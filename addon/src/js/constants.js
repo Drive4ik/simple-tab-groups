@@ -57,6 +57,20 @@ export const PERMISSIONS = Object.freeze({
     NATIVE_MESSAGING: {
         permissions: ['nativeMessaging'],
     },
+    BROWSER_SETTINGS: {
+        permissions: ['browserSettings'],
+    },
+});
+
+export const BROWSER_SETTINGS_SCHEME = Object.freeze({
+    newTabPosition: {
+        title: 'browserSettingNewTabPosition',
+        values: ['afterCurrent', 'relatedAfterCurrent', 'atEnd'],
+    },
+    verticalTabs: {
+        title: 'browserSettingVerticalTabs',
+        type: Boolean,
+    },
 });
 
 export const AUTO_BACKUP_LOCATIONS = Object.freeze({
@@ -478,6 +492,8 @@ export const DEFAULT_OPTIONS = Object.freeze({
     syncTabFavIcons: false,
 
     colorScheme: 'auto', // auto, light, dark
+
+    browserSettings: {},
 
     hotkeys: [
         {

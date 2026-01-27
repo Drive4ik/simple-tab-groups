@@ -632,14 +632,14 @@ async function syncGroups(localData, cloudData, sourceOfTruth, changes) {
     log.stop();
 }
 
-const EXCLUDE_GROUP_KEYS = [
-    'tabs',
-];
-
 function assignGroupKeys(localGroup, cloudGroup, sourceOfTruth, changes) {
     const isDefaultGroup = !localGroup.tabs && !cloudGroup.tabs;
 
     const log = logger.start('assignGroupKeys', {isDefaultGroup});
+
+    const EXCLUDE_GROUP_KEYS = [
+        'tabs',
+    ];
 
     // because we also need to be able to compare "defaultGroupProps"
     const allGroupKeys = [...Object.keys(localGroup), ...Object.keys(cloudGroup)].filter(Utils.onlyUniqueFilter);
@@ -856,13 +856,13 @@ async function mapDataContainers(data, joinSplitFunc, containersMap = new Map) {
     }
 }
 
-const GROUP_CONTAINER_KEYS = [
-    'newTabContainer',
-    'excludeContainersForReOpen',
-    'catchTabContainers',
-];
-
 async function eachGroupContainerKeyMap(group, asyncMapFunc) {
+    const GROUP_CONTAINER_KEYS = [
+        'newTabContainer',
+        'excludeContainersForReOpen',
+        'catchTabContainers',
+    ];
+
     for (const containerKey of GROUP_CONTAINER_KEYS) {
         if (group.hasOwnProperty(containerKey)) {
             const result = [];

@@ -1,21 +1,22 @@
 
 import * as Constants from './constants.js';
 import * as Utils from './utils.js';
+import * as Permissions from './permissions.js';
 import Logger from '/js/logger.js';
 
 const logger = new Logger('Host');
 var versionChecked = false;
 
 export async function hasPermission() {
-    return browser.permissions.contains(Constants.PERMISSIONS.NATIVE_MESSAGING);
+    return Permissions.has(Permissions.NATIVE_MESSAGING);
 }
 
 export async function requestPermission() {
-    return browser.permissions.request(Constants.PERMISSIONS.NATIVE_MESSAGING);
+    return Permissions.request(Permissions.NATIVE_MESSAGING);
 }
 
 export async function removePermission() {
-    return browser.permissions.remove(Constants.PERMISSIONS.NATIVE_MESSAGING);
+    return Permissions.remove(Permissions.NATIVE_MESSAGING);
 }
 
 export class HostError extends Error {

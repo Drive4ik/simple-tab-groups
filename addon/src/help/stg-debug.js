@@ -117,6 +117,8 @@ async function saveConsoleLogs() {
             extensions,
             storage,
             permissionBookmarks,
+            permissionNativeMessaging,
+            permissionBrowserSettings,
             windows,
             tabs,
         ] = await Promise.all([
@@ -124,6 +126,8 @@ async function saveConsoleLogs() {
             browser.management.getAll().catch(onCatch('management', Array)),
             browser.storage.local.get().catch(onCatch('storage', Object)),
             browser.permissions.contains(Constants.PERMISSIONS.BOOKMARKS).catch(onCatch('permissions BOOKMARKS', Object)),
+            browser.permissions.contains(Constants.PERMISSIONS.NATIVE_MESSAGING).catch(onCatch('permissions NATIVE_MESSAGING', Object)),
+            browser.permissions.contains(Constants.PERMISSIONS.BROWSER_SETTINGS).catch(onCatch('permissions BROWSER_SETTINGS', Object)),
             browser.windows.getAll({
                 windowTypes: [browser.windows.WindowType.NORMAL],
             }).catch(onCatch('windows', Array)),
@@ -167,6 +171,8 @@ async function saveConsoleLogs() {
             UUID: Constants.STG_BASE_URL,
             permissions: {
                 bookmarks: permissionBookmarks,
+                nativeMessaging: permissionNativeMessaging,
+                browserSettings: permissionBrowserSettings,
             },
             storage,
         },

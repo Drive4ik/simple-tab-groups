@@ -635,6 +635,46 @@
         "message": "Разрешить доступ к закладкам",
         "description": "Allow access to bookmarks"
     },
+    "allowAccessToBrowserSettings": {
+        "message": "Разрешить доступ к настройкам браузера",
+        "description": "Allow access to browser settings"
+    },
+    "browserSettingNewTabPosition": {
+        "message": "Позиция новой вкладки",
+        "description": "New tab position"
+    },
+    "browserSettingNewTabPosition_afterCurrent": {
+        "message": "Открывать рядом с текущей",
+        "description": "Open next to current"
+    },
+    "browserSettingNewTabPosition_afterCurrent_desc": {
+        "message": "Открывать все новые вкладки рядом с текущей вкладкой.",
+        "description": "Open all new tabs next to the current tab."
+    },
+    "browserSettingNewTabPosition_relatedAfterCurrent": {
+        "message": "Рядом, если связаны",
+        "description": "Related next to current"
+    },
+    "browserSettingNewTabPosition_relatedAfterCurrent_desc": {
+        "message": "Открывать новые вкладки рядом с текущей, если они связаны (например, открыты по ссылке). Иначе — в конце строки вкладок.",
+        "description": "Related next to current description"
+    },
+    "browserSettingNewTabPosition_atEnd": {
+        "message": "В конце",
+        "description": "At the end"
+    },
+    "browserSettingNewTabPosition_atEnd_desc": {
+        "message": "Открывать все вкладки в конце строки вкладок.",
+        "description": "At the end description"
+    },
+    "browserSettingVerticalTabs": {
+        "message": "Вертикальные вкладки",
+        "description": "Vertical tabs"
+    },
+    "disabledByPolicy": {
+        "message": "Эта настройка была отключена вашим администратором или политикой организации.",
+        "description": "Setting disabled by policy"
+    },
     "openBookmarkInGroup": {
         "message": "Открыть закладку в группе",
         "description": "Open bookmark in group"

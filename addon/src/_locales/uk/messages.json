@@ -635,6 +635,46 @@
         "message": "Дозволити доступ до закладок",
         "description": "Allow access to bookmarks"
     },
+    "allowAccessToBrowserSettings": {
+        "message": "Дозволити доступ до налаштувань браузера",
+        "description": "Allow access to browser settings"
+    },
+    "browserSettingNewTabPosition": {
+        "message": "Позиція нової вкладки",
+        "description": "New tab position"
+    },
+    "browserSettingNewTabPosition_afterCurrent": {
+        "message": "Відкривати поруч з поточною",
+        "description": "Open next to current"
+    },
+    "browserSettingNewTabPosition_afterCurrent_desc": {
+        "message": "Відкривати всі нові вкладки поруч з поточною вкладкою.",
+        "description": "Open all new tabs next to the current tab."
+    },
+    "browserSettingNewTabPosition_relatedAfterCurrent": {
+        "message": "Поруч якщо пов'язані",
+        "description": "Related next to current"
+    },
+    "browserSettingNewTabPosition_relatedAfterCurrent_desc": {
+        "message": "Відкривати нові вкладки поруч з поточною, якщо вони пов'язані (наприклад, відкриті за посиланням). Інакше — в кінці рядка вкладок.",
+        "description": "Related next to current description"
+    },
+    "browserSettingNewTabPosition_atEnd": {
+        "message": "В кінці",
+        "description": "At the end"
+    },
+    "browserSettingNewTabPosition_atEnd_desc": {
+        "message": "Відкривати всі вкладки в кінці рядка вкладок.",
+        "description": "At the end description"
+    },
+    "browserSettingVerticalTabs": {
+        "message": "Вертикальні вкладки",
+        "description": "Vertical tabs"
+    },
+    "disabledByPolicy": {
+        "message": "Ця установка була вимкнена вашим адміністратором або політикою організації.",
+        "description": "Setting disabled by policy"
+    },
     "openBookmarkInGroup": {
         "message": "Відкрити закладку в групі",
         "description": "Open bookmark in group"

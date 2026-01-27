@@ -3,6 +3,7 @@ import './prefixed-storage.js';
 import Logger from './logger.js';
 import * as Constants from './constants.js';
 import * as Storage from './storage.js';
+import * as Permissions from './permissions.js';
 
 const logger = new Logger(Constants.MODULES.BOOKMARKS);
 
@@ -16,15 +17,15 @@ const ROOT = {
 };
 
 export async function hasPermission() {
-    return browser.permissions.contains(Constants.PERMISSIONS.BOOKMARKS);
+    return Permissions.has(Permissions.BOOKMARKS);
 }
 
 export async function requestPermission() {
-    return browser.permissions.request(Constants.PERMISSIONS.BOOKMARKS);
+    return Permissions.request(Permissions.BOOKMARKS);
 }
 
 export async function removePermission() {
-    return browser.permissions.remove(Constants.PERMISSIONS.BOOKMARKS);
+    return Permissions.remove(Permissions.BOOKMARKS);
 }
 
 async function findGroup(group, parentId, createIfNeed = false) {

@@ -12,8 +12,6 @@ import Listeners from '/js/listeners.js\
 &windows.onCreated\
 &windows.onFocusChanged\
 &windows.onRemoved\
-&permissions.onAdded\
-&permissions.onRemoved\
 &runtime.onConnect\
 &runtime.onMessage\
 &runtime.onMessageExternal\
@@ -54,6 +52,8 @@ import * as Tabs from '/js/tabs.js';
 import * as Windows from '/js/windows.js';
 import * as Management from '/js/management.js';
 import * as Bookmarks from '/js/bookmarks.js';
+import * as Permissions from '/js/permissions.js';
+import * as BrowserSettings from '/js/browser-settings.js';
 import * as Cloud from '/js/sync/cloud/cloud.js';
 
 const storage = localStorage.create(Constants.MODULES.BACKGROUND);
@@ -1823,15 +1823,24 @@ const onBeforeTabRequest = catchFunc(async function onBeforeTabRequest({tabId, u
     };
 }, logger);
 
-const onPermissionsAdded = catchFunc(async function onPermissionsAdded({origins, permissions}) {
-    logger.log('onPermissionsAdded', {origins, permissions});
-    await updateMoveTabMenus();
+const onPermissionsAdded = catchFunc(async function onPermissionsAdded(permissions) {
+    const log = logger.start('onPermissionsAdded', permissions);
+
+    if (Permissions.hasAny(permissions, Permissions.BOOKMARKS)) {
+        await updateMoveTabMenus();
+    }
+
+    if (Permissions.hasAny(permissions, Permissions.BROWSER_SETTINGS)) {
+        await BrowserSettings.set(options.browserSettings);
+    }
+
+    log.stop();
 }, logger);
 
-const onPermissionsRemoved = catchFunc(async function onPermissionsRemoved({origins, permissions}) {
-    logger.log('onPermissionsRemoved', {origins, permissions});
+const onPermissionsRemoved = catchFunc(async function onPermissionsRemoved(permissions) {
+    const log = logger.start('onPermissionsRemoved', permissions);
 
-    if (permissions?.some(p => Constants.PERMISSIONS.NATIVE_MESSAGING.permissions.includes(p))) {
+    if (Permissions.hasAny(permissions, Permissions.NATIVE_MESSAGING)) {
         if (options.autoBackupLocation === Constants.AUTO_BACKUP_LOCATIONS.HOST) {
             await saveOptions({
                 autoBackupLocation: Constants.AUTO_BACKUP_LOCATIONS.DOWNLOADS,
@@ -1839,7 +1848,7 @@ const onPermissionsRemoved = catchFunc(async function onPermissionsRemoved({orig
         }
     }
 
-    await updateMoveTabMenus();
+    log.stop();
 }, logger);
 
 async function onAlarm({name}) {
@@ -1887,8 +1896,8 @@ function addEvents() {
     Listeners.windows.onFocusChanged(onFocusChangedWindow);
     Listeners.windows.onRemoved(onRemovedWindow);
 
-    Listeners.permissions.onAdded(onPermissionsAdded);
-    Listeners.permissions.onRemoved(onPermissionsRemoved);
+    Permissions.onAdded(onPermissionsAdded);
+    Permissions.onRemoved(onPermissionsRemoved);
 
     Listeners.alarms.onAlarm(onAlarm);
 }
@@ -1908,8 +1917,8 @@ function removeEvents() {
     Listeners.windows.onFocusChanged();
     Listeners.windows.onRemoved();
 
-    Listeners.permissions.onAdded();
-    Listeners.permissions.onRemoved();
+    Permissions.onAdded();
+    Permissions.onRemoved();
 
     Listeners.alarms.onAlarm();
 
@@ -3682,6 +3691,8 @@ async function runMigrateForData(data, applyToCurrentInstance = true) {
 
                 data.colorScheme = data.theme;
 
+                data.browserSettings = {};
+
                 if (applyToCurrentInstance) {
                     storage.autoBackupLastTimeStamp = data.autoBackupLastBackupTimeStamp;
                     storage.mainBookmarksFolderId = localStorage.mainBookmarksFolderId;
@@ -4235,6 +4246,10 @@ async function init() {
         }
 
         Utils.assignKeys(options, data, Constants.ALL_OPTION_KEYS);
+
+        if (await BrowserSettings.hasPermission()) {
+            await BrowserSettings.set(options.browserSettings);
+        }
 
         dataChanged.add(Groups.normalizeContainersInGroups(data.groups));
 

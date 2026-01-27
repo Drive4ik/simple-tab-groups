@@ -41,7 +41,8 @@
 
     "optional_permissions": [
         "bookmarks",
-        "nativeMessaging"
+        "nativeMessaging",
+        "browserSettings"
     ],
 
     "browser_action": {

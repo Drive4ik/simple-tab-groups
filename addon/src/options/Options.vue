@@ -24,6 +24,8 @@ import * as File from '/js/file.js';
 import * as Host from '/js/host.js';
 import * as Urls from '/js/urls.js';
 import * as Groups from '/js/groups.js';
+import * as Permissions from '/js/permissions.js';
+import * as BrowserSettings from '/js/browser-settings.js';
 import {isValidHotkeyValue, eventToHotkeyValue} from '/js/hotkeys.js';
 import JSON from '/js/json.js';
 
@@ -86,6 +88,8 @@ export default {
         this.PLUGINS = Object.fromEntries(
             Object.entries(Constants.EXTENSIONS_WHITE_LIST).filter(([id]) => id.startsWith('stg'))
         );
+
+        this.BROWSER_SETTINGS_SCHEME = Constants.BROWSER_SETTINGS_SCHEME;
 
         this.DONATE_ITEMS = Constants.DONATE_ITEMS;
 
@@ -199,6 +203,7 @@ export default {
             permissions: {
                 bookmarks: false,
                 nativeMessaging: false,
+                browserSettings: false,
             },
 
             lastAutoBackup: null,
@@ -208,6 +213,7 @@ export default {
             restoreLastBackupProgress: 0,
 
             defaultBookmarksParents: [],
+            browserSettingsNotControllable: {},
 
             showLoadingMessage: false,
 
@@ -228,11 +234,9 @@ export default {
 
         this.$on('options-reloaded', () => this.addCustomWatchers());
 
-        this.loadBookmarksParents();
-
-        if (this.IS_WINDOWS) {
-            this.loadNativeMessagingPermissions();
-        }
+        this.loadPermissions();
+        Permissions.onAdded(() => this.loadPermissions());
+        Permissions.onRemoved(() => this.loadPermissions());
 
         this.loadGroups();
 
@@ -268,6 +272,12 @@ export default {
 
                 return value;
             });
+
+            this.optionsWatch('browserSettings', async browserSettings => {
+                const rawSettings = await BrowserSettings.set(browserSettings);
+                await this.applyRawBrowserSettings(rawSettings);
+                return this.options.browserSettings;
+            }, {deep: true});
 
             this.optionsWatch('autoBackupIntervalValue', value => Utils.clamp(value, 1, 50));
 
@@ -662,6 +672,16 @@ export default {
             };
         },
 
+        loadPermissions() {
+            this.loadBookmarksPermissions();
+
+            if (this.IS_WINDOWS) {
+                this.loadNativeMessagingPermissions();
+            }
+
+            this.loadBrowserSettingsPermissions();
+        },
+
         async setPermissionsBookmarks(event) {
             if (event.target.checked) {
                 this.permissions.bookmarks = event.target.checked = await Bookmarks.requestPermission();
@@ -669,15 +689,9 @@ export default {
                 await Bookmarks.removePermission();
                 this.permissions.bookmarks = false;
             }
-
-            this.loadBookmarksParents();
         },
 
-        async loadBookmarksParents() {
-            if (this.defaultBookmarksParents.length) {
-                return;
-            }
-
+        async loadBookmarksPermissions() {
             this.permissions.bookmarks = await Bookmarks.hasPermission();
 
             if (this.permissions.bookmarks) {
@@ -695,7 +709,33 @@ export default {
             } else {
                 await Host.removePermission();
                 this.permissions.nativeMessaging = false;
-                // this.options.autoBackupLocation = this.AUTO_BACKUP_LOCATIONS.DOWNLOADS; // will set from background listener
+            }
+        },
+
+        async loadBrowserSettingsPermissions() {
+            this.permissions.browserSettings = await BrowserSettings.hasPermission();
+
+            if (this.permissions.browserSettings) {
+                await this.optionsLoadPromise;
+
+                const rawSettings = await BrowserSettings.get();
+                await this.applyRawBrowserSettings(rawSettings);
+            }
+        },
+
+        async setPermissionsBrowserSettings(event) {
+            if (event.target.checked) {
+                this.permissions.browserSettings = event.target.checked = await BrowserSettings.requestPermission();
+            } else {
+                await BrowserSettings.removePermission();
+                this.permissions.browserSettings = false;
+            }
+        },
+
+        async applyRawBrowserSettings(rawSettings) {
+            for (const [name, rawSetting] of Object.entries(rawSettings)) {
+                this.$set(this.browserSettingsNotControllable, name, BrowserSettings.isNotControllable(rawSetting));
+                this.$set(this.options.browserSettings, name, rawSetting.value);
             }
         },
 
@@ -802,26 +842,103 @@ export default {
 
         <hr/>
 
-        <div class="block checkboxes as-column">
-            <label class="checkbox">
-                <input :checked="permissions.bookmarks" @click="setPermissionsBookmarks" type="checkbox" />
-                <span v-text="lang('allowAccessToBookmarks')"></span>
-            </label>
-            <div class="ml-5">
-                <label class="label colon" v-text="lang('defaultBookmarkFolderLocation')"></label>
-                <div class="control has-icons-left">
-                    <div class="select">
-                        <select v-model="options.defaultBookmarksParent" :disabled="!permissions.bookmarks">
-                            <option v-for="bookmark in defaultBookmarksParents" :key="bookmark.id" :value="bookmark.id" v-text="bookmark.title"></option>
-                        </select>
+        <div class="block">
+            <div class="field">
+                <label class="checkbox">
+                    <input :checked="permissions.bookmarks" @click="setPermissionsBookmarks" type="checkbox" />
+                    <span v-text="lang('allowAccessToBookmarks')"></span>
+                </label>
+            </div>
+            <div class="field ml-5">
+                <div class="field is-horizontal">
+                    <div class="field-label is-normal">
+                        <label class="label colon" v-text="lang('defaultBookmarkFolderLocation')"></label>
                     </div>
-                    <div class="icon is-left">
-                        <figure class="image is-16x16">
-                            <img src="/icons/bookmark.svg" />
-                        </figure>
+                    <div class="field-body">
+                        <div class="field">
+                            <div class="control has-icons-left">
+                                <div class="select">
+                                    <select v-model="options.defaultBookmarksParent" :disabled="!permissions.bookmarks">
+                                        <option v-for="bookmark in defaultBookmarksParents" :key="bookmark.id" :value="bookmark.id" v-text="bookmark.title"></option>
+                                    </select>
+                                </div>
+                                <div class="icon is-left">
+                                    <figure class="image is-16x16">
+                                        <img src="/icons/bookmark.svg" />
+                                    </figure>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
+
+            <div class="field">
+                <label class="checkbox">
+                    <input :checked="permissions.browserSettings" @click="setPermissionsBrowserSettings" type="checkbox" />
+                    <span v-text="lang('allowAccessToBrowserSettings')"></span>
+                </label>
+            </div>
+            <div v-if="options.browserSettings" class="field ml-5">
+                <div v-for="(schema, key) in BROWSER_SETTINGS_SCHEME" :key="key" class="field is-horizontal">
+                    <div class="field-label is-normal">
+                        <label class="label colon" v-text="lang(schema.title)"></label>
+                    </div>
+                    <div class="field-body">
+                        <div class="field">
+                            <div v-if="schema.type === Boolean" class="field my-2">
+                                <div class="control">
+                                    <input type="checkbox" v-model="options.browserSettings[key]" :disabled="!permissions.browserSettings || browserSettingsNotControllable[key]" />
+                                    <!-- <em class="brackets-round" v-text="lang(options.browserSettings[key] ? 'enabled' : 'disabled')"></em> -->
+                                    <span v-if="browserSettingsNotControllable[key]" class="icon-text ml-3">
+                                        <span class="icon">
+                                            <img src="/icons/exclamation-triangle-yellow.svg" />
+                                        </span>
+                                        <span class="has-text-warning" v-text="lang('disabledByPolicy')"></span>
+                                    </span>
+                                </div>
+                            </div>
+                            <div v-else-if="schema.values" class="field">
+                                <div class="field is-grouped">
+                                    <div class="control has-icons-left has-icons-right">
+                                        <div class="select">
+                                            <select v-model="options.browserSettings[key]" :disabled="!permissions.browserSettings || browserSettingsNotControllable[key]">
+                                                <option
+                                                    v-for="value in schema.values"
+                                                    :key="value"
+                                                    :value="value"
+                                                    v-text="lang(`${schema.title}_${value}`)"
+                                                    ></option>
+                                            </select>
+                                        </div>
+                                        <div class="icon is-left">
+                                            <figure class="image is-16x16">
+                                                <img src="/icons/tab-new.svg" />
+                                            </figure>
+                                        </div>
+                                        <div class="icon is-right pointer-events-all cursor-help" :title="lang(`${schema.title}_${options.browserSettings[key]}_desc`)">
+                                            <figure class="image is-16x16">
+                                                <img src="/icons/help.svg" />
+                                            </figure>
+                                        </div>
+                                    </div>
+                                    <div v-if="browserSettingsNotControllable[key]" class="control is-align-content-center">
+                                        <span class="icon-text">
+                                            <span class="icon">
+                                                <img src="/icons/exclamation-triangle-yellow.svg" />
+                                            </span>
+                                            <span class="has-text-warning" v-text="lang('disabledByPolicy')"></span>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="block checkboxes as-column">
             <label class="checkbox">
                 <input v-model="options.showArchivedGroups" type="checkbox" />
                 <span v-text="lang('showArchivedGroups')"></span>

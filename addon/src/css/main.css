@@ -92,6 +92,10 @@ input {
     line-height: 1;
 }
 
+.pointer-events-all {
+    pointer-events: all !important;
+}
+
 .discarded-color {
     color: var(--discarded-text-color);
 }

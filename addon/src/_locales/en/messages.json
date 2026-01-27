@@ -639,6 +639,46 @@
         "message": "Allow access to bookmarks",
         "description": "Allow access to bookmarks"
     },
+    "allowAccessToBrowserSettings": {
+        "message": "Allow access to browser settings",
+        "description": "Allow access to browser settings"
+    },
+    "browserSettingNewTabPosition": {
+        "message": "New tab position",
+        "description": "New tab position"
+    },
+    "browserSettingNewTabPosition_afterCurrent": {
+        "message": "Open next to current",
+        "description": "Open all new tabs next to the current tab."
+    },
+    "browserSettingNewTabPosition_afterCurrent_desc": {
+        "message": "Open all new tabs next to the current tab.",
+        "description": "Open all new tabs next to the current tab."
+    },
+    "browserSettingNewTabPosition_relatedAfterCurrent": {
+        "message": "Related next to current",
+        "description": "Related next to current"
+    },
+    "browserSettingNewTabPosition_relatedAfterCurrent_desc": {
+        "message": "Open new tabs next to the current tab if they are related to the current tab (for example, if they were opened via a link in the current tab). Otherwise, open new tabs at the end of the tabstrip.",
+        "description": "Related next to current description"
+    },
+    "browserSettingNewTabPosition_atEnd": {
+        "message": "At the end",
+        "description": "At the end"
+    },
+    "browserSettingNewTabPosition_atEnd_desc": {
+        "message": "Open all tabs at the end of the tabstrip.",
+        "description": "At the end description"
+    },
+    "browserSettingVerticalTabs": {
+        "message": "Vertical tabs",
+        "description": "Vertical tabs"
+    },
+    "disabledByPolicy": {
+        "message": "This setting has been disabled by your administrator or organizational policy.",
+        "description": "Setting disabled by policy"
+    },
     "openBookmarkInGroup": {
         "message": "Open bookmark in group",
         "description": "Open bookmark in group"
