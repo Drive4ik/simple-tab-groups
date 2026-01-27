@@ -3840,22 +3840,22 @@ async function runMigrateForData(data, applyToCurrentInstance = true) {
                 }
 
                 // migrate backup folder to file path
-                data.autoBackupFilePathFile = data.autoBackupFolderName;
+                data.autoBackupFilePath = data.autoBackupFolderName || '';
 
                 if (
                     !data.autoBackupFolderName.length ||
                     /^STG\-backups\-FF\-[a-z\d\.]+$/.test(data.autoBackupFolderName) ||
                     /^STG\-backups\-(win|linux|mac|openbsd)\-\d+$/.test(data.autoBackupFolderName)
                 ) {
-                    data.autoBackupFilePathFile = `STG-backups-FF-{ff-version}/`;
+                    data.autoBackupFilePath = `STG-backups-FF-{ff-version}/`;
                 } else {
-                    data.autoBackupFilePathFile += '/';
+                    data.autoBackupFilePath += '/';
                 }
 
                 if (data.autoBackupByDayIndex) {
-                    data.autoBackupFilePathFile += `auto-stg-backup-day-of-month-{day-2-digit}@drive4ik`;
+                    data.autoBackupFilePath += `auto-stg-backup-day-of-month-{day-2-digit}@drive4ik`;
                 } else {
-                    data.autoBackupFilePathFile += `STG-backup {date-full} {time-short}@drive4ik`;
+                    data.autoBackupFilePath += `STG-backup {date-full} {time-short}@drive4ik`;
                 }
             },
         },

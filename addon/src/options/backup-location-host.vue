@@ -74,7 +74,7 @@ export default {
     methods: {
         lang: browser.i18n.getMessage,
         addCustomWatchers() {
-            this.optionsWatch('autoBackupFilePathHost', async (value, oldValue) => {
+            this.optionsWatch('autoBackupFilePath', async (value, oldValue) => {
                 try {
                     value = value.trim();
 
@@ -124,9 +124,9 @@ export default {
             }
         },
         insertVariableToFilePath(variable) {
-            this.options.autoBackupFilePathHost = Utils.insertVariable(
-                this.$refs.autoBackupFilePathHost,
-                this.options.autoBackupFilePathHost,
+            this.options.autoBackupFilePath = Utils.insertVariable(
+                this.$refs.autoBackupFilePath,
+                this.options.autoBackupFilePath,
                 variable
             );
         },
@@ -197,7 +197,7 @@ export default {
                                 <input type="text" @click="selectBackupFolderHost" :value="backupFolder" readonly class="input" :title="lang(backupFolder ? 'backupFolderTitle' : 'selectBackupFolder')" :class="{'is-clickable': hasConnection}" />
                             </div>
                             <div class="control auto-backup-filename">
-                                <input type="text" v-model.lazy.trim="options.autoBackupFilePathHost" ref="autoBackupFilePathHost" maxlength="200" class="input" :title="lang('filePathTitle')" />
+                                <input type="text" v-model.lazy.trim="options.autoBackupFilePath" ref="autoBackupFilePath" maxlength="200" class="input" :title="lang('filePathTitle')" />
                             </div>
                             <div class="control">
                                 <a class="button is-static">.json</a>

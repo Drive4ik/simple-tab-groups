@@ -26,7 +26,7 @@ export default {
     methods: {
         lang: browser.i18n.getMessage,
         addCustomWatchers() {
-            this.optionsWatch('autoBackupFilePathFile', async (value, oldValue) => {
+            this.optionsWatch('autoBackupFilePath', async (value, oldValue) => {
                 try {
                     value = value.trim();
 
@@ -43,9 +43,9 @@ export default {
             });
         },
         insertVariableToFilePath(variable) {
-            this.options.autoBackupFilePathFile = Utils.insertVariable(
-                this.$refs.autoBackupFilePathFile,
-                this.options.autoBackupFilePathFile,
+            this.options.autoBackupFilePath = Utils.insertVariable(
+                this.$refs.autoBackupFilePath,
+                this.options.autoBackupFilePath,
                 variable
             );
         },
@@ -71,8 +71,8 @@ export default {
                         </div>
                         <div class="control is-expanded">
                             <input type="text"
-                                v-model.lazy.trim="options.autoBackupFilePathFile"
-                                ref="autoBackupFilePathFile"
+                                v-model.lazy.trim="options.autoBackupFilePath"
+                                ref="autoBackupFilePath"
                                 maxlength="200"
                                 :title="lang('filePathTitle')"
                                 class="input"

@@ -478,9 +478,8 @@ export const DEFAULT_OPTIONS = Object.freeze({
     autoBackupEnable: true,
     autoBackupIntervalKey: INTERVAL_KEY.days, // minutes, hours, days
     autoBackupIntervalValue: 1,
-    autoBackupLocation: AUTO_BACKUP_LOCATIONS.DOWNLOADS, // TODO new, add migrate anywhere
-    autoBackupFilePathHost: 'STG-backup {date-full} {time-short}',
-    autoBackupFilePathFile: 'STG-backups-FF-{ff-version}/STG-backup {date-full} {time-short}',
+    autoBackupLocation: AUTO_BACKUP_LOCATIONS.DOWNLOADS,
+    autoBackupFilePath: 'STG-backups-FF-{ff-version}/STG-backup {date-full} {time-short}',
     autoBackupIncludeTabThumbnails: true,
     autoBackupIncludeTabFavIcons: true,
 

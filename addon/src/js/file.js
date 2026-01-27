@@ -135,7 +135,7 @@ export async function save(data, filePath = 'file-name', options = {}) {
 }
 
 export async function saveBackup(data, isAutoBackup) {
-    const filePath = data.autoBackupFilePathFile + '.json';
+    const filePath = data.autoBackupFilePath + '.json';
 
     return await save(data, filePath, {
         saveAs: !isAutoBackup,
@@ -168,20 +168,20 @@ export async function testBackupFilePath(filePath, exploreFolder = false) {
 export async function openBackupFolder() {
     const TEMP_FILE_NAME = 'folder-check';
 
-    let {autoBackupFilePathFile} = await Storage.get('autoBackupFilePathFile');
+    let {autoBackupFilePath} = await Storage.get('autoBackupFilePath');
 
-    autoBackupFilePathFile = autoBackupFilePathFile.replaceAll('\\', '/');
+    autoBackupFilePath = autoBackupFilePath.replaceAll('\\', '/');
 
-    const slashIndex = autoBackupFilePathFile.lastIndexOf('/');
+    const slashIndex = autoBackupFilePath.lastIndexOf('/');
 
     if (slashIndex > -1) {
-        autoBackupFilePathFile = autoBackupFilePathFile.slice(0, slashIndex + 1) + TEMP_FILE_NAME;
+        autoBackupFilePath = autoBackupFilePath.slice(0, slashIndex + 1) + TEMP_FILE_NAME;
     } else {
-        autoBackupFilePathFile = TEMP_FILE_NAME;
+        autoBackupFilePath = TEMP_FILE_NAME;
     }
 
     try {
-        await testBackupFilePath(autoBackupFilePathFile, true);
+        await testBackupFilePath(autoBackupFilePath, true);
     } catch (e) {
         logger.logError(String(e), e);
     }

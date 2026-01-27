@@ -176,7 +176,7 @@ export async function testBackupFilePath(filePath) {
 
 export async function saveBackup(data) {
     await sendMessage('save-backup', {
-        filePath: data.autoBackupFilePathHost + '.json',
+        filePath: data.autoBackupFilePath + '.json',
         data,
     });
 }
