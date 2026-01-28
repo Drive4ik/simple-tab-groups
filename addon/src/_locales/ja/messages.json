@@ -810,8 +810,8 @@
         "description": "Welcome to Simple Tab Groups"
     },
     "helpPageWelcomeDescription": {
-        "message": "ブラウザーの設定で [前回のウィンドウとタブを開く] を有効にしてください。\nこれはグループとタブの間の通信を管理するために必要です。\nこれが無効になっている場合、ブラウザーの起動時にタブが開かず、アドオンからタブの情報が失われます。\nつまり、アドオンの動作が停止するでしょう。",
-        "description": "Please enable \"Open previous windows and tabs\" in browser settings.\nThis is necessary to maintain communication between the group and the tab, \notherwise the tabs will not open when the browser starts and will be lost from the addon -\nthe addon will stop working."
+        "message": "ブラウザーの設定で [前回のウィンドウとタブを開く] を有効にしてください。\nこれはグループとタブの間の通信を管理するために必要です。これが無効になっている場合、ブラウザーの起動時にタブが開かず、アドオンからタブの情報が失われます。つまり、アドオンの動作が停止するでしょう。",
+        "description": "Please enable \"Open previous windows and tabs\" in browser settings.\nThis is necessary to maintain communication between the group and the tab, otherwise the tabs will not open when the browser starts and will be lost from the addon - the addon will stop working."
     },
     "enableDebugTitle": {
         "message": "デバッグを有効にする",

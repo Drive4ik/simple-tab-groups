@@ -810,8 +810,8 @@
         "description": "Welcome to Simple Tab Groups"
     },
     "helpPageWelcomeDescription": {
-        "message": "Włącz \"Przywracanie poprzedniej sesji\" w ustawieniach przeglądarki.\nJest to niezbędne do utrzymania komunikacji pomiędzy grupą a kartą,\nw przeciwnym wypadku karty nie zostaną otwarte podczas uruchamiania przeglądarki i rozszerzenie straci informację o nich -\nrozszerzenie nie będzie działać.",
-        "description": "Please enable \"Open previous windows and tabs\" in browser settings.\nThis is necessary to maintain communication between the group and the tab, \notherwise the tabs will not open when the browser starts and will be lost from the addon -\nthe addon will stop working."
+        "message": "Włącz \"Przywracanie poprzedniej sesji\" w ustawieniach przeglądarki.\nJest to niezbędne do utrzymania komunikacji pomiędzy grupą a kartą, w przeciwnym wypadku karty nie zostaną otwarte podczas uruchamiania przeglądarki i rozszerzenie straci informację o nich - rozszerzenie nie będzie działać.",
+        "description": "Please enable \"Open previous windows and tabs\" in browser settings.\nThis is necessary to maintain communication between the group and the tab, otherwise the tabs will not open when the browser starts and will be lost from the addon - the addon will stop working."
     },
     "enableDebugTitle": {
         "message": "Włącz tryb DEBUG",

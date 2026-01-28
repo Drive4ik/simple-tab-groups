@@ -774,8 +774,8 @@
         "description": "Welcome to Simple Tab Groups"
     },
     "helpPageWelcomeDescription": {
-        "message": "브라우저 설정에서 \"이전 세션 복원\"을 활성화하십시오.\n이는 그룹과 탭 간의 통신을 유지하는 데 필요합니다. 그렇지 않으면 \n브라우저가 시작될 때 탭이 열리지 않고 확장 프로그램에서 손실됩니다 확장 프로그램이 작동을 멈춥니다.",
-        "description": "Please enable \"Open previous windows and tabs\" in browser settings.\nThis is necessary to maintain communication between the group and the tab, \notherwise the tabs will not open when the browser starts and will be lost from the addon -\nthe addon will stop working."
+        "message": "브라우저 설정에서 \"이전 세션 복원\"을 활성화하십시오.\n이는 그룹과 탭 간의 통신을 유지하는 데 필요합니다. 그렇지 않으면 브라우저가 시작될 때 탭이 열리지 않고 확장 프로그램에서 손실됩니다 확장 프로그램이 작동을 멈춥니다.",
+        "description": "Please enable \"Open previous windows and tabs\" in browser settings.\nThis is necessary to maintain communication between the group and the tab, otherwise the tabs will not open when the browser starts and will be lost from the addon - the addon will stop working."
     },
     "enableDebugTitle": {
         "message": "디버그 활성화",

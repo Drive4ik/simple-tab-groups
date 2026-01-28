@@ -810,8 +810,8 @@
         "description": "Welcome to Simple Tab Groups"
     },
     "helpPageWelcomeDescription": {
-        "message": "请在浏览器选项中启用“恢复先前的浏览状态”。\n这是在群组和标签之间通信所必需的，\n否则浏览器启动时标签页不会打开，扩展也会丢失它们 -\n扩展无法工作。",
-        "description": "Please enable \"Open previous windows and tabs\" in browser settings.\nThis is necessary to maintain communication between the group and the tab, \notherwise the tabs will not open when the browser starts and will be lost from the addon -\nthe addon will stop working."
+        "message": "请在浏览器选项中启用“恢复先前的浏览状态”。\n这是在群组和标签之间通信所必需的，否则浏览器启动时标签页不会打开，扩展也会丢失它们 - 扩展无法工作。",
+        "description": "Please enable \"Open previous windows and tabs\" in browser settings.\nThis is necessary to maintain communication between the group and the tab, otherwise the tabs will not open when the browser starts and will be lost from the addon - the addon will stop working."
     },
     "enableDebugTitle": {
         "message": "启用调试",

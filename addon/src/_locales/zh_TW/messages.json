@@ -811,7 +811,7 @@
     },
     "helpPageWelcomeDescription": {
         "message": "請勾選瀏覽器設定中的「啟動時打開前次瀏覽的視窗與分頁 」。\n這是本附加元件順利運作的必要先決條件，否則下次開啟瀏覽器將喪失所有開啟的分頁，本附加元件也無法運作。",
-        "description": "Please enable \"Open previous windows and tabs\" in browser settings.\nThis is necessary to maintain communication between the group and the tab, \notherwise the tabs will not open when the browser starts and will be lost from the addon -\nthe addon will stop working."
+        "description": "Please enable \"Open previous windows and tabs\" in browser settings.\nThis is necessary to maintain communication between the group and the tab, otherwise the tabs will not open when the browser starts and will be lost from the addon - the addon will stop working."
     },
     "enableDebugTitle": {
         "message": "啟用除錯模式",

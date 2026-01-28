@@ -74,3 +74,7 @@ button:disabled {
 .white-space-pre-line {
     white-space: pre-line;
 }
+
+.text-wrap-balance {
+    text-wrap: balance;
+}

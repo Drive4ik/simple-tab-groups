@@ -810,8 +810,8 @@
         "description": "Welcome to Simple Tab Groups"
     },
     "helpPageWelcomeDescription": {
-        "message": "Gelieve \"Eerdere vensters en tabbladen openen\" te activeren in de browserinstellingen.\nDit is nodig om de communicatie tussen de groep en het tabblad te onderhouden,\nzoniet zullen de tabbladen niet openen wanneer de browser opstart en zullen deze verloren gaan uit de add-on -\nde add-on zal stoppen met werken.",
-        "description": "Please enable \"Open previous windows and tabs\" in browser settings.\nThis is necessary to maintain communication between the group and the tab, \notherwise the tabs will not open when the browser starts and will be lost from the addon -\nthe addon will stop working."
+        "message": "Gelieve \"Eerdere vensters en tabbladen openen\" te activeren in de browserinstellingen.\nDit is nodig om de communicatie tussen de groep en het tabblad te onderhouden, zoniet zullen de tabbladen niet openen wanneer de browser opstart en zullen deze verloren gaan uit de add-on - de add-on zal stoppen met werken.",
+        "description": "Please enable \"Open previous windows and tabs\" in browser settings.\nThis is necessary to maintain communication between the group and the tab, otherwise the tabs will not open when the browser starts and will be lost from the addon - the addon will stop working."
     },
     "enableDebugTitle": {
         "message": "DEBUGGEN activeren",

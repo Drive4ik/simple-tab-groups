@@ -786,8 +786,8 @@
         "description": "Welcome to Simple Tab Groups"
     },
     "helpPageWelcomeDescription": {
-        "message": "Harap aktifkan \"Pulihkan sesi sebelumnya\" di setelan browser.\nIni diperlukan untuk menjaga komunikasi antara grup dan tab,\njika tidak, tab tidak akan terbuka saat browser dimulai dan akan hilang dari addon - addon akan berhenti bekerja.",
-        "description": "Please enable \"Open previous windows and tabs\" in browser settings.\nThis is necessary to maintain communication between the group and the tab,\notherwise the tabs will not open when the browser starts and will be lost from the addon -\nthe addon will stop working."
+        "message": "Harap aktifkan \"Pulihkan sesi sebelumnya\" di setelan browser.\nIni diperlukan untuk menjaga komunikasi antara grup dan tab, jika tidak, tab tidak akan terbuka saat browser dimulai dan akan hilang dari addon - addon akan berhenti bekerja.",
+        "description": "Please enable \"Open previous windows and tabs\" in browser settings.\nThis is necessary to maintain communication between the group and the tab, otherwise the tabs will not open when the browser starts and will be lost from the addon - the addon will stop working."
     },
     "enableDebugTitle": {
         "message": "Aktifkan DEBUG",

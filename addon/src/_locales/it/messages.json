@@ -810,8 +810,8 @@
         "description": "Welcome to Simple Tab Groups"
     },
     "helpPageWelcomeDescription": {
-        "message": "Abilita \"Ripristina la sessione precedente\" nelle impostazioni del browser.\nQuesta impostazione è necessaria per mantere la comunicazione tra il gruppo corrente e le schede,\naltrimenti le schede non saranno aperte quando il browser si avvia e le informazioni del gruppo saranno perse dall'estensione\n e l'estensione smetterà di funzionare.",
-        "description": "Please enable \"Open previous windows and tabs\" in browser settings.\nThis is necessary to maintain communication between the group and the tab,\notherwise the tabs will not open when the browser starts and will be lost from the addon -\nthe addon will stop working."
+        "message": "Abilita \"Ripristina la sessione precedente\" nelle impostazioni del browser.\nQuesta impostazione è necessaria per mantere la comunicazione tra il gruppo corrente e le schede, altrimenti le schede non saranno aperte quando il browser si avvia e le informazioni del gruppo saranno perse dall'estensione e l'estensione smetterà di funzionare.",
+        "description": "Please enable \"Open previous windows and tabs\" in browser settings.\nThis is necessary to maintain communication between the group and the tab, otherwise the tabs will not open when the browser starts and will be lost from the addon - the addon will stop working."
     },
     "enableDebugTitle": {
         "message": "Abilita modalità DEBUG",
