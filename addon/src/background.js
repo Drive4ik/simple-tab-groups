@@ -1,5 +1,5 @@
 
-import Listeners from '/js/listeners.js\
+import Listeners, {getExtensionStartTime} from '/js/listeners.js\
 ?onExtensionStart=[{"delay":200}]\
 &tabs.onActivated\
 &tabs.onCreated\
@@ -59,7 +59,6 @@ import * as Cloud from '/js/sync/cloud/cloud.js';
 const storage = localStorage.create(Constants.MODULES.BACKGROUND);
 
 delete storage.inited;
-storage.START_TIME = Date.now();
 storage.IS_TEMPORARY = false;
 
 if (storage.enableDebug === Constants.DEBUG.AUTO) { // if debug was auto-enabled - disable on next start addon/browser
@@ -4112,6 +4111,8 @@ Listeners.runtime.onInstalled(({reason, previousVersion, temporary}) => {
 async function initializeGroupWindows(windows, currentGroupIds) {
     const log = logger.start('initializeGroupWindows windows count:', windows.length);
 
+    const EXTENSION_START_TIME = await getExtensionStartTime();
+
     let tabsToShow = [],
         tabsToHide = [],
         moveTabsToWin = {};
@@ -4159,7 +4160,7 @@ async function initializeGroupWindows(windows, currentGroupIds) {
                 }
             } else if (win.groupId) {
                 if (!tab.hidden) {
-                    if (Utils.isTabLoading(tab) || tab.url.startsWith('file:') || tab.lastAccessed > storage.START_TIME) {
+                    if (Utils.isTabLoading(tab) || tab.url.startsWith('file:') || tab.lastAccessed > EXTENSION_START_TIME) {
                         Cache.setTabGroup(tab.id, win.groupId)
                             .then(() => tab.groupId = win.groupId)
                             .catch(log.onCatch(["can't setTabGroup", tab.id, 'group', win.groupId], false));

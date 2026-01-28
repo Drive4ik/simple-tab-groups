@@ -1,6 +1,7 @@
 import './translate-help-pages.js';
 import '/js/prefixed-storage.js';
 
+import {getExtensionStartTime} from '/js/listeners.js';
 import * as Messages from '/js/messages.js';
 import backgroundSelf from '/js/background.js';
 import * as Constants from '/js/constants.js';
@@ -111,8 +112,14 @@ function onCatch(message, resultObjType, ...args) {
     }
 }
 
+async function getUpTime() {
+    const EXTENSION_START_TIME = await getExtensionStartTime();
+    return Math.ceil((Date.now() - EXTENSION_START_TIME) / 1000);
+}
+
 async function saveConsoleLogs() {
     const [
+            UP_TIME,
             platformInfo,
             extensions,
             storage,
@@ -122,6 +129,7 @@ async function saveConsoleLogs() {
             windows,
             tabs,
         ] = await Promise.all([
+            getUpTime(),
             browser.runtime.getPlatformInfo().catch(onCatch('getPlatformInfo', Object)),
             browser.management.getAll().catch(onCatch('management', Array)),
             browser.storage.local.get().catch(onCatch('storage', Object)),
@@ -165,9 +173,7 @@ async function saveConsoleLogs() {
         CRITICAL_ERRORS,
         addon: {
             version: Constants.MANIFEST.version,
-            upTime: mainStorage.START_TIME
-                ? Math.ceil((Date.now() - mainStorage.START_TIME) / 1000) + ' sec'
-                : 'unknown',
+            upTime: UP_TIME + ' sec',
             UUID: Constants.STG_BASE_URL,
             permissions: {
                 bookmarks: permissionBookmarks,

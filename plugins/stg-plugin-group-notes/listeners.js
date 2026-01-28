@@ -1,19 +1,31 @@
 
 const listeners = {};
 
-export const CUSTOM_EVENT_SCHEMES = new Map;
+const CUSTOM_EVENT_SCHEMES = new Map;
 
-export const ON_EXTENSION_START_TIME_STORAGE_KEY = '__ext_start_time';
+const ON_EXTENSION_START_TIME_STORAGE_KEY = '__ext_start_time';
+
+export async function getExtensionStartTime() {
+    const {[ON_EXTENSION_START_TIME_STORAGE_KEY]: EXTENSION_START_TIME} =
+        await browser.storage.session.get(ON_EXTENSION_START_TIME_STORAGE_KEY);
+
+    return EXTENSION_START_TIME;
+}
+
+async function setExtensionStartTime(EXTENSION_START_TIME) {
+    await browser.storage.session.set({
+        [ON_EXTENSION_START_TIME_STORAGE_KEY]: EXTENSION_START_TIME,
+    });
+}
+
 CUSTOM_EVENT_SCHEMES.set('onExtensionStart', {
     event: {
         timer: 0,
         async addListener(listener, {delay = 0} = {}) {
-            const storage = await browser.storage.session.get(ON_EXTENSION_START_TIME_STORAGE_KEY);
+            const EXTENSION_START_TIME = await getExtensionStartTime();
 
-            if (!storage[ON_EXTENSION_START_TIME_STORAGE_KEY]) {
-                await browser.storage.session.set({
-                    [ON_EXTENSION_START_TIME_STORAGE_KEY]: Date.now(),
-                });
+            if (!EXTENSION_START_TIME) {
+                await setExtensionStartTime(Date.now() + delay);
                 this.timer = self.setTimeout(listener, delay);
             }
         },
