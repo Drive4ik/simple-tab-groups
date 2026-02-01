@@ -304,7 +304,14 @@ export default {
                 </div>
 
                 <template v-if="area.disabled">
-                    <div class="mt-3 mb-3" v-html="lang('browserIsNotFirefox', [browserName])"></div>
+                    <div class="mt-3 mb-3" v-html="lang(['browserIsNotFirefox', browserName], {
+                        a: {
+                            'sync-url': {
+                                href: 'https://www.mozilla.org/firefox/sync/',
+                                target: '_blank',
+                            },
+                        },
+                    })"></div>
                     <div>
                         <a class="button is-link" href="https://www.mozilla.org/firefox/new/" target="_blank">
                             <span class="icon">

@@ -100,7 +100,7 @@
         "description": "Close the popup window after selecting a tab"
     },
     "openManageGroupsInTab": {
-        "message": "Відкривати \"Управління групами\" в новій вкладці",
+        "message": "Відкривати \"__MSG_manageGroupsTitle__\" в новій вкладці",
         "description": "Open \"Manage Groups\" in new tab"
     },
     "showConfirmDialogBeforeGroupDelete": {
@@ -266,7 +266,7 @@
         "description": "Load icon"
     },
     "selectUserGroupIconWarnText": {
-        "message": "Вибачте, Ви не можете завантажити значок в цьому вікні, але Ви можете зробити це в \"Управління групами\". Відкрити \"Управління групами\"? ",
+        "message": "Вибачте, Ви не можете завантажити значок в цьому вікні, але Ви можете зробити це в \"__MSG_manageGroupsTitle__\". Відкрити \"__MSG_manageGroupsTitle__\"? ",
         "description": "Sorry, you can't load custom icon in this popup, but you can load custom group icon in \"Manage groups\".\nOpen \"Manage groups\"?"
     },
     "setRandomColor": {
@@ -294,7 +294,7 @@
         "description": "Hotkeys"
     },
     "hotkeysDescription": {
-        "message": "Ви також можете налаштувати гарячі клавіші на сторінці <a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\"> Управління гарячими клавішами в розширеннях Firefox </a>. Вони будуть працювати на всіх вікнах і сторінках браузера.",
+        "message": "Ви також можете налаштувати гарячі клавіші на сторінці <a hotkey-url> Управління гарячими клавішами в розширеннях Firefox </a>. Вони будуть працювати на всіх вікнах і сторінках браузера.",
         "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
     },
     "addHotKeyButton": {
@@ -374,7 +374,7 @@
         "description": "Delete current group"
     },
     "hotkeyActionTitleOpenManageGroups": {
-        "message": "Відкрити \"Управління групами\"",
+        "message": "Відкрити \"__MSG_manageGroupsTitle__\"",
         "description": "Open manage groups"
     },
     "hotkeyActionTitleMoveSelectedTabsToCustomGroup": {
@@ -596,7 +596,7 @@
         "description": "files(s)"
     },
     "darkColorSchemeNotification": {
-        "message": "Для повної підтримки темної теми встановіть параметр <code>svg.context-properties.content.enabled</code> в <code>true</code> на сторінці <code>about:config</code>, <a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\" target=\"_blank\">Як це зробити?</a>",
+        "message": "Для повної підтримки темної теми встановіть параметр `svg.context-properties.content.enabled` в `true` на сторінці `about:config`, <a how-url>Як це зробити?</a>",
         "description": "Fully support the dark theme text"
     },
     "importSettingsPanoramaViewAddonTitle": {
@@ -798,7 +798,7 @@
         "description": "Tabs not created"
     },
     "showTabsWithThumbnailsInManageGroups": {
-        "message": "Показувати вкладки зі слайдами на сторінці \"Управління групами\"",
+        "message": "Показувати вкладки зі слайдами на сторінці \"__MSG_manageGroupsTitle__\"",
         "description": "Show tabs with thumbnails in \"Manage groups\" page"
     },
     "alwaysOpenTabsInContainer": {
@@ -842,8 +842,8 @@
         "description": "Pinned tabs"
     },
     "eraseAddonSettingsWarningTitle": {
-        "message": "Ця дія <b>ПОВНІСТЮ ВИДАЛЕ</b> всі існуючі налаштування і групи! <br>Вкладки не будуть затронуті.",
-        "description": "This action will <b>FULL ERASE</b> all existing settings and groups!<br>Tabs will not be affected."
+        "message": "**__MSG_warning__** Ця дія __ПОВНІСТЮ ВИДАЛЕ__ всі існуючі налаштування і групи!\nВкладки не будуть затронуті.",
+        "description": "This action will <u>FULL ERASE</u> all existing settings and groups!\nTabs will not be affected."
     },
     "clear": {
         "message": "Очистити",
@@ -978,7 +978,7 @@
         "description": "addon can't open URL:"
     },
     "helpPageOpenInContainerDesc1": {
-        "message": "Групі <strong>$groupTitle$</strong> призначено відкривати вкладки в контейнері <container-name>$containerName$</container-name>.",
+        "message": "Групі **$groupTitle$** призначено відкривати вкладки в контейнері <container-name>$containerName$</container-name>.",
         "description": "Group 'Group 1' was assigned to open tabs in Personal container.",
         "placeholders": {
             "groupTitle": {
@@ -996,7 +996,7 @@
         "description": "Another addon:"
     },
     "helpPageOpenInContainerDesc3": {
-        "message": "намагається відкрити цей URL в контейнері <container-name>$containerName$</container-name>. Перемістіть вкладку в іншу групу або забороніть аддону <strong>$addonName$</strong> виконувати цю дію.",
+        "message": "намагається відкрити цей URL в контейнері <container-name>$containerName$</container-name>. Перемістіть вкладку в іншу групу або забороніть аддону **$addonName$** виконувати цю дію.",
         "description": "tries to open this URL in Business container. Move the tab to another group or forbid the addon 'Facebook Container' to perform this action.",
         "placeholders": {
             "containerName": {
@@ -1056,7 +1056,7 @@
         "description": "excluding these containers"
     },
     "helpPageOpenInContainerExcludeContainerToGroup": {
-        "message": "Виключити контейнер <container-name>$containerName$</container-name> для групи <strong>$groupTitle$</strong>",
+        "message": "Виключити контейнер <container-name>$containerName$</container-name> для групи **$groupTitle$**",
         "description": "Exclude Personal container for group Group 1",
         "placeholders": {
             "containerName": {
@@ -1070,7 +1070,7 @@
         }
     },
     "helpPageOpenInContainerIgnoreAppForSession": {
-        "message": "Ігнорувати розширення \"<strong>$addonName$</strong>\" доки браузер не закриється",
+        "message": "Ігнорувати розширення \"**$addonName$**\" доки браузер не закриється",
         "description": "Ignore addon for session",
         "placeholders": {
             "addonName": {
@@ -1436,7 +1436,7 @@
         "description": "Use settings located locally in the current browser profile"
     },
     "browserIsNotFirefox": {
-        "message": "Ваш браузер: $browserName$, він не підтримує <a href=\"https://www.mozilla.org/firefox/sync/\" target=\"_blank\" class=\"is-underlined\">Firefox Sync</a>",
+        "message": "Ваш браузер: **$browserName$**, він не підтримує <a sync-url>__синхронізацію Firefox__</a>",
         "description": "Browser doesn't support FF sync",
         "placeholders": {
             "browserName": {

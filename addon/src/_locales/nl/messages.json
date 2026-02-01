@@ -92,7 +92,7 @@
         "description": "Close the popup window after selecting a tab"
     },
     "openManageGroupsInTab": {
-        "message": "Open \"Groepen beheren\" in nieuw tabblad",
+        "message": "Open \"__MSG_manageGroupsTitle__\" in nieuw tabblad",
         "description": "Open \"Manage Groups\" in new tab"
     },
     "showConfirmDialogBeforeGroupDelete": {
@@ -250,7 +250,7 @@
         "description": "Load icon"
     },
     "selectUserGroupIconWarnText": {
-        "message": "Sorry, je kan geen aangepast icoon laden in deze pop-up, maar je kan een aangepast groepsicoon laden via \"Groepen beheren\".\n\"Groepen beheren\" openen?",
+        "message": "Sorry, je kan geen aangepast icoon laden in deze pop-up, maar je kan een aangepast groepsicoon laden via \"__MSG_manageGroupsTitle__\".\n\"__MSG_manageGroupsTitle__\" openen?",
         "description": "Sorry, you can't load custom icon in this popup, but you can load custom group icon in \"Manage groups\".\nOpen \"Manage groups\"?"
     },
     "setRandomColor": {
@@ -278,7 +278,7 @@
         "description": "Hotkeys"
     },
     "hotkeysDescription": {
-        "message": "U kan de sneltoetsen ook configureren op de pagina <a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\">Extensiesneltoetsen in Firefox beheren</a>. Deze zullen werken in alle vensters en op alle browserpagina's.",
+        "message": "U kan de sneltoetsen ook configureren op de pagina <a hotkey-url>Extensiesneltoetsen in Firefox beheren</a>. Deze zullen werken in alle vensters en op alle browserpagina's.",
         "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
     },
     "addHotKeyButton": {
@@ -358,7 +358,7 @@
         "description": "Delete current group"
     },
     "hotkeyActionTitleOpenManageGroups": {
-        "message": "Open \"Groepen beheren\"",
+        "message": "Open \"__MSG_manageGroupsTitle__\"",
         "description": "Open manage groups"
     },
     "hotkeyActionTitleMoveSelectedTabsToCustomGroup": {
@@ -576,7 +576,7 @@
         "description": "day(s)"
     },
     "darkColorSchemeNotification": {
-        "message": "Voor een volledige ondersteuning van het donkere thema, zet u parameter <code>svg.context-properties.content.enabled</code> op <code>true</code> via de <code>about:config</code> pagina. <a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\" target=\"_blank\">Configuratie-editor voor Firefox</a>",
+        "message": "Voor een volledige ondersteuning van het donkere thema, zet u parameter `svg.context-properties.content.enabled` op `true` via de `about:config` pagina. <a how-url>Configuratie-editor voor Firefox</a>",
         "description": "Fully support the dark theme text"
     },
     "importSettingsPanoramaViewAddonTitle": {
@@ -738,7 +738,7 @@
         "description": "Tabs not created"
     },
     "showTabsWithThumbnailsInManageGroups": {
-        "message": "Toon tabs met voorbeelden op \"Groepen beheren\"-pagina",
+        "message": "Toon tabs met voorbeelden op \"__MSG_manageGroupsTitle__\"-pagina",
         "description": "Show tabs with thumbnails in \"Manage groups\" page"
     },
     "alwaysOpenTabsInContainer": {
@@ -782,8 +782,8 @@
         "description": "Pinned tabs"
     },
     "eraseAddonSettingsWarningTitle": {
-        "message": "Deze actie zal alle bestaande instellingen en groepen <b>VOLLEDIG WISSEN</b>!<br>Tabs zullen niet beïnvloed worden.",
-        "description": "This action will <b>FULL ERASE</b> all existing settings and groups!<br>Tabs will not be affected."
+        "message": "**__MSG_warning__** Deze actie zal alle bestaande instellingen en groepen __VOLLEDIG WISSEN__!\nTabs zullen niet beïnvloed worden.",
+        "description": "This action will <u>FULL ERASE</u> all existing settings and groups!\nTabs will not be affected."
     },
     "clear": {
         "message": "Wissen",
@@ -918,7 +918,7 @@
         "description": "addon can't open URL:"
     },
     "helpPageOpenInContainerDesc1": {
-        "message": "Groep <strong>$groupTitle$</strong> werd toegewezen aan geopende tabs in <container-name>$containerName$</container-name> container.",
+        "message": "Groep **$groupTitle$** werd toegewezen aan geopende tabs in <container-name>$containerName$</container-name> container.",
         "description": "Group 'Group 1' was assigned to open tabs in Personal container.",
         "placeholders": {
             "groupTitle": {
@@ -936,7 +936,7 @@
         "description": "Another addon:"
     },
     "helpPageOpenInContainerDesc3": {
-        "message": "probeert deze URL te openen in <container-name>$containerName$</container-name> container. Verplaats de tab naar een andere groep of verbied de add-on <strong>$addonName$</strong> deze actie uit te voeren.",
+        "message": "probeert deze URL te openen in <container-name>$containerName$</container-name> container. Verplaats de tab naar een andere groep of verbied de add-on **$addonName$** deze actie uit te voeren.",
         "description": "tries to open this URL in Business container. Move the tab to another group or forbid the addon 'Facebook Container' to perform this action.",
         "placeholders": {
             "containerName": {
@@ -996,7 +996,7 @@
         "description": "excluding these containers"
     },
     "helpPageOpenInContainerExcludeContainerToGroup": {
-        "message": "Sluit <container-name>$containerName$</container-name> container uit van groep <strong>$groupTitle$</strong>",
+        "message": "Sluit <container-name>$containerName$</container-name> container uit van groep **$groupTitle$**",
         "description": "Exclude Personal container for group Group 1",
         "placeholders": {
             "containerName": {
@@ -1010,7 +1010,7 @@
         }
     },
     "helpPageOpenInContainerIgnoreAppForSession": {
-        "message": "Negeer extensie \"<strong>$addonName$</strong>\" tot de browser gesloten is",
+        "message": "Negeer extensie \"**$addonName$**\" tot de browser gesloten is",
         "description": "Ignore addon for session",
         "placeholders": {
             "addonName": {

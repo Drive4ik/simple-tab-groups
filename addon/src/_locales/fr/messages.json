@@ -92,7 +92,7 @@
         "description": "Close the popup window after selecting a tab"
     },
     "openManageGroupsInTab": {
-        "message": "Ouvrir \"Gérer les groupes\" dans un nouvel onglet",
+        "message": "Ouvrir \"__MSG_manageGroupsTitle__\" dans un nouvel onglet",
         "description": "Open \"Manage Groups\" in new tab"
     },
     "showConfirmDialogBeforeGroupDelete": {
@@ -250,7 +250,7 @@
         "description": "Load icon"
     },
     "selectUserGroupIconWarnText": {
-        "message": "Désolé, vous ne pouvez pas charger d'icône personnalisée dans cette pop-up, mais vous pouvez charger une icône de groupe dans \"Gérer les groupes\".\nOuvrir \"Gérer les groupes\" ?",
+        "message": "Désolé, vous ne pouvez pas charger d'icône personnalisée dans cette pop-up, mais vous pouvez charger une icône de groupe dans \"__MSG_manageGroupsTitle__\".\nOuvrir \"__MSG_manageGroupsTitle__\" ?",
         "description": "Sorry, you can't load custom icon in this popup, but you can load custom group icon in \"Manage groups\".\nOpen \"Manage groups\"?"
     },
     "setRandomColor": {
@@ -278,7 +278,7 @@
         "description": "Hotkeys"
     },
     "hotkeysDescription": {
-        "message": "Vous pouvez aussi configurer les raccourcis sur la page <a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\">Gérer les raccourcis d'extension</a>. Ceci s'appliquera à toutes les fenêtres et toutes les pages du navigateur.",
+        "message": "Vous pouvez aussi configurer les raccourcis sur la page <a hotkey-url>Gérer les raccourcis d'extension</a>. Ceci s'appliquera à toutes les fenêtres et toutes les pages du navigateur.",
         "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
     },
     "addHotKeyButton": {
@@ -358,7 +358,7 @@
         "description": "Delete current group"
     },
     "hotkeyActionTitleOpenManageGroups": {
-        "message": "Ouvrir \"Gérer les groupes\"",
+        "message": "Ouvrir \"__MSG_manageGroupsTitle__\"",
         "description": "Open manage groups"
     },
     "hotkeyActionTitleMoveSelectedTabsToCustomGroup": {
@@ -576,7 +576,7 @@
         "description": "day(s)"
     },
     "darkColorSchemeNotification": {
-        "message": "Pour activer complétement le thème sombre, activez le paramètre <code>svg.context-properties.content.enabled</code> en lui mettant la valeur <code>true</code> sur la page de configuration <code>about:config</code>. <a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\" target=\"_blank\">Comment faire ?</a>",
+        "message": "Pour activer complétement le thème sombre, activez le paramètre `svg.context-properties.content.enabled` en lui mettant la valeur `true` sur la page de configuration `about:config`. <a how-url>Comment faire ?</a>",
         "description": "Fully support the dark theme text"
     },
     "importSettingsPanoramaViewAddonTitle": {
@@ -738,7 +738,7 @@
         "description": "Tabs not created"
     },
     "showTabsWithThumbnailsInManageGroups": {
-        "message": "Afficher les onglets avec des vignettes dans la page \"Gérer les groupes\"",
+        "message": "Afficher les onglets avec des vignettes dans la page \"__MSG_manageGroupsTitle__\"",
         "description": "Show tabs with thumbnails in \"Manage groups\" page"
     },
     "alwaysOpenTabsInContainer": {
@@ -782,8 +782,8 @@
         "description": "Pinned tabs"
     },
     "eraseAddonSettingsWarningTitle": {
-        "message": "Cette action va <b>EFFACER TOTALEMENT</b> tous les paramètres et les groupes existants !<br>Les onglets ne seront pas affectés.",
-        "description": "This action will <b>FULL ERASE</b> all existing settings and groups!<br>Tabs will not be affected."
+        "message": "**__MSG_warning__** Cette action va __EFFACER TOTALEMENT__ tous les paramètres et les groupes existants !\nLes onglets ne seront pas affectés.",
+        "description": "This action will <u>FULL ERASE</u> all existing settings and groups!\nTabs will not be affected."
     },
     "clear": {
         "message": "Effacer",
@@ -918,7 +918,7 @@
         "description": "addon can't open URL:"
     },
     "helpPageOpenInContainerDesc1": {
-        "message": "Le groupe <strong>$groupTitle$</strong> a été défini pour ouvrir les onglets dans le contexte <container-name>$containerName$</container-name>.",
+        "message": "Le groupe **$groupTitle$** a été défini pour ouvrir les onglets dans le contexte <container-name>$containerName$</container-name>.",
         "description": "Group 'Group 1' was assigned to open tabs in Personal container.",
         "placeholders": {
             "groupTitle": {
@@ -936,7 +936,7 @@
         "description": "Another addon:"
     },
     "helpPageOpenInContainerDesc3": {
-        "message": ", tente d'ouvrir cette URL dans le contexte <container-name>$containerName$</container-name>. Déplacez l'onglet dans un autre groupe ou interdisez à l'extension <strong>$addonName$</strong> de procéder à cette action.",
+        "message": ", tente d'ouvrir cette URL dans le contexte <container-name>$containerName$</container-name>. Déplacez l'onglet dans un autre groupe ou interdisez à l'extension **$addonName$** de procéder à cette action.",
         "description": "tries to open this URL in Business container. Move the tab to another group or forbid the addon 'Facebook Container' to perform this action.",
         "placeholders": {
             "containerName": {
@@ -996,7 +996,7 @@
         "description": "excluding these containers"
     },
     "helpPageOpenInContainerExcludeContainerToGroup": {
-        "message": "Exclure le contexte <container-name>$containerName$</container-name> du groupe <strong>$groupTitle$</strong>",
+        "message": "Exclure le contexte <container-name>$containerName$</container-name> du groupe **$groupTitle$**",
         "description": "Exclude Personal container for group Group 1",
         "placeholders": {
             "containerName": {
@@ -1010,7 +1010,7 @@
         }
     },
     "helpPageOpenInContainerIgnoreAppForSession": {
-        "message": "Ignorer l'extension \"<strong>$addonName$</strong>\" jusqu'à la fermeture du navigateur",
+        "message": "Ignorer l'extension \"**$addonName$**\" jusqu'à la fermeture du navigateur",
         "description": "Ignore addon for session",
         "placeholders": {
             "addonName": {

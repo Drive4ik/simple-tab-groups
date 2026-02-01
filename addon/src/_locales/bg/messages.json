@@ -92,7 +92,7 @@
         "description": "Close the popup window after selecting a tab"
     },
     "openManageGroupsInTab": {
-        "message": "Отваряне на „Управление на групи“ в раздел",
+        "message": "Отваряне на „__MSG_manageGroupsTitle__“ в раздел",
         "description": "Open \"Manage Groups\" in new tab"
     },
     "showConfirmDialogBeforeGroupDelete": {
@@ -278,7 +278,7 @@
         "description": "Hotkeys"
     },
     "hotkeysDescription": {
-        "message": "Също така можете да настроите клавишни комбинации на страницата <a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\">Управление на клавишни комбинации на разширения</a>. Ще работят във всички прозорци и на всички страници.",
+        "message": "Също така можете да настроите клавишни комбинации на страницата <a hotkey-url>Управление на клавишни комбинации на разширения</a>. Ще работят във всички прозорци и на всички страници.",
         "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
     },
     "addHotKeyButton": {
@@ -358,7 +358,7 @@
         "description": "Delete current group"
     },
     "hotkeyActionTitleOpenManageGroups": {
-        "message": "Отваря управлението на групи",
+        "message": "Отваря \"__MSG_manageGroupsTitle__\"",
         "description": "Open manage groups"
     },
     "hotkeyActionTitleMoveSelectedTabsToCustomGroup": {
@@ -576,7 +576,7 @@
         "description": "day(s)"
     },
     "darkColorSchemeNotification": {
-        "message": "За пълна поддръжка на тъмната тема трябва да зададете на свойството <code>svg.context-properties.content.enabled</code> стойност <code>true</code> в страницата на <code>about:config</code>. <a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\" target=\"_blank\">Как да го направя?</a>",
+        "message": "За пълна поддръжка на тъмната тема трябва да зададете на свойството `svg.context-properties.content.enabled` стойност `true` в страницата на `about:config`. <a how-url>Как да го направя?</a>",
         "description": "Fully support the dark theme text"
     },
     "importSettingsPanoramaViewAddonTitle": {
@@ -738,7 +738,7 @@
         "description": "Tabs not created"
     },
     "showTabsWithThumbnailsInManageGroups": {
-        "message": "Представяне на сайтовете с миниатюри в страницата „Управление на групи“",
+        "message": "Представяне на сайтовете с миниатюри в страницата „__MSG_manageGroupsTitle__“",
         "description": "Show tabs with thumbnails in \"Manage groups\" page"
     },
     "alwaysOpenTabsInContainer": {
@@ -782,8 +782,8 @@
         "description": "Pinned tabs"
     },
     "eraseAddonSettingsWarningTitle": {
-        "message": "Това действие ще <b>ЗАЛИЧИ НАПЪЛНО</b> текущите групи и настройки на добавката!<br>Разделите ще останат непокътнати.",
-        "description": "This action will <b>FULL ERASE</b> all existing settings and groups!<br>Tabs will not be affected."
+        "message": "**__MSG_warning__** Това действие ще __ЗАЛИЧИ НАПЪЛНО__ текущите групи и настройки на добавката!\nРазделите ще останат непокътнати.",
+        "description": "This action will <u>FULL ERASE</u> all existing settings and groups!\nTabs will not be affected."
     },
     "clear": {
         "message": "Изчистване",
@@ -918,7 +918,7 @@
         "description": "addon can't open URL:"
     },
     "helpPageOpenInContainerDesc1": {
-        "message": "Групата <strong>$groupTitle$</strong> е настроена да отваря раздели в изолатор <container-name>$containerName$</container-name>",
+        "message": "Групата **$groupTitle$** е настроена да отваря раздели в изолатор <container-name>$containerName$</container-name>",
         "description": "Group 'Group 1' was assigned to open tabs in Personal container.",
         "placeholders": {
             "groupTitle": {
@@ -936,7 +936,7 @@
         "description": "Another addon:"
     },
     "helpPageOpenInContainerDesc3": {
-        "message": "опитва да отвори същия адрес в изолатор <container-name>$containerName$</container-name>. Или преместете раздела в друга група, или забранете на добавката <strong>$addonName$</strong> да извършва това действие.",
+        "message": "опитва да отвори същия адрес в изолатор <container-name>$containerName$</container-name>. Или преместете раздела в друга група, или забранете на добавката **$addonName$** да извършва това действие.",
         "description": "tries to open this URL in Business container. Move the tab to another group or forbid the addon 'Facebook Container' to perform this action.",
         "placeholders": {
             "containerName": {
@@ -996,7 +996,7 @@
         "description": "excluding these containers"
     },
     "helpPageOpenInContainerExcludeContainerToGroup": {
-        "message": "С изключение на изолатора <container-name>$containerName$</container-name> за група <strong>$groupTitle$</strong>",
+        "message": "С изключение на изолатора <container-name>$containerName$</container-name> за група **$groupTitle$**",
         "description": "Exclude Personal container for group Group 1",
         "placeholders": {
             "containerName": {
@@ -1010,7 +1010,7 @@
         }
     },
     "helpPageOpenInContainerIgnoreAppForSession": {
-        "message": "Добавката „<strong>$addonName$</strong>“ да бъде пренебрегната до затваряне на четеца",
+        "message": "Добавката „**$addonName$**“ да бъде пренебрегната до затваряне на четеца",
         "description": "Ignore addon for session",
         "placeholders": {
             "addonName": {

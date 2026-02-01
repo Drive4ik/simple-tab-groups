@@ -84,7 +84,7 @@
         "description": "Close popup after changing group"
     },
     "openManageGroupsInTab": {
-        "message": "Άνοιγμα \"Διαχείριση Groups\" σε νέο tab",
+        "message": "Άνοιγμα \"__MSG_manageGroupsTitle__\" σε νέο tab",
         "description": "Open \"Manage Groups\" in new tab"
     },
     "showConfirmDialogBeforeGroupDelete": {
@@ -242,7 +242,7 @@
         "description": "Load icon"
     },
     "selectUserGroupIconWarnText": {
-        "message": "Δεν μπορείτε να φορτώσετε custom εικονίδιο εδώ, αλλά μπορείτε να φορτώσετε custom εικονίδιο για group στην \"Διαχείριση groups\".\nΝα ανοίξει η \"Διαχείριση groups\"?",
+        "message": "Δεν μπορείτε να φορτώσετε custom εικονίδιο εδώ, αλλά μπορείτε να φορτώσετε custom εικονίδιο για group στην \"__MSG_manageGroupsTitle__\".\nΝα ανοίξει η \"__MSG_manageGroupsTitle__\"?",
         "description": "Sorry, you can't load custom icon in this popup, but you can load custom group icon in \"Manage groups\".\nOpen \"Manage groups\"?"
     },
     "setRandomColor": {
@@ -342,7 +342,7 @@
         "description": "Delete current group"
     },
     "hotkeyActionTitleOpenManageGroups": {
-        "message": "Άνοιγμα Διαχείρισης groups",
+        "message": "Άνοιγμα \"__MSG_manageGroupsTitle__\"",
         "description": "Open manage groups"
     },
     "hotkeyActionTitleMoveSelectedTabsToCustomGroup": {
@@ -532,7 +532,7 @@
         "description": "day(s)"
     },
     "darkColorSchemeNotification": {
-        "message": "Για πλήρη υποστήριξη του dark theme, ενεργοποιείστε την <code>svg.context-properties.content.enabled</code> παράμετρο σε <code>true</code> στην <code>about:config</code> σελίδα. <a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\" target=\"_blank\">How to do it?</a>",
+        "message": "Για πλήρη υποστήριξη του dark theme, ενεργοποιείστε την `svg.context-properties.content.enabled` παράμετρο σε `true` στην `about:config` σελίδα. <a how-url>How to do it?</a>",
         "description": "Fully support the dark theme text"
     },
     "importSettingsPanoramaViewAddonTitle": {

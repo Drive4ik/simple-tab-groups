@@ -154,7 +154,7 @@ export default {
             <span class="has-text-weight-bold" v-text="lang('deleteAllAddonDataAndSettingsBeforeRestoringBackup')"></span>
         </label>
         <br>
-        <span class="has-text-danger has-text-weight-bold" v-html="lang('eraseAddonSettingsWarningTitle')"></span>
+        <span class="has-text-danger has-text-weight-bold white-space-pre-line" v-html="lang('eraseAddonSettingsWarningTitle')"></span>
     </div>
 
     <hr/>

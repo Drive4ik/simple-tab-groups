@@ -76,7 +76,7 @@
         "description": "Close popup after changing group"
     },
     "openManageGroupsInTab": {
-        "message": "Öffne \"Gruppierungen verwalten\" in einem neuen Tab.",
+        "message": "Öffne \"__MSG_manageGroupsTitle__\" in einem neuen Tab.",
         "description": "Open \"Manage Groups\" in new tab"
     },
     "exportAddonSettingsButton": {

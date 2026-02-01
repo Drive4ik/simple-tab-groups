@@ -717,8 +717,11 @@ export default {
             if (this.permissions.browserSettings) {
                 await this.optionsLoadPromise;
 
-                const rawSettings = await BrowserSettings.get();
-                await this.applyRawBrowserSettings(rawSettings);
+                // update/set options.browserSettings only if it doesn't exist
+                if (!Object.keys(this.options.browserSettings).length) {
+                    const rawSettings = await BrowserSettings.get();
+                    await this.applyRawBrowserSettings(rawSettings);
+                }
             }
         },
 
@@ -825,7 +828,14 @@ export default {
                     </select>
                 </div>
             </div>
-            <div class="has-text-warning show-on-dark-scheme" v-html="lang('darkColorSchemeNotification')"></div>
+            <div class="has-text-warning show-on-dark-scheme" v-html="lang('darkColorSchemeNotification', {
+                a: {
+                    'how-url': {
+                        href: 'https://support.mozilla.org/kb/about-config-editor-firefox',
+                        target: '_blank',
+                    },
+                },
+            })"></div>
         </div>
 
         <div class="field">
@@ -1068,7 +1078,14 @@ export default {
 
     <div v-show="section === SECTION_HOTKEYS">
         <label class="label" v-text="lang('hotkeysTitle')"></label>
-        <div class="block" v-html="lang('hotkeysDescription')"></div>
+        <div class="block" v-html="lang('hotkeysDescription', {
+            a: {
+                'hotkey-url': {
+                    href: 'https://support.mozilla.org/kb/manage-extension-shortcuts-firefox',
+                    target: '_blank',
+                },
+            },
+        })"></div>
         <div class="block hotkeys">
             <div class="field is-grouped" v-for="(hotkey, hotkeyIndex) in options.hotkeys" :key="hotkeyIndex">
                 <div class="control">
@@ -1392,10 +1409,7 @@ export default {
         <hr>
 
         <label class="label" v-text="lang('deleteAllAddonDataAndSettings')"></label>
-        <div class="field has-text-weight-bold has-text-danger">
-            <span v-text="lang('warning')"></span>
-            <span v-html="lang('eraseAddonSettingsWarningTitle')"></span>
-        </div>
+        <div class="field has-text-weight-bold has-text-danger white-space-pre-line" v-html="lang('eraseAddonSettingsWarningTitle')"></div>
         <div class="field is-grouped is-align-items-center">
             <div class="control">
                 <button @click="showClearAddonConfirmPopup = true" class="button is-danger">

@@ -92,7 +92,7 @@
         "description": "Close the popup window after selecting a tab"
     },
     "openManageGroupsInTab": {
-        "message": "Otevřít \"Správu skupin\" v novém panelu",
+        "message": "Otevřít \"__MSG_manageGroupsTitle__\" v novém panelu",
         "description": "Open \"Manage Groups\" in new tab"
     },
     "showConfirmDialogBeforeGroupDelete": {
@@ -250,7 +250,7 @@
         "description": "Load icon"
     },
     "selectUserGroupIconWarnText": {
-        "message": "Omlouváme se, ale v tomto vyskakovacím okně nelze nahrát vlastní ikonu skupiny. Je možné ji nahrát ve \"Správě skupin\".\nOtevřít \"Správu skupin\"?",
+        "message": "Omlouváme se, ale v tomto vyskakovacím okně nelze nahrát vlastní ikonu skupiny. Je možné ji nahrát ve \"__MSG_manageGroupsTitle__\".\nOtevřít \"__MSG_manageGroupsTitle__\"?",
         "description": "Sorry, you can't load custom icon in this popup, but you can load custom group icon in \"Manage groups\".\nOpen \"Manage groups\"?"
     },
     "setRandomColor": {
@@ -278,7 +278,7 @@
         "description": "Hotkeys"
     },
     "hotkeysDescription": {
-        "message": "Klávesové zkratky lze také nastavit <a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\">ve správě doplňků ve Firefoxu.</a> Tyto zkratky fungují na všech stránkách.",
+        "message": "Klávesové zkratky lze také nastavit <a hotkey-url>ve správě doplňků ve Firefoxu.</a> Tyto zkratky fungují na všech stránkách.",
         "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
     },
     "addHotKeyButton": {
@@ -358,7 +358,7 @@
         "description": "Delete current group"
     },
     "hotkeyActionTitleOpenManageGroups": {
-        "message": "Otevřít správu skupin",
+        "message": "Otevřít \"__MSG_manageGroupsTitle__\"",
         "description": "Open manage groups"
     },
     "hotkeyActionTitleMoveSelectedTabsToCustomGroup": {
@@ -576,7 +576,7 @@
         "description": "day(s)"
     },
     "darkColorSchemeNotification": {
-        "message": "Pro plnou podporu tmavého tématu je potřeba přepnout parametr <code>svg.context-properties.content.enabled</code> na <code>true</code> na stránce <code>about:config</code>. <a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\" target=\"_blank\">Jak na to?</a>",
+        "message": "Pro plnou podporu tmavého tématu je potřeba přepnout parametr `svg.context-properties.content.enabled` na `true` na stránce `about:config`. <a how-url>Jak na to?</a>",
         "description": "Fully support the dark theme text"
     },
     "importSettingsPanoramaViewAddonTitle": {
@@ -738,7 +738,7 @@
         "description": "Tabs not created"
     },
     "showTabsWithThumbnailsInManageGroups": {
-        "message": "Ukázat náhledy panelů ve \"Správě skupin\"",
+        "message": "Ukázat náhledy panelů ve \"__MSG_manageGroupsTitle__\"",
         "description": "Show tabs with thumbnails in \"Manage groups\" page"
     },
     "alwaysOpenTabsInContainer": {
@@ -782,8 +782,8 @@
         "description": "Pinned tabs"
     },
     "eraseAddonSettingsWarningTitle": {
-        "message": "Tato akce <b>ZCELA VYMAŽE</b> všechna stávající nastavení a skupiny.<br>Panely nebudou ovlivněny.",
-        "description": "This action will <b>FULL ERASE</b> all existing settings and groups!<br>Tabs will not be affected."
+        "message": "**__MSG_warning__** Tato akce __ZCELA VYMAŽE__ všechna stávající nastavení a skupiny.\nPanely nebudou ovlivněny.",
+        "description": "This action will <u>FULL ERASE</u> all existing settings and groups!\nTabs will not be affected."
     },
     "clear": {
         "message": "Vymazat",
@@ -918,7 +918,7 @@
         "description": "addon can't open URL:"
     },
     "helpPageOpenInContainerDesc1": {
-        "message": "Skupina <strong>$groupTitle$</strong> byla určena k otvíraní panelů v kontejneru <container-name>$containerName$</container-name>.",
+        "message": "Skupina **$groupTitle$** byla určena k otvíraní panelů v kontejneru <container-name>$containerName$</container-name>.",
         "description": "Group 'Group 1' was assigned to open tabs in Personal container.",
         "placeholders": {
             "groupTitle": {
@@ -936,7 +936,7 @@
         "description": "Another addon:"
     },
     "helpPageOpenInContainerDesc3": {
-        "message": "zkouší otevřít tuto URL adresu v kontejneru <container-name>$containerName$</container-name>. Přesuňte panel do jiné skupiny nebo zakažte doplňku <strong>$addonName$</strong> provádět tuto akci.",
+        "message": "zkouší otevřít tuto URL adresu v kontejneru <container-name>$containerName$</container-name>. Přesuňte panel do jiné skupiny nebo zakažte doplňku **$addonName$** provádět tuto akci.",
         "description": "tries to open this URL in Business container. Move the tab to another group or forbid the addon 'Facebook Container' to perform this action.",
         "placeholders": {
             "containerName": {
@@ -996,7 +996,7 @@
         "description": "excluding these containers"
     },
     "helpPageOpenInContainerExcludeContainerToGroup": {
-        "message": "Vyloučit kontejner <container-name>$containerName$</container-name> pro skupinu <strong>$groupTitle$</strong>",
+        "message": "Vyloučit kontejner <container-name>$containerName$</container-name> pro skupinu **$groupTitle$**",
         "description": "Exclude Personal container for group Group 1",
         "placeholders": {
             "containerName": {
@@ -1010,7 +1010,7 @@
         }
     },
     "helpPageOpenInContainerIgnoreAppForSession": {
-        "message": "Ignorovat rozšíření \"<strong>$addonName$</strong>\" dokud se prohlížeč nevypne",
+        "message": "Ignorovat rozšíření \"**$addonName$**\" dokud se prohlížeč nevypne",
         "description": "Ignore addon for session",
         "placeholders": {
             "addonName": {

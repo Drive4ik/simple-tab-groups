@@ -92,7 +92,7 @@
         "description": "Close the popup window after selecting a tab"
     },
     "openManageGroupsInTab": {
-        "message": "[グループの管理] を新しいタブで開く",
+        "message": "[__MSG_manageGroupsTitle__] を新しいタブで開く",
         "description": "Open \"Manage Groups\" in new tab"
     },
     "showConfirmDialogBeforeGroupDelete": {
@@ -250,7 +250,7 @@
         "description": "Load icon"
     },
     "selectUserGroupIconWarnText": {
-        "message": "カスタムアイコンを読み込めませんでした。[グループの管理] によってグループアイコンのカスタマイズが可能です。\n[グループの管理] を開きますか？",
+        "message": "カスタムアイコンを読み込めませんでした。[__MSG_manageGroupsTitle__] によってグループアイコンのカスタマイズが可能です。\n[__MSG_manageGroupsTitle__] を開きますか？",
         "description": "Sorry, you can't load custom icon in this popup, but you can load custom group icon in \"Manage groups\".\nOpen \"Manage groups\"?"
     },
     "setRandomColor": {
@@ -278,7 +278,7 @@
         "description": "Hotkeys"
     },
     "hotkeysDescription": {
-        "message": "ホットキーは、<a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\">Firefox のショートカットキーの管理</a> ページでも設定できます。これらはすべてのウィンドウとブラウザーページで動作します。",
+        "message": "ホットキーは、<a hotkey-url>Firefox のショートカットキーの管理</a> ページでも設定できます。これらはすべてのウィンドウとブラウザーページで動作します。",
         "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
     },
     "addHotKeyButton": {
@@ -358,7 +358,7 @@
         "description": "Delete current group"
     },
     "hotkeyActionTitleOpenManageGroups": {
-        "message": "グループの管理を開く",
+        "message": "__MSG_manageGroupsTitle__を開く",
         "description": "Open manage groups"
     },
     "hotkeyActionTitleMoveSelectedTabsToCustomGroup": {
@@ -576,7 +576,7 @@
         "description": "day(s)"
     },
     "darkColorSchemeNotification": {
-        "message": "ダークテーマをフルサポートにするために <code>svg.context-properties.content.enabled</code> のパラメータを <code>true</code> へ変更してください <code>about:config</code>. <a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\" target=\"_blank\">How to do it?</a>",
+        "message": "ダークテーマをフルサポートにするために `svg.context-properties.content.enabled` のパラメータを `true` へ変更してください `about:config`. <a how-url>How to do it?</a>",
         "description": "Fully support the dark theme text"
     },
     "importSettingsPanoramaViewAddonTitle": {
@@ -738,7 +738,7 @@
         "description": "Tabs not created"
     },
     "showTabsWithThumbnailsInManageGroups": {
-        "message": "[グループの管理] ページでタブのサムネイルを表示する",
+        "message": "[__MSG_manageGroupsTitle__] ページでタブのサムネイルを表示する",
         "description": "Show tabs with thumbnails in \"Manage groups\" page"
     },
     "alwaysOpenTabsInContainer": {
@@ -782,8 +782,8 @@
         "description": "Pinned tabs"
     },
     "eraseAddonSettingsWarningTitle": {
-        "message": "全ての設定とグループを <b>完全消去</b> します。<br>タブは影響を受けません",
-        "description": "This action will <b>FULL ERASE</b> all existing settings and groups!<br>Tabs will not be affected."
+        "message": "**__MSG_warning__** 全ての設定とグループを __完全消去__ します。\nタブは影響を受けません",
+        "description": "This action will <u>FULL ERASE</u> all existing settings and groups!\nTabs will not be affected."
     },
     "clear": {
         "message": "消去",
@@ -918,7 +918,7 @@
         "description": "addon can't open URL:"
     },
     "helpPageOpenInContainerDesc1": {
-        "message": "<strong>$groupTitle$</strong> グループが <container-name>$containerName$</container-name> コンテナー内の開いたタブに割り当てられました。",
+        "message": "**$groupTitle$** グループが <container-name>$containerName$</container-name> コンテナー内の開いたタブに割り当てられました。",
         "description": "Group 'Group 1' was assigned to open tabs in Personal container.",
         "placeholders": {
             "groupTitle": {
@@ -936,7 +936,7 @@
         "description": "Another addon:"
     },
     "helpPageOpenInContainerDesc3": {
-        "message": "この URL を <container-name>$containerName$</container-name> コンテナーに開こうとしています。タブを別のグループへ移動するか、アドオン <strong>$addonName$</strong> のこのアクションを禁止してください。",
+        "message": "この URL を <container-name>$containerName$</container-name> コンテナーに開こうとしています。タブを別のグループへ移動するか、アドオン **$addonName$** のこのアクションを禁止してください。",
         "description": "tries to open this URL in Business container. Move the tab to another group or forbid the addon 'Facebook Container' to perform this action.",
         "placeholders": {
             "containerName": {
@@ -996,7 +996,7 @@
         "description": "excluding these containers"
     },
     "helpPageOpenInContainerExcludeContainerToGroup": {
-        "message": "<strong>$groupTitle$</strong> グループの <container-name>$containerName$</container-name> コンテナーを除外する",
+        "message": "**$groupTitle$** グループの <container-name>$containerName$</container-name> コンテナーを除外する",
         "description": "Exclude Personal container for group Group 1",
         "placeholders": {
             "containerName": {
@@ -1010,7 +1010,7 @@
         }
     },
     "helpPageOpenInContainerIgnoreAppForSession": {
-        "message": "ブラウザを閉じるまで拡張機能「<strong>$addonName$</strong>」を無視します",
+        "message": "ブラウザを閉じるまで拡張機能「**$addonName$**」を無視します",
         "description": "Ignore addon for session",
         "placeholders": {
             "addonName": {

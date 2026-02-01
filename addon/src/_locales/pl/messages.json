@@ -92,7 +92,7 @@
         "description": "Close the popup window after selecting a tab"
     },
     "openManageGroupsInTab": {
-        "message": "Otwórz \"Menadżer grup\" w nowej karcie",
+        "message": "Otwórz \"__MSG_manageGroupsTitle__\" w nowej karcie",
         "description": "Open \"Manage Groups\" in new tab"
     },
     "showConfirmDialogBeforeGroupDelete": {
@@ -250,7 +250,7 @@
         "description": "Load icon"
     },
     "selectUserGroupIconWarnText": {
-        "message": "Niestety, nie możesz załadować niestandardowej ikony w tym okienku, ale możesz załadować niestandardową ikonę grupy w opcji \"Zarządzaj grupami\". \nOtworzyć \"Zarządzaj grupami\"?",
+        "message": "Niestety, nie możesz załadować niestandardowej ikony w tym okienku, ale możesz załadować niestandardową ikonę grupy w opcji \"__MSG_manageGroupsTitle__\". \nOtworzyć \"__MSG_manageGroupsTitle__\"?",
         "description": "Sorry, you can't load custom icon in this popup, but you can load custom group icon in \"Manage groups\".\nOpen \"Manage groups\"?"
     },
     "setRandomColor": {
@@ -278,7 +278,7 @@
         "description": "Hotkeys"
     },
     "hotkeysDescription": {
-        "message": "Możesz również skonfigurować skróty klawiszowe na stronie <a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\">Zarządzanie skrótami klawiaturowymi w Firefox</a>. Będą one działać we wszystkich oknach i stronach przeglądarki.",
+        "message": "Możesz również skonfigurować skróty klawiszowe na stronie <a hotkey-url>Zarządzanie skrótami klawiaturowymi w Firefox</a>. Będą one działać we wszystkich oknach i stronach przeglądarki.",
         "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
     },
     "addHotKeyButton": {
@@ -358,7 +358,7 @@
         "description": "Delete current group"
     },
     "hotkeyActionTitleOpenManageGroups": {
-        "message": "Otwórz zarządzanie grupami",
+        "message": "Otwórz \"__MSG_manageGroupsTitle__\"",
         "description": "Open manage groups"
     },
     "hotkeyActionTitleMoveSelectedTabsToCustomGroup": {
@@ -576,7 +576,7 @@
         "description": "day(s)"
     },
     "darkColorSchemeNotification": {
-        "message": "Aby uzyskać pełne wsparcie ciemnego motywu, ustaw parametr <code>svg.context-properties.content.enabled</code>na <code>true</code> w <code>about:config</config>. <a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\" target=\"_blank\">Jak to zrobić?</a>",
+        "message": "Aby uzyskać pełne wsparcie ciemnego motywu, ustaw parametr `svg.context-properties.content.enabled` na `true` w `about:config`. <a how-url>Jak to zrobić?</a>",
         "description": "Fully support the dark theme text"
     },
     "importSettingsPanoramaViewAddonTitle": {
@@ -738,7 +738,7 @@
         "description": "Tabs not created"
     },
     "showTabsWithThumbnailsInManageGroups": {
-        "message": "Pokaż karty wraz z miniaturkami na stronie \"Zarządzanie grupami\"",
+        "message": "Pokaż karty wraz z miniaturkami na stronie \"__MSG_manageGroupsTitle__\"",
         "description": "Show tabs with thumbnails in \"Manage groups\" page"
     },
     "alwaysOpenTabsInContainer": {
@@ -782,8 +782,8 @@
         "description": "Pinned tabs"
     },
     "eraseAddonSettingsWarningTitle": {
-        "message": "Akcja <b>USUNIE</b> wszystkie grupy oraz ustawienia.<br>Karty pozostaną bez zmian.",
-        "description": "This action will <b>FULL ERASE</b> all existing settings and groups!<br>Tabs will not be affected."
+        "message": "**__MSG_warning__** Akcja __USUNIE__ wszystkie grupy oraz ustawienia.\nKarty pozostaną bez zmian.",
+        "description": "This action will <u>FULL ERASE</u> all existing settings and groups!\nTabs will not be affected."
     },
     "clear": {
         "message": "Wyczyść",
@@ -918,7 +918,7 @@
         "description": "addon can't open URL:"
     },
     "helpPageOpenInContainerDesc1": {
-        "message": "Grupa <strong>$groupTitle$</strong> została przypisana do otwartych kart w kontekście <container-name>$containerName$</container-name>.",
+        "message": "Grupa **$groupTitle$** została przypisana do otwartych kart w kontekście <container-name>$containerName$</container-name>.",
         "description": "Group 'Group 1' was assigned to open tabs in Personal container.",
         "placeholders": {
             "groupTitle": {
@@ -936,7 +936,7 @@
         "description": "Another addon:"
     },
     "helpPageOpenInContainerDesc3": {
-        "message": "próbuje otworzyć ten adres w kontekście <container-name>$containerName$</container-name>. Przenieś kartę do innej grupy albo zabroń rozszerzeniu <strong>$addonName$</strong> wykonania tej akcji.",
+        "message": "próbuje otworzyć ten adres w kontekście <container-name>$containerName$</container-name>. Przenieś kartę do innej grupy albo zabroń rozszerzeniu **$addonName$** wykonania tej akcji.",
         "description": "tries to open this URL in Business container. Move the tab to another group or forbid the addon 'Facebook Container' to perform this action.",
         "placeholders": {
             "containerName": {
@@ -996,7 +996,7 @@
         "description": "excluding these containers"
     },
     "helpPageOpenInContainerExcludeContainerToGroup": {
-        "message": "Wyklucz kontekst  <container-name>$containerName$</container-name> dla grupy <strong>$groupTitle$</strong>",
+        "message": "Wyklucz kontekst  <container-name>$containerName$</container-name> dla grupy **$groupTitle$**",
         "description": "Exclude Personal container for group Group 1",
         "placeholders": {
             "containerName": {
@@ -1010,7 +1010,7 @@
         }
     },
     "helpPageOpenInContainerIgnoreAppForSession": {
-        "message": "Ignoruj rozszerzenie \"<strong>$addonName$</strong>\" dopóki przeglądarka nie zostanie zamknieta",
+        "message": "Ignoruj rozszerzenie \"**$addonName$**\" dopóki przeglądarka nie zostanie zamknieta",
         "description": "Ignore addon for session",
         "placeholders": {
             "addonName": {

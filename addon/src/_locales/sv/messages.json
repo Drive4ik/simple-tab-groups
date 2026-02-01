@@ -84,7 +84,7 @@
         "description": "Close popup after changing group"
     },
     "openManageGroupsInTab": {
-        "message": "Öppna \"Gruppöversikt\" i en ny flik",
+        "message": "Öppna \"__MSG_manageGroupsTitle__\" i en ny flik",
         "description": "Open \"Manage Groups\" in new tab"
     },
     "showConfirmDialogBeforeGroupDelete": {
@@ -224,7 +224,7 @@
         "description": "Load icon"
     },
     "selectUserGroupIconWarnText": {
-        "message": "Tyvärr, du kan inte välja egna ikoner här, men du kan välja en egen gruppikon i \"Gruppöversikt\".\n Öppna \"Gruppöversikt\"?",
+        "message": "Tyvärr, du kan inte välja egna ikoner här, men du kan välja en egen gruppikon i \"__MSG_manageGroupsTitle__\".\n Öppna \"__MSG_manageGroupsTitle__\"?",
         "description": "Sorry, you can't load custom icon in this popup, but you can load custom group icon in \"Manage groups\".\nOpen \"Manage groups\"?"
     },
     "setRandomColor": {
@@ -300,7 +300,7 @@
         "description": "Delete current group"
     },
     "hotkeyActionTitleOpenManageGroups": {
-        "message": "Visa Gruppöversikt",
+        "message": "Visa \"__MSG_manageGroupsTitle__\"",
         "description": "Open manage groups"
     },
     "whatsWrongMessage": {
@@ -478,7 +478,7 @@
         "description": "day(s)"
     },
     "darkColorSchemeNotification": {
-        "message": "För att det mörka temat skall visas korrekt överallt, sätt <code>svg.context-properties.content.enabled</code>-inställningen till <code>true</code> på <code>about:config</code>-sidan. Klicka <a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\" target=\"_blank\">här</a> för ytterligare instruktioner.",
+        "message": "För att det mörka temat skall visas korrekt överallt, sätt `svg.context-properties.content.enabled`-inställningen till `true` på `about:config`-sidan. Klicka <a how-url>här</a> för ytterligare instruktioner.",
         "description": "Fully support the dark theme text"
     },
     "importSettingsPanoramaViewAddonTitle": {

@@ -84,7 +84,7 @@
         "description": "Close popup after changing group"
     },
     "openManageGroupsInTab": {
-        "message": "Buka \"Kelola Grup\" di tab baru",
+        "message": "Buka \"__MSG_manageGroupsTitle__\" di tab baru",
         "description": "Open \"Manage Groups\" in new tab"
     },
     "showConfirmDialogBeforeGroupDelete": {
@@ -242,7 +242,7 @@
         "description": "Load icon"
     },
     "selectUserGroupIconWarnText": {
-        "message": "Maaf, Anda tidak dapat memuat ikon khusus di tampilan ini, tetapi Anda dapat memuat ikon grup khusus di \"Kelola grup\".\nBuka \"Kelola grup\"?",
+        "message": "Maaf, Anda tidak dapat memuat ikon khusus di tampilan ini, tetapi Anda dapat memuat ikon grup khusus di \"__MSG_manageGroupsTitle__\".\nBuka \"__MSG_manageGroupsTitle__\"?",
         "description": "Sorry, you can't load custom icon in this popup, but you can load custom group icon in \"Manage groups\".\nOpen \"Manage groups\"?"
     },
     "setRandomColor": {
@@ -270,7 +270,7 @@
         "description": "Hotkeys"
     },
     "hotkeysDescription": {
-        "message": "Anda juga dapat mengonfigurasi tombol pintas di halaman <a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\">Kelola pintasan ekstensi di Firefox</a>. Mereka akan bekerja di semua jendela dan halaman browser.",
+        "message": "Anda juga dapat mengonfigurasi tombol pintas di halaman <a hotkey-url>Kelola pintasan ekstensi di Firefox</a>. Mereka akan bekerja di semua jendela dan halaman browser.",
         "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
     },
     "addHotKeyButton": {
@@ -346,7 +346,7 @@
         "description": "Delete current group"
     },
     "hotkeyActionTitleOpenManageGroups": {
-        "message": "Buka kelola grup",
+        "message": "Buka \"__MSG_manageGroupsTitle__\"",
         "description": "Open manage groups"
     },
     "hotkeyActionTitleMoveSelectedTabsToCustomGroup": {
@@ -552,7 +552,7 @@
         "description": "day(s)"
     },
     "darkColorSchemeNotification": {
-        "message": "Untuk mendukung sepenuhnya tema gelap, aktifkan parameter <code>svg.context-properties.content.enabled</code> ke <code>true</code> pada halaman <code>about:config</code>. <a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\" target=\"_blank\">Bagaimana cara melakukannya?</a>",
+        "message": "Untuk mendukung sepenuhnya tema gelap, aktifkan parameter `svg.context-properties.content.enabled` ke `true` pada halaman `about:config`. <a how-url>Bagaimana cara melakukannya?</a>",
         "description": "Fully support the dark theme text"
     },
     "importSettingsPanoramaViewAddonTitle": {
@@ -714,7 +714,7 @@
         "description": "Tabs not created"
     },
     "showTabsWithThumbnailsInManageGroups": {
-        "message": "Tampilkan tab dengan gambar mini di halaman \"Kelola grup\"",
+        "message": "Tampilkan tab dengan gambar mini di halaman \"__MSG_manageGroupsTitle__\"",
         "description": "Show tabs with thumbnails in \"Manage groups\" page"
     },
     "alwaysOpenTabsInContainer": {
@@ -758,8 +758,8 @@
         "description": "Pinned tabs"
     },
     "eraseAddonSettingsWarningTitle": {
-        "message": "Tindakan ini akan <b>HAPUS PENUH</b> semua setelan dan grup yang ada!<br>Tab tidak akan terpengaruh.",
-        "description": "This action will <b>FULL ERASE</b> all existing settings and groups!<br>Tabs will not be affected."
+        "message": "**__MSG_warning__** Tindakan ini akan __HAPUS PENUH__ semua setelan dan grup yang ada!\nTab tidak akan terpengaruh.",
+        "description": "This action will <u>FULL ERASE</u> all existing settings and groups!\nTabs will not be affected."
     },
     "clear": {
         "message": "Hapus Semua",
@@ -890,7 +890,7 @@
         "description": "addon can't open URL:"
     },
     "helpPageOpenInContainerDesc1": {
-        "message": "rup <strong>$groupTitle$</strong> ditetapkan untuk membuka tab di wadah <container-name>$containerName$</container-name>.",
+        "message": "rup **$groupTitle$** ditetapkan untuk membuka tab di wadah <container-name>$containerName$</container-name>.",
         "description": "Group 'Group 1' was assigned to open tabs in Personal container.",
         "placeholders": {
             "groupTitle": {
@@ -908,7 +908,7 @@
         "description": "Another addon:"
     },
     "helpPageOpenInContainerDesc3": {
-        "message": "mencoba membuka URL ini di wadah <container-name>$containerName$</container-name>. Pindahkan tab ke grup lain atau larang addon <strong>$addonName$</strong> untuk melakukan tindakan ini.",
+        "message": "mencoba membuka URL ini di wadah <container-name>$containerName$</container-name>. Pindahkan tab ke grup lain atau larang addon **$addonName$** untuk melakukan tindakan ini.",
         "description": "tries to open this URL in Business container. Move the tab to another group or forbid the addon 'Facebook Container' to perform this action.",
         "placeholders": {
             "containerName": {
@@ -968,7 +968,7 @@
         "description": "excluding these containers"
     },
     "helpPageOpenInContainerExcludeContainerToGroup": {
-        "message": "Kecualikan penampung <container-name>$containerName$</container-name> untuk grup <strong>$groupTitle$</strong>",
+        "message": "Kecualikan penampung <container-name>$containerName$</container-name> untuk grup **$groupTitle$**",
         "description": "Exclude Personal container for group Group 1",
         "placeholders": {
             "containerName": {
@@ -982,7 +982,7 @@
         }
     },
     "helpPageOpenInContainerIgnoreAppForSession": {
-        "message": "Abaikan ekstensi \"<strong>$addonName$</strong>\" hingga browser ditutup",
+        "message": "Abaikan ekstensi \"**$addonName$**\" hingga browser ditutup",
         "description": "Ignore addon for session",
         "placeholders": {
             "addonName": {

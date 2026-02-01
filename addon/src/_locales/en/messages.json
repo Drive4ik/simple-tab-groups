@@ -108,7 +108,7 @@
         "description": "Close the popup window after selecting a tab"
     },
     "openManageGroupsInTab": {
-        "message": "Open \"Manage Groups\" in new tab",
+        "message": "Open \"__MSG_manageGroupsTitle__\" in new tab",
         "description": "Open \"Manage Groups\" in new tab"
     },
     "showConfirmDialogBeforeGroupDelete": {
@@ -274,7 +274,7 @@
         "description": "Load icon"
     },
     "selectUserGroupIconWarnText": {
-        "message": "Sorry, you can't load a custom icon in this popup, but you can load a custom group icon in \"Manage groups\".\nOpen \"Manage groups\"?",
+        "message": "Sorry, you can't load a custom icon in this popup, but you can load a custom group icon in \"__MSG_manageGroupsTitle__\".\nOpen \"__MSG_manageGroupsTitle__\"?",
         "description": "Sorry, you can't load custom icon in this popup, but you can load custom group icon in \"Manage groups\".\nOpen \"Manage groups\"?"
     },
     "setRandomColor": {
@@ -302,7 +302,7 @@
         "description": "Hotkeys"
     },
     "hotkeysDescription": {
-        "message": "You can also configure hotkeys on the <a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\">Manage extension shortcuts in Firefox</a> page. They will work on all windows and browser pages.",
+        "message": "You can also configure hotkeys on the <a hotkey-url>Manage extension shortcuts in Firefox</a> page. They will work on all windows and browser pages.",
         "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
     },
     "addHotKeyButton": {
@@ -382,7 +382,7 @@
         "description": "Delete current group"
     },
     "hotkeyActionTitleOpenManageGroups": {
-        "message": "Open manage groups",
+        "message": "Open \"__MSG_manageGroupsTitle__\"",
         "description": "Open manage groups"
     },
     "hotkeyActionTitleMoveSelectedTabsToCustomGroup": {
@@ -604,7 +604,7 @@
         "description": "files(s)"
     },
     "darkColorSchemeNotification": {
-        "message": "To fully support the dark theme, enable the <code>svg.context-properties.content.enabled</code> parameter to <code>true</code> on the <code>about:config</code> page. <a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\" target=\"_blank\">How to do it?</a>",
+        "message": "To fully support the dark theme, enable the `svg.context-properties.content.enabled` parameter to `true` on the `about:config` page. <a how-url>How to do it?</a>",
         "description": "Fully support the dark theme text"
     },
     "importSettingsPanoramaViewAddonTitle": {
@@ -806,7 +806,7 @@
         "description": "Tabs not created"
     },
     "showTabsWithThumbnailsInManageGroups": {
-        "message": "Show tabs with thumbnails in \"Manage groups\" page",
+        "message": "Show tabs with thumbnails in \"__MSG_manageGroupsTitle__\" page",
         "description": "Show tabs with thumbnails in \"Manage groups\" page"
     },
     "alwaysOpenTabsInContainer": {
@@ -850,8 +850,8 @@
         "description": "Pinned tabs"
     },
     "eraseAddonSettingsWarningTitle": {
-        "message": "This action will <b>FULL ERASE</b> all existing settings and groups!<br>Tabs will not be affected.",
-        "description": "This action will <b>FULL ERASE</b> all existing settings and groups!<br>Tabs will not be affected."
+        "message": "**__MSG_warning__** This action will __FULL ERASE__ all existing settings and groups!\nTabs will not be affected.",
+        "description": "Warning! This action will <u>FULL ERASE</u> all existing settings and groups!\nTabs will not be affected."
     },
     "clear": {
         "message": "Clear",
@@ -986,7 +986,7 @@
         "description": "addon can't open URL:"
     },
     "helpPageOpenInContainerDesc1": {
-        "message": "Group <strong>$groupTitle$</strong> was assigned to open tabs in <container-name>$containerName$</container-name> container.",
+        "message": "Group **$groupTitle$** was assigned to open tabs in <container-name>$containerName$</container-name> container.",
         "description": "Group 'Group 1' was assigned to open tabs in Personal container.",
         "placeholders": {
             "groupTitle": {
@@ -1004,7 +1004,7 @@
         "description": "Another addon:"
     },
     "helpPageOpenInContainerDesc3": {
-        "message": "tries to open this URL in <container-name>$containerName$</container-name> container. Move the tab to another group or forbid the addon <strong>$addonName$</strong> to perform this action.",
+        "message": "tries to open this URL in <container-name>$containerName$</container-name> container. Move the tab to another group or forbid the addon **$addonName$** to perform this action.",
         "description": "tries to open this URL in Business container. Move the tab to another group or forbid the addon 'Facebook Container' to perform this action.",
         "placeholders": {
             "containerName": {
@@ -1064,7 +1064,7 @@
         "description": "excluding these containers"
     },
     "helpPageOpenInContainerExcludeContainerToGroup": {
-        "message": "Exclude <container-name>$containerName$</container-name> container for group <strong>$groupTitle$</strong>",
+        "message": "Exclude <container-name>$containerName$</container-name> container for group **$groupTitle$**",
         "description": "Exclude Personal container for group Group 1",
         "placeholders": {
             "containerName": {
@@ -1078,7 +1078,7 @@
         }
     },
     "helpPageOpenInContainerIgnoreAppForSession": {
-        "message": "Ignore extension \"<strong>$addonName$</strong>\" until the browser is closed",
+        "message": "Ignore extension \"**$addonName$**\" until the browser is closed",
         "description": "Ignore addon for session",
         "placeholders": {
             "addonName": {
@@ -1444,7 +1444,7 @@
         "description": "Use settings located locally in the current browser profile"
     },
     "browserIsNotFirefox": {
-        "message": "Your browser is: $browserName$, it doesn't support <a href=\"https://www.mozilla.org/firefox/sync/\" target=\"_blank\" class=\"is-underlined\">Firefox Sync</a>",
+        "message": "Your browser is: **$browserName$**, it doesn't support <a sync-url>__Firefox Sync__</a>",
         "description": "Browser doesn't support FF sync",
         "placeholders": {
             "browserName": {

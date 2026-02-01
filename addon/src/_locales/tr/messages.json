@@ -84,7 +84,7 @@
         "description": "Close popup after changing group"
     },
     "openManageGroupsInTab": {
-        "message": "\"Grupları Yönet\" sayfasını yeni sekmede aç",
+        "message": "\"__MSG_manageGroupsTitle__\" sayfasını yeni sekmede aç",
         "description": "Open \"Manage Groups\" in new tab"
     },
     "showConfirmDialogBeforeGroupDelete": {
@@ -242,7 +242,7 @@
         "description": "Load icon"
     },
     "selectUserGroupIconWarnText": {
-        "message": "Üzgünüz, bu açılır pencerede özel bir simge yükleyemezsiniz, ancak \"Grupları yönet\" bölümüne özel bir grup simgesi yükleyebilirsiniz. \"Grupları yönet\" açılsın mı?",
+        "message": "Üzgünüz, bu açılır pencerede özel bir simge yükleyemezsiniz, ancak \"__MSG_manageGroupsTitle__\" bölümüne özel bir grup simgesi yükleyebilirsiniz. \"__MSG_manageGroupsTitle__\" açılsın mı?",
         "description": "Sorry, you can't load custom icon in this popup, but you can load custom group icon in \"Manage groups\".\nOpen \"Manage groups\"?"
     },
     "setRandomColor": {
@@ -342,7 +342,7 @@
         "description": "Delete current group"
     },
     "hotkeyActionTitleOpenManageGroups": {
-        "message": "Grup yöneti aç",
+        "message": "\"__MSG_manageGroupsTitle__\" aç",
         "description": "Open manage groups"
     },
     "hotkeyActionTitleMoveSelectedTabsToCustomGroup": {

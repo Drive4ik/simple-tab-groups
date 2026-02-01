@@ -92,7 +92,7 @@
         "description": "Close the popup window after selecting a tab"
     },
     "openManageGroupsInTab": {
-        "message": "在新分頁開啟「管理群組」",
+        "message": "在新分頁開啟「__MSG_manageGroupsTitle__」",
         "description": "Open \"Manage Groups\" in new tab"
     },
     "showConfirmDialogBeforeGroupDelete": {
@@ -250,7 +250,7 @@
         "description": "Load icon"
     },
     "selectUserGroupIconWarnText": {
-        "message": "這裡無法載入自訂圖示，而「管理群組」可以。\n要開啟「管理群組」嗎？",
+        "message": "這裡無法載入自訂圖示，而「__MSG_manageGroupsTitle__」可以。\n要開啟「__MSG_manageGroupsTitle__」嗎？",
         "description": "Sorry, you can't load custom icon in this popup, but you can load custom group icon in \"Manage groups\".\nOpen \"Manage groups\"?"
     },
     "setRandomColor": {
@@ -278,7 +278,7 @@
         "description": "Hotkeys"
     },
     "hotkeysDescription": {
-        "message": "可以在這裡設定快速鍵，也可以在「<a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\">管理擴充套件快速鍵</a>」頁面中設定。",
+        "message": "可以在這裡設定快速鍵，也可以在「<a hotkey-url>管理擴充套件快速鍵</a>」頁面中設定。",
         "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
     },
     "addHotKeyButton": {
@@ -358,7 +358,7 @@
         "description": "Delete current group"
     },
     "hotkeyActionTitleOpenManageGroups": {
-        "message": "開啟管理群組",
+        "message": "開啟__MSG_manageGroupsTitle__",
         "description": "Open manage groups"
     },
     "hotkeyActionTitleMoveSelectedTabsToCustomGroup": {
@@ -576,7 +576,7 @@
         "description": "day(s)"
     },
     "darkColorSchemeNotification": {
-        "message": "要完整支援深色主題，在<br><code>about:config</code> 頁面變更<br><code>svg.context-properties.content.enabled</code> 參數為 <code>true</code>. <a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\" target=\"_blank\">說明頁</a>",
+        "message": "要完整支援深色主題，在 `about:config` 頁面變更 `svg.context-properties.content.enabled` 參數為 `true`. <a how-url>說明頁</a>",
         "description": "Fully support the dark theme text"
     },
     "importSettingsPanoramaViewAddonTitle": {
@@ -782,8 +782,8 @@
         "description": "Pinned tabs"
     },
     "eraseAddonSettingsWarningTitle": {
-        "message": "完全清除所有群組與設定！分頁不受影響。",
-        "description": "This action will <b>FULL ERASE</b> all existing settings and groups!<br>Tabs will not be affected."
+        "message": "**__MSG_warning__** 完全清除所有群組與設定！分頁不受影響。",
+        "description": "This action will <b>FULL ERASE</b> all existing settings and groups!\nTabs will not be affected."
     },
     "clear": {
         "message": "清除",
@@ -918,7 +918,7 @@
         "description": "addon can't open URL:"
     },
     "helpPageOpenInContainerDesc1": {
-        "message": "<strong>$groupTitle$</strong> 群組被指定於 <container-name>$containerName$</container-name> 容器中開啟分頁。",
+        "message": "**$groupTitle$** 群組被指定於 <container-name>$containerName$</container-name> 容器中開啟分頁。",
         "description": "Group 'Group 1' was assigned to open tabs in Personal container.",
         "placeholders": {
             "groupTitle": {
@@ -936,7 +936,7 @@
         "description": "Another addon:"
     },
     "helpPageOpenInContainerDesc3": {
-        "message": "嘗試於 <container-name>$containerName$</container-name> 容器中開啟這個 URL。將分頁移至其他群組，或禁止附加元件 <strong>$addonName$</strong> 執行此動作。",
+        "message": "嘗試於 <container-name>$containerName$</container-name> 容器中開啟這個 URL。將分頁移至其他群組，或禁止附加元件 **$addonName$** 執行此動作。",
         "description": "tries to open this URL in Business container. Move the tab to another group or forbid the addon 'Facebook Container' to perform this action.",
         "placeholders": {
             "containerName": {
@@ -996,7 +996,7 @@
         "description": "excluding these containers"
     },
     "helpPageOpenInContainerExcludeContainerToGroup": {
-        "message": "於<strong>$groupTitle$</strong> 群組排除 <container-name>$containerName$</container-name> 容器",
+        "message": "於**$groupTitle$** 群組排除 <container-name>$containerName$</container-name> 容器",
         "description": "Exclude Personal container for group Group 1",
         "placeholders": {
             "containerName": {
@@ -1010,7 +1010,7 @@
         }
     },
     "helpPageOpenInContainerIgnoreAppForSession": {
-        "message": "忽略擴充套件 \"<strong>$addonName$</strong>\" 直至瀏覽器關閉",
+        "message": "忽略擴充套件 \"**$addonName$**\" 直至瀏覽器關閉",
         "description": "Ignore addon for session",
         "placeholders": {
             "addonName": {

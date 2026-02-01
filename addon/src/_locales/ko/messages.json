@@ -84,7 +84,7 @@
         "description": "Close popup after changing group"
     },
     "openManageGroupsInTab": {
-        "message": "새 탭에서 \"그룹 관리\"  열기",
+        "message": "새 탭에서 \"__MSG_manageGroupsTitle__\"  열기",
         "description": "Open \"Manage Groups\" in new tab"
     },
     "showConfirmDialogBeforeGroupDelete": {
@@ -242,7 +242,7 @@
         "description": "Load icon"
     },
     "selectUserGroupIconWarnText": {
-        "message": "죄송합니다. 이 팝업에서 사용자 정의 아이콘을 로드할 수 없지만 \"그룹 관리\"에서 사용자 정의 그룹 아이콘을 로드할 수 있습니다.\n\"그룹 관리\"를 여시겠습니까?",
+        "message": "죄송합니다. 이 팝업에서 사용자 정의 아이콘을 로드할 수 없지만 \"__MSG_manageGroupsTitle__\"에서 사용자 정의 그룹 아이콘을 로드할 수 있습니다.\n\"__MSG_manageGroupsTitle__\"를 여시겠습니까?",
         "description": "Sorry, you can't load custom icon in this popup, but you can load custom group icon in \"Manage groups\".\nOpen \"Manage groups\"?"
     },
     "setRandomColor": {
@@ -334,7 +334,7 @@
         "description": "Delete current group"
     },
     "hotkeyActionTitleOpenManageGroups": {
-        "message": "그룹 관리 열기",
+        "message": "\"__MSG_manageGroupsTitle__\" 열기",
         "description": "Open manage groups"
     },
     "hotkeyActionTitleMoveSelectedTabsToCustomGroup": {
@@ -540,7 +540,7 @@
         "description": "day(s)"
     },
     "darkColorSchemeNotification": {
-        "message": "어두운 테마를 완전히 지원하려면 <code>about:config</code> 페이지에서 <code>svg.context-properties.content.enabled</code> 매개변수를 <code>true</code>로 활성화하세요. <a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\" target=\"_blank\">어떻게 해야 하나요?</a>",
+        "message": "어두운 테마를 완전히 지원하려면 `about:config` 페이지에서 `svg.context-properties.content.enabled` 매개변수를 `true`로 활성화하세요. <a how-url>어떻게 해야 하나요?</a>",
         "description": "Fully support the dark theme text"
     },
     "importSettingsPanoramaViewAddonTitle": {
@@ -702,7 +702,7 @@
         "description": "Tabs not created"
     },
     "showTabsWithThumbnailsInManageGroups": {
-        "message": "\"그룹 관리\" 페이지에서 미리보기 이미지가 있는 탭 표시",
+        "message": "\"__MSG_manageGroupsTitle__\" 페이지에서 미리보기 이미지가 있는 탭 표시",
         "description": "Show tabs with thumbnails in \"Manage groups\" page"
     },
     "alwaysOpenTabsInContainer": {
@@ -746,8 +746,8 @@
         "description": "Pinned tabs"
     },
     "eraseAddonSettingsWarningTitle": {
-        "message": "이 작업은 기존의 모든 설정과 그룹을 <b>완전히 지웁니다</b>!<br>탭은 영향을 받지 않습니다.",
-        "description": "This action will <b>FULL ERASE</b> all existing settings and groups!<br>Tabs will not be affected."
+        "message": "**__MSG_warning__** 이 작업은 기존의 모든 설정과 그룹을 __완전히 지웁니다__!\n탭은 영향을 받지 않습니다.",
+        "description": "This action will <u>FULL ERASE</u> all existing settings and groups!\nTabs will not be affected."
     },
     "clear": {
         "message": "청소",

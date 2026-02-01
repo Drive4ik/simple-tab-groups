@@ -8,7 +8,7 @@
         "description": "Settings context button title"
     },
     "manageGroupsTitle": {
-        "message": "Gestisci i gruppi di schede",
+        "message": "Gestione gruppi",
         "description": "Manage groups"
     },
     "setTabIconAsGroupIcon": {
@@ -92,7 +92,7 @@
         "description": "Close the popup window after selecting a tab"
     },
     "openManageGroupsInTab": {
-        "message": "Apri \"Gestione gruppi\" in una nuova scheda",
+        "message": "Apri \"__MSG_manageGroupsTitle__\" in una nuova scheda",
         "description": "Open \"Manage Groups\" in new tab"
     },
     "showConfirmDialogBeforeGroupDelete": {
@@ -250,7 +250,7 @@
         "description": "Load icon"
     },
     "selectUserGroupIconWarnText": {
-        "message": "Non puoi caricare icone personalizzate in questo popup, ma puoi caricare un'icona personalizzata del gruppo all'interno di \"Gestione gruppi\".\nAprire \"Gestione gruppi\"?",
+        "message": "Non puoi caricare icone personalizzate in questo popup, ma puoi caricare un'icona personalizzata del gruppo all'interno di \"__MSG_manageGroupsTitle__\".\nAprire \"__MSG_manageGroupsTitle__\"?",
         "description": "Sorry, you can't load custom icon in this popup, but you can load custom group icon in \"Manage groups\".\nOpen \"Manage groups\"?"
     },
     "setRandomColor": {
@@ -278,7 +278,7 @@
         "description": "Hotkeys"
     },
     "hotkeysDescription": {
-        "message": "Puoi modificare le scorciatoie sulla pagina <a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\">Gestire le scorciatoie da tastiera per i componenti aggiuntivi in Firefox</a>. Funzioneranno su tutte le finestre e le pagine del browser.",
+        "message": "Puoi modificare le scorciatoie sulla pagina <a hotkey-url>Gestire le scorciatoie da tastiera per i componenti aggiuntivi in Firefox</a>. Funzioneranno su tutte le finestre e le pagine del browser.",
         "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
     },
     "addHotKeyButton": {
@@ -358,7 +358,7 @@
         "description": "Delete current group"
     },
     "hotkeyActionTitleOpenManageGroups": {
-        "message": "Apri gestione gruppi",
+        "message": "Apri \"__MSG_manageGroupsTitle__\"",
         "description": "Open manage groups"
     },
     "hotkeyActionTitleMoveSelectedTabsToCustomGroup": {
@@ -576,7 +576,7 @@
         "description": "day(s)"
     },
     "darkColorSchemeNotification": {
-        "message": "Per abilitare completamente il tema scuro, modificare il parametro <code>svg.context-properties.content.enabled</code> in <code>true</code> all'interno della pagina <code>about:config</code>. <a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\" target=\"_blank\">Per maggiori informazioni, clicca qui</a>",
+        "message": "Per abilitare completamente il tema scuro, modificare il parametro `svg.context-properties.content.enabled` in `true` all'interno della pagina `about:config`. <a how-url>Per maggiori informazioni, clicca qui</a>",
         "description": "Fully support the dark theme text"
     },
     "importSettingsPanoramaViewAddonTitle": {
@@ -738,7 +738,7 @@
         "description": "Tabs not created"
     },
     "showTabsWithThumbnailsInManageGroups": {
-        "message": "Mostra le anteprime delle schede nella pagina \"Gestione gruppi\"",
+        "message": "Mostra le anteprime delle schede nella pagina \"__MSG_manageGroupsTitle__\"",
         "description": "Show tabs with thumbnails in \"Manage groups\" page"
     },
     "alwaysOpenTabsInContainer": {
@@ -782,8 +782,8 @@
         "description": "Pinned tabs"
     },
     "eraseAddonSettingsWarningTitle": {
-        "message": "Questa azione <b>ELIMINERÀ COMPLEMENTE</b> tutte le impostazioni e tutti i gruppi!<br>Le schede non saranno chiuse.",
-        "description": "This action will <b>FULL ERASE</b> all existing settings and groups!<br>Tabs will not be affected."
+        "message": "**__MSG_warning__** Questa azione __ELIMINERÀ COMPLEMENTE__ tutte le impostazioni e tutti i gruppi!\nLe schede non saranno chiuse.",
+        "description": "This action will <u>FULL ERASE</u> all existing settings and groups!\nTabs will not be affected."
     },
     "clear": {
         "message": "Pulisci",
@@ -918,7 +918,7 @@
         "description": "addon can't open URL:"
     },
     "helpPageOpenInContainerDesc1": {
-        "message": "Il gruppo <strong>$groupTitle$</strong> è stato assegnato per aprire le schede nel contenitore <container-name>$containerName$</container-name>",
+        "message": "Il gruppo **$groupTitle$** è stato assegnato per aprire le schede nel contenitore <container-name>$containerName$</container-name>",
         "description": "Group 'Group 1' was assigned to open tabs in Personal container.",
         "placeholders": {
             "groupTitle": {
@@ -936,7 +936,7 @@
         "description": "Another addon:"
     },
     "helpPageOpenInContainerDesc3": {
-        "message": "ha tentato di aprire questo URL nel contenitore <container-name>$containerName$</container-name>. Sposta questa schede in un altro gruppo oppure vieta all'estensione <strong>$addonName$</strong> di effettuare questa azione.",
+        "message": "ha tentato di aprire questo URL nel contenitore <container-name>$containerName$</container-name>. Sposta questa schede in un altro gruppo oppure vieta all'estensione **$addonName$** di effettuare questa azione.",
         "description": "tries to open this URL in Business container. Move the tab to another group or forbid the addon 'Facebook Container' to perform this action.",
         "placeholders": {
             "containerName": {
@@ -996,7 +996,7 @@
         "description": "excluding these containers"
     },
     "helpPageOpenInContainerExcludeContainerToGroup": {
-        "message": "Escludi il contenitore <container-name>$containerName$</container-name> per il gruppo <strong>$groupTitle$</strong>",
+        "message": "Escludi il contenitore <container-name>$containerName$</container-name> per il gruppo **$groupTitle$**",
         "description": "Exclude Personal container for group Group 1",
         "placeholders": {
             "containerName": {
@@ -1010,7 +1010,7 @@
         }
     },
     "helpPageOpenInContainerIgnoreAppForSession": {
-        "message": "Ignora estensione \"<strong>$addonName$</strong>\" fino alla chiusura del browser",
+        "message": "Ignora estensione \"**$addonName$**\" fino alla chiusura del browser",
         "description": "Ignore addon for session",
         "placeholders": {
             "addonName": {

@@ -92,7 +92,7 @@
         "description": "Close the popup window after selecting a tab"
     },
     "openManageGroupsInTab": {
-        "message": "Abrir \"Gerenciar Grupos\" em nova aba",
+        "message": "Abrir \"__MSG_manageGroupsTitle__\" em nova aba",
         "description": "Open \"Manage Groups\" in new tab"
     },
     "showConfirmDialogBeforeGroupDelete": {
@@ -250,7 +250,7 @@
         "description": "Load icon"
     },
     "selectUserGroupIconWarnText": {
-        "message": "Desculpe, mas você não pode carregar ícones personalizados neste pop-up. Para isso, dirija-se a \"Gerenciar grupos\".\nAbrir \"Gerenciar grupos\"?",
+        "message": "Desculpe, mas você não pode carregar ícones personalizados neste pop-up. Para isso, dirija-se a \"__MSG_manageGroupsTitle__\".\nAbrir \"__MSG_manageGroupsTitle__\"?",
         "description": "Sorry, you can't load custom icon in this popup, but you can load custom group icon in \"Manage groups\".\nOpen \"Manage groups\"?"
     },
     "setRandomColor": {
@@ -278,7 +278,7 @@
         "description": "Hotkeys"
     },
     "hotkeysDescription": {
-        "message": "Você também pode configurar teclas de atalho na página <a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\">Gerenciar atalhos de extensão no Firefox</a>. Eles funcionarão em todas as janelas e páginas do navegador.",
+        "message": "Você também pode configurar teclas de atalho na página <a hotkey-url>Gerenciar atalhos de extensão no Firefox</a>. Eles funcionarão em todas as janelas e páginas do navegador.",
         "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
     },
     "addHotKeyButton": {
@@ -358,7 +358,7 @@
         "description": "Delete current group"
     },
     "hotkeyActionTitleOpenManageGroups": {
-        "message": "Abrir gerenciador de grupos",
+        "message": "Abrir \"__MSG_manageGroupsTitle__\"",
         "description": "Open manage groups"
     },
     "hotkeyActionTitleMoveSelectedTabsToCustomGroup": {
@@ -576,7 +576,7 @@
         "description": "day(s)"
     },
     "darkColorSchemeNotification": {
-        "message": "Para ter suporte completo ao tema escuro, habilite o parâmetro <code>svg.context-properties.content.enabled</code> para <code>true</code> na página <code>about:config</code>. <a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\" target=\"_blank\">Como fazer isso?</a>",
+        "message": "Para ter suporte completo ao tema escuro, habilite o parâmetro `svg.context-properties.content.enabled` para `true` na página `about:config`. <a how-url>Como fazer isso?</a>",
         "description": "Fully support the dark theme text"
     },
     "importSettingsPanoramaViewAddonTitle": {
@@ -738,7 +738,7 @@
         "description": "Tabs not created"
     },
     "showTabsWithThumbnailsInManageGroups": {
-        "message": "Mostrar abas com a miniatura na página \"Gerenciar grupos\"",
+        "message": "Mostrar abas com a miniatura na página \"__MSG_manageGroupsTitle__\"",
         "description": "Show tabs with thumbnails in \"Manage groups\" page"
     },
     "alwaysOpenTabsInContainer": {
@@ -782,8 +782,8 @@
         "description": "Pinned tabs"
     },
     "eraseAddonSettingsWarningTitle": {
-        "message": "Esta ação vai <b>APAGAR COMPLETAMENTE</b> todas as configurações e grupos existentes!<br>As abas não serão afetadas.",
-        "description": "This action will <b>FULL ERASE</b> all existing settings and groups!<br>Tabs will not be affected."
+        "message": "**__MSG_warning__** Esta ação vai __APAGAR COMPLETAMENTE__ todas as configurações e grupos existentes!\nAs abas não serão afetadas.",
+        "description": "This action will <u>FULL ERASE</u> all existing settings and groups!\nTabs will not be affected."
     },
     "clear": {
         "message": "Limpar",
@@ -918,7 +918,7 @@
         "description": "addon can't open URL:"
     },
     "helpPageOpenInContainerDesc1": {
-        "message": "O grupo <strong>$groupTitle$</strong> foi atribuído para abrir guias no contêiner <container-name>$containerName$</container-name>.",
+        "message": "O grupo **$groupTitle$** foi atribuído para abrir guias no contêiner <container-name>$containerName$</container-name>.",
         "description": "Group 'Group 1' was assigned to open tabs in Personal container.",
         "placeholders": {
             "groupTitle": {
@@ -936,7 +936,7 @@
         "description": "Another addon:"
     },
     "helpPageOpenInContainerDesc3": {
-        "message": "tenta abrir esta URL no contêiner <container-name>$containerName$</container-name>. Mova a guia para outro grupo ou proíba o complemento <strong>$addonName$</strong> de realizar esta ação.",
+        "message": "tenta abrir esta URL no contêiner <container-name>$containerName$</container-name>. Mova a guia para outro grupo ou proíba o complemento **$addonName$** de realizar esta ação.",
         "description": "tries to open this URL in Business container. Move the tab to another group or forbid the addon 'Facebook Container' to perform this action.",
         "placeholders": {
             "containerName": {
@@ -996,7 +996,7 @@
         "description": "excluding these containers"
     },
     "helpPageOpenInContainerExcludeContainerToGroup": {
-        "message": "Excluir o contêiner <container-name>$containerName$</container-name> para o grupo <strong>$groupTitle$</strong>",
+        "message": "Excluir o contêiner <container-name>$containerName$</container-name> para o grupo **$groupTitle$**",
         "description": "Exclude Personal container for group Group 1",
         "placeholders": {
             "containerName": {
@@ -1010,7 +1010,7 @@
         }
     },
     "helpPageOpenInContainerIgnoreAppForSession": {
-        "message": "Ignore a extensão \"<strong>$addonName$</strong>\" até que o navegador seja fechado",
+        "message": "Ignore a extensão \"**$addonName$**\" até que o navegador seja fechado",
         "description": "Ignore addon for session",
         "placeholders": {
             "addonName": {
