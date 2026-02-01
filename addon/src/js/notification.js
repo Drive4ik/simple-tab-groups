@@ -3,6 +3,7 @@ import Listeners from './listeners.js\
 &alarms.onAlarm\
 ';
 import * as Constants from './constants.js';
+import Lang from '/js/lang.js';
 
 export const MIN_EXPIRES = 5;
 export const MAX_EXPIRES = 10 * 60;
@@ -110,22 +111,6 @@ async function onAlarm({name}) {
     }
 }
 
-function translate(message) {
-    if (typeof message === 'string') {
-        if (message.includes(' ')) {
-            // untranslatable string
-            return message;
-        } else {
-            return browser.i18n.getMessage(message) || message;
-        }
-    } else if (Array.isArray(message)) {
-        const [messageName, ...substitutions] = message;
-        return browser.i18n.getMessage(messageName, substitutions.flat(Infinity));
-    } else {
-        return String(message);
-    }
-}
-
 export default async function Notification(message, options = {}) {
     if (!message) {
         throw new Error('Notification message is required');
@@ -133,8 +118,8 @@ export default async function Notification(message, options = {}) {
 
     const notification = {
         ...options,
-        message: translate(message),
-        title: translate(options.title || 'extensionName'),
+        message: Lang(message, null, {html: false}),
+        title: Lang(options.title || 'extensionName', null, {html: false}),
         iconUrl: options.iconUrl ?? (Constants.MANIFEST.action ?? Constants.MANIFEST.browser_action).default_icon,
     };
 

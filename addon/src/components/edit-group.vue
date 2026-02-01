@@ -12,6 +12,7 @@ import * as Containers from '/js/containers.js';
 import * as Storage from '/js/storage.js';
 import * as Messages from '/js/messages.js';
 import Notification from '/js/notification.js';
+import Lang from '/js/lang.js';
 import * as File from '/js/file.js';
 import * as Bookmarks from '/js/bookmarks.js';
 // import * as Tabs from '/js/tabs.js';
@@ -177,7 +178,7 @@ export default {
         this.setFocus();
     },
     methods: {
-        lang: browser.i18n.getMessage,
+        lang: Lang,
 
         addCurrentDomain(domainRegexpStr) {
             this.group.catchTabRules += (this.group.catchTabRules.length ? '\n' : '') + domainRegexpStr;
@@ -278,7 +279,7 @@ export default {
                 .forEach(regExpStr => {
                     try {
                         new RegExp(regExpStr);
-                    } catch (e) {
+                    } catch {
                         Notification(['invalidRegExpRuleTitle', regExpStr]);
                     }
                 });

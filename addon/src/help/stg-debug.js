@@ -1,6 +1,5 @@
-import './translate-help-pages.js';
 import '/js/prefixed-storage.js';
-
+import Lang from '/js/lang.js?translate-page';
 import {getExtensionStartTime} from '/js/listeners.js';
 import * as Messages from '/js/messages.js';
 import backgroundSelf from '/js/background.js';
@@ -30,7 +29,7 @@ function reloadState() {
 
     if (wasAutoDebug || isAutoDebug()) {
         debugStatus.classList = 'auto-enabled';
-        $('#mainTitle').innerText = browser.i18n.getMessage('helpPageStgDebugAutoDebugMainTitle');
+        $('#mainTitle').innerText = Lang('helpPageStgDebugAutoDebugMainTitle');
     } else if (mainStorage.enableDebug) {
         debugStatus.classList = 'enabled';
     }

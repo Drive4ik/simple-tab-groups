@@ -104,7 +104,7 @@
         "description": "Show confirmation dialog before archiving the group"
     },
     "exportAddonSettingsTitle": {
-        "message": "Fazer backup de seu Simple Tab Groups",
+        "message": "Fazer backup de seu __MSG_extensionName__",
         "description": "Backup your Simple Tab Groups"
     },
     "exportAddonSettingsDescription": {
@@ -120,7 +120,7 @@
         "description": "Include tab thumbnails in backup (makes backup file size bigger)"
     },
     "importAddonSettingsTitle": {
-        "message": "Restaurar Simple Tab Groups a partir do backup",
+        "message": "Restaurar __MSG_extensionName__ a partir do backup",
         "description": "Restore Simple Tab Groups"
     },
     "importAddonSettingsDescription": {
@@ -806,11 +806,11 @@
         "description": "Delete all addon data and settings before restoring backup"
     },
     "helpPageWelcomeTitle": {
-        "message": "Bem-vindo ao Simple Tab Groups",
+        "message": "Bem-vindo ao __MSG_extensionName__",
         "description": "Welcome to Simple Tab Groups"
     },
     "helpPageWelcomeDescription": {
-        "message": "Por favor, habilite \"Restaurar sessão anterior\" nas configurações do navegador.\nIsso é necessário para manter a comunicação entre o grupo e a aba, caso contrário as abas não abrirão quando o navegador iniciar e serão perdidas do addon - o addon irá parar de funcionar.",
+        "message": "Por favor, habilite \"**Restaurar sessão anterior**\" nas configurações do navegador.\nIsso é necessário para manter a comunicação entre o grupo e a aba, caso contrário as abas não abrirão quando o navegador iniciar e serão perdidas do addon - o addon irá parar de funcionar.",
         "description": "Please enable \"Open previous windows and tabs\" in browser settings.\nThis is necessary to maintain communication between the group and the tab, otherwise the tabs will not open when the browser starts and will be lost from the addon - the addon will stop working."
     },
     "enableDebugTitle": {
@@ -830,7 +830,7 @@
         "description": "logging was auto-enabled due to an error in addon"
     },
     "loggingDescription": {
-        "message": "Por favor, habilite esta caixa de seleção somente se você precisar gravar um bug e enviar os logs para mim. Ativar esta caixa de seleção levará a uma lentidão notável do complemento, pois todas as ações do complemento são registradas. Ao reproduzir o erro, desative esta caixa de seleção e o complemento oferecerá para salvar o arquivo de log. Esta opção pode ser habilitada sozinha se ocorrer um erro. Você precisa desabilitar a caixa de seleção DEBUG e salvar o arquivo de log.<br> Envie este arquivo de log para mim por e-mail: <a href=\"mailto:drive4ik+stg@protonmail.com\">drive4ik+stg@protonmail.com< /a><br> <span class=\"has-text-danger\">Atenção! Não há dados pessoais, senhas, favoritos etc., neste arquivo de log!</span><br> Isso é necessário para poder reproduzir o problema e tentar corrigi-lo.<br> Atenciosamente",
+        "message": "Por favor, habilite esta caixa de seleção somente se você precisar gravar um bug e enviar os logs para mim. Ativar esta caixa de seleção levará a uma lentidão notável do complemento, pois todas as ações do complemento são registradas. Ao reproduzir o erro, desative esta caixa de seleção e o complemento oferecerá para salvar o arquivo de log. Esta opção pode ser habilitada sozinha se ocorrer um erro. Você precisa desabilitar a caixa de seleção DEBUG e salvar o arquivo de log.\n\nEnvie este arquivo de log para mim por e-mail: <a email>author-email</a> <p warn>Atenção! Não há dados pessoais, senhas, favoritos etc., neste arquivo de log!</p> Isso é necessário para poder reproduzir o problema e tentar corrigi-lo.\nAtenciosamente",
         "description": "logging description"
     },
     "archiveGroup": {
@@ -1044,7 +1044,7 @@
         "description": "Show archived groups"
     },
     "helpPageDbErrorReinstallTitle": {
-        "message": "Erro de banco de dados em Grupos de Guias Simples",
+        "message": "Erro de banco de dados em __MSG_extensionName__",
         "description": "Database error in Simple Tab Groups"
     },
     "helpPageDbErrorReinstallDescription": {
@@ -1104,11 +1104,11 @@
         "description": "Extensions that conflict with STG"
     },
     "helpPageExtensionsThatConflictWithStgDesc1": {
-        "message": "O complemento Simple Tab Groups está em conflito com as seguintes extensões habilitadas:",
+        "message": "O complemento __MSG_extensionName__ está em conflito com as seguintes extensões habilitadas:",
         "description": "Simple Tab Groups addon conflicts with the following enabled extensions:"
     },
     "helpPageExtensionsThatConflictWithStgDesc2": {
-        "message": "Para evitar a perda de guias ou sua localização em janelas e grupos, é altamente recomendável desativar ou remover extensões habilitadas que entram em conflito com o complemento Simple Tab Groups. Você pode fazer isso na página de configurações de addons \"about:addons\" ou pressionando a combinação de teclas <code>Ctrl+Shift+A</code>",
+        "message": "Para evitar a perda de guias ou sua localização em janelas e grupos, é altamente recomendável desativar ou remover extensões habilitadas que entram em conflito com o complemento __MSG_extensionName__.\nVocê pode fazer isso na página de configurações de addons \"about:addons\" ou pressionando a combinação de teclas `Ctrl+Shift+A`",
         "description": "To avoid losing tabs or their location in windows and groups, it is strongly recommended to turn off or remove enabled extensions that conflict with the Simple Tab Groups addon. You can do this on the addons settings page about:addons or by pressing the key combination Ctrl+Shift+A"
     },
     "ignoreConflictedExtIgnore": {

@@ -1,4 +1,7 @@
 <script>
+
+import Lang from '/js/lang.js';
+
 export default {
     props: {
         title: {
@@ -11,7 +14,7 @@ export default {
         },
     },
     methods: {
-        lang: browser.i18n.getMessage,
+        lang: Lang,
     },
 }
 </script>

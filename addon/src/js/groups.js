@@ -6,6 +6,7 @@ import * as Constants from './constants.js';
 import * as Storage from './storage.js';
 import * as Cache from './cache.js';
 import Notification from './notification.js';
+import Lang from '/js/lang.js';
 import * as Containers from './containers.js';
 import * as Bookmarks from './bookmarks.js';
 import * as Management from './management.js';
@@ -300,7 +301,7 @@ async function addUndoRemove(groupToRemove) {
 
     await Menus.create({
         id: restoreId,
-        title: browser.i18n.getMessage('undoRemoveGroupItemTitle', groupToRemove.title),
+        title: Lang('undoRemoveGroupItemTitle', groupToRemove.title),
         contexts: [Menus.ContextType.ACTION],
         icons: getIconUrl(groupToRemove, 16),
         onClick: () => restore(groupToRemove.id),
@@ -858,7 +859,7 @@ export function createTitle(title = null, groupId = null, defaultGroupProps = {}
     } else if (defaultGroupProps.title) {
         title = defaultGroupProps.title;
     } else {
-        title = browser.i18n.getMessage('newGroupTitle', uid);
+        title = Lang('newGroupTitle', uid);
     }
 
     if (format) {
@@ -928,13 +929,13 @@ export function getTitle({id, title, isArchive, isSticky, tabs, iconViewType, ne
 
 export function tabsCountMessage(tabs, groupIsArchived, lang = true) {
     if (groupIsArchived) {
-        return lang ? browser.i18n.getMessage('groupTabsCount', tabs.length) : tabs.length;
+        return lang ? Lang('groupTabsCount', tabs.length) : tabs.length;
     }
 
     let activeTabsCount = tabs.filter(tab => !tab.discarded).length;
 
     if (lang) {
-        return browser.i18n.getMessage('groupTabsCountActive', [activeTabsCount, tabs.length]);
+        return Lang('groupTabsCountActive', [activeTabsCount, tabs.length]);
     }
 
     return activeTabsCount ? (activeTabsCount + '/' + tabs.length) : tabs.length;

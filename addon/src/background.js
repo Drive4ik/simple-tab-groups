@@ -40,6 +40,7 @@ import * as Utils from '/js/utils.js';
 import Notification from '/js/notification.js';
 import JSON from '/js/json.js';
 import BatchProcessor from '/js/batch-processor.js';
+import Lang from '/js/lang.js';
 import * as Urls from '/js/urls.js';
 import * as Containers from '/js/containers.js';
 import * as Storage from '/js/storage.js';
@@ -1115,19 +1116,19 @@ async function updateMoveTabMenus() {
 
     hasBookmarksPermission && await Menus.create({
         id: Menus.ContextType.BOOKMARK,
-        title: browser.i18n.getMessage('openBookmarkInGroup'),
+        title: Lang('openBookmarkInGroup'),
         contexts: [Menus.ContextType.BOOKMARK],
     });
 
     options.showContextMenuOnTabs && await Menus.create({
         id: Menus.ContextType.TAB,
-        title: browser.i18n.getMessage('moveTabToGroupDisabledTitle'),
+        title: Lang('moveTabToGroupDisabledTitle'),
         contexts: [Menus.ContextType.TAB],
     });
 
     options.showContextMenuOnLinks && await Menus.create({
         id: Menus.ContextType.LINK,
-        title: browser.i18n.getMessage('openLinkInGroupDisabledTitle'),
+        title: Lang('openLinkInGroupDisabledTitle'),
         contexts: [Menus.ContextType.LINK],
     });
 
@@ -1152,7 +1153,7 @@ async function updateMoveTabMenus() {
 
     options.showContextMenuOnTabs && await Menus.create({
         id: 'set-tab-icon-as-group-icon',
-        title: browser.i18n.getMessage('setTabIconAsGroupIcon'),
+        title: Lang('setTabIconAsGroupIcon'),
         icon: '/icons/image.svg',
         parentId: Menus.ContextType.TAB,
         contexts: [Menus.ContextType.TAB],
@@ -1347,7 +1348,7 @@ async function updateMoveTabMenus() {
     }
 
     options.showContextMenuOnTabs && await Menus.create({
-        title: browser.i18n.getMessage('createNewGroup'),
+        title: Lang('createNewGroup'),
         icon: '/icons/group-new.svg',
         parentId: Menus.ContextType.TAB,
         contexts: [Menus.ContextType.TAB],
@@ -1364,7 +1365,7 @@ async function updateMoveTabMenus() {
     });
 
     options.showContextMenuOnLinks && await Menus.create({
-        title: browser.i18n.getMessage('createNewGroup'),
+        title: Lang('createNewGroup'),
         icon: '/icons/group-new.svg',
         parentId: Menus.ContextType.LINK,
         contexts: [Menus.ContextType.LINK],
@@ -1395,7 +1396,7 @@ async function updateMoveTabMenus() {
     });
 
     hasBookmarksPermission && await Menus.create({
-        title: browser.i18n.getMessage('createNewGroup'),
+        title: Lang('createNewGroup'),
         icon: '/icons/group-new.svg',
         parentId: Menus.ContextType.BOOKMARK,
         contexts: [Menus.ContextType.BOOKMARK],
@@ -1476,7 +1477,7 @@ async function updateMoveTabMenus() {
 
     hasBookmarksPermission && await Menus.create({
         id: 'exportAllGroupsToBookmarks',
-        title: browser.i18n.getMessage('exportAllGroupsToBookmarks'),
+        title: Lang('exportAllGroupsToBookmarks'),
         icon: '/icons/bookmark.svg',
         contexts: [Menus.ContextType.ACTION],
         async onClick() {
@@ -1494,7 +1495,7 @@ async function updateMoveTabMenus() {
 
     await Menus.create({
         id: 'reopenTabsWithTemporaryContainersInNew',
-        title: browser.i18n.getMessage('reopenTabsWithTemporaryContainersInNew'),
+        title: Lang('reopenTabsWithTemporaryContainersInNew'),
         icon: Containers.TEMPORARY.iconUrl,
         contexts: [Menus.ContextType.ACTION],
         async onClick(info) {
@@ -1550,7 +1551,7 @@ async function setBrowserAction(windowId, title, icon, enable, isSticky) {
     }
 
     if (title?.startsWith('lang:')) {
-        title = browser.i18n.getMessage(title.slice(5));
+        title = Lang(title.slice(5), null, {html: false});
     }
 
     if (undefined !== enable) {
@@ -1767,9 +1768,10 @@ const onBeforeTabRequest = catchFunc(async function onBeforeTabRequest({tabId, u
 
         if (showNotif < 3) {
             storage.ignoreExtensionsForReopenTabInContainer = ++showNotif;
-            let str = browser.i18n.getMessage('helpPageOpenInContainerMainTitle', Containers.get(newTabContainer).name);
 
-            str = str.replace(/(\<.+?\>)/g, '') + '\n\n' + browser.i18n.getMessage('clickHereForInfo');
+            const str = Lang('__MSG_helpPageOpenInContainerMainTitle__\n\n__MSG_clickHereForInfo__', {
+                helpPageOpenInContainerMainTitle: Containers.get(newTabContainer).name,
+            }, {html: false});
 
             Notification(str, {
                 module: ['tabs', 'create', {
@@ -2165,7 +2167,7 @@ async function onBackgroundMessage(message, sender) {
 
                     if (groupToLoad) {
                         if (groupToLoad.isArchive) {
-                            result.error = browser.i18n.getMessage('groupIsArchived', groupToLoad.title);
+                            result.error = Lang('groupIsArchived', groupToLoad.title);
                             Notification(result.error);
                         } else {
                             if (data.windowId) {
@@ -2192,14 +2194,17 @@ async function onBackgroundMessage(message, sender) {
                         Tabs.sendMessage(activeTab.id, {
                             action: 'show-groups-popup',
                             popupAction: 'load-custom-group',
-                            popupTitle: browser.i18n.getMessage('hotkeyActionTitleLoadCustomGroup'),
+                            popupTitle: Lang('hotkeyActionTitleLoadCustomGroup'),
                             groups: notArchivedGroups.map(Groups.mapForExternalExtension),
                             disableGroupIds: [currentGroup?.id].filter(Boolean),
                         });
 
                         result.ok = true;
                     } else {
-                        result.error = browser.i18n.getMessage('impossibleToAskUserAboutAction', [activeTab.title, browser.i18n.getMessage('hotkeyActionTitleLoadCustomGroup')]);
+                        result.error = Lang('impossibleToAskUserAboutAction', [
+                            activeTab.title,
+                            Lang('hotkeyActionTitleLoadCustomGroup'),
+                        ]);
                         Notification(result.error, {
                             module: 'urls@openNotSupportedUrlHelper',
                         });
@@ -2225,7 +2230,7 @@ async function onBackgroundMessage(message, sender) {
                     if (Tabs.isCanSendMessage(activeTab)) {
                         const title = await Tabs.sendMessage(activeTab.id, {
                             action: 'show-prompt',
-                            promptTitle: browser.i18n.getMessage('createNewGroup'),
+                            promptTitle: Lang('createNewGroup'),
                             value: data.proposalTitle,
                         });
 
@@ -2248,7 +2253,10 @@ async function onBackgroundMessage(message, sender) {
                         }, sender);
 
                         if (options.alwaysAskNewGroupName) {
-                            result.error = browser.i18n.getMessage('impossibleToAskUserAboutAction', [activeTab.title, browser.i18n.getMessage('createNewGroup')]);
+                            result.error = Lang('impossibleToAskUserAboutAction', [
+                                activeTab.title,
+                                Lang('createNewGroup'),
+                            ]);
                             Notification(result.error, {
                                 module: 'urls@openNotSupportedUrlHelper',
                             });
@@ -2258,7 +2266,7 @@ async function onBackgroundMessage(message, sender) {
                 break;
             case 'rename-group':
                 if (!groups.length) {
-                    result.error = browser.i18n.getMessage('noGroupsAvailable');
+                    result.error = Lang('noGroupsAvailable');
                     Notification(result.error);
                 } else if (!data.groupId) {
                     let activeTab = await Tabs.getActive();
@@ -2267,7 +2275,7 @@ async function onBackgroundMessage(message, sender) {
                         Tabs.sendMessage(activeTab.id, {
                             action: 'show-groups-popup',
                             popupAction: 'rename-group',
-                            popupTitle: browser.i18n.getMessage('hotkeyActionTitleRenameGroup'),
+                            popupTitle: Lang('hotkeyActionTitleRenameGroup'),
                             groups: groups.map(Groups.mapForExternalExtension),
                             focusedGroupId: currentGroup?.id,
                             disableNewGroupItem: true,
@@ -2275,7 +2283,10 @@ async function onBackgroundMessage(message, sender) {
 
                         result.ok = true;
                     } else {
-                        result.error = browser.i18n.getMessage('impossibleToAskUserAboutAction', [activeTab.title, browser.i18n.getMessage('hotkeyActionTitleRenameGroup')]);
+                        result.error = Lang('impossibleToAskUserAboutAction', [
+                            activeTab.title,
+                            Lang('hotkeyActionTitleRenameGroup'),
+                        ]);
                         Notification(result.error, {
                             module: 'urls@openNotSupportedUrlHelper',
                         });
@@ -2289,7 +2300,7 @@ async function onBackgroundMessage(message, sender) {
                         if (Tabs.isCanSendMessage(activeTab)) {
                             let title = await Tabs.sendMessage(activeTab.id, {
                                 action: 'show-prompt',
-                                promptTitle: browser.i18n.getMessage('hotkeyActionTitleRenameGroup'),
+                                promptTitle: Lang('hotkeyActionTitleRenameGroup'),
                                 value: groupToRename.title,
                             });
 
@@ -2300,7 +2311,10 @@ async function onBackgroundMessage(message, sender) {
                                 result.error = 'title in empty - skip rename group';
                             }
                         } else {
-                            result.error = browser.i18n.getMessage('impossibleToAskUserAboutAction', [activeTab.title, browser.i18n.getMessage('hotkeyActionTitleRenameGroup')]);
+                            result.error = Lang('impossibleToAskUserAboutAction', [
+                                activeTab.title,
+                                Lang('hotkeyActionTitleRenameGroup'),
+                            ]);
                             Notification(result.error, {
                                 module: 'urls@openNotSupportedUrlHelper',
                             });
@@ -2325,7 +2339,7 @@ async function onBackgroundMessage(message, sender) {
                 break;
             case 'export-group-to-bookmarks':
                 if (!await Bookmarks.hasPermission()) {
-                    result.error = browser.i18n.getMessage('noAccessToBookmarks');
+                    result.error = Lang('noAccessToBookmarks');
                     break;
                 }
 
@@ -2347,7 +2361,7 @@ async function onBackgroundMessage(message, sender) {
                         }
                     } else {
                         // delete data.groupId;
-                        result.error = browser.i18n.getMessage('groupNotFound');
+                        result.error = Lang('groupNotFound');
                     }
                 }
 
@@ -2358,7 +2372,7 @@ async function onBackgroundMessage(message, sender) {
                         Tabs.sendMessage(activeTab.id, {
                             action: 'show-groups-popup',
                             popupAction: 'export-group-to-bookmarks',
-                            popupTitle: browser.i18n.getMessage('exportGroupToBookmarks'),
+                            popupTitle: Lang('exportGroupToBookmarks'),
                             groups: groups.map(Groups.mapForExternalExtension),
                             focusedGroupId: currentGroup?.id,
                             disableNewGroupItem: true,
@@ -2366,7 +2380,10 @@ async function onBackgroundMessage(message, sender) {
 
                         result.ok = true;
                     } else {
-                        result.error = browser.i18n.getMessage('impossibleToAskUserAboutAction', [activeTab.title, browser.i18n.getMessage('hotkeyActionTitleRenameGroup')]);
+                        result.error = Lang('impossibleToAskUserAboutAction', [
+                            activeTab.title,
+                            Lang('hotkeyActionTitleRenameGroup'),
+                        ]);
                         Notification(result.error, {
                             module: 'urls@openNotSupportedUrlHelper',
                         });
@@ -2375,7 +2392,7 @@ async function onBackgroundMessage(message, sender) {
                 break;
             case 'remove-group-from-bookmarks':
                 if (!await Bookmarks.hasPermission()) {
-                    result.error = browser.i18n.getMessage('noAccessToBookmarks');
+                    result.error = Lang('noAccessToBookmarks');
                     break;
                 }
 
@@ -2389,10 +2406,10 @@ async function onBackgroundMessage(message, sender) {
 
                         await loadingBrowserAction(false);
                     } else {
-                        result.error = browser.i18n.getMessage('groupNotFound');
+                        result.error = Lang('groupNotFound');
                     }
                 } else {
-                    result.error = browser.i18n.getMessage('groupNotFound');
+                    result.error = Lang('groupNotFound');
                 }
                 break;
             case 'delete-current-group':
@@ -2409,7 +2426,7 @@ async function onBackgroundMessage(message, sender) {
 
                     result.ok = true;
                 } else {
-                    result.error = browser.i18n.getMessage('windowNotHaveGroup');
+                    result.error = Lang('windowNotHaveGroup');
                 }
 
                 break;
@@ -2439,7 +2456,7 @@ async function onBackgroundMessage(message, sender) {
 
                     if (groupMoveTo) {
                         if (groupMoveTo.isArchive) {
-                            result.error = browser.i18n.getMessage('groupIsArchived', groupMoveTo.title);
+                            result.error = Lang('groupIsArchived', groupMoveTo.title);
                             Notification(result.error);
                         } else {
                             await Tabs.move(tabIds, data.groupId);
@@ -2454,14 +2471,17 @@ async function onBackgroundMessage(message, sender) {
                         Tabs.sendMessage(activeTab.id, {
                             action: 'show-groups-popup',
                             popupAction: data.action,
-                            popupTitle: browser.i18n.getMessage('hotkeyActionTitleMoveSelectedTabsToCustomGroup'),
+                            popupTitle: Lang('hotkeyActionTitleMoveSelectedTabsToCustomGroup'),
                             groups: notArchivedGroups.map(Groups.mapForExternalExtension),
                             focusedGroupId: activeTab.groupId,
                         });
 
                         result.ok = true;
                     } else {
-                        result.error = browser.i18n.getMessage('impossibleToAskUserAboutAction', [activeTab.title, browser.i18n.getMessage('hotkeyActionTitleMoveSelectedTabsToCustomGroup')]);
+                        result.error = Lang('impossibleToAskUserAboutAction', [
+                            activeTab.title,
+                            Lang('hotkeyActionTitleMoveSelectedTabsToCustomGroup'),
+                        ]);
                         Notification(result.error, {
                             module: 'urls@openNotSupportedUrlHelper',
                         });
@@ -2476,7 +2496,7 @@ async function onBackgroundMessage(message, sender) {
 
                     if (groupToDiscard) {
                         if (groupToDiscard.isArchive) {
-                            result.error = browser.i18n.getMessage('groupIsArchived', groupToDiscard.title);
+                            result.error = Lang('groupIsArchived', groupToDiscard.title);
                             Notification(result.error);
                         } else {
                             await Tabs.discard(groupToDiscard.tabs);
@@ -2489,7 +2509,7 @@ async function onBackgroundMessage(message, sender) {
                             Tabs.sendMessage(activeTab.id, {
                                 action: 'show-groups-popup',
                                 popupAction: 'discard-group',
-                                popupTitle: browser.i18n.getMessage('hotkeyActionTitleDiscardGroup'),
+                                popupTitle: Lang('hotkeyActionTitleDiscardGroup'),
                                 groups: notArchivedGroups.map(Groups.mapForExternalExtension),
                                 focusedGroupId: currentGroup?.id,
                                 disableNewGroupItem: true,
@@ -2497,7 +2517,10 @@ async function onBackgroundMessage(message, sender) {
 
                             result.ok = true;
                         } else {
-                            result.error = browser.i18n.getMessage('impossibleToAskUserAboutAction', [activeTab.title, browser.i18n.getMessage('hotkeyActionTitleDiscardGroup')]);
+                            result.error = Lang('impossibleToAskUserAboutAction', [
+                                activeTab.title,
+                                Lang('hotkeyActionTitleDiscardGroup'),
+                            ]);
                             Notification(result.error, {
                                 module: 'urls@openNotSupportedUrlHelper',
                             });
@@ -3265,7 +3288,7 @@ async function runMigrateForData(data, applyToCurrentInstance = true) {
                     windows = await Windows.load(true, true, true);
 
                     if (!windows.length) {
-                        throw browser.i18n.getMessage('notFoundWindowsAddonStoppedWorking');
+                        throw Lang('notFoundWindowsAddonStoppedWorking');
                     }
 
                     Notification('loading', {id: 'loading'});
@@ -4368,7 +4391,10 @@ async function init() {
         // Urls.openUrl('/popup/popup.html#sidebar');
         // Urls.openUrl('/popup/popup.html');
 
+        // Urls.openOptionsPage();
         // Urls.openOptionsPage('backup');
+        // Urls.openDebugPage();
+        // Urls.openUrl('welcome');
     } catch (e) {
         setActionToReloadAddon();
 

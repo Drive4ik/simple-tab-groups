@@ -1,5 +1,5 @@
 
-import './translate-help-pages.js';
+import '/js/lang.js?translate-page';
 
 const $ = document.querySelector.bind(document);
 const UNSUPPORTED_URL = location.hash.slice(1).trim();
@@ -15,6 +15,5 @@ if (UNSUPPORTED_URL) {
 }
 
 async function closeTab() {
-    let tab = await browser.tabs.getCurrent();
-    await browser.tabs.remove(tab.id);
+    window.close();
 }

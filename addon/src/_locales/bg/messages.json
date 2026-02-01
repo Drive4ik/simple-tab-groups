@@ -104,7 +104,7 @@
         "description": "Show confirmation dialog before archiving the group"
     },
     "exportAddonSettingsTitle": {
-        "message": "Резервни копия",
+        "message": "Резервни копия __MSG_extensionName__",
         "description": "Backup your Simple Tab Groups"
     },
     "exportAddonSettingsDescription": {
@@ -120,7 +120,7 @@
         "description": "Include tab thumbnails in backup (makes backup file size bigger)"
     },
     "importAddonSettingsTitle": {
-        "message": "Възстановяване на групи от резервно копие",
+        "message": "Възстановяване на __MSG_extensionName__ от резервно копие",
         "description": "Restore Simple Tab Groups"
     },
     "importAddonSettingsDescription": {
@@ -806,11 +806,11 @@
         "description": "Delete all addon data and settings before restoring backup"
     },
     "helpPageWelcomeTitle": {
-        "message": "Добре дошли при Simple Tab Groups",
+        "message": "Добре дошли при __MSG_extensionName__",
         "description": "Welcome to Simple Tab Groups"
     },
     "helpPageWelcomeDescription": {
-        "message": "Oтметнете „Възстановяване на предишната сесия“ в настройките на четеца.\nТова е необходимо, за да бъде запазена връзката между групите и разделите. В противен случай при отваряне на четеца разделите няма да бъдат заредени и ще бъдат недостъпни за добавката и тя ще спре да работи.",
+        "message": "Oтметнете „**Възстановяване на предишната сесия**“ в настройките на четеца.\nТова е необходимо, за да бъде запазена връзката между групите и разделите. В противен случай при отваряне на четеца разделите няма да бъдат заредени и ще бъдат недостъпни за добавката и тя ще спре да работи.",
         "description": "Please enable \"Open previous windows and tabs\" in browser settings.\nThis is necessary to maintain communication between the group and the tab, otherwise the tabs will not open when the browser starts and will be lost from the addon - the addon will stop working."
     },
     "enableDebugTitle": {
@@ -830,7 +830,7 @@
         "description": "logging was auto-enabled due to an error in addon"
     },
     "loggingDescription": {
-        "message": "Отметнете полето само ако трябва да пресъздадете грешка и да изпратите дневника на автора. Отмятането му ще доведе до чувствително намаляване на производителността на добавката, тъй като всички нейни действия бъдат отразени в дневника. След като успешно пресъздадете грешката махнете отметката и добавката ще ви предложи да запазите дневника във файл. В случай на грешка добавката сама може да отметне това поле. В този случай трябва да махнете отметката и пак да запазите дневника във файл.<br>Изпратете файл по електронна поща на <a href=\"mailto:drive4ik+stg@protonmail.com\">drive4ik+stg@protonmail.com</a><br><span class=\"has-text-danger\">Внимание! Дневникът не съдържа лична информация като пароли, отметки и т.н.</span><br>Той е необходим за пресъздаване на проблема и неговото отстраняване от автора.<br>Поздрави!",
+        "message": "Отметнете полето само ако трябва да пресъздадете грешка и да изпратите дневника на автора. Отмятането му ще доведе до чувствително намаляване на производителността на добавката, тъй като всички нейни действия бъдат отразени в дневника. След като успешно пресъздадете грешката махнете отметката и добавката ще ви предложи да запазите дневника във файл. В случай на грешка добавката сама може да отметне това поле. В този случай трябва да махнете отметката и пак да запазите дневника във файл.\n\nИзпратете файл по електронна поща на <a email>author-email</a> <p warn>Внимание! Дневникът не съдържа лична информация като пароли, отметки и т.н.</p> Той е необходим за пресъздаване на проблема и неговото отстраняване от автора.\nПоздрави!",
         "description": "logging description"
     },
     "archiveGroup": {
@@ -1044,7 +1044,7 @@
         "description": "Show archived groups"
     },
     "helpPageDbErrorReinstallTitle": {
-        "message": "Грешка в данните на Simple Tab Groups",
+        "message": "Грешка в данните на __MSG_extensionName__",
         "description": "Database error in Simple Tab Groups"
     },
     "helpPageDbErrorReinstallDescription": {
@@ -1104,11 +1104,11 @@
         "description": "Extensions that conflict with STG"
     },
     "helpPageExtensionsThatConflictWithStgDesc1": {
-        "message": "Разширението Simple Tab Groups е в конфликт със следните, работещи добавки:",
+        "message": "Разширението __MSG_extensionName__ е в конфликт със следните, работещи добавки:",
         "description": "Simple Tab Groups addon conflicts with the following enabled extensions:"
     },
     "helpPageExtensionsThatConflictWithStgDesc2": {
-        "message": "За да предотвратите загуба на раздели или разпиляването им из прозорци и раздели е силно препоръчително да изключите добавките, които са в конфликт с разширението Simple Tab Groups. Можете да го направите от страницата за настройка на добавки „about:addons“ или чрез клавишната комбинация <code>Ctrl+Shift+A</code>",
+        "message": "За да предотвратите загуба на раздели или разпиляването им из прозорци и раздели е силно препоръчително да изключите добавките, които са в конфликт с разширението __MSG_extensionName__.\nМожете да го направите от страницата за настройка на добавки „about:addons“ или чрез клавишната комбинация `Ctrl+Shift+A`",
         "description": "To avoid losing tabs or their location in windows and groups, it is strongly recommended to turn off or remove enabled extensions that conflict with the Simple Tab Groups addon. You can do this on the addons settings page about:addons or by pressing the key combination Ctrl+Shift+A"
     },
     "colorScheme": {

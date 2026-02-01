@@ -104,7 +104,7 @@
         "description": "Show confirmation dialog before archiving the group"
     },
     "exportAddonSettingsTitle": {
-        "message": "Effettua il backup di Simple Tab Groups",
+        "message": "Effettua il backup di __MSG_extensionName__",
         "description": "Backup your Simple Tab Groups"
     },
     "exportAddonSettingsDescription": {
@@ -120,7 +120,7 @@
         "description": "Include tab thumbnails in backup (makes backup file size bigger)"
     },
     "importAddonSettingsTitle": {
-        "message": "Ripristina i gruppi di Simple Tabs Groups dal backup",
+        "message": "Ripristina i gruppi di __MSG_extensionName__ dal backup",
         "description": "Restore Simple Tab Groups"
     },
     "importAddonSettingsDescription": {
@@ -806,11 +806,11 @@
         "description": "Delete all addon data and settings before restoring backup"
     },
     "helpPageWelcomeTitle": {
-        "message": "Benvenuto in Simple Tab Groups",
+        "message": "Benvenuto in __MSG_extensionName__",
         "description": "Welcome to Simple Tab Groups"
     },
     "helpPageWelcomeDescription": {
-        "message": "Abilita \"Ripristina la sessione precedente\" nelle impostazioni del browser.\nQuesta impostazione è necessaria per mantere la comunicazione tra il gruppo corrente e le schede, altrimenti le schede non saranno aperte quando il browser si avvia e le informazioni del gruppo saranno perse dall'estensione e l'estensione smetterà di funzionare.",
+        "message": "Abilita \"**Ripristina la sessione precedente**\" nelle impostazioni del browser.\nQuesta impostazione è necessaria per mantere la comunicazione tra il gruppo corrente e le schede, altrimenti le schede non saranno aperte quando il browser si avvia e le informazioni del gruppo saranno perse dall'estensione e l'estensione smetterà di funzionare.",
         "description": "Please enable \"Open previous windows and tabs\" in browser settings.\nThis is necessary to maintain communication between the group and the tab, otherwise the tabs will not open when the browser starts and will be lost from the addon - the addon will stop working."
     },
     "enableDebugTitle": {
@@ -830,7 +830,7 @@
         "description": "logging was auto-enabled due to an error in addon"
     },
     "loggingDescription": {
-        "message": "Spunta questa casella solamente se devi registrare un bug e mandare la registrazione a me. Spuntare questa casella comporta un notevole rallentamento dell'estensione, poiché tutte le azioni dell'estensione sono registrate. Quando hai finito di registrare l'errore, togli la spunta alla casella e l'estensione ti chiederà dove salvare la registrazione. Questa opzione verrà abilitata in automatico se l'estensione trova un errore. Per salvare la registrazione devi togliere la spunta alla casella della modalità DEBUG e salvare la registrazione su file. <br> Manda il file della registrazione con un'email a <a href=\"mailto:drive4ik+stg@protonmail.com\">drive4ik+stg@protonmail.com</a><br> <span class=\"has-text-danger\"> Attenzione! La registrazione non contiene nessun tipo di dato personale, come password o segnalibri!</span><br> La registrazione è necessaria per poter riprodurre l'errore e sistemare il problema. <br> Cordiali saluti",
+        "message": "Spunta questa casella solamente se devi registrare un bug e mandare la registrazione a me. Spuntare questa casella comporta un notevole rallentamento dell'estensione, poiché tutte le azioni dell'estensione sono registrate. Quando hai finito di registrare l'errore, togli la spunta alla casella e l'estensione ti chiederà dove salvare la registrazione. Questa opzione verrà abilitata in automatico se l'estensione trova un errore. Per salvare la registrazione devi togliere la spunta alla casella della modalità DEBUG e salvare la registrazione su file.\n\nManda il file della registrazione con un'email a <a email>author-email</a> <p warn>Attenzione! La registrazione non contiene nessun tipo di dato personale, come password o segnalibri!</p> La registrazione è necessaria per poter riprodurre l'errore e sistemare il problema.\nCordiali saluti",
         "description": "logging description"
     },
     "archiveGroup": {
@@ -1044,7 +1044,7 @@
         "description": "Show archived groups"
     },
     "helpPageDbErrorReinstallTitle": {
-        "message": "Errore database in Simple Tab Groups",
+        "message": "Errore database in __MSG_extensionName__",
         "description": "Database error in Simple Tab Groups"
     },
     "helpPageDbErrorReinstallDescription": {
@@ -1104,11 +1104,11 @@
         "description": "Extensions that conflict with STG"
     },
     "helpPageExtensionsThatConflictWithStgDesc1": {
-        "message": "Simple Tab Groups è in conflitto con le seguenti estensioni abilitate:",
+        "message": "__MSG_extensionName__ è in conflitto con le seguenti estensioni abilitate:",
         "description": "Simple Tab Groups addon conflicts with the following enabled extensions:"
     },
     "helpPageExtensionsThatConflictWithStgDesc2": {
-        "message": "Per evitare di perdere schede o la loro posizione in finestre e gruppi, si consiglia vivamente di disattivare o rimuovere le estensioni attivate che confliggono con l'addon Simple Tab Groups. Puoi farlo nella pagina delle impostazioni degli addon \"about:addons\" o premendo la combinazione di tasti <code>Ctrl+Shift+A</code>",
+        "message": "Per evitare di perdere schede o la loro posizione in finestre e gruppi, si consiglia vivamente di disattivare o rimuovere le estensioni attivate che confliggono con l'addon __MSG_extensionName__.\nPuoi farlo nella pagina delle impostazioni degli addon \"about:addons\" o premendo la combinazione di tasti `Ctrl+Shift+A`",
         "description": "To avoid losing tabs or their location in windows and groups, it is strongly recommended to turn off or remove enabled extensions that conflict with the Simple Tab Groups addon. You can do this on the addons settings page about:addons or by pressing the key combination Ctrl+Shift+A"
     },
     "ignoreConflictedExtIgnore": {

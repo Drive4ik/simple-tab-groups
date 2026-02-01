@@ -96,7 +96,7 @@
         "description": "Show confirmation dialog before archiving the group"
     },
     "exportAddonSettingsTitle": {
-        "message": "Αντίγραφο ασφαλείας (backup) των Simple Tab Groups",
+        "message": "Αντίγραφο ασφαλείας (backup) των __MSG_extensionName__",
         "description": "Backup your Simple Tab Groups"
     },
     "exportAddonSettingsDescription": {
@@ -112,7 +112,7 @@
         "description": "Include tab thumbnails in backup (makes backup file size bigger)"
     },
     "importAddonSettingsTitle": {
-        "message": "Επαναφορά των Simple Tab Groups (από αντίγραφο ασφαλείας)",
+        "message": "Επαναφορά των __MSG_extensionName__ (από αντίγραφο ασφαλείας)",
         "description": "Restore Simple Tab Groups"
     },
     "importAddonSettingsDescription": {

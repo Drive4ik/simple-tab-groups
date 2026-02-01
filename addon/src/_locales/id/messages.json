@@ -96,7 +96,7 @@
         "description": "Show confirmation dialog before archiving the group"
     },
     "exportAddonSettingsTitle": {
-        "message": "Cadangkan \"Simple Tab Group\" Anda",
+        "message": "Cadangkan \"__MSG_extensionName__\" Anda",
         "description": "Backup your Simple Tab Groups"
     },
     "exportAddonSettingsDescription": {
@@ -112,7 +112,7 @@
         "description": "Include tab thumbnails in backup (makes backup file size bigger)"
     },
     "importAddonSettingsTitle": {
-        "message": "Pulihkan \"Simple Tab Group\" dari cadangan",
+        "message": "Pulihkan \"__MSG_extensionName__\" dari cadangan",
         "description": "Restore Simple Tab Groups"
     },
     "importAddonSettingsDescription": {
@@ -782,11 +782,11 @@
         "description": "Delete all addon data and settings before restoring backup"
     },
     "helpPageWelcomeTitle": {
-        "message": "Selamat datang di \"Simple Tab Group\"",
+        "message": "Selamat datang di \"__MSG_extensionName__\"",
         "description": "Welcome to Simple Tab Groups"
     },
     "helpPageWelcomeDescription": {
-        "message": "Harap aktifkan \"Pulihkan sesi sebelumnya\" di setelan browser.\nIni diperlukan untuk menjaga komunikasi antara grup dan tab, jika tidak, tab tidak akan terbuka saat browser dimulai dan akan hilang dari addon - addon akan berhenti bekerja.",
+        "message": "Harap aktifkan \"**Pulihkan sesi sebelumnya**\" di setelan browser.\nIni diperlukan untuk menjaga komunikasi antara grup dan tab, jika tidak, tab tidak akan terbuka saat browser dimulai dan akan hilang dari addon - addon akan berhenti bekerja.",
         "description": "Please enable \"Open previous windows and tabs\" in browser settings.\nThis is necessary to maintain communication between the group and the tab, otherwise the tabs will not open when the browser starts and will be lost from the addon - the addon will stop working."
     },
     "enableDebugTitle": {
@@ -802,7 +802,7 @@
         "description": "logging was auto-enabled due to an error in addon"
     },
     "loggingDescription": {
-        "message": "Harap aktifkan kotak centang ini hanya jika Anda perlu merekam bug dan mengirim log kepada saya. Mengaktifkan kotak centang ini akan menyebabkan pelambatan yang nyata pada addon, karena semua tindakan addon dicatat. Saat Anda mereproduksi kesalahan, matikan kotak centang ini, dan addon akan menawarkan untuk menyimpan file log. Opsi ini dapat diaktifkan dengan sendirinya jika terjadi kesalahan. Anda perlu menonaktifkan kotak centang DEBUG dan menyimpan file log.<br> Kirimkan file log ini kepada saya melalui email: <a href=\"mailto:drive4ik+stg@protonmail.com\">drive4ik+stg@protonmail.com< /a><br> <span class=\"has-text-danger\">Perhatian! Tidak ada data pribadi, kata sandi, bookmark, dll., dalam file log ini!</span><br> Ini diperlukan untuk mereproduksi masalah dan mencoba memperbaikinya.<br> Salam Hormat",
+        "message": "Harap aktifkan kotak centang ini hanya jika Anda perlu merekam bug dan mengirim log kepada saya. Mengaktifkan kotak centang ini akan menyebabkan pelambatan yang nyata pada addon, karena semua tindakan addon dicatat. Saat Anda mereproduksi kesalahan, matikan kotak centang ini, dan addon akan menawarkan untuk menyimpan file log. Opsi ini dapat diaktifkan dengan sendirinya jika terjadi kesalahan. Anda perlu menonaktifkan kotak centang DEBUG dan menyimpan file log.\n\nKirimkan file log ini kepada saya melalui email: <a email>author-email</a> <p warn>Perhatian! Tidak ada data pribadi, kata sandi, bookmark, dll., dalam file log ini!</p> Ini diperlukan untuk mereproduksi masalah dan mencoba memperbaikinya.\nSalam Hormat",
         "description": "logging description"
     },
     "archiveGroup": {
@@ -1016,7 +1016,7 @@
         "description": "Show archived groups"
     },
     "helpPageDbErrorReinstallTitle": {
-        "message": "Kesalahan basis data di \"Simple Tab Grup\"",
+        "message": "Kesalahan basis data di \"__MSG_extensionName__\"",
         "description": "Database error in Simple Tab Groups"
     },
     "helpPageDbErrorReinstallDescription": {
@@ -1076,11 +1076,11 @@
         "description": "Extensions that conflict with STG"
     },
     "helpPageExtensionsThatConflictWithStgDesc1": {
-        "message": "Ekstensi \"Simple Tab Group\" bertentangan dengan ekstensi yang diaktifkan berikut:",
+        "message": "Ekstensi \"__MSG_extensionName__\" bertentangan dengan ekstensi yang diaktifkan berikut:",
         "description": "Simple Tab Groups addon conflicts with the following enabled extensions:"
     },
     "helpPageExtensionsThatConflictWithStgDesc2": {
-        "message": "Untuk menghindari kehilangan tab atau lokasinya di jendela dan grup, sangat disarankan untuk mematikan atau menghapus ekstensi aktif yang bertentangan dengan addon Grup Tab Sederhana. Anda dapat melakukannya di halaman pengaturan addons \"about:addons\" atau dengan menekan kombinasi tombol <code>Ctrl+Shift+A</code>",
+        "message": "Untuk menghindari kehilangan tab atau lokasinya di jendela dan grup, sangat disarankan untuk mematikan atau menghapus ekstensi aktif yang bertentangan dengan addon __MSG_extensionName__.\nAnda dapat melakukannya di halaman pengaturan addons \"about:addons\" atau dengan menekan kombinasi tombol `Ctrl+Shift+A`",
         "description": "To avoid losing tabs or their location in windows and groups, it is strongly recommended to turn off or remove enabled extensions that conflict with the Simple Tab Groups addon. You can do this on the addons settings page about:addons or by pressing the key combination Ctrl+Shift+A"
     },
     "colorScheme": {

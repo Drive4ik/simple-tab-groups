@@ -96,7 +96,7 @@
         "description": "Show confirmation dialog before archiving the group"
     },
     "exportAddonSettingsTitle": {
-        "message": "당신의 심플 탭 그룹을 백업",
+        "message": "__MSG_extensionName__을 백업하세요",
         "description": "Backup your Simple Tab Groups"
     },
     "exportAddonSettingsDescription": {
@@ -112,7 +112,7 @@
         "description": "Include tab thumbnails in backup (makes backup file size bigger)"
     },
     "importAddonSettingsTitle": {
-        "message": "심플 탭 그룹 복원",
+        "message": "__MSG_extensionName__ 복원",
         "description": "Restore Simple Tab Groups"
     },
     "importAddonSettingsDescription": {
@@ -770,11 +770,11 @@
         "description": "Delete all addon data and settings before restoring backup"
     },
     "helpPageWelcomeTitle": {
-        "message": "심플 탭 그룹 이용을 환영합니다",
+        "message": "__MSG_extensionName__에 오신 것을 환영합니다",
         "description": "Welcome to Simple Tab Groups"
     },
     "helpPageWelcomeDescription": {
-        "message": "브라우저 설정에서 \"이전 세션 복원\"을 활성화하십시오.\n이는 그룹과 탭 간의 통신을 유지하는 데 필요합니다. 그렇지 않으면 브라우저가 시작될 때 탭이 열리지 않고 확장 프로그램에서 손실됩니다 확장 프로그램이 작동을 멈춥니다.",
+        "message": "브라우저 설정에서 \"**이전 세션 복원**\"을 활성화하십시오.\n이는 그룹과 탭 간의 통신을 유지하는 데 필요합니다. 그렇지 않으면 브라우저가 시작될 때 탭이 열리지 않고 확장 프로그램에서 손실됩니다 확장 프로그램이 작동을 멈춥니다.",
         "description": "Please enable \"Open previous windows and tabs\" in browser settings.\nThis is necessary to maintain communication between the group and the tab, otherwise the tabs will not open when the browser starts and will be lost from the addon - the addon will stop working."
     },
     "enableDebugTitle": {
@@ -790,7 +790,7 @@
         "description": "logging was auto-enabled due to an error in addon"
     },
     "loggingDescription": {
-        "message": "버그를 기록하고 로그를 보내야 하는 경우에만 이 확인란을 활성화하십시오. 이 확인란을 활성화하면 모든 추가 작업이 기록되므로 추가 작업의 속도가 눈에 띄게 느려집니다. 오류를 재현할 때 이 확인란을 해제하면 로그 파일을 저장할 수 있습니다. 오류가 발생할 경우 이 옵션을 단독으로 실행할 수 있습니다. DEBUG 확인란을 사용하지 않도록 설정하고 로그 파일을 저장해야 합니다.이 로그 파일을 제게 이메일로 보내 주십시오: <a href=\"mailto:drive4ik+stg@protonmail.com>drive4ik+stg@protonmail.com<br> <span class=\"has-text-class\">관심! 이 로그 파일에는 개인 데이터, 암호, 북마크 등이 없습니다!이것은 문제를 재현하고 고치려고 노력하는 것이 필요합니다.[br] 안부 전합니다.",
+        "message": "버그를 기록하고 로그를 보내야 하는 경우에만 이 확인란을 활성화하십시오. 이 확인란을 활성화하면 모든 추가 작업이 기록되므로 추가 작업의 속도가 눈에 띄게 느려집니다. 오류를 재현할 때 이 확인란을 해제하면 로그 파일을 저장할 수 있습니다. 오류가 발생할 경우 이 옵션을 단독으로 실행할 수 있습니다. DEBUG 확인란을 사용하지 않도록 설정하고 로그 파일을 저장해야 합니다.\n\n이 로그 파일을 제게 이메일로 보내 주십시오: <a email>author-email</a> <p warn>관심! 이 로그 파일에는 개인 데이터, 암호, 북마크 등이 없습니다!</p> 이것은 문제를 재현하고 고치려고 노력하는 것이 필요합니다.\n안부 전합니다.",
         "description": "logging description"
     },
     "archiveGroup": {
@@ -932,11 +932,11 @@
         "description": "Show archived groups"
     },
     "helpPageDbErrorReinstallTitle": {
-        "message": "Simple Tab Groups의 데이터베이스 에러",
+        "message": "__MSG_extensionName__ 의 데이터베이스 에러",
         "description": "Database error in Simple Tab Groups"
     },
     "helpPageDbErrorReinstallDescription": {
-        "message": "안타깝게도 Firefox 데이터베이스에서 Simple Tab Groups 확장 프로그램의 데이터를 읽는 동안 오류가 발생했습니다. 현재 확장 프로그램이 중지되었습니다. 추가 기능을 재개하려면 다음을 수행하십시오.",
+        "message": "안타깝게도 Firefox 데이터베이스에서 __MSG_extensionName__ 확장 프로그램의 데이터를 읽는 동안 오류가 발생했습니다. 현재 확장 프로그램이 중지되었습니다. 추가 기능을 재개하려면 다음을 수행하십시오.",
         "description": "Unfortunately, an error occurred while reading data from the STG addon from the Firefox database. At the moment, the addon is stopped. To resume the add-on, do the following:"
     },
     "helpPageDbErrorReinstallDescription2": {
@@ -948,7 +948,7 @@
         "description": "If you see this window again, try reinstalling the addon:"
     },
     "helpPageDbErrorReinstallDescription4": {
-        "message": "Simple Tab Groups 확장 프로그램 삭제",
+        "message": "__MSG_extensionName__ 확장 프로그램 삭제",
         "description": "Remove STG Addon"
     },
     "helpPageDbErrorReinstallDescription5": {
@@ -956,11 +956,11 @@
         "description": "Restart Firefox Browser"
     },
     "helpPageDbErrorReinstallDescription6": {
-        "message": "Simple Tab Groups 확장 프로그램 설치",
+        "message": "__MSG_extensionName__ 확장 프로그램 설치",
         "description": "Install STG Addon"
     },
     "helpPageDbErrorReinstallDescription7": {
-        "message": "Firefox 다운로드 폴더 \"STG-backups\"에 있는 최신 Simple Tab Groups 확장 프로그램 데이터 백업을 복원합니다.\n확장 프로그램 설정에서 백업을 복원할 수 있습니다.",
+        "message": "Firefox 다운로드 폴더 \"STG-backups\"에 있는 최신 __MSG_extensionName__ 확장 프로그램 데이터 백업을 복원합니다.\n확장 프로그램 설정에서 백업을 복원할 수 있습니다.",
         "description": "Restore the latest STG addon data backup located in the Firefox downloads folder \"STG-backups\".\nYou can restore backup in addon settings"
     },
     "helpPageDbErrorReinstallOpenFFDownloadsFolder": {
@@ -988,15 +988,15 @@
         "description": "Disabled text"
     },
     "helpPageExtensionsThatConflictWithStgTitle": {
-        "message": "Simple Tab Groups와 충돌하는 확장 프로그램",
+        "message": "__MSG_extensionName__와 충돌하는 확장 프로그램",
         "description": "Extensions that conflict with STG"
     },
     "helpPageExtensionsThatConflictWithStgDesc1": {
-        "message": "Simple Tab Groups 확장 프로그램이 활성화된 다음 확장 프로그램과 충돌합니다:",
+        "message": "__MSG_extensionName__ 확장 프로그램이 활성화된 다음 확장 프로그램과 충돌합니다:",
         "description": "Simple Tab Groups addon conflicts with the following enabled extensions:"
     },
     "helpPageExtensionsThatConflictWithStgDesc2": {
-        "message": "창 및 그룹에서 탭이나 탭의 위치를 ​​잃지 않으려면 Simple Tab Groups 확장 프로그램과 충돌하는 활성화된 확장 프로그램을 끄거나 제거하는 것이 좋습니다. 확장 프로그램 설정 페이지 \"about:addons\"에서 또는 키 조합 <code>Ctrl+Shift+A</code>를 눌러 이 작업을 수행할 수 있습니다.",
+        "message": "창 및 그룹에서 탭이나 탭의 위치를 ​​잃지 않으려면 __MSG_extensionName__ 확장 프로그램과 충돌하는 활성화된 확장 프로그램을 끄거나 제거하는 것이 좋습니다.\n확장 프로그램 설정 페이지 \"about:addons\"에서 또는 키 조합 `Ctrl+Shift+A`를 눌러 이 작업을 수행할 수 있습니다.",
         "description": "To avoid losing tabs or their location in windows and groups, it is strongly recommended to turn off or remove enabled extensions that conflict with the Simple Tab Groups addon. You can do this on the addons settings page about:addons or by pressing the key combination Ctrl+Shift+A"
     },
     "colorScheme": {

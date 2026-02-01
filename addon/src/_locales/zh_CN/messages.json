@@ -104,7 +104,7 @@
         "description": "Show confirmation dialog before archiving the group"
     },
     "exportAddonSettingsTitle": {
-        "message": "备份你的“Simple Tab Groups”",
+        "message": "备份你的“__MSG_extensionName__”",
         "description": "Backup your Simple Tab Groups"
     },
     "exportAddonSettingsDescription": {
@@ -120,7 +120,7 @@
         "description": "Include tab thumbnails in backup (makes backup file size bigger)"
     },
     "importAddonSettingsTitle": {
-        "message": "恢复“Simple Tab Groups”",
+        "message": "恢复“__MSG_extensionName__”",
         "description": "Restore Simple Tab Groups"
     },
     "importAddonSettingsDescription": {
@@ -806,11 +806,11 @@
         "description": "Delete all addon data and settings before restoring backup"
     },
     "helpPageWelcomeTitle": {
-        "message": "欢迎使用 Simple Tab Groups",
+        "message": "欢迎使用 __MSG_extensionName__",
         "description": "Welcome to Simple Tab Groups"
     },
     "helpPageWelcomeDescription": {
-        "message": "请在浏览器选项中启用“恢复先前的浏览状态”。\n这是在群组和标签之间通信所必需的，否则浏览器启动时标签页不会打开，扩展也会丢失它们 - 扩展无法工作。",
+        "message": "请在浏览器选项中启用“**恢复先前的浏览状态**”。\n这是在群组和标签之间通信所必需的，否则浏览器启动时标签页不会打开，扩展也会丢失它们 - 扩展无法工作。",
         "description": "Please enable \"Open previous windows and tabs\" in browser settings.\nThis is necessary to maintain communication between the group and the tab, otherwise the tabs will not open when the browser starts and will be lost from the addon - the addon will stop working."
     },
     "enableDebugTitle": {
@@ -830,7 +830,7 @@
         "description": "logging was auto-enabled due to an error in addon"
     },
     "loggingDescription": {
-        "message": "请仅在您需要记录问题并发送日志给我时才启用该选项。启用该选项将明显让扩展变慢，因为所有的扩展动作将被记录。当您重现该错误后，关闭该选项，扩展会提示保存日志文件。该选项将在错误发生后自动启用。您要禁用 调试 选择框并保存日志文件。<br> 请使用邮件将该文件发送至： <a href=\"mailto:drive4ik+stg@protonmail.com\">drive4ik+stg@protonmail.com</a><br> <span class=\"has-text-danger\">注意！日志文件中不包含任何个人文件，密码，书签等！</span><br> 这是重现问题并尝试修复它的必要过程。<br> 十分感谢",
+        "message": "请仅在您需要记录问题并发送日志给我时才启用该选项。启用该选项将明显让扩展变慢，因为所有的扩展动作将被记录。当您重现该错误后，关闭该选项，扩展会提示保存日志文件。该选项将在错误发生后自动启用。您要禁用 调试 选择框并保存日志文件。\n\n请使用邮件将该文件发送至： <a email>author-email</a> <p warn>注意！日志文件中不包含任何个人文件，密码，书签等！</p> 这是重现问题并尝试修复它的必要过程。\n十分感谢",
         "description": "logging description"
     },
     "archiveGroup": {
@@ -1044,7 +1044,7 @@
         "description": "Show archived groups"
     },
     "helpPageDbErrorReinstallTitle": {
-        "message": "Simple Tab Groups 内部数据库错误",
+        "message": "__MSG_extensionName__ 内部数据库错误",
         "description": "Database error in Simple Tab Groups"
     },
     "helpPageDbErrorReinstallDescription": {
@@ -1104,11 +1104,11 @@
         "description": "Extensions that conflict with STG"
     },
     "helpPageExtensionsThatConflictWithStgDesc1": {
-        "message": "Simple Tab Groups 扩展与以下启用的扩展冲突：",
+        "message": "__MSG_extensionName__ 扩展与以下启用的扩展冲突：",
         "description": "Simple Tab Groups addon conflicts with the following enabled extensions:"
     },
     "helpPageExtensionsThatConflictWithStgDesc2": {
-        "message": "为了避免丢失标签页或它们在窗口中的位置和所在群组，强烈建议关闭或移除与 Simple Tab Groups 冲突的已启用的扩展。您可以在扩展设置页面 \"about:addons\"或以快捷键 <code>Ctrl+Shift+A</code>完成",
+        "message": "为了避免丢失标签页或它们在窗口中的位置和所在群组，强烈建议关闭或移除与 __MSG_extensionName__ 冲突的已启用的扩展。\n您可以在扩展设置页面 \"about:addons\"或以快捷键 `Ctrl+Shift+A`完成",
         "description": "To avoid losing tabs or their location in windows and groups, it is strongly recommended to turn off or remove enabled extensions that conflict with the Simple Tab Groups addon. You can do this on the addons settings page about:addons or by pressing the key combination Ctrl+Shift+A"
     },
     "ignoreConflictedExtIgnore": {

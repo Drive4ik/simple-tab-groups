@@ -1,5 +1,6 @@
 <script>
 import contextMenu from './context-menu.vue';
+import Lang from '/js/lang.js';
 
 export default {
     props: {
@@ -32,7 +33,7 @@ export default {
         'context-menu': contextMenu,
     },
     methods: {
-        lang: browser.i18n.getMessage,
+        lang: Lang,
         open(...args) {
             this.$refs.contextMenu.open(...args);
         },

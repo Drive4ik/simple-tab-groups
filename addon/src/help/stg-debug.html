@@ -2,7 +2,7 @@
 <html>
 
 <head>
-    <title data-i18n-id="helpPageStgDebugTitle"></title>
+    <title>__MSG_helpPageStgDebugTitle__</title>
     <meta charset="utf-8">
     <meta name="color-scheme" content="light dark"> <!-- need for aboutNetError.css -->
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -30,24 +30,24 @@
             align-items: center;
             margin-top: 20px;
             height: 20px;
-        }
 
-        #debugStatus > :not(:first-child) {
-            margin-left: 5px;
-        }
+            > :not(:first-child) {
+                margin-left: 5px;
+            }
 
-        #debugStatus:not(.enabled):not(.auto-enabled) {
-            visibility: hidden;
-        }
+            &:not(.enabled):not(.auto-enabled) {
+                visibility: hidden;
+            }
 
-        #debugStatus > .enabled,
-        #debugStatus > .auto-enabled {
-            display: none;
-        }
+            > .enabled,
+            > .auto-enabled {
+                display: none;
+            }
 
-        #debugStatus.enabled > .enabled,
-        #debugStatus.auto-enabled > .auto-enabled {
-            display: inline-block;
+            &.enabled > .enabled,
+            &.auto-enabled > .auto-enabled {
+                display: inline-block;
+            }
         }
 
         .size-16 {
@@ -66,22 +66,31 @@
 <body>
     <main>
         <div class="title">
-            <h1 id="mainTitle" class="title-text" data-i18n-id="helpPageStgDebugTitle"></h1>
+            <h1 id="mainTitle" class="title-text">__MSG_helpPageStgDebugTitle__</h1>
         </div>
         <div>
-            <div data-i18n-id="loggingDescription"></div>
+            <div
+                class="white-space-pre-line"
+                data-a-email-href="mailto:drive4ik+stg@protonmail.com"
+                data-a-email-hreftocontent
+                data-a-email-target="_blank"
+                data-p-warn-class="text-error"
+                data-p-warn-spacesaround
+                >
+                html: __MSG_loggingDescription__
+            </div>
 
             <div id="debugStatus">
                 <span class="size-16 debug-record userContext-icon identity-icon-circle identity-color-red"></span>
-                <span class="enabled" data-i18n-id="loggingIsEnabledTitle"></span>
-                <span class="auto-enabled" data-i18n-id="loggingIsAutoEnabledTitle"></span>
+                <span class="enabled">__MSG_loggingIsEnabledTitle__</span>
+                <span class="auto-enabled">__MSG_loggingIsAutoEnabledTitle__</span>
             </div>
 
 
             <div class="button-container">
-                <button id="enableDebug" class="primary hidden" data-i18n-id="enableDebugTitle">Enable Debug</button>
-                <button id="disableDebug" class="primary" data-i18n-id="disableDebugTitle">Disable Debug</button>
-                <button id="closePage" data-i18n-id="close">Close</button>
+                <button id="enableDebug" class="primary hidden">__MSG_enableDebugTitle__</button>
+                <button id="disableDebug" class="primary">__MSG_disableDebugTitle__</button>
+                <button id="closePage">__MSG_close__</button>
             </div>
         <div>
     <main>

@@ -34,7 +34,7 @@
         el: '#content',
         data: {
             isAdmin: !!localStorage.isAdmin,
-            notAllowedKeys: ['branch', 'component', 'locale', 'version', 'polyglot', 'extensionName'],
+            notAllowedKeys: ['branch', 'component', 'locale', 'version', 'polyglot', 'extensionName', 'stgHostName'],
 
             branchesLoading: true,
             branches: [],

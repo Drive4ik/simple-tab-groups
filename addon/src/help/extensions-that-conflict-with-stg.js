@@ -1,6 +1,5 @@
 
-import './translate-help-pages.js';
-
+import Lang from '/js/lang.js?translate-page';
 import * as Constants from '/js/constants.js';
 import * as Management from '/js/management.js';
 
@@ -18,7 +17,7 @@ function createExtensionBlock(ext) {
     const ignoredText = document.createElement('em');
     ignoredText.classList.add('ignored-text');
     ignoredText.classList.add('hidden');
-    ignoredText.innerText = browser.i18n.getMessage('ignoreConflictedExtIgnoredText');
+    ignoredText.innerText = Lang('ignoreConflictedExtIgnoredText');
 
     const block = document.createElement('div');
     block.classList.add('block-content');
@@ -37,9 +36,9 @@ function createExtensionBlock(ext) {
             const isIgnored = Management.isIgnoredConflictedExtension(ext.id);
 
             if (isIgnored) {
-                button.innerText = browser.i18n.getMessage('ignoreConflictedExtDontIgnore');
+                button.innerText = Lang('ignoreConflictedExtDontIgnore');
             } else {
-                button.innerText = browser.i18n.getMessage('ignoreConflictedExtIgnore');
+                button.innerText = Lang('ignoreConflictedExtIgnore');
             }
 
             ignoredText.classList.toggle('hidden', !isIgnored);
@@ -52,7 +51,7 @@ function createExtensionBlock(ext) {
             if (Management.isIgnoredConflictedExtension(ext.id)) {
                 Management.dontIgnoreConflictedExtension(ext.id);
                 setContent();
-            } else if (confirm(browser.i18n.getMessage('ignoreConflictedExtConfirm'))) {
+            } else if (confirm(Lang('ignoreConflictedExtConfirm'))) {
                 Management.ignoreConflictedExtension(ext.id);
                 setContent();
             }

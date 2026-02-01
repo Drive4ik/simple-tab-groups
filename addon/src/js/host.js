@@ -3,6 +3,7 @@ import * as Constants from './constants.js';
 import * as Utils from './utils.js';
 import * as Permissions from './permissions.js';
 import Logger from '/js/logger.js';
+import Lang from '/js/lang.js';
 
 const logger = new Logger('Host');
 var versionChecked = false;
@@ -26,7 +27,7 @@ export class HostError extends Error {
         if (response.message) {
             message = response.message;
         } else if (response.lang) {
-            message = browser.i18n.getMessage(response.lang, ...response.args) || response.lang;
+            message = Lang(response.lang, response.args) || response.lang;
         } else {
             message = 'Unknown error';
         }
@@ -129,7 +130,7 @@ export async function openBackupFolder() {
 
 export async function selectBackupFolder() {
     const {data} = await sendMessage('select-backup-folder', {
-        dialogTitle: browser.i18n.getMessage('selectBackupFolder'),
+        dialogTitle: Lang('selectBackupFolder'),
     });
     return data;
 }

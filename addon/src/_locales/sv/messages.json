@@ -92,7 +92,7 @@
         "description": "Show confirm dialog before group delete"
     },
     "exportAddonSettingsTitle": {
-        "message": "Ta en säkerhetskopia av Simple Tab Groups-inställningar och -flikar",
+        "message": "Ta en säkerhetskopia av __MSG_extensionName__-inställningar och -flikar",
         "description": "Backup your Simple Tab Groups"
     },
     "exportAddonSettingsDescription": {
@@ -108,7 +108,7 @@
         "description": "Include tab thumbnails in backup (makes backup file size bigger)"
     },
     "importAddonSettingsTitle": {
-        "message": "Återställ Simple Tab Groups-data",
+        "message": "Återställ __MSG_extensionName__-data",
         "description": "Restore Simple Tab Groups"
     },
     "importAddonSettingsDescription": {

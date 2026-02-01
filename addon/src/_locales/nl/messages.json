@@ -104,7 +104,7 @@
         "description": "Show confirmation dialog before archiving the group"
     },
     "exportAddonSettingsTitle": {
-        "message": "Maak reservekopie van Simple Tab Groups",
+        "message": "Maak reservekopie van __MSG_extensionName__",
         "description": "Backup your Simple Tab Groups"
     },
     "exportAddonSettingsDescription": {
@@ -120,7 +120,7 @@
         "description": "Include tab thumbnails in backup (makes backup file size bigger)"
     },
     "importAddonSettingsTitle": {
-        "message": "Simple Tab Groups herstellen vanuit reservekopie",
+        "message": "__MSG_extensionName__ herstellen vanuit reservekopie",
         "description": "Restore Simple Tab Groups"
     },
     "importAddonSettingsDescription": {
@@ -806,11 +806,11 @@
         "description": "Delete all addon data and settings before restoring backup"
     },
     "helpPageWelcomeTitle": {
-        "message": "Welkom bij Simple Tab Groups",
+        "message": "Welkom bij __MSG_extensionName__",
         "description": "Welcome to Simple Tab Groups"
     },
     "helpPageWelcomeDescription": {
-        "message": "Gelieve \"Eerdere vensters en tabbladen openen\" te activeren in de browserinstellingen.\nDit is nodig om de communicatie tussen de groep en het tabblad te onderhouden, zoniet zullen de tabbladen niet openen wanneer de browser opstart en zullen deze verloren gaan uit de add-on - de add-on zal stoppen met werken.",
+        "message": "Gelieve \"**Eerdere vensters en tabbladen openen**\" te activeren in de browserinstellingen.\nDit is nodig om de communicatie tussen de groep en het tabblad te onderhouden, zoniet zullen de tabbladen niet openen wanneer de browser opstart en zullen deze verloren gaan uit de add-on - de add-on zal stoppen met werken.",
         "description": "Please enable \"Open previous windows and tabs\" in browser settings.\nThis is necessary to maintain communication between the group and the tab, otherwise the tabs will not open when the browser starts and will be lost from the addon - the addon will stop working."
     },
     "enableDebugTitle": {
@@ -830,7 +830,7 @@
         "description": "logging was auto-enabled due to an error in addon"
     },
     "loggingDescription": {
-        "message": "Gelieve dit keuzevakje enkel aan te vinken wanneer u bugs wil registreren en logbestanden naar mij wil doorsturen. Dit keuzevakje aanvinken zal tot een merkbare vertraging van de add-on leiden, aangezien alle acties gelogd worden. Vink het keuzevakje uit wanneer u de fout gereproduceerd heeft, en de add-on zal aanbieden het logbestand op te slaan. Deze optie kan vanzelf geactiveerd worden indien een fout optreedt. U moet het keuzevakje DEBUGGEN uitvinken en het logbestand opslaan.<br> Gelieve het logbestand per e-mail naar mij te sturen: <a href=\"mailto:drive4ik+stg@protonmail.com\">drive4ik+stg@protonmail.com</a><br> <span class=\"has-text-danger\">Aandacht! Er worden geen persoonlijke data, wachtwoorden, bladwijzers enz. in dit logbestand opgeslagen!</span><br> Het bestand is nodig om het probleem te reproduceren en dit te proberen oplossen.<br> Vriendelijke groeten",
+        "message": "Gelieve dit keuzevakje enkel aan te vinken wanneer u bugs wil registreren en logbestanden naar mij wil doorsturen. Dit keuzevakje aanvinken zal tot een merkbare vertraging van de add-on leiden, aangezien alle acties gelogd worden. Vink het keuzevakje uit wanneer u de fout gereproduceerd heeft, en de add-on zal aanbieden het logbestand op te slaan. Deze optie kan vanzelf geactiveerd worden indien een fout optreedt. U moet het keuzevakje DEBUGGEN uitvinken en het logbestand opslaan.\n\nGelieve het logbestand per e-mail naar mij te sturen: <a email>author-email</a> <p warn>Aandacht! Er worden geen persoonlijke data, wachtwoorden, bladwijzers enz. in dit logbestand opgeslagen!</p> Het bestand is nodig om het probleem te reproduceren en dit te proberen oplossen.\n Vriendelijke groeten",
         "description": "logging description"
     },
     "archiveGroup": {
@@ -1044,7 +1044,7 @@
         "description": "Show archived groups"
     },
     "helpPageDbErrorReinstallTitle": {
-        "message": "Databankfout in Simple Tab Groups",
+        "message": "Databankfout in __MSG_extensionName__",
         "description": "Database error in Simple Tab Groups"
     },
     "helpPageDbErrorReinstallDescription": {
@@ -1104,11 +1104,11 @@
         "description": "Extensions that conflict with STG"
     },
     "helpPageExtensionsThatConflictWithStgDesc1": {
-        "message": "Simple Tab Groups add-on conflicteert met de volgende ingeschakelde extensies:",
+        "message": "__MSG_extensionName__ add-on conflicteert met de volgende ingeschakelde extensies:",
         "description": "Simple Tab Groups addon conflicts with the following enabled extensions:"
     },
     "helpPageExtensionsThatConflictWithStgDesc2": {
-        "message": "Om het verlies van tabs of hun locatie in vensters en groepen te vermijden, wordt sterk aanbevolen om ingeschakelde extensies die conflicteren met de Simple Tab Groups add-on uit te schakelen of te verwijderen. U kan dit doen via de instellingenpagina voor add-ons \"about:addons\" of door op de toetsencombinatie <code>Ctrl+Shift+A</code> te drukken",
+        "message": "Om het verlies van tabs of hun locatie in vensters en groepen te vermijden, wordt sterk aanbevolen om ingeschakelde extensies die conflicteren met de __MSG_extensionName__ add-on uit te schakelen of te verwijderen.\nU kan dit doen via de instellingenpagina voor add-ons \"about:addons\" of door op de toetsencombinatie `Ctrl+Shift+A` te drukken",
         "description": "To avoid losing tabs or their location in windows and groups, it is strongly recommended to turn off or remove enabled extensions that conflict with the Simple Tab Groups addon. You can do this on the addons settings page about:addons or by pressing the key combination Ctrl+Shift+A"
     },
     "ignoreConflictedExtIgnore": {

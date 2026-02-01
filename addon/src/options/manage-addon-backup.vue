@@ -2,6 +2,7 @@
 import * as Constants from '/js/constants.js';
 import * as Containers from '/js/containers.js';
 import * as Groups from '/js/groups.js';
+import Lang from '/js/lang.js';
 import JSON from '/js/json.js';
 
 export default {
@@ -98,7 +99,7 @@ export default {
         };
     },
     methods: {
-        lang: browser.i18n.getMessage,
+        lang: Lang,
 
         getGroupIconUrl: Groups.getIconUrl,
 

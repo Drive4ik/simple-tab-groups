@@ -6,6 +6,7 @@ import * as Tabs from '/js/tabs.js';
 import * as Groups from '/js/groups.js';
 import * as Management from '/js/management.js';
 import * as Utils from '/js/utils.js';
+import Lang from '/js/lang.js';
 import JSON from '/js/json.js';
 import Logger from '/js/logger.js';
 import GithubGist from './githubgist.js';
@@ -29,9 +30,9 @@ export function CloudError(langId) {
 
     if (langId.startsWith('githubRateLimit')) {
         const relativeTime = Utils.relativeTime(Number(langId.split(':').pop()));
-        this.message = browser.i18n.getMessage('githubRateLimit', relativeTime);
+        this.message = Lang('githubRateLimit', relativeTime);
     } else {
-        this.message = browser.i18n.getMessage(langId) || langId;
+        this.message = Lang(langId) || langId;
     }
 
     this.toString = () => `${this.name}: ${this.message}`;
@@ -163,7 +164,7 @@ export async function sync(trust = null, revision = null, progressFunc = null) {
 
     if (syncResult.changes.cloud) {
         try {
-            const description = browser.i18n.getMessage('githubGistBackupDescription');
+            const description = Lang('githubGistBackupDescription');
             cloudInfo = await Cloud.setContent(syncResult.cloudData, description, createCloudProgress(55, 85));
         } catch (e) {
             log.stopError(e);

@@ -104,7 +104,7 @@
         "description": "Show confirmation dialog before archiving the group"
     },
     "exportAddonSettingsTitle": {
-        "message": "Sauvegarder vos groupes Simple Tab Groups",
+        "message": "Sauvegarder vos groupes __MSG_extensionName__",
         "description": "Backup your Simple Tab Groups"
     },
     "exportAddonSettingsDescription": {
@@ -120,7 +120,7 @@
         "description": "Include tab thumbnails in backup (makes backup file size bigger)"
     },
     "importAddonSettingsTitle": {
-        "message": "Restaurer des groupes Simple Tab Groups",
+        "message": "Restaurer des groupes __MSG_extensionName__",
         "description": "Restore Simple Tab Groups"
     },
     "importAddonSettingsDescription": {
@@ -806,11 +806,11 @@
         "description": "Delete all addon data and settings before restoring backup"
     },
     "helpPageWelcomeTitle": {
-        "message": "Bienvenue dans Simple Tab Groups",
+        "message": "Bienvenue dans __MSG_extensionName__",
         "description": "Welcome to Simple Tab Groups"
     },
     "helpPageWelcomeDescription": {
-        "message": "Veuillez activer \"Ouvrir les fenêtres et onglets précédents\" dans les paramètres du navigateur.\nC'est nécessaire pour maintenir la communication entre les groupes et les onglets, sinon les onglets ne s'ouvriront au redémarrage du navigateur et ils seront perdus pour l'extension - l'extension cessera de fonctionner.",
+        "message": "Veuillez activer \"**Ouvrir les fenêtres et onglets précédents**\" dans les paramètres du navigateur.\nC'est nécessaire pour maintenir la communication entre les groupes et les onglets, sinon les onglets ne s'ouvriront au redémarrage du navigateur et ils seront perdus pour l'extension - l'extension cessera de fonctionner.",
         "description": "Please enable \"Open previous windows and tabs\" in browser settings.\nThis is necessary to maintain communication between the group and the tab, otherwise the tabs will not open when the browser starts and will be lost from the addon - the addon will stop working."
     },
     "enableDebugTitle": {
@@ -830,7 +830,7 @@
         "description": "logging was auto-enabled due to an error in addon"
     },
     "loggingDescription": {
-        "message": "Veuillez cocher cette case uniquement si vous devez enregistrer le bug et m'envoyer les fichiers journaux. L'activation de cette case entraînera un ralentissement notable de l'extension, car toutes les actions de l'extension sont enregistrées. Lorsque vous aurez reproduit l'erreur, décochez cette case, et l'extension vous proposera d'enregistrer le fichier journal. Cette option pourra aussi s'activer d'elle-même si une erreur se produit ; vous devrez alors décocher la case DEBUG et enregistrer le fichier journal.<br> Veuillez m'envoyer ce fichier journal par courrier électronique: <a href=\"mailto:drive4ik+stg@protonmail.com\">drive4ik+stg@protonmail.com</a><br> <span class=\"has-text-danger\">Attention: il n'y a pas de données personnelles, de mots de passe, de signets etc. dans ce fichier journal !</span><br> Ceci est nécessaire pour pouvoir reproduire le problème et essayer de le résoudre.<br> Cordialement",
+        "message": "Veuillez cocher cette case uniquement si vous devez enregistrer le bug et m'envoyer les fichiers journaux. L'activation de cette case entraînera un ralentissement notable de l'extension, car toutes les actions de l'extension sont enregistrées. Lorsque vous aurez reproduit l'erreur, décochez cette case, et l'extension vous proposera d'enregistrer le fichier journal. Cette option pourra aussi s'activer d'elle-même si une erreur se produit ; vous devrez alors décocher la case DEBUG et enregistrer le fichier journal.\n\n Veuillez m'envoyer ce fichier journal par courrier électronique: <a email>author-email</a> <p warn>Attention: il n'y a pas de données personnelles, de mots de passe, de signets etc. dans ce fichier journal !</p> Ceci est nécessaire pour pouvoir reproduire le problème et essayer de le résoudre.\nCordialement",
         "description": "logging description"
     },
     "archiveGroup": {
@@ -1044,7 +1044,7 @@
         "description": "Show archived groups"
     },
     "helpPageDbErrorReinstallTitle": {
-        "message": "Erreur de base de données dans Simple Tab Groups",
+        "message": "Erreur de base de données dans __MSG_extensionName__",
         "description": "Database error in Simple Tab Groups"
     },
     "helpPageDbErrorReinstallDescription": {
@@ -1104,11 +1104,11 @@
         "description": "Extensions that conflict with STG"
     },
     "helpPageExtensionsThatConflictWithStgDesc1": {
-        "message": "L'extension Simple Tab Groups est en conflit avec les extensions activées suivantes:",
+        "message": "L'extension __MSG_extensionName__ est en conflit avec les extensions activées suivantes:",
         "description": "Simple Tab Groups addon conflicts with the following enabled extensions:"
     },
     "helpPageExtensionsThatConflictWithStgDesc2": {
-        "message": "Pour éviter de perdre les onglets ou leur emplacement dans les fenêtres et les groupes, il est fortement recommandé de désactiver ou de supprimer les extensions activées qui entrent en conflit avec l'extension Simple Tab Groups. Vous pouvez le faire sur la page des paramètres des extensions \"about:addons\" ou en appuyant sur la combinaison de touches <code>Ctrl+Shift+A</code>.",
+        "message": "Pour éviter de perdre les onglets ou leur emplacement dans les fenêtres et les groupes, il est fortement recommandé de désactiver ou de supprimer les extensions activées qui entrent en conflit avec l'extension __MSG_extensionName__.\nVous pouvez le faire sur la page des paramètres des extensions \"about:addons\" ou en appuyant sur la combinaison de touches `Ctrl+Shift+A`.",
         "description": "To avoid losing tabs or their location in windows and groups, it is strongly recommended to turn off or remove enabled extensions that conflict with the Simple Tab Groups addon. You can do this on the addons settings page about:addons or by pressing the key combination Ctrl+Shift+A"
     },
     "ignoreConflictedExtIgnore": {

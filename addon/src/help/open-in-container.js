@@ -1,6 +1,5 @@
 
-import './translate-help-pages.js';
-
+import Lang from '/js/lang.js?translate-page';
 import * as Messages from '/js/messages.js';
 import * as Constants from '/js/constants.js';
 import * as Storage from '/js/storage.js';
@@ -11,19 +10,15 @@ const urlParams = new URLSearchParams(window.location.search);
 
 let currentTab;
 
-function lang(...args) {
-    return browser.i18n.getMessage(...args);
-}
-
 function getContainer(cookieStoreId) {
     if (!cookieStoreId) {
         return {notFound: true};
     }
 
     if (cookieStoreId === Constants.TEMPORARY_CONTAINER) {
-        return {name: lang('temporaryContainerTitle')};
+        return {name: Lang('temporaryContainerTitle')};
     } else if (cookieStoreId === Constants.DEFAULT_COOKIE_STORE_ID) {
-        return {name: lang('noContainerTitle')};
+        return {name: Lang('noContainerTitle')};
     } else {
         return browser.contextualIdentities.get(cookieStoreId).catch(() => ({name: cookieStoreId, notFound: true}));
     }
@@ -112,14 +107,14 @@ async function init() {
         });
     }
 
-    $('#helpPageOpenInContainerMainTitle')[INNER_HTML] = lang('helpPageOpenInContainerMainTitle', safeHtml(destContainer.name));
+    $('#helpPageOpenInContainerMainTitle')[INNER_HTML] = Lang('helpPageOpenInContainerMainTitle', safeHtml(destContainer.name));
     applyContainerStyles($('#helpPageOpenInContainerMainTitle'), destContainer);
     $('#redirect-url').innerText = url;
-    $('#helpPageOpenInContainerDesc1')[INNER_HTML] = lang('helpPageOpenInContainerDesc1', [safeHtml(group.title), safeHtml(destContainer.name)]);
+    $('#helpPageOpenInContainerDesc1')[INNER_HTML] = Lang('helpPageOpenInContainerDesc1', [safeHtml(group.title), safeHtml(destContainer.name)]);
     applyContainerStyles($('#helpPageOpenInContainerDesc1'), destContainer);
     // $('#another-addon-img').src = Management.getExtensionIcon(conflictedExt);//can't have permission to read other addon icon :((
     $('#another-addon-name').innerText = conflictedExt.name;
-    $('#helpPageOpenInContainerDesc3')[INNER_HTML] = lang('helpPageOpenInContainerDesc3', [safeHtml(anotherContainer.name), safeHtml(conflictedExt.name)]);
+    $('#helpPageOpenInContainerDesc3')[INNER_HTML] = Lang('helpPageOpenInContainerDesc3', [safeHtml(anotherContainer.name), safeHtml(conflictedExt.name)]);
     applyContainerStyles($('#helpPageOpenInContainerDesc3'), anotherContainer);
 
     // load favicon
@@ -132,16 +127,16 @@ async function init() {
         return;
     }
 
-    $('#deny')[INNER_HTML] = lang('helpPageOpenInContainerOpenInContainer', safeHtml(anotherContainer.name));
-    $('#confirm')[INNER_HTML] = lang('helpPageOpenInContainerOpenInContainer', safeHtml(destContainer.name));
+    $('#deny')[INNER_HTML] = Lang('helpPageOpenInContainerOpenInContainer', safeHtml(anotherContainer.name));
+    $('#confirm')[INNER_HTML] = Lang('helpPageOpenInContainerOpenInContainer', safeHtml(destContainer.name));
 
     applyContainerStyles($('#deny'), anotherContainer);
     applyContainerStyles($('#confirm'), destContainer);
 
-    $('#helpPageOpenInContainerExcludeContainerToGroup')[INNER_HTML] = lang('helpPageOpenInContainerExcludeContainerToGroup', [safeHtml(anotherContainer.name), safeHtml(group.title)]);
+    $('#helpPageOpenInContainerExcludeContainerToGroup')[INNER_HTML] = Lang('helpPageOpenInContainerExcludeContainerToGroup', [safeHtml(anotherContainer.name), safeHtml(group.title)]);
     applyContainerStyles($('#helpPageOpenInContainerExcludeContainerToGroup'), anotherContainer);
 
-    $('#helpPageOpenInContainerIgnoreAppForSession')[INNER_HTML] = lang('helpPageOpenInContainerIgnoreAppForSession', safeHtml(conflictedExt.name));
+    $('#helpPageOpenInContainerIgnoreAppForSession')[INNER_HTML] = Lang('helpPageOpenInContainerIgnoreAppForSession', safeHtml(conflictedExt.name));
 
     $('#deny').addEventListener('click', () => openTab(url, anotherCookieStoreId, 'deny', groupId));
     $('#confirm').addEventListener('click', () => openTab(url, destCookieStoreId, 'confirm', undefined, conflictedExtId));

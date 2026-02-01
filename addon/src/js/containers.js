@@ -8,6 +8,7 @@ import * as Constants from './constants.js';
 import * as ConstantsBrowser from './constants-browser.js';
 import Logger, {catchFunc} from './logger.js';
 import Notification from './notification.js';
+import Lang from '/js/lang.js';
 import * as Utils from './utils.js';
 import * as Groups from './groups.js';
 import * as Storage from './storage.js';
@@ -20,7 +21,7 @@ const containers = {};
 
 export const DEFAULT = {
     cookieStoreId: Constants.DEFAULT_COOKIE_STORE_ID,
-    name: browser.i18n.getMessage('noContainerTitle'),
+    name: Lang('noContainerTitle'),
 };
 
 export const TEMPORARY = {
@@ -29,7 +30,7 @@ export const TEMPORARY = {
     cookieStoreId: Constants.TEMPORARY_CONTAINER,
     icon: Constants.TEMPORARY_CONTAINER_ICON,
     iconUrl: ConstantsBrowser.getContainerIconUrl(Constants.TEMPORARY_CONTAINER_ICON),
-    name: browser.i18n.getMessage('temporaryContainerTitle'),
+    name: Lang('temporaryContainerTitle'),
 };
 
 const tmpUniq = Utils.getRandomInt();

@@ -112,7 +112,7 @@
         "description": "Show confirmation dialog before archiving the group"
     },
     "exportAddonSettingsTitle": {
-        "message": "Резервне копіювання",
+        "message": "Резервне копіювання __MSG_extensionName__",
         "description": "Backup your Simple Tab Groups"
     },
     "exportAddonSettingsDescription": {
@@ -128,7 +128,7 @@
         "description": "Include tab thumbnails in backup (makes backup file size bigger)"
     },
     "importAddonSettingsTitle": {
-        "message": "Відновлення Simple Tab Groups з резервної копії",
+        "message": "Відновлення __MSG_extensionName__ з резервної копії",
         "description": "Restore Simple Tab Groups"
     },
     "importAddonSettingsDescription": {
@@ -854,7 +854,7 @@
         "description": "Delete all addon data and settings"
     },
     "warningAllDataWillRemove": {
-        "message": "Увага! Видалення ВСІХ налаштувань аддона! Вы впевнені в цьому?",
+        "message": "__MSG_warning__ Видалення ВСІХ налаштувань аддона! Вы впевнені в цьому?",
         "description": "Warning! Removing ALL addon data! Are you really sure?"
     },
     "ifDifferentContainerReOpen": {
@@ -866,11 +866,11 @@
         "description": "Delete all addon data and settings before restoring backup"
     },
     "helpPageWelcomeTitle": {
-        "message": "Ласкаво просимо в Simple Tab Groups",
+        "message": "Ласкаво просимо в __MSG_extensionName__",
         "description": "Welcome to Simple Tab Groups"
     },
     "helpPageWelcomeDescription": {
-        "message": "Будь ласка, включіть опцію \"Відкрити попередні вікна та вкладки\" в налаштуваннях браузера.\nЦе необхідно для підтримки зв'язку між групою і вкладкою, інакше вкладки з минулій сесії не будуть відкриватися при завантаженні браузера і будуть втрачені із доповнення - аддон перестане правильно працювати.",
+        "message": "Будь ласка, включіть опцію \"**Відкрити попередні вікна та вкладки**\" в налаштуваннях браузера.\nЦе необхідно для підтримки зв'язку між групою і вкладкою, інакше вкладки з минулій сесії не будуть відкриватися при завантаженні браузера і будуть втрачені із доповнення - аддон перестане правильно працювати.",
         "description": "Please enable \"Open previous windows and tabs\" in browser settings.\nThis is necessary to maintain communication between the group and the tab, otherwise the tabs will not open when the browser starts and will be lost from the addon - the addon will stop working."
     },
     "enableDebugTitle": {
@@ -890,7 +890,7 @@
         "description": "logging was auto-enabled due to an error in addon"
     },
     "loggingDescription": {
-        "message": "Будь ласка, включите цей прапорець, тільки якщо вам потрібно записати помилку і відправити мені логи. Включення цього прапорця призведе до помітного уповільнення аддона, так як всі дії аддона логіруются. При відтворенні помилки вимкніть цей прапорець, і аддон запропонує зберегти файл журналу логів. Ця опція може бути включена сама по собі, якщо відбувається помилка в аддоні. Вам необхідно відключити прапорець DEBUG і зберегти файл журналу.<br>\nБудь ласка, надішліть мені цей файл по електронній пошті: <a href=\"mailto:drive4ik+stg@protonmail.com\">drive4ik+stg@protonmail.com</a><br>\n<span class=\"has-text-danger\">Увага! У цьому лог-файлі немає особистих даних, паролів, закладок і т.д.!</span><br>\nЦе необхідно, щоб мати можливість відтворити проблему і спробувати її виправити.<br>\nС найкращими побажаннями",
+        "message": "Будь ласка, включите цей прапорець, тільки якщо вам потрібно записати помилку і відправити мені логи. Включення цього прапорця призведе до помітного уповільнення аддона, так як всі дії аддона логіруются. При відтворенні помилки вимкніть цей прапорець, і аддон запропонує зберегти файл журналу логів. Ця опція може бути включена сама по собі, якщо відбувається помилка в аддоні. Вам необхідно відключити прапорець DEBUG і зберегти файл журналу.\n\nБудь ласка, надішліть мені цей файл по електронній пошті: <a email>author-email</a> <p warn>**__MSG_warning__** У цьому лог-файлі немає особистих даних, паролів, закладок і т.д.!</p> Це необхідно, щоб мати можливість відтворити проблему і спробувати її виправити.\nС найкращими побажаннями",
         "description": "logging description"
     },
     "archiveGroup": {
@@ -1104,7 +1104,7 @@
         "description": "Show archived groups"
     },
     "helpPageDbErrorReinstallTitle": {
-        "message": "Помилка бази даних в Simple Tab Groups",
+        "message": "Помилка бази даних в __MSG_extensionName__",
         "description": "Database error in Simple Tab Groups"
     },
     "helpPageDbErrorReinstallDescription": {
@@ -1216,14 +1216,8 @@
         "description": "Required actions"
     },
     "stgHostHowToUse": {
-        "message": "Щоб вибрати будь-яку папку на вашому комп'ютері для збереження резервних копій груп вкладок, вам потрібна програма <strong>Simple Tab Groups Host</strong>.\n\nЯк налаштувати:\n1. Завантажте програму <a href=\"$dowloadUrl$\" target=\"_blank\">STGHost.exe</a> в будь-яку папку на вашому комп'ютері\n2. Запустіть програму та встановіть шлях для збереження резервних копій\n3. За необхідності змініть інші параметри в налаштуваннях програми.\n\n<strong>Важливо:</strong> Якщо ви перемістили програму в іншу папку, вам потрібно запустити її один раз, щоб Firefox розпізнав нове місце розташування.\n\nПісля налаштування програма автоматично запускатиметься у фоновому режимі та прийматиме команди від розширення, а це повідомлення зникне.",
-        "description": "How to install and use the STGHost program",
-        "placeholders": {
-            "dowloadUrl": {
-                "content": "$1",
-                "example": "https://github.com/..."
-            }
-        }
+        "message": "Щоб вибрати будь-яку папку на вашому комп'ютері для збереження резервних копій груп вкладок, вам потрібна програма **__MSG_stgHostName__**.\n\nЯк налаштувати:\n1. Завантажте програму <a download>__STGHost.exe__</a> в будь-яку папку на вашому комп'ютері\n2. Запустіть програму та встановіть шлях для збереження резервних копій\n3. За необхідності змініть інші параметри в налаштуваннях програми.\n<p warn>**__MSG_warning__** Якщо ви перемістили програму в іншу папку, вам потрібно запустити її один раз, щоб Firefox розпізнав нове місце розташування.</p>\nПісля налаштування програма автоматично запускатиметься у фоновому режимі та прийматиме команди від розширення, а це повідомлення зникне.",
+        "description": "How to install and use the STGHost program"
     },
     "hostAppNotFound": {
         "message": "Не знайдено файл \"STGHost.exe\".\nЗапустіть файл \"STGHost.exe\" один раз.",
@@ -1246,11 +1240,11 @@
         "description": "Extensions that conflict with STG"
     },
     "helpPageExtensionsThatConflictWithStgDesc1": {
-        "message": "Додаток Simple Tab Groups конфліктує з такими ввімкненими розширеннями:",
+        "message": "Додаток __MSG_extensionName__ конфліктує з такими ввімкненими розширеннями:",
         "description": "Simple Tab Groups addon conflicts with the following enabled extensions:"
     },
     "helpPageExtensionsThatConflictWithStgDesc2": {
-        "message": "Щоб уникнути втрати вкладок або їх розташування у вікнах і групах, настійно рекомендуємо вимкнути або видалити увімкнені розширення, які конфліктують з додатком Simple Tab Groups. Ви можете зробити це на сторінці налаштувань додатків \"about:addons\" або натиснувши комбінацію клавіш <code>Ctrl+Shift+A</code>",
+        "message": "Щоб уникнути втрати вкладок або їх розташування у вікнах і групах, настійно рекомендуємо вимкнути або видалити увімкнені розширення, які конфліктують з додатком __MSG_extensionName__.\nВи можете зробити це на сторінці налаштувань додатків \"about:addons\" або натиснувши комбінацію клавіш `Ctrl+Shift+A`",
         "description": "To avoid losing tabs or their location in windows and groups, it is strongly recommended to turn off or remove enabled extensions that conflict with the Simple Tab Groups addon. You can do this on the addons settings page about:addons or by pressing the key combination Ctrl+Shift+A"
     },
     "ignoreConflictedExtIgnore": {
@@ -1408,7 +1402,7 @@
         "description": "Check Github gist personal access token"
     },
     "githubGistBackupDescription": {
-        "message": "Simple Tab Groups файл резервної копії для синхронізації в хмарі",
+        "message": "__MSG_extensionName__ файл резервної копії для синхронізації в хмарі",
         "description": "Simple Tab Groups backup file for cloud sync"
     },
     "githubInvalidGistContent": {
@@ -1476,7 +1470,7 @@
         "description": "What is this for?"
     },
     "helpPageHowToGithubGistWhatIsDesc": {
-        "message": "Це потрібно для синхронізації ваших вкладок і налаштувань Simple Tab Groups між двома або більше комп'ютерами.\nВаші дані будуть зберігатися у файлі GitHub Gist. Цей файл буде приватним. Крім вас, ніхто не матиме до нього доступу, якщо ви самі не надасте посилання GitHub Gist на ці дані іншій особі. STG надсилатиме ці дані лише на ваш обліковий запис GitHub.",
+        "message": "Це потрібно для синхронізації ваших вкладок і налаштувань __MSG_extensionName__ між двома або більше комп'ютерами.\nВаші дані будуть зберігатися у файлі GitHub Gist. Цей файл буде приватним. Крім вас, ніхто не матиме до нього доступу, якщо ви самі не надасте посилання GitHub Gist на ці дані іншій особі. STG надсилатиме ці дані лише на ваш обліковий запис GitHub.",
         "description": "What is description"
     },
     "helpPageHowToGithubGistHowSetupQ": {
@@ -1556,7 +1550,7 @@
         "description": "Libraries title"
     },
     "aboutThanksText": {
-        "message": "Дякуємо за використання Simple Tab Groups!",
+        "message": "Дякуємо за використання __MSG_extensionName__!",
         "description": "Thanks text"
     },
     "donateItemHelpEthereum": {

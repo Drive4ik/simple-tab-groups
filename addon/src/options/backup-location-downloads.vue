@@ -5,6 +5,7 @@ import contextMenu from '../components/context-menu.vue';
 import '/js/prefixed-storage.js';
 // import * as Constants from '/js/constants.js';
 import Notification from '/js/notification.js';
+import Lang from '/js/lang.js';
 import * as Utils from '/js/utils.js';
 import * as File from '/js/file.js';
 
@@ -24,7 +25,7 @@ export default {
         this.$on('options-reloaded', () => this.addCustomWatchers());
     },
     methods: {
-        lang: browser.i18n.getMessage,
+        lang: Lang,
         addCustomWatchers() {
             this.optionsWatch('autoBackupFilePath', async (value, oldValue) => {
                 try {

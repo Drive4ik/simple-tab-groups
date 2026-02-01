@@ -104,7 +104,7 @@
         "description": "Show confirmation dialog before archiving the group"
     },
     "exportAddonSettingsTitle": {
-        "message": "備份 Simple Tab Groups",
+        "message": "備份 __MSG_extensionName__",
         "description": "Backup your Simple Tab Groups"
     },
     "exportAddonSettingsDescription": {
@@ -120,7 +120,7 @@
         "description": "Include tab thumbnails in backup (makes backup file size bigger)"
     },
     "importAddonSettingsTitle": {
-        "message": "還原 Simple Tab Groups",
+        "message": "還原 __MSG_extensionName__",
         "description": "Restore Simple Tab Groups"
     },
     "importAddonSettingsDescription": {
@@ -806,11 +806,11 @@
         "description": "Delete all addon data and settings before restoring backup"
     },
     "helpPageWelcomeTitle": {
-        "message": "歡迎使用 Simple Tab Groups",
+        "message": "歡迎使用 __MSG_extensionName__",
         "description": "Welcome to Simple Tab Groups"
     },
     "helpPageWelcomeDescription": {
-        "message": "請勾選瀏覽器設定中的「啟動時打開前次瀏覽的視窗與分頁 」。\n這是本附加元件順利運作的必要先決條件，否則下次開啟瀏覽器將喪失所有開啟的分頁，本附加元件也無法運作。",
+        "message": "請勾選瀏覽器設定中的「**啟動時打開前次瀏覽的視窗與分頁**」。\n這是本附加元件順利運作的必要先決條件，否則下次開啟瀏覽器將喪失所有開啟的分頁，本附加元件也無法運作。",
         "description": "Please enable \"Open previous windows and tabs\" in browser settings.\nThis is necessary to maintain communication between the group and the tab, otherwise the tabs will not open when the browser starts and will be lost from the addon - the addon will stop working."
     },
     "enableDebugTitle": {
@@ -830,7 +830,7 @@
         "description": "logging was auto-enabled due to an error in addon"
     },
     "loggingDescription": {
-        "message": "請在必須紀錄臭蟲及傳送紀錄給我時才啟用這項功能。一旦啟用後會導致附加元件明顯變慢，因為所有動作及資訊都會被記錄下來。重現問題後就請關閉，附加元件會提示紀錄存檔。此功能可能因附加元件發生錯誤而自動被啟用。建議關閉此項功能並存檔。<br>請 Email 紀錄檔給我：<a href=\"mailto:drive4ik+stg@protonmail.com\">drive4ik+stg@protonmail.com</a><br> <span class=\"has-text-danger\">注意！記錄檔不會包含任何個資、密碼、書籤...等資訊！</span><br> 只會包含重現問題的必要資訊，也才能藉此除錯及修復。<br> 以上",
+        "message": "請在必須紀錄臭蟲及傳送紀錄給我時才啟用這項功能。一旦啟用後會導致附加元件明顯變慢，因為所有動作及資訊都會被記錄下來。重現問題後就請關閉，附加元件會提示紀錄存檔。此功能可能因附加元件發生錯誤而自動被啟用。建議關閉此項功能並存檔。\n\n請 Email 紀錄檔給我：<a email>author-email</a> <p warn>注意！記錄檔不會包含任何個資、密碼、書籤...等資訊！</p> 只會包含重現問題的必要資訊，也才能藉此除錯及修復。\n以上",
         "description": "logging description"
     },
     "archiveGroup": {
@@ -1044,7 +1044,7 @@
         "description": "Show archived groups"
     },
     "helpPageDbErrorReinstallTitle": {
-        "message": "Simple Tab Groups 資料庫發生錯誤",
+        "message": "__MSG_extensionName__ 資料庫發生錯誤",
         "description": "Database error in Simple Tab Groups"
     },
     "helpPageDbErrorReinstallDescription": {
@@ -1104,11 +1104,11 @@
         "description": "Extensions that conflict with STG"
     },
     "helpPageExtensionsThatConflictWithStgDesc1": {
-        "message": "有類似性質的分頁管理擴充套件(如下)干擾 STG:",
+        "message": "有類似性質的分頁管理擴充套件(如下)干擾 __MSG_extensionName__:",
         "description": "Simple Tab Groups addon conflicts with the following enabled extensions:"
     },
     "helpPageExtensionsThatConflictWithStgDesc2": {
-        "message": "為免遺失所有分頁與群組設定，強烈建議先關閉或移除干擾 STG 的其他擴充套件，可以到 \"about:addons\" (或按 <code>Ctrl+Shift+A</code>) 設定。",
+        "message": "為免遺失所有分頁與群組設定，強烈建議先關閉或移除干擾 __MSG_extensionName__ 的其他擴充套件，可以到 \"about:addons\" (或按 `Ctrl+Shift+A`) 設定。",
         "description": "To avoid losing tabs or their location in windows and groups, it is strongly recommended to turn off or remove enabled extensions that conflict with the Simple Tab Groups addon. You can do this on the addons settings page about:addons or by pressing the key combination Ctrl+Shift+A"
     },
     "ignoreConflictedExtIgnore": {

@@ -104,7 +104,7 @@
         "description": "Show confirmation dialog before archiving the group"
     },
     "exportAddonSettingsTitle": {
-        "message": "Simple Tab Groups データのバックアップ",
+        "message": "__MSG_extensionName__ データのバックアップ",
         "description": "Backup your Simple Tab Groups"
     },
     "exportAddonSettingsDescription": {
@@ -120,7 +120,7 @@
         "description": "Include tab thumbnails in backup (makes backup file size bigger)"
     },
     "importAddonSettingsTitle": {
-        "message": "Simple Tab Groups の復元",
+        "message": "__MSG_extensionName__ の復元",
         "description": "Restore Simple Tab Groups"
     },
     "importAddonSettingsDescription": {
@@ -378,7 +378,7 @@
         "description": "Reload all tabs in current group"
     },
     "whatsWrongMessage": {
-        "message": "なにか問題が起きました...\n開発者にメールでエラーログをお送りくださいますようご協力をお願いします。(Simple Tab Groups の設定画面の一番下にログを出力するためのボタンがあります)",
+        "message": "なにか問題が起きました...\n開発者にメールでエラーログをお送りくださいますようご協力をお願いします。(__MSG_extensionName__ の設定画面の一番下にログを出力するためのボタンがあります)",
         "description": "Whats wrong...\nPlease contact with developer by support email with last error logs (exist button at bottom of options)"
     },
     "saveErrorLogsIntoFile": {
@@ -806,11 +806,11 @@
         "description": "Delete all addon data and settings before restoring backup"
     },
     "helpPageWelcomeTitle": {
-        "message": "Simple Tab Groups へようこそ",
+        "message": "__MSG_extensionName__ へようこそ",
         "description": "Welcome to Simple Tab Groups"
     },
     "helpPageWelcomeDescription": {
-        "message": "ブラウザーの設定で [前回のウィンドウとタブを開く] を有効にしてください。\nこれはグループとタブの間の通信を管理するために必要です。これが無効になっている場合、ブラウザーの起動時にタブが開かず、アドオンからタブの情報が失われます。つまり、アドオンの動作が停止するでしょう。",
+        "message": "ブラウザーの設定で [**前回のウィンドウとタブを開く**] を有効にしてください。\nこれはグループとタブの間の通信を管理するために必要です。これが無効になっている場合、ブラウザーの起動時にタブが開かず、アドオンからタブの情報が失われます。つまり、アドオンの動作が停止するでしょう。",
         "description": "Please enable \"Open previous windows and tabs\" in browser settings.\nThis is necessary to maintain communication between the group and the tab, otherwise the tabs will not open when the browser starts and will be lost from the addon - the addon will stop working."
     },
     "enableDebugTitle": {
@@ -830,7 +830,7 @@
         "description": "logging was auto-enabled due to an error in addon"
     },
     "loggingDescription": {
-        "message": "このチェックボックスは、バグの記録とログを作者へ送信する必要がある場合のみ有効にしてください。このチェックボックスにチェックを入れると、アドオンのすべてのアクションが記録されるため、アドオンの動作が遅くなります。エラーを再現できる場合は、このチェックボックスのチェックを外してください。アドオンのログファイルが保存できます。このオプションは、エラーが発生したときにも有効になります。その場合は、ご自身で DEBUG のチェックボックスを無効にしてログファイルを保存する必要があります。<br>このログファイルをメールで作者に送信してください: <a href=\"mailto:drive4ik+stg@protonmail.com\">drive4ik+stg@protonmail.com</a><br> <span class=\"has-text-danger\">注意！ このログファイルには、パスワードやブックマークなどの個人データは含まれていません。</span><br> これは、問題を再現して解決するために必要です。<br> ご協力に感謝します。",
+        "message": "このチェックボックスは、バグの記録とログを作者へ送信する必要がある場合のみ有効にしてください。このチェックボックスにチェックを入れると、アドオンのすべてのアクションが記録されるため、アドオンの動作が遅くなります。エラーを再現できる場合は、このチェックボックスのチェックを外してください。アドオンのログファイルが保存できます。このオプションは、エラーが発生したときにも有効になります。その場合は、ご自身で DEBUG のチェックボックスを無効にしてログファイルを保存する必要があります。\n\nこのログファイルをメールで作者に送信してください: <a email>author-email</a> <p warn>注意！ このログファイルには、パスワードやブックマークなどの個人データは含まれていません。</p> これは、問題を再現して解決するために必要です。\nご協力に感謝します。",
         "description": "logging description"
     },
     "archiveGroup": {
@@ -1044,7 +1044,7 @@
         "description": "Show archived groups"
     },
     "helpPageDbErrorReinstallTitle": {
-        "message": "Simple Tab Groups のデータベースエラー",
+        "message": "__MSG_extensionName__ のデータベースエラー",
         "description": "Database error in Simple Tab Groups"
     },
     "helpPageDbErrorReinstallDescription": {
@@ -1104,11 +1104,11 @@
         "description": "Extensions that conflict with STG"
     },
     "helpPageExtensionsThatConflictWithStgDesc1": {
-        "message": "Simple Tab Groupsアドオンは以下の有効な拡張機能と競合しています",
+        "message": "__MSG_extensionName__ アドオンは以下の有効な拡張機能と競合しています",
         "description": "Simple Tab Groups addon conflicts with the following enabled extensions:"
     },
     "helpPageExtensionsThatConflictWithStgDesc2": {
-        "message": "ウィンドウやグループ内のタブの位置がわからなくなるのを防ぐため、Simple Tab Groups アドオンと競合する有効な拡張機能をオフにするか、削除することを強くお勧めします。これはアドオンの設定ページ\"about:addons\"で行うか、<code>Ctrl+Shift+A</code>キーを押すことで行えます",
+        "message": "ウィンドウやグループ内のタブの位置がわからなくなるのを防ぐため、__MSG_extensionName__ アドオンと競合する有効な拡張機能をオフにするか、削除することを強くお勧めします。\nこれはアドオンの設定ページ\"about:addons\"で行うか、`Ctrl+Shift+A`キーを押すことで行えます",
         "description": "To avoid losing tabs or their location in windows and groups, it is strongly recommended to turn off or remove enabled extensions that conflict with the Simple Tab Groups addon. You can do this on the addons settings page about:addons or by pressing the key combination Ctrl+Shift+A"
     },
     "ignoreConflictedExtIgnore": {

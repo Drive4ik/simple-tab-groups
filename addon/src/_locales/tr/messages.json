@@ -96,7 +96,7 @@
         "description": "Show confirmation dialog before archiving the group"
     },
     "exportAddonSettingsTitle": {
-        "message": "Simple Tab Groups yedeği al",
+        "message": "__MSG_extensionName__ yedeği al",
         "description": "Backup your Simple Tab Groups"
     },
     "exportAddonSettingsDescription": {
@@ -112,7 +112,7 @@
         "description": "Include tab thumbnails in backup (makes backup file size bigger)"
     },
     "importAddonSettingsTitle": {
-        "message": "Yedek dosyasından Simple Tab Groups geri yükle",
+        "message": "Yedek dosyasından __MSG_extensionName__ geri yükle",
         "description": "Restore Simple Tab Groups"
     },
     "importAddonSettingsDescription": {

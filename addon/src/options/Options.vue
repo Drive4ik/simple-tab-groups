@@ -15,6 +15,7 @@ import * as Messages from '/js/messages.js';
 import Logger, {errorEventHandler} from '/js/logger.js';
 // import {objToNativeError} from '/js/logger-utils.js';
 import Notification from '/js/notification.js';
+import Lang from '/js/lang.js?translate-page';
 import * as Utils from '/js/utils.js';
 import * as Management from '/js/management.js';
 import * as Containers from '/js/containers.js';
@@ -42,8 +43,6 @@ const SECTION_GENERAL = 'general';
 const SECTION_HOTKEYS = 'hotkeys';
 const SECTION_BACKUP = 'backup';
 const SECTION_ABOUT = 'about';
-
-document.title = browser.i18n.getMessage('openSettings');
 
 const [section, element = null] = (storage.section || SECTION_GENERAL).split(' ');
 storage.section = section;
@@ -309,9 +308,9 @@ export default {
             this.groups = groups;
         },
 
-        lang: browser.i18n.getMessage,
-        getHotkeyActionTitle: action => browser.i18n.getMessage('hotkeyActionTitle' + Utils.capitalize(Utils.toCamelCase(action))),
-        getDonateItemHelp: item => browser.i18n.getMessage('donateItemHelp' + Utils.capitalize(Utils.toCamelCase(item))),
+        lang: Lang,
+        getHotkeyActionTitle: action => Lang('hotkeyActionTitle' + Utils.capitalize(Utils.toCamelCase(action))),
+        getDonateItemHelp: item => Lang('donateItemHelp' + Utils.capitalize(Utils.toCamelCase(item))),
 
         initLastUpdateBackups() {
             const mainStorage = localStorage.create(Constants.MODULES.BACKGROUND);

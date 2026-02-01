@@ -104,7 +104,7 @@
         "description": "Show confirmation dialog before archiving the group"
     },
     "exportAddonSettingsTitle": {
-        "message": "Hacer una copia de seguridad de tus Simple Tab Groups",
+        "message": "Hacer una copia de seguridad de tus __MSG_extensionName__",
         "description": "Backup your Simple Tab Groups"
     },
     "exportAddonSettingsDescription": {
@@ -120,7 +120,7 @@
         "description": "Include tab thumbnails in backup (makes backup file size bigger)"
     },
     "importAddonSettingsTitle": {
-        "message": "Restaurar Simple Tabs Groups",
+        "message": "Restaurar __MSG_extensionName__",
         "description": "Restore Simple Tab Groups"
     },
     "importAddonSettingsDescription": {
@@ -806,11 +806,11 @@
         "description": "Delete all addon data and settings before restoring backup"
     },
     "helpPageWelcomeTitle": {
-        "message": "Bienvenido/a a Simple Tab Groups",
+        "message": "Bienvenido/a a __MSG_extensionName__",
         "description": "Welcome to Simple Tab Groups"
     },
     "helpPageWelcomeDescription": {
-        "message": "Por favor activá \"Restaurar sesión previa\" en los ajustes del navegadr.\nEsto es necesario para mantener la comunicación entre el grupo y la pestaña, sino las pestañas no se abrirían cuando el navegador inicia y se perderían en la extensión - la extensión dejará de funcionar.",
+        "message": "Por favor activá \"**Restaurar sesión previa**\" en los ajustes del navegadr.\nEsto es necesario para mantener la comunicación entre el grupo y la pestaña, sino las pestañas no se abrirían cuando el navegador inicia y se perderían en la extensión - la extensión dejará de funcionar.",
         "description": "Please enable \"Open previous windows and tabs\" in browser settings.\nThis is necessary to maintain communication between the group and the tab, otherwise the tabs will not open when the browser starts and will be lost from the addon - the addon will stop working."
     },
     "enableDebugTitle": {
@@ -830,7 +830,7 @@
         "description": "logging was auto-enabled due to an error in addon"
     },
     "loggingDescription": {
-        "message": "Por favor habilitá ésta casilla de verificación solo si necesitas registrar el error y enviarme registros. Habilitar esto provocará una desaceleración notable de la extensión, ya que se registran todas las acciones del mismo. Cuando reproduzcas el error, desactivá esta casilla de verificación y la extensión ofrecerá guardar el archivo de registro. Esta opción se puede habilitar por sí sola si ocurre un error. Tenés que deseleccionar la casilla de verificación DEPURACION y guardar el archivo de registro.<br> Por favor enviame el archivo de registro por email: <a href=\"mailto:drive4ik+stg@protonmail.com\">drive4ik+stg@protonmail.com</a><br> <span class=\"has-text-danger\">Atención! No hay datos personales, contraseñas, marcadores, etc. en este archivo de registro!</span><br> Esto es necesario para poder reproducir el problema e intentar solucionarlo.<br> Atentamente",
+        "message": "Por favor habilitá ésta casilla de verificación solo si necesitas registrar el error y enviarme registros. Habilitar esto provocará una desaceleración notable de la extensión, ya que se registran todas las acciones del mismo. Cuando reproduzcas el error, desactivá esta casilla de verificación y la extensión ofrecerá guardar el archivo de registro. Esta opción se puede habilitar por sí sola si ocurre un error. Tenés que deseleccionar la casilla de verificación DEPURACION y guardar el archivo de registro.\n\nPor favor enviame el archivo de registro por email: <a email>author-email</a> <p warn>Atención! No hay datos personales, contraseñas, marcadores, etc. en este archivo de registro!</p> Esto es necesario para poder reproducir el problema e intentar solucionarlo.\nAtentamente",
         "description": "logging description"
     },
     "archiveGroup": {
@@ -1044,7 +1044,7 @@
         "description": "Show archived groups"
     },
     "helpPageDbErrorReinstallTitle": {
-        "message": "Error de base de datos en Simple Tab Groups",
+        "message": "Error de base de datos en __MSG_extensionName__",
         "description": "Database error in Simple Tab Groups"
     },
     "helpPageDbErrorReinstallDescription": {
@@ -1104,11 +1104,11 @@
         "description": "Extensions that conflict with STG"
     },
     "helpPageExtensionsThatConflictWithStgDesc1": {
-        "message": "La extensión Simple Tab Groups es incompatible con las siguientes extensiones activadas:",
+        "message": "La extensión __MSG_extensionName__ es incompatible con las siguientes extensiones activadas:",
         "description": "Simple Tab Groups addon conflicts with the following enabled extensions:"
     },
     "helpPageExtensionsThatConflictWithStgDesc2": {
-        "message": "Para evitar perder pestañas o su ubicación en ventanas y grupos, se recomienda desactivar o borrar las extensiones activadas que sean incompatibles con Simple Tab Groups. Puede hacerlo en la página de configuración de extensiones \"about:addons\" o presionando la combinación de teclas <code>Ctrl+Shift+A</code>",
+        "message": "Para evitar perder pestañas o su ubicación en ventanas y grupos, se recomienda desactivar o borrar las extensiones activadas que sean incompatibles con __MSG_extensionName__.\nPuede hacerlo en la página de configuración de extensiones \"about:addons\" o presionando la combinación de teclas `Ctrl+Shift+A`",
         "description": "To avoid losing tabs or their location in windows and groups, it is strongly recommended to turn off or remove enabled extensions that conflict with the Simple Tab Groups addon. You can do this on the addons settings page about:addons or by pressing the key combination Ctrl+Shift+A"
     },
     "ignoreConflictedExtIgnore": {

@@ -1,5 +1,6 @@
 <script>
 import JSON from '/js/json.js';
+import Lang from '/js/lang.js';
 
 export default {
     name: 'popup-dialog',
@@ -19,7 +20,7 @@ export default {
         };
     },
     methods: {
-        lang: browser.i18n.getMessage,
+        lang: Lang,
     },
     async mounted() {
         document.documentElement.classList.add('is-clipped');

@@ -1,6 +1,7 @@
 
 import './prefixed-storage.js';
 import Logger from './logger.js';
+import Lang from '/js/lang.js';
 import * as Constants from './constants.js';
 import * as Storage from './storage.js';
 import * as Permissions from './permissions.js';
@@ -13,7 +14,7 @@ const MAX_LENGTH = 1024 * 60;
 
 const ROOT = {
     id: 'rootId',
-    title: browser.i18n.getMessage('extensionName'),
+    title: Lang('extensionName'),
 };
 
 export async function hasPermission() {

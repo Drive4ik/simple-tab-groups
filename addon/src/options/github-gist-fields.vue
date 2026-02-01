@@ -1,6 +1,7 @@
 <script>
 
 import * as Constants from '/js/constants.js';
+import Lang from '/js/lang.js';
 import {CloudError} from '/js/sync/cloud/cloud.js';
 import GithubGist from '/js/sync/cloud/githubgist.js';
 
@@ -55,7 +56,7 @@ export default {
         },
     },
     methods: {
-        lang: browser.i18n.getMessage,
+        lang: Lang,
 
         async checkToken() {
             try {

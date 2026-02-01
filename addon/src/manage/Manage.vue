@@ -12,6 +12,7 @@ import contextMenuGroup from '../components/context-menu-group.vue';
 import '/js/prefixed-storage.js';
 import * as Constants from '/js/constants.js';
 import Logger, {errorEventHandler} from '/js/logger.js';
+import Lang from '/js/lang.js?translate-page';
 import * as Urls from '/js/urls.js';
 import * as Groups from '/js/groups.js';
 import * as Tabs from '/js/tabs.js';
@@ -30,8 +31,6 @@ const storage = localStorage.create(Constants.MODULES.MANAGE);
 // import dnd from '../js/dnd';
 // import { Drag, Drop } from 'vue-drag-drop';
 // import draggable from 'vuedraggable';
-
-document.title = browser.i18n.getMessage('manageGroupsTitle');
 
 const VIEW_GRID = 'grid';
 const VIEW_DEFAULT = VIEW_GRID;
@@ -106,7 +105,7 @@ export default {
         },
     },
     methods: {
-        lang: browser.i18n.getMessage,
+        lang: Lang,
 
         setupListeners() {
             this.tabGroupsSetupListeners();
@@ -306,7 +305,7 @@ export default {
 
                         if (1 < this.multipleTabIds.length) {
                             let multiTabsNode = document.getElementById('multipleTabsText');
-                            multiTabsNode.innerText = browser.i18n.getMessage('movingMultipleTabsText', this.multipleTabIds.length);
+                            multiTabsNode.innerText = this.lang('movingMultipleTabsText', this.multipleTabIds.length);
 
                             event.dataTransfer.setDragImage(multiTabsNode, 20, multiTabsNode.offsetHeight - 80);
                         }

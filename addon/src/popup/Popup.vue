@@ -13,6 +13,7 @@ import contextMenuGroup from '../components/context-menu-group.vue';
 import '/js/prefixed-storage.js';
 import * as Constants from '/js/constants.js';
 import Logger, {errorEventHandler} from '/js/logger.js';
+import Lang from '/js/lang.js';
 import * as Containers from '/js/containers.js';
 import * as Urls from '/js/urls.js';
 import * as Groups from '/js/groups.js';
@@ -177,7 +178,7 @@ export default {
         },
     },
     methods: {
-        lang: browser.i18n.getMessage,
+        lang: Lang,
 
         async setFocusOnActive() {
             await this.$nextTick();

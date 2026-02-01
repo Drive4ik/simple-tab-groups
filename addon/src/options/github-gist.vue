@@ -6,6 +6,7 @@ import GithubGistFields from './github-gist-fields.vue';
 import '/js/prefixed-storage.js';
 import * as Constants from '/js/constants.js';
 // import Logger from '/js/logger.js';
+import Lang from '/js/lang.js';
 import * as Storage from '/js/storage.js';
 import * as Utils from '/js/utils.js';
 import * as Urls from '/js/urls.js';
@@ -119,7 +120,7 @@ export default {
         this.$on('sync-finish', () => this.area.load(false));
     },
     methods: {
-        lang: browser.i18n.getMessage,
+        lang: Lang,
 
         createCloud({githubGistToken, githubGistFileName}) {
             return new GithubGist(githubGistToken, githubGistFileName);
