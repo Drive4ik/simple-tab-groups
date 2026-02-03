@@ -7,6 +7,7 @@ import Listeners from './listeners.js\
 import * as Constants from './constants.js';
 import * as Utils from './utils.js';
 import Notification from './notification.js';
+import Lang from './lang.js';
 
 const TEMPORARY_CONTAINER = 'temporary-container';
 
@@ -91,7 +92,7 @@ async function setWindowAction(windowId) {
     const groupContainer = group?.contextualIdentity;
     const [{shortcut}] = await browser.commands.getAll();
 
-    const titleParts = [browser.i18n.getMessage('newTabTitle')];
+    const titleParts = [Lang('newTabTitle')];
 
     if (groupContainer) {
         titleParts.push(`[${groupContainer.name}]`);

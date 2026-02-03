@@ -1,9 +1,9 @@
-import '/translate-page.js';
 import '/easymde/easymde.min.js';
 import * as Constants from '/constants.js';
 import * as MainConstants from '/main-constants.js';
 import * as Utils from '/utils.js';
 import * as MainUtils from '/main-utils.js';
+import Lang from '/lang.js?translate-page&text';
 
 const isSidebar = self.location.hash === '#sidebar';
 const isTab = self.location.hash === '#tab';
@@ -53,7 +53,7 @@ const $ = document.querySelector.bind(document),
             toggleFullScreen: null,
         },
         spellChecker: false,
-        placeholder: browser.i18n.getMessage('notesPlaceholder'),
+        placeholder: Lang('notesPlaceholder'),
     }),
     previewButtonNode = $('.editor-toolbar button.preview'),
     sideBySideButtonNode = isSidebar ? null : $('.editor-toolbar button.side-by-side');
@@ -107,14 +107,14 @@ function setGroup(group = null, idErrorMessage = null) {
     let tabTitle;
 
     if (group) {
-        tabTitle = groupTitleNode.innerText = browser.i18n.getMessage('groupAndWindowTitle', group.title);
+        tabTitle = groupTitleNode.innerText = Lang('groupAndWindowTitle', group.title);
         groupIconNode.src = group.iconUrl;
         if (isTab && options.tabFaviconAsGroup) {
             tabFavicon.href = group.iconUrl;
         }
         currentGroupId = group.id;
     } else {
-        tabTitle = browser.i18n.getMessage('extensionName') + ' - ' + $('#' + idErrorMessage).innerText;
+        tabTitle = Lang('extensionName') + ' - ' + $('#' + idErrorMessage).innerText;
         if (isTab && options.tabFaviconAsGroup) {
             tabFavicon.href = DEFAULT_FAVICON_HREF;
         }

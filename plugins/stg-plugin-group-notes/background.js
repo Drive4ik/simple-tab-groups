@@ -14,6 +14,7 @@ import * as MainUtils from './main-utils.js';
 import * as Host from './host.js';
 import * as File from './file.js';
 import Notification from './notification.js';
+import Lang from './lang.js';
 
 Listeners.runtime.onMessageExternal(async (request, sender) => {
     if (sender.id !== Constants.STG_ID) {
@@ -151,14 +152,14 @@ async function setup() {
 
     await Utils.createMenu({
         id: 'openInTab',
-        title: browser.i18n.getMessage('openInTab'),
+        title: Lang('openInTab'),
         contexts: [browser.menus.ContextType.ACTION],
         icon: 'icons/icon.svg',
     });
 
     await Utils.createMenu({
         id: 'openOptions',
-        title: browser.i18n.getMessage('openOptions'),
+        title: Lang('openOptions'),
         contexts: [browser.menus.ContextType.ACTION],
         icon: 'icons/gear-solid.svg',
     });

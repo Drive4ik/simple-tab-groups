@@ -6,6 +6,7 @@ import Listeners from './listeners.js\
 import * as Constants from './constants.js';
 import * as Utils from './utils.js';
 import Notification from './notification.js';
+import Lang from './lang.js';
 
 Listeners.action.onClicked(async () => {
     try {
@@ -26,7 +27,7 @@ Listeners.action.onClicked(async () => {
 async function updateActionTitle() {
     const [{shortcut}] = await browser.commands.getAll();
 
-    const titleParts = [browser.i18n.getMessage('defaultBrowserActionTitle')];
+    const titleParts = [Lang('defaultBrowserActionTitle')];
 
     if (shortcut) {
         titleParts.push(`(${shortcut})`);

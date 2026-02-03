@@ -1,8 +1,9 @@
 
 
-import * as Constants from '/constants.js';
-import * as MainConstants from '/main-constants.js';
-import * as Utils from '/utils.js';
+import * as Constants from './constants.js';
+import * as MainConstants from './main-constants.js';
+import * as Utils from './utils.js';
+import Lang from './lang.js';
 
 export async function hasPermission() {
     return browser.permissions.contains(MainConstants.PERMISSIONS.NATIVE_MESSAGING);
@@ -23,7 +24,7 @@ export class HostError extends Error {
         if (response.message) {
             message = response.message;
         } else if (response.lang) {
-            message = browser.i18n.getMessage(response.lang, ...response.args) || response.lang;
+            message = Lang(response.lang, response.args) || response.lang;
         } else {
             message = 'Unknown error';
         }
@@ -73,7 +74,7 @@ export async function openBackupFolder() {
 
 export async function selectBackupFolder() {
     const {data} = await sendMessage('select-backup-folder', {
-        dialogTitle: browser.i18n.getMessage('selectBackupFolder'),
+        dialogTitle: Lang('selectBackupFolder'),
     });
     return data;
 }

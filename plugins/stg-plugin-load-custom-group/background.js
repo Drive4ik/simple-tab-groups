@@ -9,6 +9,7 @@ import Listeners from './listeners.js\
 import * as Constants from './constants.js';
 import * as Utils from './utils.js';
 import Notification from './notification.js';
+import Lang from './lang.js';
 
 Listeners.runtime.onMessageExternal(async (request, sender) => {
     if (sender.id !== Constants.STG_ID) {
@@ -95,7 +96,7 @@ async function setAction({id, title, iconUrl} = {}) {
     const [{shortcut}] = await browser.commands.getAll();
 
     const titleParts = [
-        id ? title : browser.i18n.getMessage('defaultBrowserActionTitle'),
+        id ? title : Lang('defaultBrowserActionTitle'),
     ];
 
     if (shortcut) {
@@ -125,7 +126,7 @@ async function setup() {
 
     await Utils.createMenu({
         id: 'openSettings',
-        title: browser.i18n.getMessage('openSettings'),
+        title: Lang('openSettings'),
         contexts: [browser.menus.ContextType.ACTION],
         icon: 'icons/settings.svg',
     });

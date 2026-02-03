@@ -1,7 +1,7 @@
 import Listeners from '/listeners.js?runtime.onMessageExternal';
-import '/translate-page.js';
 import * as Constants from '/constants.js';
 import * as Utils from '/utils.js';
+import '/lang.js?translate-page&text';
 
 const $ = document.querySelector.bind(document);
 const groupsSelect = $('#groups-select');

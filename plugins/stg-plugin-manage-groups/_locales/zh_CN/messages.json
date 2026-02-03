@@ -8,7 +8,7 @@
         "description": "Need install Simple Tab Groups extention\nClick here to open Simple Tab Groups home page"
     },
     "defaultBrowserActionTitle": {
-        "message": "打开管理群组",
-        "description": "Open Manage groups"
+        "message": "管理群组",
+        "description": "Manage groups"
     }
 }

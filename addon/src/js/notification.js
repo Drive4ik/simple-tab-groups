@@ -3,7 +3,7 @@ import Listeners from './listeners.js\
 &alarms.onAlarm\
 ';
 import * as Constants from './constants.js';
-import Lang from '/js/lang.js';
+import Lang from './lang.js';
 
 export const MIN_EXPIRES = 5;
 export const MAX_EXPIRES = 10 * 60;

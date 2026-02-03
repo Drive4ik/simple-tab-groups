@@ -1,11 +1,11 @@
 import Listeners from '/listeners.js?permissions.onRemoved';
-import '/translate-page.js';
 import * as Host from '/host.js';
 import * as File from '/file.js';
 import * as Utils from '/utils.js';
 import * as Constants from '/constants.js';
 import * as MainConstants from '/main-constants.js';
 import * as MainUtils from '/main-utils.js';
+import Lang from '/lang.js?translate-page&text';
 
 const $ = document.querySelector.bind(document);
 const $$ = selector => Array.from(document.querySelectorAll(selector));
@@ -71,7 +71,7 @@ async function setNodeValues(options) {
         }
     }
 
-    $('#location-downloads-input').value = browser.i18n.getMessage('downloadsFolder') + '/';
+    $('#location-downloads-input').value = Lang('downloadsFolder') + '/';
 
     $('#auto-backup-wrapper').classList.toggle('is-windows', Constants.IS_WINDOWS);
 }
@@ -208,7 +208,7 @@ async function setHostEvents() {
             const response = await Host.getLastBackup(progress => progressNode.value = progress);
             progressNode.value = 0;
 
-            const message = browser.i18n.getMessage('confirmRestoreBackupTitle', [
+            const message = Lang('confirmRestoreBackupTitle', [
                 response.relativeFilePath,
                 new Date(response.lastWriteUnix * 1000).toLocaleString(),
             ]);
