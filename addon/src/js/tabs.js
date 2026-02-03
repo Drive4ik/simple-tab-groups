@@ -17,7 +17,7 @@ const logger = new Logger('Tabs');
 
 const mainStorage = localStorage.create(Constants.MODULES.BACKGROUND);
 
-export async function create({url, active, pinned, title, index, windowId, openerTabId, cookieStoreId, newTabContainer, ifDifferentContainerReOpen, excludeContainersForReOpen, groupId, favIconUrl, thumbnail}) {
+export async function create({url, active, pinned, title, index, windowId, openerTabId, cookieStoreId, newTabContainer, ifDifferentContainerReOpen, excludeContainersForReOpen, groupId, favIconUrl, thumbnail}, skipTracking = false) {
     if (!Constants.IS_BACKGROUND_PAGE) {
         throw Error('is not background');
     }
@@ -82,7 +82,9 @@ export async function create({url, active, pinned, title, index, windowId, opene
 
     const newTab = await browser.tabs.create(tab);
 
-    self.skipTabs.created.add(newTab.id);
+    if (skipTracking === true) {
+        self.skipTabs.created.add(newTab.id);
+    }
 
     delete newTab.groupId; // TODO temp
 
@@ -238,7 +240,7 @@ export async function createTempActiveTab(windowId, createPinnedTab = true, newT
             pinned: createPinnedTab,
             active: true,
             windowId: windowId,
-        });
+        }, true);
         log.stop('created temp tab', tempTab);
         return tempTab;
     }
@@ -439,7 +441,7 @@ export async function move(tabIds, groupId, params = {}) {
                 openerTabId: null,
                 windowId,
                 ...newTabParams,
-            });
+            }, true);
 
             self.skipTabsTracking([newTab], skippedTabs);
 

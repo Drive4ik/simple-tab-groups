@@ -107,7 +107,7 @@ function escapeAttrValue(str) {
         .replace(/>/g, "&gt;");
 }
 
-function hasMessage(str) {
+export function hasMessage(str) {
     return new RegExp(MSG_REGEXP).test(str);
 }
 

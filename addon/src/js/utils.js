@@ -1,6 +1,6 @@
 
 import * as Constants from './constants.js';
-import * as ConstantsBrowser from '/js/constants-browser.js';
+import * as ConstantsBrowser from './constants-browser.js';
 import JSON from './json.js';
 
 export const INNER_HTML = 'innerHTML';
@@ -9,9 +9,8 @@ export function unixNow() {
     return Math.floor(Date.now() / 1000);
 }
 
-const TYPE_REGEXP = /(^\[.+\ |\]$)/g;
 export function type(obj) {
-    return Object.prototype.toString.call(obj).replace(TYPE_REGEXP, '').toLowerCase();
+    return Object.prototype.toString.call(obj).slice(8, -1).toLowerCase();
 }
 
 export function isDeadObject(obj) {

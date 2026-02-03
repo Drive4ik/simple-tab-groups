@@ -132,7 +132,7 @@ self.CacheLastTabsState = Cache.lastTabsState;
 self.CacheWindows = Cache.windows;
 
 async function createTabsSafe(tabs, tryRestoreOpeners, hideTabs = true) {
-    const log = logger.start('createTabsSafe', { tryRestoreOpeners, hideTabs }, tabs.map(tab => Utils.extractKeys(tab, [
+    const log = logger.start('createTabsSafe', {tryRestoreOpeners, hideTabs}, tabs.map(tab => Utils.extractKeys(tab, [
         'id',
         'cookieStoreId',
         'openerTabId',
@@ -146,15 +146,16 @@ async function createTabsSafe(tabs, tryRestoreOpeners, hideTabs = true) {
         return [];
     }
 
-    let isEnabledTreeTabsExt = Constants.TREE_TABS_EXTENSIONS.some(id => Management.isEnabled(id)),
-        oldNewTabIds = {},
-        newTabs = [];
+    const isEnabledTreeTabsExt = Constants.TREE_TABS_EXTENSIONS.some(id => Management.isEnabled(id));
+    const oldNewTabIds = {};
 
-    tabs.forEach(function (tab) {
+    let newTabs = [];
+
+    for (const tab of tabs) {
         delete tab.active;
         delete tab.index;
         delete tab.windowId;
-    });
+    }
 
     if (tryRestoreOpeners && isEnabledTreeTabsExt && tabs.some(tab => tab.openerTabId)) {
         log.log('tryRestoreOpeners');
@@ -163,7 +164,7 @@ async function createTabsSafe(tabs, tryRestoreOpeners, hideTabs = true) {
                 tab.openerTabId = oldNewTabIds[tab.openerTabId];
             }
 
-            const newTab = await Tabs.create(tab);
+            const newTab = await Tabs.create(tab, true);
 
             if (tab.id) {
                 oldNewTabIds[tab.id] = newTab.id;
@@ -174,7 +175,7 @@ async function createTabsSafe(tabs, tryRestoreOpeners, hideTabs = true) {
     } else {
         log.log('creating tabs');
         tabs.forEach(tab => delete tab.openerTabId);
-        newTabs = await Promise.all(tabs.map(Tabs.create));
+        newTabs = await Promise.all(tabs.map(tab => Tabs.create(tab, true)));
     }
 
     newTabs = await Tabs.moveNative(newTabs, {
@@ -184,7 +185,7 @@ async function createTabsSafe(tabs, tryRestoreOpeners, hideTabs = true) {
     if (hideTabs) {
         const tabsToHide = newTabs.filter(tab => !tab.pinned && tab.groupId && !Cache.getWindowId(tab.groupId));
 
-        log.log('hide tabs', tabsToHide);
+        log.log('hide tabs length:', tabsToHide.length);
 
         await Tabs.hide(tabsToHide, true);
     }
@@ -349,7 +350,7 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
                                 active: true,
                                 windowId,
                                 ...Groups.getNewTabParams(groupToShow),
-                            });
+                            }, true);
                         }
                     }
                 } else {
@@ -391,7 +392,7 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
                                 active: true,
                                 windowId,
                                 ...Groups.getNewTabParams(groupToShow),
-                            });
+                            }, true);
 
                             await hideUnSyncTabs(tabs);
                         }
@@ -1133,6 +1134,7 @@ async function updateMoveTabMenus() {
 
             await Tabs.create({
                 ...tab,
+                index: null,
                 active: info.button.RIGHT,
                 cookieStoreId: Constants.TEMPORARY_CONTAINER,
             });
@@ -1691,7 +1693,7 @@ const onBeforeTabRequest = catchFunc(async function onBeforeTabRequest({tabId, u
             }
         }
 
-        const newTab = await Tabs.create(newTabParams);
+        const newTab = await Tabs.create(newTabParams, true);
 
         log.log('remove tab', tab);
         Tabs.remove(tab);
@@ -3084,7 +3086,7 @@ async function runMigrateForData(data, applyToCurrentInstance = true) {
                         tabs.forEach(tab => delete tab.openerTabId);
                         tabs.forEach(tab => delete tab.groupId); // TODO temp
 
-                        await Promise.all(tabs.map(tab => Tabs.create(Utils.normalizeTabUrl(tab))));
+                        await Promise.all(tabs.map(tab => Tabs.create(Utils.normalizeTabUrl(tab), true)));
 
                         await Utils.wait(100);
 
@@ -4280,7 +4282,7 @@ async function init() {
 
 async function setActionToReloadAddon() {
     await Browser.actionAllWindows({
-        title: 'clickHereToReloadAddon',
+        title: '__MSG_clickHereToReloadAddon__',
         icon: 'icons/exclamation-triangle-yellow.svg',
         popup: '',
         enable: true,
@@ -4291,7 +4293,7 @@ async function setActionToReloadAddon() {
 
 Listeners.onExtensionStart(async () => {
     await Browser.action({
-        title: 'loading',
+        title: '__MSG_loading__',
         badgeBackgroundColor: 'transparent',
     });
 

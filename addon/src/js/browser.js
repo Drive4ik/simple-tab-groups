@@ -2,7 +2,7 @@
 import * as Constants from './constants.js';
 import * as Cache from './cache.js';
 import * as Utils from './utils.js';
-import Lang from './lang.js';
+import Lang, {hasMessage} from './lang.js';
 import Logger from './logger.js';
 
 let Groups;
@@ -29,12 +29,14 @@ export async function action({
         badgeBackgroundColor,
     });
 
-    if (title === 'loading') {
-        icon = 'icons/icon-animate.svg';
-        enable = false;
-    }
+    if (hasMessage(title)) {
+        if (title.includes('loading')) {
+            icon = 'icons/icon-animate.svg';
+            enable = false;
+        }
 
-    title = Lang(title, null, {html: false});
+        title = Lang(title, null, {html: false});
+    }
 
     if (enable !== null) {
         if (enable) {
@@ -121,7 +123,7 @@ export async function actionGroup(group, windowId) {
     };
 
     if (group) {
-        details.title = Utils.sliceText(Groups.getTitle(group, 'withContainer'), 43);
+        details.title = Utils.sliceText(Groups.getTitle(group, 'withContainer'), 43) + ' - ' + Constants.MANIFEST.short_name;
         details.icon = Groups.getIconUrl(group);
         details.isSticky = group.isSticky;
     }
@@ -150,7 +152,7 @@ export async function actionGroup(group, windowId) {
 export async function actionLoading(start = true) {
     if (start) {
         await actionAllWindows({
-            title: 'loading',
+            title: '__MSG_loading__',
         });
     } else {
         Windows ??= await import('./windows.js');
