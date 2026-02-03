@@ -5,10 +5,7 @@ import {MENU_ITEM_BUTTON} from './constants-browser.js';
 import Logger, {catchFunc} from './logger.js';
 import * as Utils from './utils.js';
 
-export {
-    MenusContextType as ContextType,
-    MenusItemType as ItemType,
-} from './constants-browser.js';
+export const {ContextType, ItemType} = browser.menus;
 
 const logger = new Logger('Menus').disable();
 
@@ -18,7 +15,7 @@ if (Constants.IS_BACKGROUND_PAGE) {
     Listeners.menus.onClicked(catchFunc(onClicked, logger));
 }
 
-async function onClicked(info, tab) {
+async function onClicked(info, tab = undefined) {
     const log = logger.start('onClicked', info.menuItemId, {info, tab});
 
     const menu = menusMap.get(info.menuItemId);

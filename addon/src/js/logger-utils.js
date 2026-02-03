@@ -15,6 +15,7 @@ function removeUnnecessaryStrings(str) {
 
 const DELETE_STACK_LINE_INCLUDES = [
     'vue.runtime.esm.js',
+    'listeners.js',
 ];
 
 const DELETE_STACK_LINE_STARTS_WITH = [

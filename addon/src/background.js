@@ -1,6 +1,6 @@
 
 import Listeners, {getExtensionStartTime} from '/js/listeners.js\
-?onExtensionStart=[{"delay":200}]\
+?onExtensionStart\
 &tabs.onActivated\
 &tabs.onCreated\
 &tabs.onUpdated=[{"properties":["title","status","favIconUrl","hidden","pinned","discarded","audible"]}]\
@@ -22,6 +22,7 @@ import Listeners, {getExtensionStartTime} from '/js/listeners.js\
 ';
 import '/js/prefixed-storage.js';
 import * as Constants from '/js/constants.js';
+import * as Browser from '/js/browser.js';
 import * as Messages from '/js/messages.js';
 import Logger, {
     catchFunc,
@@ -259,7 +260,7 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
                 throw '';
             }
 
-            await loadingBrowserAction(true, windowId).catch(log.onCatch('loadingBrowserAction'));
+            await Browser.actionLoading();
 
             // show tabs
             if (groupToShow.tabs.length) {
@@ -410,7 +411,7 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
 
             await updateMoveTabMenus();
 
-            await updateBrowserActionData(groupToShow.id);
+            await Browser.actionLoading(false);
 
             if (!applyFromHistory) {
                 groupsHistory.add(groupId);
@@ -435,7 +436,7 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
         if (e) {
             errorEventHandler.call(log, e);
 
-            await updateBrowserActionData(null, windowId);
+            await Browser.actionGroup(null, windowId);
 
             if (!groupWindowId) {
                 self.skipTabs.tracking.clear();
@@ -750,7 +751,7 @@ async function GrandRestoreWindows({ id }, needRestoreMissedTabsMap) {
         Storage.get('tabsToRestore')
     ]);
 
-    await Promise.all(windows.map(win => loadingBrowserAction(true, win.id)));
+    await Browser.actionLoading();
 
     let tabsToRestoreChanged = false;
     function deleteTabsToRestoreByGroup({ id }) {
@@ -964,7 +965,7 @@ async function GrandRestoreWindows({ id }, needRestoreMissedTabsMap) {
         }
     }
 
-    await Promise.all(windows.map(win => loadingBrowserAction(false, win.id).catch(() => {})));
+    await Browser.actionLoading(false);
 
     windowIdsForRestoring.clear();
 
@@ -987,7 +988,7 @@ const onCreatedWindow = catchFunc(async function onCreatedWindow(win) {
         return;
     }
 
-    await loadingBrowserAction(true, win.id);
+    await Browser.actionLoading();
 
     log.log('start grand restore for', win.id);
 
@@ -1015,11 +1016,13 @@ const onCreatedWindow = catchFunc(async function onCreatedWindow(win) {
     }
 
     if (!win.groupId && options.createNewGroupWhenOpenNewWindow) {
-        log.log('add group to window', win.id);
-        await Groups.add(win.id);
+        log.log('create new group into window', win.id);
+        if (!await Groups.add(win.id)) {
+            await Browser.actionLoading(false);
+        }
+    } else {
+        await Browser.actionLoading(false);
     }
-
-    await loadingBrowserAction(false, win.id);
 
     if (needRestoreMissedTabsMap.get(win.id)) {
         log.log('run tryRestoreMissedTabs');
@@ -1072,21 +1075,6 @@ const onRemovedWindow = catchFunc(async function onRemovedWindow(windowId) {
 
     log.stop();
 }, logger);
-
-let _currentWindowForLoadingBrowserAction = null;
-async function loadingBrowserAction(start = true, windowId) {
-    if (start) {
-        _currentWindowForLoadingBrowserAction = windowId || await Windows.getLastFocusedNormalWindow();
-
-        await setBrowserAction(_currentWindowForLoadingBrowserAction, 'loading', undefined, false);
-    } else {
-        if (windowId) {
-            _currentWindowForLoadingBrowserAction = windowId;
-        }
-
-        await updateBrowserActionData(null, _currentWindowForLoadingBrowserAction);
-    }
-}
 
 async function updateMoveTabMenus() {
     const log = logger.start('updateMoveTabMenus');
@@ -1304,10 +1292,10 @@ async function updateMoveTabMenus() {
                     return;
                 }
 
-                await loadingBrowserAction();
+                await Browser.actionLoading();
 
-                const [bookmark] = await browser.bookmarks.getSubTree(info.bookmarkId),
-                    tabsToCreate = [];
+                const [bookmark] = await browser.bookmarks.getSubTree(info.bookmarkId);
+                const tabsToCreate = [];
 
                 if (bookmark.type === browser.bookmarks.BookmarkTreeNodeType.BOOKMARK) {
                     bookmark.children = [bookmark];
@@ -1329,10 +1317,10 @@ async function updateMoveTabMenus() {
                 }
 
                 if (tabsToCreate.length) {
-                    const { group } = await Groups.load(groupId),
-                        [firstTab] = await createTabsSafe(Groups.setNewTabsParams(tabsToCreate, group));
+                    const {group} = await Groups.load(groupId);
+                    const [firstTab] = await createTabsSafe(Groups.setNewTabsParams(tabsToCreate, group));
 
-                    await loadingBrowserAction(false);
+                    await Browser.actionLoading(false);
 
                     if (info.button.RIGHT) {
                         await applyGroup(undefined, groupId, firstTab.id);
@@ -1340,7 +1328,7 @@ async function updateMoveTabMenus() {
                         Notification(['tabsCreatedCount', tabsToCreate.length]);
                     }
                 } else {
-                    await loadingBrowserAction(false);
+                    await Browser.actionLoading(false);
                     Notification('tabsNotCreated');
                 }
             },
@@ -1458,11 +1446,9 @@ async function updateMoveTabMenus() {
                     }
                 }
 
-                await loadingBrowserAction();
-
+                await Browser.actionLoading();
                 await addBookmarkFolderAsGroup(folder);
-
-                await loadingBrowserAction(false);
+                await Browser.actionLoading(false);
 
                 if (groupsCreatedCount) {
                     Notification(['groupsCreatedCount', groupsCreatedCount]);
@@ -1479,15 +1465,15 @@ async function updateMoveTabMenus() {
         id: 'exportAllGroupsToBookmarks',
         title: Lang('exportAllGroupsToBookmarks'),
         icon: '/icons/bookmark.svg',
-        contexts: [Menus.ContextType.ACTION],
+        contexts: [Menus.ContextType.BROWSER_ACTION],
         async onClick() {
-            await loadingBrowserAction();
+            await Browser.actionLoading();
 
             const {groups} = await Groups.load(null, true);
 
             await Bookmarks.exportGroups(groups);
 
-            loadingBrowserAction(false);
+            await Browser.actionLoading(false);
 
             // Notification('allGroupsExportedToBookmarks'); // ? maybe not needed anymore
         },
@@ -1497,7 +1483,7 @@ async function updateMoveTabMenus() {
         id: 'reopenTabsWithTemporaryContainersInNew',
         title: Lang('reopenTabsWithTemporaryContainersInNew'),
         icon: Containers.TEMPORARY.iconUrl,
-        contexts: [Menus.ContextType.ACTION],
+        contexts: [Menus.ContextType.BROWSER_ACTION],
         async onClick(info) {
             const allTabs = await Tabs.get(null, null, null, undefined, true, true),
                 tabsToCreate = [];
@@ -1514,7 +1500,7 @@ async function updateMoveTabMenus() {
                 });
 
             if (tabsToCreate.length) {
-                await loadingBrowserAction();
+                await Browser.actionLoading();
 
                 const newTabs = await Promise.all(tabsToCreate.map(Tabs.create));
 
@@ -1530,114 +1516,12 @@ async function updateMoveTabMenus() {
                     await Containers.removeUnusedTemporaryContainers(newTabs);
                 }
 
-                await loadingBrowserAction(false);
+                await Browser.actionLoading(false);
             }
         },
     });
 
     log.stop();
-}
-
-async function setBrowserAction(windowId, title, icon, enable, isSticky) {
-    const log = logger.start('setBrowserAction', { windowId, title, icon, enable, isSticky });
-
-    if ('loading' === title) {
-        title = 'lang:loading';
-        icon = 'loading';
-    }
-
-    if ('loading' === icon) {
-        icon = '/icons/icon-animate.svg';
-    }
-
-    if (title?.startsWith('lang:')) {
-        title = Lang(title.slice(5), null, {html: false});
-    }
-
-    if (undefined !== enable) {
-        if (enable) {
-            await browser.browserAction.enable();
-        } else {
-            await browser.browserAction.disable();
-        }
-    }
-
-    const manifestAction = Constants.MANIFEST.manifest_version === 3
-        ? Constants.MANIFEST.action
-        : Constants.MANIFEST.browser_action;
-
-    const winObj = windowId ? { windowId } : {};
-
-    await Promise.all([
-        browser.browserAction.setTitle({
-            ...winObj,
-            title: title || manifestAction.default_title,
-        }).catch(log.onCatch('setTitle', false)),
-        browser.browserAction.setBadgeText({
-            ...winObj,
-            text: isSticky ? Constants.STICKY_SYMBOL : '',
-        }).catch(log.onCatch('setBadgeText', false)),
-        browser.browserAction.setIcon({
-            ...winObj,
-            path: icon || manifestAction.default_icon,
-        }).catch(log.onCatch('setIcon', false)),
-    ]);
-
-    log.stop();
-}
-
-async function updateBrowserActionData(groupId, windowId) {
-    const log = logger.start('updateBrowserActionData', { groupId, windowId });
-
-    if (groupId) {
-        windowId = Cache.getWindowId(groupId);
-    } else if (windowId) {
-        groupId = Cache.getWindowGroup(windowId);
-    }
-
-    if (!windowId) {
-        log.stop('no window id');
-        return;
-    }
-
-    log.log({ groupId, windowId })
-
-    let group;
-
-    if (groupId) {
-        ({ group } = await Groups.load(groupId));
-    }
-
-    if (group) {
-        log.log('group found');
-        await setBrowserAction(windowId, Utils.sliceText(Groups.getTitle(group, 'withContainer'), 43) + ' - STG', Groups.getIconUrl(group), true, group.isSticky); // todo make this args as obj
-    } else {
-        log.log('group NOT found');
-        await setBrowserAction(windowId, undefined, undefined, true);
-    }
-
-    await prependWindowTitle(windowId, group);
-
-    log.stop();
-}
-
-async function prependWindowTitle(windowId, group = null) {
-    if (windowId) {
-        let titlePreface = '';
-
-        if (group?.prependTitleToWindow) {
-            const emoji = Groups.getEmojiIcon(group);
-
-            if (emoji) {
-                titlePreface = `${emoji} - `;
-            } else {
-                titlePreface = `${Utils.sliceText(group.title, 25)} - `;
-            }
-        }
-
-        await browser.windows.update(windowId, { titlePreface })
-            .catch(logger.onCatch(['prependWindowTitle', { windowId, titlePreface }], false));
-    }
 }
 
 const moveTabsBatch = new BatchProcessor(async (groupId, tabIds) => {
@@ -2350,11 +2234,9 @@ async function onBackgroundMessage(message, sender) {
                     } = await Groups.load(data.groupId, true);
 
                     if (groupToExport) {
-                        await loadingBrowserAction(true);
-
+                        await Browser.actionLoading();
                         result.ok = await Bookmarks.exportGroup(groupToExport, groupIndex);
-
-                        await loadingBrowserAction(false);
+                        await Browser.actionLoading(false);
 
                         if (data.showMessages) {
                             Notification(['groupExportedToBookmarks', groupToExport.title]);
@@ -2400,11 +2282,9 @@ async function onBackgroundMessage(message, sender) {
                     const {group} = await Groups.load(data.groupId);
 
                     if (group) {
-                        await loadingBrowserAction(true);
-
+                        await Browser.actionLoading();
                         result.ok = await Bookmarks.removeGroup(group);
-
-                        await loadingBrowserAction(false);
+                        await Browser.actionLoading(false);
                     } else {
                         result.error = Lang('groupNotFound');
                     }
@@ -2842,7 +2722,7 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
 
     sendMessageFromBackground('lock-addon');
 
-    await loadingBrowserAction();
+    await Browser.actionLoading();
 
     const currentData = {};
 
@@ -3008,8 +2888,7 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
 
 async function clearAddon(reloadAddonOnFinish = true) {
     if (reloadAddonOnFinish) {
-        await loadingBrowserAction();
-
+        await Browser.actionLoading();
         sendMessageFromBackground('lock-addon');
     }
 
@@ -3087,10 +2966,7 @@ self.createTabsSafe = createTabsSafe;
 
 self.sendExternalMessage = sendExternalMessage;
 
-self.updateBrowserActionData = updateBrowserActionData;
 self.updateMoveTabMenus = updateMoveTabMenus;
-
-self.loadingBrowserAction = loadingBrowserAction;
 
 self.applyGroup = applyGroup;
 
@@ -4020,7 +3896,7 @@ async function tryRestoreMissedTabs() {
 
     log.log('restoring tabs:', tabsToRestore);
 
-    await Promise.all(windows.map(win => loadingBrowserAction(true, win.id)));
+    await Browser.actionLoading();
 
     let [allTabs, { groups }] = await Promise.all([Tabs.get(null, false, null), Groups.load()]),
         groupNewTabParams = groups
@@ -4081,7 +3957,7 @@ async function tryRestoreMissedTabs() {
         sendMessageFromBackground('groups-updated');
     }
 
-    await Promise.all(windows.map(win => loadingBrowserAction(false, win.id)));
+    await Browser.actionLoading(false);
 
     log.stop();
 }
@@ -4302,12 +4178,13 @@ async function init() {
 
         if (!windows.length) {
             log.error('no windows found');
-            storage.notFoundWindowsAddonStoppedWorking = true;
+            storage.notFoundWindowsAddonStoppedWorking = 1;
             // Notification('notFoundWindowsAddonStoppedWorking');
             Listeners.windows.onCreated(() => browser.runtime.reload());
             throw '';
         } else if (storage.notFoundWindowsAddonStoppedWorking) {
-            log.log('try run grand restore');
+            log.warn('try run grand restore, attempt:', storage.notFoundWindowsAddonStoppedWorking);
+
             try {
                 await Promise.all(windows.map(async win => {
                     grandRestoringPromise = GrandRestoreWindows(win);
@@ -4316,11 +4193,16 @@ async function init() {
                 }));
             } catch (e) {
                 log.logError('cant grand restore', e);
-                browser.runtime.reload();
+                if (storage.notFoundWindowsAddonStoppedWorking++ < 10) {
+                    browser.runtime.reload();
+                } else {
+                    await setActionToReloadAddon();
+                }
+                log.stop();
                 return;
             }
 
-            log.log('grand restore finish');
+            log.info('grand restore finish');
 
             delete storage.notFoundWindowsAddonStoppedWorking;
         }
@@ -4331,15 +4213,7 @@ async function init() {
 
         await initializeGroupWindows(windows, data.groups.map(g => g.id));
 
-        await Promise.all(windows.map(async win => {
-            try {
-                await updateBrowserActionData(null, win.id);
-
-                if (win.groupId) {
-                    groupsHistory.add(win.groupId);
-                }
-            } catch {}
-        }));
+        windows.filter(win => win.groupId).forEach(win => groupsHistory.add(win.groupId));
 
         let tabs = Utils.concatTabs(windows);
 
@@ -4365,14 +4239,12 @@ async function init() {
             addListenerOnBeforeRequest();
         }
 
-        Groups.load(null, true, true).catch(log.onCatch('cant load groups')); // load favIconUrls, speed up first run popup
-
         if (storage.isBackupRestoring) {
             delete storage.isBackupRestoring;
             Notification('backupSuccessfullyRestored');
         }
 
-        await setBrowserAction(undefined, undefined, undefined, true);
+        await Browser.actionLoading(false);
 
         storage.inited = true;
 
@@ -4382,11 +4254,8 @@ async function init() {
         // send message for addon plugins
         sendExternalMessage('i-am-back');
 
-        log.stop();
-
-        // if (storage.IS_TEMPORARY && !Logger.logs.some(l => l['console.error'])) {
-        //     console.clear();
-        // }
+        log.log('loading groups for creating cache...');
+        await Groups.load(null, true, true); // load favIconUrls, speed up first run popup
 
         // Urls.openUrl('/popup/popup.html#sidebar');
         // Urls.openUrl('/popup/popup.html');
@@ -4395,37 +4264,40 @@ async function init() {
         // Urls.openOptionsPage('backup');
         // Urls.openDebugPage();
         // Urls.openUrl('welcome');
+
+        log.stop();
     } catch (e) {
-        setActionToReloadAddon();
+        await setActionToReloadAddon();
 
         if (e) {
             errorEventHandler.call(log, e);
             log.stopError('with errors');
         } else {
-            log.stop(String(e));
+            log.stop();
         }
     }
 }
 
-function setActionToReloadAddon() {
-    setBrowserAction(undefined, 'lang:clickHereToReloadAddon', '/icons/exclamation-triangle-yellow.svg', true).catch(() => { });
-
-    browser.browserAction.setPopup({
+async function setActionToReloadAddon() {
+    await Browser.actionAllWindows({
+        title: 'clickHereToReloadAddon',
+        icon: 'icons/exclamation-triangle-yellow.svg',
         popup: '',
+        enable: true,
     });
 
     Listeners.browserAction.onClicked(() => browser.runtime.reload());
 }
 
-browser.browserAction.setBadgeBackgroundColor({
-    color: 'transparent',
+Listeners.onExtensionStart(async () => {
+    await Browser.action({
+        title: 'loading',
+        badgeBackgroundColor: 'transparent',
+    });
+
+    // delay startup to avoid errors with extensions "Facebook Container", "Firefox Multi-Account Containers" etc.
+    // TransactionInactiveError: A request was placed against a transaction which is currently not active, or which is finished.
+    // An unexpected error occurred
+    // etc.
+    self.setTimeout(init, 200);
 });
-
-setBrowserAction(undefined, 'loading', undefined, false);
-
-// delay startup to avoid errors with extensions "Facebook Container", "Firefox Multi-Account Containers" etc.
-// TransactionInactiveError: A request was placed against a transaction which is currently not active, or which is finished.
-// An unexpected error occurred
-// etc.
-
-Listeners.onExtensionStart(init); // + delay 200ms

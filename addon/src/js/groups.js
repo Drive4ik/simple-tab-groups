@@ -8,6 +8,7 @@ import * as Cache from './cache.js';
 import Notification from './notification.js';
 import Lang from '/js/lang.js';
 import * as Containers from './containers.js';
+import * as Browser from './browser.js';
 import * as Bookmarks from './bookmarks.js';
 import * as Management from './management.js';
 import * as Menus from './menus.js';
@@ -196,7 +197,7 @@ export async function add(windowId, tabIds = [], title = null) {
 
     if (windowId) {
         await Cache.setWindowGroup(windowId, newGroup.id);
-        await backgroundSelf.updateBrowserActionData(newGroup.id);
+        await Browser.actionGroup(newGroup, windowId);
     }
 
     if (windowId && !tabIds.length) {
@@ -302,7 +303,7 @@ async function addUndoRemove(groupToRemove) {
     await Menus.create({
         id: restoreId,
         title: Lang('undoRemoveGroupItemTitle', groupToRemove.title),
-        contexts: [Menus.ContextType.ACTION],
+        contexts: [Menus.ContextType.BROWSER_ACTION],
         icons: getIconUrl(groupToRemove, 16),
         onClick: () => restore(groupToRemove.id),
     });
@@ -348,11 +349,9 @@ export async function restore(groupId) {
     await backgroundSelf.updateMoveTabMenus();
 
     if (tabs.length && !group.isArchive) {
-        await backgroundSelf.loadingBrowserAction();
-
+        await Browser.actionLoading();
         group.tabs = await backgroundSelf.createTabsSafe(setNewTabsParams(tabs, group), true);
-
-        await backgroundSelf.loadingBrowserAction(false);
+        await Browser.actionLoading(false);
     }
 
     backgroundSelf.sendMessageFromBackground('group-added', {
@@ -414,7 +413,7 @@ export async function update(groupId, updateData) {
     if (KEYS_RESPONSIBLE_VIEW.some(key => updateDataKeys.includes(key))) {
         await backgroundSelf.updateMoveTabMenus();
 
-        await backgroundSelf.updateBrowserActionData(group.id);
+        await Browser.actionGroup(group);
     }
 
     if (updateDataKeys.includes('title')) {
@@ -537,7 +536,7 @@ export async function unload(groupId) {
 
     log.log('windowId', windowId);
 
-    await backgroundSelf.loadingBrowserAction(true, windowId);
+    await Browser.actionLoading();
 
     await Cache.removeWindowSession(windowId);
 
@@ -566,7 +565,7 @@ export async function unload(groupId) {
         await Tabs.discard(tabs);
     }
 
-    await backgroundSelf.updateBrowserActionData(null, windowId);
+    await Browser.actionLoading(false);
 
     await backgroundSelf.updateMoveTabMenus();
 
@@ -587,7 +586,7 @@ export async function unload(groupId) {
 export async function archiveToggle(groupId) {
     const log = logger.start('archiveToggle', groupId);
 
-    await backgroundSelf.loadingBrowserAction();
+    await Browser.actionLoading();
 
     let {group, groups} = await load(groupId, true),
         tabsToRemove = [];
@@ -632,7 +631,7 @@ export async function archiveToggle(groupId) {
         group: mapForExternalExtension(group),
     });
 
-    backgroundSelf.loadingBrowserAction(false).catch(log.onCatch('loadingBrowserAction'));
+    await Browser.actionLoading(false);
 
     await backgroundSelf.updateMoveTabMenus();
 

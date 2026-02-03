@@ -77,7 +77,7 @@ function replaceTags(message, data, extra) {
                 continue;
             }
 
-            if (MSG_REGEXP.test(value)) {
+            if (hasMessage(value)) {
                 value = Lang(value, data, extra);
             }
 
@@ -107,10 +107,19 @@ function escapeAttrValue(str) {
         .replace(/>/g, "&gt;");
 }
 
+function hasMessage(str) {
+    return new RegExp(MSG_REGEXP).test(str);
+}
+
+function getMessageFormat(str) {
+    const [, format = PARAMS_FORMAT_HTML] = new RegExp(MSG_REGEXP).exec(str) ?? [];
+    return format;
+}
+
 // data can be Object, or if Array - with lang substitutions
 export default function Lang(messageName, data = {}, extra = {html: PARAMS_FORMAT_HTML}) {
     if (!messageName) {
-        return;
+        return messageName;
     }
 
     data ??= {};
@@ -119,7 +128,7 @@ export default function Lang(messageName, data = {}, extra = {html: PARAMS_FORMA
         substitutions = [];
 
     if (typeof messageName === 'string') {
-        if (messageName.includes(MSG_START) || messageName.includes(' ')) {
+        if (hasMessage(messageName) || messageName.includes(' ')) {
             translated = messageName; // keep as is
         } else {
             if (Object.prototype.toString.call(data) !== '[object Object]') {
@@ -133,7 +142,7 @@ export default function Lang(messageName, data = {}, extra = {html: PARAMS_FORMA
         [messageName, ...substitutions] = messageName;
 
         if (!messageName) {
-            return;
+            return messageName;
         }
 
         translated = browser.i18n.getMessage(String(messageName), substitutions);
@@ -170,7 +179,7 @@ function translateNodes(parentElement) {
     const messageNodes = [];
 
     while (walker.nextNode()) {
-        if (MSG_REGEXP.test(walker.currentNode.nodeValue)) {
+        if (hasMessage(walker.currentNode.nodeValue)) {
             messageNodes.push(walker.currentNode);
         }
     }
@@ -179,8 +188,7 @@ function translateNodes(parentElement) {
         const parent = node.parentElement;
         const data = parent._stg_data ??= getNodeData(parent);
 
-        const [, format] = MSG_REGEXP.exec(node.nodeValue);
-        const html = format === FORMAT_HTML;
+        const html = getMessageFormat(node.nodeValue) === FORMAT_HTML;
 
         const translated = Lang(node.nodeValue.trim(), data, {html});
 
@@ -200,7 +208,7 @@ function translateAttributes(parentElement) {
 
     for (const node of parentElement.querySelectorAll(attrSelector)) {
         for (const attr of node.attributes) {
-            if (MSG_REGEXP.test(attr.value)) {
+            if (hasMessage(attr.value)) {
                 attr.value = Lang(attr.value, node._stg_data);
             }
         }
