@@ -100,28 +100,34 @@ export async function getLastFocusedNormalWindow(returnId = true) {
     return returnId ? win?.id : win;
 }
 
-export async function createPopup(url, createData = {}) {
-    const log = logger.start('createPopup', url, {createData});
+export async function createPopup(createData, once = true) {
+    const log = logger.start('createPopup', createData);
 
     createData = {
-        url,
         focused: true,
         type: browser.windows.CreateType.POPUP,
         state: browser.windows.WindowState.NORMAL,
         ...createData,
     };
 
-    for (const key in createData) {
-        if (createData[key] === null) {
-            delete createData[key];
+    let win;
+
+    if (once) {
+        const windows = await browser.windows.getAll({
+            windowTypes: [browser.windows.WindowType.POPUP],
+            populate: true,
+        });
+
+        win = windows.find(win => win.tabs[0].url.startsWith(createData.url));
+
+        if (win && createData.focused) {
+            await setFocus(win.id);
         }
     }
 
-    const win = await browser.windows.create(createData).catch(log.onCatch(createData));
+    win ??= await browser.windows.create(createData).catch(log.onCatch(createData));
 
-    Cache.setWindow(win);
-
-    log.stop('created window', win);
+    log.stop(win);
 
     return win;
 }

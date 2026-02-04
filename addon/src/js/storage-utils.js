@@ -1,5 +1,5 @@
 
-import * as Urls from './urls.js';
+import * as Constants from './constants.js';
 
 export function getKeysData(keys, defaultData) {
     let keysData;
@@ -21,10 +21,11 @@ export async function nativeGet(area, keysData, log, errorCounter = 0) {
     try {
         return await browser.storage[area].get(keysData);
     } catch (e) {
-        errorCounter++;
-
-        if (errorCounter > 100) {
-            Urls.openUrl('db-error-reinstall', true);
+        if (errorCounter++ > 100) {
+            browser.tabs.create({
+                url: Constants.PAGES.HELP.REINSTALL,
+                active: true,
+            });
             log.throwError('db-error-reinstall', e);
         }
 

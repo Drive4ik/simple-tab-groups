@@ -4,7 +4,6 @@ import Logger from './logger.js';
 import backgroundSelf from './background.js';
 import Notification from './notification.js';
 import * as Constants from './constants.js';
-import * as Urls from './urls.js';
 import * as Utils from './utils.js';
 import * as Cache from './cache.js';
 import * as Containers from './containers.js';
@@ -32,13 +31,13 @@ export async function create({url, active, pinned, title, index, windowId, opene
                 if (Utils.isUUID(uuid)) {
                     tab.url = url;
                 } else {
-                    tab.url = Urls.HELP_PAGE_UNSUPPORTED_URL + '#' + url;
+                    tab.url = Constants.PAGES.HELP.UNSUPPORTED_URL + '#' + url;
                 }
             } else {
                 tab.url = url;
             }
         } else if (url !== 'about:newtab') {
-            tab.url = Urls.HELP_PAGE_UNSUPPORTED_URL + '#' + url;
+            tab.url = Constants.PAGES.HELP.UNSUPPORTED_URL + '#' + url;
         }
     }
 
@@ -95,18 +94,30 @@ export async function create({url, active, pinned, title, index, windowId, opene
     return newTab;
 }
 
-export async function createUrlOnce(url, windowId) {
-    const [tab] = await get(windowId, null, null, {url});
+export async function createUrlOnce(url) {
+    let [tab] = await browser.tabs.query({
+        url: url.includes('#') ? url.slice(0, url.indexOf('#')) : url,
+        hidden: false,
+    });
 
     if (tab) {
-        return setActive(tab.id);
-    } else {
-        return create({
+        const updateProperties = {
             active: true,
-            url,
-            windowId,
-        });
+        };
+
+        if (tab.url !== url) {
+            updateProperties.url = url;
+        }
+
+        [tab] = await tabsAction({action: 'update'}, tab, updateProperties);
     }
+
+    tab ??= await browser.tabs.create({
+        url,
+        active: true,
+    });
+
+    return tab;
 }
 
 export async function setActive(tabId = null, tabs = []) {

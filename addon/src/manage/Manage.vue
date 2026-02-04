@@ -13,12 +13,12 @@ import '/js/prefixed-storage.js';
 import * as Constants from '/js/constants.js';
 import Logger, {errorEventHandler} from '/js/logger.js';
 import Lang from '/js/lang.js?translate-page';
-import * as Urls from '/js/urls.js';
 import * as Groups from '/js/groups.js';
 import * as Tabs from '/js/tabs.js';
 import * as Utils from '/js/utils.js';
 
 import defaultGroupMixin from '/js/mixins/default-group.mixin.js';
+import globalMixin from '/js/mixins/global.mixin.js';
 import optionsMixin from '/js/mixins/options.mixin.js';
 import popupHelpersMixin from '/js/mixins/popup-helpers.mixin.js';
 import tabGroupsMixin from '/js/mixins/tab-groups.mixin.js';
@@ -39,6 +39,7 @@ export default {
     name: Constants.MODULES.MANAGE,
     mixins: [
         defaultGroupMixin,
+        globalMixin,
         optionsMixin,
         popupHelpersMixin,
         tabGroupsMixin,
@@ -350,13 +351,6 @@ export default {
 
         async closeThisWindow() {
             window.close();
-        },
-
-        openOptionsPage(section = 'general') {
-            this.sendMessage('open-options-page', {section});
-        },
-        openDebugPage() {
-            Urls.openDebugPage();
         },
     },
 }

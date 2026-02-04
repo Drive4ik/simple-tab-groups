@@ -49,6 +49,24 @@ export const STG_HELP_PAGES = Object.freeze([
     'db-error-reinstall',
 ]);
 
+export const PAGES = Object.freeze({
+    POPUP: browser.runtime.getURL('popup/popup.html'),
+    MANAGE: browser.runtime.getURL('manage/manage.html'),
+    SETTINGS: browser.runtime.getURL('options/options.html'),
+    HELP: {
+        WELCOME: browser.runtime.getURL('help/welcome.html'),
+        CONFLICTED_EXTENSIONS: browser.runtime.getURL('help/extensions-that-conflict-with-stg.html'),
+        OPEN_IN_CONTAINER: browser.runtime.getURL('help/open-in-container.html'),
+        HOWTO_GITHUB_GIST: browser.runtime.getURL('help/how-to-github-gist.html'),
+        UNSUPPORTED_URL: browser.runtime.getURL('help/stg-unsupported-url.html'),
+        DEBUG: browser.runtime.getURL('help/stg-debug.html'),
+        REINSTALL: browser.runtime.getURL('help/db-error-reinstall.html'),
+    },
+    DOC: {
+        UNSUPPORTED_URL: 'https://developer.mozilla.org/docs/Mozilla/Add-ons/WebExtensions/Content_scripts',
+    },
+});
+
 // permission "<all_urls>" need for tab thumbnails and webRequestBlocking
 export const PERMISSIONS = Object.freeze({
     BOOKMARKS: {
@@ -155,7 +173,7 @@ export const POPUP_SETTINGS_MENU_ITEMS = Object.freeze([
     }, {
         key: 'syncCloudOptions',
         sendMessage: ['open-options-page', {
-            section: 'backup sync',
+            section: 'backup/sync',
         }],
         title: 'githubGistCloudSettingsTitle',
         icon: 'settings',

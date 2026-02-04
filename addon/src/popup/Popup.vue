@@ -15,12 +15,12 @@ import * as Constants from '/js/constants.js';
 import Logger, {errorEventHandler} from '/js/logger.js';
 import Lang from '/js/lang.js';
 import * as Containers from '/js/containers.js';
-import * as Urls from '/js/urls.js';
 import * as Groups from '/js/groups.js';
 import * as Tabs from '/js/tabs.js';
 import * as Utils from '/js/utils.js';
 
 import defaultGroupMixin from '/js/mixins/default-group.mixin.js';
+import globalMixin from '/js/mixins/global.mixin.js';
 import optionsMixin from '/js/mixins/options.mixin.js';
 import popupHelpersMixin from '/js/mixins/popup-helpers.mixin.js';
 import syncCloudMixin from '/js/mixins/sync-cloud.mixin.js';
@@ -43,6 +43,7 @@ export default {
     name: Constants.MODULES.POPUP,
     mixins: [
         defaultGroupMixin,
+        globalMixin,
         optionsMixin,
         popupHelpersMixin,
         syncCloudMixin,
@@ -229,7 +230,7 @@ export default {
 
                     if (this.syncCloudTriggeredByPopup) {
                         const ok = await this.confirm(name, message, 'openSettings', 'is-info');
-                        ok && this.openOptionsPage('backup sync');
+                        ok && this.openOptionsPage('backup/sync');
                     }
                 })
                 .$on('sync-finish', () => {
@@ -554,18 +555,6 @@ export default {
                     return tabContainer?.[key];
                 }
             }
-        },
-
-        openOptionsPage(section = 'general') {
-            this.sendMessage('open-options-page', {section});
-            this.closeWindow();
-        },
-        openManageGroups() {
-            this.sendMessage('open-manage-groups');
-            this.closeWindow();
-        },
-        openDebugPage() {
-            Urls.openDebugPage();
         },
 
         // allowTypes: Array ['groups', 'tabs']

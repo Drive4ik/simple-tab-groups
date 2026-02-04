@@ -23,7 +23,6 @@ import * as Bookmarks from '/js/bookmarks.js';
 import * as Storage from '/js/storage.js';
 import * as File from '/js/file.js';
 import * as Host from '/js/host.js';
-import * as Urls from '/js/urls.js';
 import * as Groups from '/js/groups.js';
 import * as Permissions from '/js/permissions.js';
 import * as BrowserSettings from '/js/browser-settings.js';
@@ -31,11 +30,10 @@ import {isValidHotkeyValue, eventToHotkeyValue} from '/js/hotkeys.js';
 import JSON from '/js/json.js';
 
 import defaultGroupMixin from '/js/mixins/default-group.mixin.js';
+import globalMixin from '/js/mixins/global.mixin.js';
 import optionsMixin from '/js/mixins/options.mixin.js';
 
 window.logger = new Logger(Constants.MODULES.OPTIONS);
-
-const storage = localStorage.create(Constants.MODULES.OPTIONS);
 
 Vue.config.errorHandler = errorEventHandler.bind(window.logger);
 
@@ -44,8 +42,19 @@ const SECTION_HOTKEYS = 'hotkeys';
 const SECTION_BACKUP = 'backup';
 const SECTION_ABOUT = 'about';
 
-const [section, element = null] = (storage.section || SECTION_GENERAL).split(' ');
-storage.section = section;
+const HASH = {
+    get parts() {
+        return self.location.hash.slice(1).split('/').filter(Boolean);
+    },
+    get section() {
+        return [SECTION_GENERAL, SECTION_HOTKEYS, SECTION_BACKUP, SECTION_ABOUT].includes(this.parts[0])
+            ? this.parts[0]
+            : SECTION_GENERAL;
+    },
+    get block() {
+        return this.parts[1];
+    },
+};
 
 let instance;
 
@@ -74,7 +83,11 @@ await Management.init();
 
 export default {
     name: Constants.MODULES.OPTIONS,
-    mixins: [defaultGroupMixin, optionsMixin],
+    mixins: [
+        defaultGroupMixin,
+        globalMixin,
+        optionsMixin,
+    ],
     data() {
         window.app = this;
         this.MANIFEST = Constants.MANIFEST;
@@ -100,8 +113,7 @@ export default {
         this.AUTO_BACKUP_LOCATIONS = Constants.AUTO_BACKUP_LOCATIONS;
 
         return {
-            section,
-            element,
+            section: HASH.section,
 
             optionsWatchKeys: [
                 ...Constants.ONLY_BOOL_OPTION_KEYS,
@@ -228,7 +240,7 @@ export default {
         'backup-location-downloads': backupLocationDownloads,
         'backup-location-host': backupLocationHost,
     },
-    async created() {
+    created() {
         instance = this;
 
         this.$on('options-reloaded', () => this.addCustomWatchers());
@@ -241,20 +253,14 @@ export default {
 
         this.initLastUpdateBackups();
         window.addEventListener('focus', () => this.initLastUpdateBackups(), false);
+        window.addEventListener('hashchange', () => this.hashChanged());
     },
     mounted() {
-        const scrollNodeSelector = {
-            sync: '#sync-block',
-            debug: '#debug-block',
-        }[this.element];
-
-        if (scrollNodeSelector) {
-            Utils.wait(1000).then(() => Utils.scrollTo(scrollNodeSelector));
-        }
+        this.goToBlock(HASH.block);
     },
     watch: {
         section(section) {
-            storage.section = section;
+            self.location.hash = section;
         },
     },
     computed: {
@@ -323,6 +329,22 @@ export default {
                 };
             } else {
                 this.lastAutoBackup = null;
+            }
+        },
+
+        hashChanged() {
+            this.section = HASH.section;
+            this.goToBlock(HASH.block);
+        },
+
+        goToBlock(block) {
+            const scrollNodeSelector = {
+                sync: '#sync-block',
+                debug: '#debug-block',
+            }[block];
+
+            if (scrollNodeSelector) {
+                Utils.wait(1000).then(() => Utils.scrollTo(scrollNodeSelector));
             }
         },
 
@@ -744,10 +766,6 @@ export default {
         getGroupIconUrl(groupId) {
             const group = this.groups.find(gr => gr.id === groupId);
             return Groups.getIconUrl(group);
-        },
-
-        openDebugPage() {
-            Urls.openDebugPage();
         },
 
         copyTextSelector(selector) {

@@ -1,7 +1,6 @@
 
 import '/js/prefixed-storage.js';
 import * as Constants from '/js/constants.js';
-import * as Urls from '/js/urls.js';
 import * as Utils from '/js/utils.js';
 
 const storage = localStorage.create(Constants.MODULES.CLOUD);
@@ -204,7 +203,7 @@ export default class GithubGist {
         }
 
         if (options.method === 'GET') {
-            url = Urls.setUrlSearchParams(url, body ?? {});
+            url = Utils.setUrlSearchParams(url, body ?? {});
             options.cache ??= 'no-store';
         } else if (body) {
             if (body.files) {

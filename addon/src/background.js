@@ -42,7 +42,6 @@ import Notification from '/js/notification.js';
 import JSON from '/js/json.js';
 import BatchProcessor from '/js/batch-processor.js';
 import Lang from '/js/lang.js';
-import * as Urls from '/js/urls.js';
 import * as Containers from '/js/containers.js';
 import * as Storage from '/js/storage.js';
 import * as Cache from '/js/cache.js';
@@ -405,7 +404,7 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
                     await hideTabs([activeTabGroupToHide]);
                 }
 
-                groupToHide.tabs.forEach(tab => tab.url === Urls.MANAGE_TABS_URL && tabsIdsToRemove.add(tab.id));
+                groupToHide.tabs.forEach(tab => tab.url.startsWith(Constants.PAGES.MANAGE) && tabsIdsToRemove.add(tab.id));
             }
 
             await Tabs.remove(Array.from(tabsIdsToRemove));
@@ -1646,7 +1645,7 @@ const onBeforeTabRequest = catchFunc(async function onBeforeTabRequest({tabId, u
             params.asInfo = true;
         }
 
-        return Urls.setUrlSearchParams(Urls.getURL('open-in-container', true), params);
+        return Utils.setUrlSearchParams(Constants.PAGES.HELP.OPEN_IN_CONTAINER, params);
     }
 
     if (Constants.CONFLICTED_EXTENSIONS_FOR_REOPEN_TAB_IN_CONTAINER.includes(originExt.id) && originExt.enabled) {
@@ -1924,7 +1923,9 @@ async function onBackgroundMessage(message, sender) {
 
             Notification('whatsWrongMessage', {
                 iconUrl: '/icons/exclamation-triangle-yellow.svg',
-                module: 'urls@openDebugPage',
+                module: ['windows', 'createPopup', {
+                    url: Constants.PAGES.HELP.DEBUG,
+                }],
                 expires: Notification.MAX_EXPIRES,
             });
 
@@ -2092,7 +2093,7 @@ async function onBackgroundMessage(message, sender) {
                             Lang('hotkeyActionTitleLoadCustomGroup'),
                         ]);
                         Notification(result.error, {
-                            module: 'urls@openNotSupportedUrlHelper',
+                            module: ['tabs', 'createUrlOnce', Constants.PAGES.DOC.UNSUPPORTED_URL],
                         });
                     }
                 }
@@ -2144,7 +2145,7 @@ async function onBackgroundMessage(message, sender) {
                                 Lang('createNewGroup'),
                             ]);
                             Notification(result.error, {
-                                module: 'urls@openNotSupportedUrlHelper',
+                                module: ['tabs', 'createUrlOnce', Constants.PAGES.DOC.UNSUPPORTED_URL],
                             });
                         }
                     }
@@ -2174,7 +2175,7 @@ async function onBackgroundMessage(message, sender) {
                             Lang('hotkeyActionTitleRenameGroup'),
                         ]);
                         Notification(result.error, {
-                            module: 'urls@openNotSupportedUrlHelper',
+                            module: ['tabs', 'createUrlOnce', Constants.PAGES.DOC.UNSUPPORTED_URL],
                         });
                     }
                 } else if (data.groupId && !data.title) {
@@ -2202,7 +2203,7 @@ async function onBackgroundMessage(message, sender) {
                                 Lang('hotkeyActionTitleRenameGroup'),
                             ]);
                             Notification(result.error, {
-                                module: 'urls@openNotSupportedUrlHelper',
+                                module: ['tabs', 'createUrlOnce', Constants.PAGES.DOC.UNSUPPORTED_URL],
                             });
                         }
                     } else {
@@ -2269,7 +2270,7 @@ async function onBackgroundMessage(message, sender) {
                             Lang('hotkeyActionTitleRenameGroup'),
                         ]);
                         Notification(result.error, {
-                            module: 'urls@openNotSupportedUrlHelper',
+                            module: ['tabs', 'createUrlOnce', Constants.PAGES.DOC.UNSUPPORTED_URL],
                         });
                     }
                 }
@@ -2313,11 +2314,28 @@ async function onBackgroundMessage(message, sender) {
 
                 break;
             case 'open-manage-groups':
-                await Urls.openManageGroups();
+                if (options.openManageGroupsInTab) {
+                    await Tabs.createUrlOnce(Constants.PAGES.MANAGE);
+                } else {
+                    const manageStorage = localStorage.create(Constants.MODULES.MANAGE);
+
+                    await Windows.createPopup({
+                        url: Constants.PAGES.MANAGE,
+                        width: manageStorage.windowWidth ?? 1000,
+                        height: manageStorage.windowHeight ?? 700,
+                    });
+                }
                 result.ok = true;
                 break;
             case 'open-options-page':
-                await Urls.openOptionsPage(data.section);
+                const settingsUrl = Constants.PAGES.SETTINGS + (data.section ? `#${data.section}` : '');
+                await Tabs.createUrlOnce(settingsUrl);
+                result.ok = true;
+                break;
+            case 'open-debug-page':
+                await Windows.createPopup({
+                    url: Constants.PAGES.HELP.DEBUG,
+                });
                 result.ok = true;
                 break;
             case 'move-selected-tabs-to-custom-group':
@@ -2365,7 +2383,7 @@ async function onBackgroundMessage(message, sender) {
                             Lang('hotkeyActionTitleMoveSelectedTabsToCustomGroup'),
                         ]);
                         Notification(result.error, {
-                            module: 'urls@openNotSupportedUrlHelper',
+                            module: ['tabs', 'createUrlOnce', Constants.PAGES.DOC.UNSUPPORTED_URL],
                         });
                     }
                 }
@@ -2404,7 +2422,7 @@ async function onBackgroundMessage(message, sender) {
                                 Lang('hotkeyActionTitleDiscardGroup'),
                             ]);
                             Notification(result.error, {
-                                module: 'urls@openNotSupportedUrlHelper',
+                                module: ['tabs', 'createUrlOnce', Constants.PAGES.DOC.UNSUPPORTED_URL],
                             });
                         }
                     }
@@ -2944,7 +2962,7 @@ async function cloudSync(auto = false, trust = null, revision = null) {
 
             if (!isNetworkError && !isInvalidToken) {
                 Notification(e, {
-                    module: ['urls', 'openOptionsPage', 'backup sync'],
+                    module: ['tabs', 'createUrlOnce', Constants.PAGES.SETTINGS + '#backup/sync'],
                 });
             }
         }
@@ -4003,7 +4021,10 @@ Listeners.runtime.onInstalled(({reason, previousVersion, temporary}) => {
         )
     ) {
         log.log('open welcome');
-        Urls.openUrl('welcome');
+        Tabs.create({
+            url: Constants.PAGES.HELP.WELCOME,
+            active: true,
+        });
     }
 
     log.stop();
@@ -4258,14 +4279,6 @@ async function init() {
 
         log.log('loading groups for creating cache...');
         await Groups.load(null, true, true); // load favIconUrls, speed up first run popup
-
-        // Urls.openUrl('/popup/popup.html#sidebar');
-        // Urls.openUrl('/popup/popup.html');
-
-        // Urls.openOptionsPage();
-        // Urls.openOptionsPage('backup');
-        // Urls.openDebugPage();
-        // Urls.openUrl('welcome');
 
         log.stop();
     } catch (e) {

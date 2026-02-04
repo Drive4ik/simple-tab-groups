@@ -8,8 +8,8 @@ import Listeners from './listeners.js\
 import './prefixed-storage.js';
 import Logger, {catchFunc} from './logger.js';
 import * as Constants from './constants.js';
+import * as Windows from './windows.js';
 import * as Utils from './utils.js';
-import * as Urls from './urls.js';
 
 const logger = new Logger(Constants.MODULES.MANAGEMENT);
 
@@ -77,7 +77,9 @@ export function detectConflictedExtensions(extensionsStorage = extensions) {
         if (isEnabled(id, extensionsStorage)) {
             if (!isIgnoredConflictedExtension(id)) {
                 logger.warn('detectConflictedExtensions', id);
-                Urls.openUrl('extensions-that-conflict-with-stg', true);
+                Windows.createPopup({
+                    url: Constants.PAGES.HELP.CONFLICTED_EXTENSIONS,
+                });
                 break;
             }
         } else if (isIgnoredConflictedExtension(id)) {

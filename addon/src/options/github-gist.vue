@@ -9,7 +9,6 @@ import * as Constants from '/js/constants.js';
 import Lang from '/js/lang.js';
 import * as Storage from '/js/storage.js';
 import * as Utils from '/js/utils.js';
-import * as Urls from '/js/urls.js';
 import * as SyncStorage from '/js/sync/sync-storage.js';
 import * as Cloud from '/js/sync/cloud/cloud.js';
 import GithubGist from '/js/sync/cloud/githubgist.js';
@@ -26,7 +25,7 @@ export default {
         this.CLOUD = Cloud.CLOUD;
 
         this.browserName = `${Constants.BROWSER_FULL_NAME} v${Constants.BROWSER.version}`;
-        this.helpLink = Urls.getURL('how-to-github-gist');
+        this.helpLink = Constants.PAGES.HELP.HOWTO_GITHUB_GIST;
 
         return {
             confirmRestoreBackupItem: null,

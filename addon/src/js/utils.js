@@ -206,6 +206,33 @@ export function isUrlAllowToCreate(url) {
     return createTabUrlRegexp.test(url);
 }
 
+export function setUrlSearchParams(url, params = {}, baseUrl = Constants.STG_BASE_URL) {
+    const formatedUrl = formatUrl(...[url].flat());
+    const urlObj = new URL(formatedUrl, baseUrl);
+
+    for (const [key, value] of Object.entries(params)) {
+        urlObj.searchParams.set(key, value);
+    }
+
+    return urlObj.href;
+}
+
+export function formatUrl(url, data = {}) {
+    return url.replace(/\{(.+?)\}/g, (match, key) => {
+        if (key.startsWith('/')) {
+            const keyClear = key.slice(1);
+
+            if ([null, '', undefined].includes(data[keyClear])) {
+                return '';
+            } else {
+                return '/' + window.encodeURIComponent(data[keyClear]);
+            }
+        }
+
+        return window.encodeURIComponent(data[key]);
+    });
+}
+
 const readerUrl = 'about:reader?url=';
 export function normalizeUrl(url) {
     if (!url || typeof url !== 'string') {
