@@ -4,7 +4,7 @@
         "description": "Extension description"
     },
     "needInstallSTGExtension": {
-        "message": "L'installation du module complémentaire Simple Tab Groups est requise\nCliquer ici pour ouvrir la page d'accueil de Simple Tab Groups",
+        "message": "L'installation du module complémentaire __MSG_STGextensionName__ est requise\nCliquer ici pour ouvrir la page d'accueil de __MSG_STGextensionName__",
         "description": "Need install Simple Tab Groups extention\nClick here to open Simple Tab Groups home page"
     },
     "defaultBrowserActionTitle": {

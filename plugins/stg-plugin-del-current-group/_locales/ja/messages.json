@@ -4,7 +4,7 @@
         "description": "Extension description"
     },
     "needInstallSTGExtension": {
-        "message": "Simple Tab Groups のエクステンションをインストールする必要があります。\nここをクリックして Simple Tab Groups のホームページを開いてください",
+        "message": "__MSG_STGextensionName__ のエクステンションをインストールする必要があります。\nここをクリックして __MSG_STGextensionName__ のホームページを開いてください",
         "description": "Need install Simple Tab Groups extention\nClick here to open Simple Tab Groups home page"
     },
     "defaultBrowserActionTitle": {

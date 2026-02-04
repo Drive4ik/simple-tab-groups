@@ -1,10 +1,6 @@
 {
-    "extensionDescription": {
-        "message": "Crear, modificar y cambiar rápidamente los grupos de pestañas",
-        "description": "Extension description"
-    },
     "needInstallSTGExtension": {
-        "message": "Necesitas instalar la extensión Simple Tab Groups\nHacé clic acá para abrir la página de inicio de Simple Tab Groups",
+        "message": "Necesitas instalar la extensión __MSG_STGextensionName__\nHacé clic acá para abrir la página de inicio de __MSG_STGextensionName__",
         "description": "Need install Simple Tab Groups extention or change container in addon settings\nClick here to open Simple Tab Groups home page"
     },
     "newTabTitle": {

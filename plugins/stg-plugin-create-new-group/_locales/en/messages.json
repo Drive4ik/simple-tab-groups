@@ -7,8 +7,12 @@
         "message": "Create new group in extention Simple Tab Groups",
         "description": "Extension description"
     },
+    "STGextensionName": {
+        "message": "Simple Tab Groups",
+        "description": "Main extension name"
+    },
     "needInstallSTGExtension": {
-        "message": "Need install Simple Tab Groups extention\nClick here to open home page Simple Tab Groups",
+        "message": "Need install __MSG_STGextensionName__ extention\nClick here to open home page __MSG_STGextensionName__",
         "description": "Need install Simple Tab Groups extention\nClick here to open home page Simple Tab Groups"
     },
     "createNewGroupTitle": {

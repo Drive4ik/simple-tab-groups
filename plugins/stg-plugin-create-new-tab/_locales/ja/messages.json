@@ -4,7 +4,7 @@
         "description": "Extension description"
     },
     "needInstallSTGExtension": {
-        "message": "Simple Tab Groups 拡張のインストールが必要です\nここをクリックすると Simple Tab Groups のホームページを開きます",
+        "message": "__MSG_STGextensionName__ 拡張のインストールが必要です\nここをクリックすると __MSG_STGextensionName__ のホームページを開きます",
         "description": "Need install Simple Tab Groups extention or change container in addon settings\nClick here to open Simple Tab Groups home page"
     },
     "newTabTitle": {

@@ -1,10 +1,10 @@
 {
     "extensionDescription": {
-        "message": "Neue Gruppe in der Erweiterung Einfache Tab-Gruppen erstellen",
+        "message": "Neue Gruppe in der Erweiterung Simple Tab Groups erstellen",
         "description": "Extension description"
     },
     "needInstallSTGExtension": {
-        "message": "Benötigt die Installation der Einfache Tab-Gruppen Erweiterung\nKlicken Sie hier, um die Startseite der Erweiterung Einfache Tab-Gruppen zu öffnen",
+        "message": "Benötigt die Installation der __MSG_STGextensionName__ Erweiterung\nKlicken Sie hier, um die Startseite der Erweiterung __MSG_STGextensionName__ zu öffnen",
         "description": "Need install Simple Tab Groups extention\nClick here to open home page Simple Tab Groups"
     },
     "createNewGroupTitle": {

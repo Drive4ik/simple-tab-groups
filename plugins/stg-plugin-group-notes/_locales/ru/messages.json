@@ -4,7 +4,7 @@
         "description": "Extension description"
     },
     "needInstallSTGExtension": {
-        "message": "Необходимо установить расширение Simple Tab Groups\nНажмите здесь чтобы открыть домашнюю страницу Simple Tab Groups",
+        "message": "Необходимо установить расширение __MSG_STGextensionName__\nНажмите здесь чтобы открыть домашнюю страницу __MSG_STGextensionName__",
         "description": "Need install Simple Tab Groups extention\nClick here to open Simple Tab Groups home page"
     },
     "openPopupTitle": {

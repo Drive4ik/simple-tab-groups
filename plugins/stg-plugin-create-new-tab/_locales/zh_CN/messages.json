@@ -1,10 +1,10 @@
 {
     "extensionDescription": {
-        "message": "在基于 Simple Tab Groups v4.4 扩展的群组容器中创建新标签页",
+        "message": "在基于 Simple Tab Groups v4.4+ 扩展的群组容器中创建新标签页",
         "description": "Extension description"
     },
     "needInstallSTGExtension": {
-        "message": "需要安装 Simple Tab Groups 扩展或在扩展设置中更换容器\n点击此处打开 Simple Tab Groups 主页",
+        "message": "需要安装 __MSG_STGextensionName__ 扩展或在扩展设置中更换容器\n点击此处打开 __MSG_STGextensionName__ 主页",
         "description": "Need install Simple Tab Groups extention or change container in addon settings\nClick here to open Simple Tab Groups home page"
     },
     "newTabTitle": {

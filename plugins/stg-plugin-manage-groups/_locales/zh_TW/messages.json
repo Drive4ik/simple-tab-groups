@@ -1,10 +1,10 @@
 {
     "extensionDescription": {
-        "message": "建立、編輯、及快速切換分頁群組。\n靈感來自傳統套件 Tab Groups :)",
+        "message": "在 Simple Tab Groups 扩展中打开管理组页面",
         "description": "Extension description"
     },
     "needInstallSTGExtension": {
-        "message": "需要安裝 Simple Tab Groups 套件。\n點擊此處開啟 Simple Tab Groups 首頁。",
+        "message": "需要安裝 __MSG_STGextensionName__ 套件。\n點擊此處開啟 __MSG_STGextensionName__ 首頁。",
         "description": "Need install Simple Tab Groups extention\nClick here to open Simple Tab Groups home page"
     },
     "defaultBrowserActionTitle": {

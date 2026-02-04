@@ -1,10 +1,10 @@
 {
     "extensionDescription": {
-        "message": "Создать новую вкладку в контейнере на основе группы в расширении Simple Tab Groups v4.4",
+        "message": "Создать новую вкладку в контейнере на основе группы в расширении Simple Tab Groups v4.4+",
         "description": "Extension description"
     },
     "needInstallSTGExtension": {
-        "message": "Необходимо установить расширение Simple Tab Groups или измените контейнер в настройках аддона\nНажмите здесь чтобы открыть домашнюю страницу Simple Tab Groups",
+        "message": "Необходимо установить расширение __MSG_STGextensionName__ или измените контейнер в настройках аддона\nНажмите здесь чтобы открыть домашнюю страницу __MSG_STGextensionName__",
         "description": "Need install Simple Tab Groups extention or change container in addon settings\nClick here to open Simple Tab Groups home page"
     },
     "newTabTitle": {

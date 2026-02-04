@@ -4,7 +4,7 @@
         "description": "Extension description"
     },
     "needInstallSTGExtension": {
-        "message": "Zainstaluj dodatek Simple Tab Groups\nNaciśnij tu aby przejść do strony domowej Simple Tab Groups",
+        "message": "Zainstaluj dodatek __MSG_STGextensionName__\nNaciśnij tu aby przejść do strony domowej __MSG_STGextensionName__",
         "description": "Need install Simple Tab Groups extention\nClick here to open Simple Tab Groups home page"
     },
     "openSettings": {
