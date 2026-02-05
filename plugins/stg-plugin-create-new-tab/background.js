@@ -37,7 +37,7 @@ Listeners.action.onClicked(async () => {
         const {ok, error, group} = await getWindowGroup(browser.windows.WINDOW_ID_CURRENT);
 
         if (ok) {
-            if (group.contextualIdentity) {
+            if (group?.contextualIdentity?.cookieStoreId) {
                 if (TEMPORARY_CONTAINER === group.contextualIdentity.cookieStoreId) {
                     await Utils.sendExternalMessage('create-temp-tab', {
                         active: true,

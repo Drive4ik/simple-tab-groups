@@ -4,6 +4,8 @@
 <head>
     <title>Simple Tab Groups - translation utility</title>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="shortcut icon" href="https://github.com/Drive4ik/simple-tab-groups/raw/refs/heads/master/addon/src/icons/icon.svg"/>
     <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.7.2/css/all.min.css">
     <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/1.0.4/css/bulma.min.css">
     <style type="text/css">
@@ -13,6 +15,10 @@
     }
     .textarea.is-danger {
         border-width: 3px
+    }
+    .has-vars .textarea {
+        width: 440px;
+        height: 220px;
     }
     .text-break-all {
         word-break: break-all;
@@ -25,6 +31,10 @@
         right: 30px;
         top: 50px;
     }
+    .variable-block:not(:last-child) {
+        border-bottom: 2px dotted;
+        padding-block-end: var(--bulma-block-spacing);
+    }
     </style>
 </head>
 
@@ -34,7 +44,7 @@
             <h4 class="title is-4">Simple Tab Groups - translation utility</h4>
 
             <div class="columns is-multiline">
-                <div class="column">
+                <div v-if="branches.length > 1" class="column">
                     <p class="subtitle">Branch:</p>
                     <div class="control has-icons-left">
                         <div :class="['select is-fullwidth', {'is-danger': !branch, 'is-loading': branchesLoading}]">
@@ -73,7 +83,7 @@
                 </div>
                 <div class="column">
                     <p class="subtitle">or load translation file:</p>
-                    <button type="button" class="button is-primary is-fullwidth" @click="clickLoadLocaleFileButton">
+                    <button type="button" class="button is-primary is-soft is-fullwidth" @click="clickLoadLocaleFileButton">
                         <span class="icon">
                             <i class="fa fa-upload" aria-hidden="true"></i>
                         </span>
@@ -83,7 +93,7 @@
                 <div class="column">
                     <p class="subtitle">Save locale:</p>
                     <div class="buttons">
-                        <button type="button" class="button is-info is-fullwidth" @click="clickSaveLocaleFileButton" :disabled="!componentName">
+                        <button type="button" class="button is-info is-soft is-fullwidth" @click="clickSaveLocaleFileButton" :disabled="!componentName">
                             <span class="icon">
                                 <i class="fa fa-download" aria-hidden="true"></i>
                             </span>
@@ -141,11 +151,11 @@
                     </thead>
                     <tbody>
                         <tr v-for="(val, key) in defaultLocale" v-show="!notAllowedKeys.includes(key)" :key="componentName + key">
-                            <td class="text-break-all" v-html="key"></td>
+                            <td class="text-break-all" v-text="key"></td>
                             <td class="is-white-space-pre-wrap" v-text="val.message"></td>
                             <td>
                                 <div class="columns">
-                                    <div class="column">
+                                    <div class="column" :class="{'is-narrow has-vars': hasVarOrMsg(val)}">
                                         <div class="field">
                                             <div class="control">
                                                 <textarea
@@ -177,14 +187,24 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="column" v-if="val.placeholders">
-                                        <div class="field" v-for="(tag, tagName) in val.placeholders">
+                                    <div class="column" v-if="hasVarOrMsg(val)">
+                                        <div class="field variable-block" v-for="(tag, tagName) in val.placeholders">
                                             Var: <span :class="
                                             [
                                                 'tag is-medium',
-                                                (locale[key] && locale[key].includes('$' + tagName + '$')) ? 'is-info' : 'is-danger'
-                                            ]" v-html="'$' + tagName + '$'"></span>
-                                            Example: <span v-html="tag.example"></span>
+                                                (locale[key]?.includes('$' + tagName + '$')) ? 'is-info is-light' : 'is-danger'
+                                            ]" v-text="'$' + tagName + '$'"></span>
+                                            <br>
+                                            Example: <span v-text="tag.example"></span>
+                                        </div>
+                                        <div class="field variable-block" v-for="(msg, msgCode) in getMessageMessages(key)">
+                                            Message: <span :class="
+                                            [
+                                                'tag is-medium',
+                                                (locale[key]?.includes('__MSG_' + msgCode + '__')) ? 'is-info is-light' : 'is-danger'
+                                            ]" v-text="'__MSG_' + msgCode + '__'"></span>
+                                            <br>
+                                            Value: <span v-text="msg"></span>
                                         </div>
                                     </div>
                                 </div>
@@ -196,10 +216,10 @@
         </div>
 
         <div class="miss-translate">
-            <button @click="findMissTranslate" class="button is-warning is-small">Find missed translate</button>
+            <button @click="findMissTranslate" class="button is-warning is-soft is-small">Find missed translate</button>
         </div>
     </main>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.6.11/vue.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.7.16/vue.js"></script>
     <script type="text/javascript" src="./index.js"></script>
 </body>
 

@@ -12,8 +12,8 @@
         "description": "Main extension name"
     },
     "needInstallSTGExtension": {
-        "message": "Need install __MSG_STGextensionName__ extention or change container in addon settings\nClick here to open __MSG_STGextensionName__ home page",
-        "description": "Need install Simple Tab Groups extention or change container in addon settings\nClick here to open Simple Tab Groups home page"
+        "message": "Need install __MSG_STGextensionName__ extention\nClick here to open __MSG_STGextensionName__ home page",
+        "description": "Need install Simple Tab Groups extention\nClick here to open Simple Tab Groups home page"
     },
     "newTabTitle": {
         "message": "Open a new tab",

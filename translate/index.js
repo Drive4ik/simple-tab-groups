@@ -1,12 +1,13 @@
 (async function() {
     'use strict';
 
-    const USER_NAME = 'Drive4ik',
-        REPOSITORY = 'simple-tab-groups',
-        MY_EMAIL = 'drive4ik+stg@protonmail.com',
-        LOCALE_FILE_EXT = '.json',
-        apiUrlPrefix = `https://api.github.com/repos/${USER_NAME}/${REPOSITORY}/`,
-        contentUrlPrefix = `https://raw.githubusercontent.com/${USER_NAME}/${REPOSITORY}/`;
+    const USER_NAME = 'Drive4ik';
+    const REPOSITORY = 'simple-tab-groups';
+    const MY_EMAIL = 'drive4ik+stg@protonmail.com';
+    const LOCALE_FILE_EXT = '.json';
+    const apiUrlPrefix = `https://api.github.com/repos/${USER_NAME}/${REPOSITORY}/`;
+    const contentUrlPrefix = `https://raw.githubusercontent.com/${USER_NAME}/${REPOSITORY}/`;
+    const MSG_REGEXP = /(?:(html|text):\s*)?__MSG_(\w+?)__/gm;
 
     function notify(body, title = document.title) {
         new window.Notification(title, {
@@ -215,6 +216,18 @@
                 }
 
                 this.$forceUpdate();
+            },
+            getMessageMessages(key) {
+                const messages = {};
+
+                this.defaultLocale[key].message.replace(MSG_REGEXP, (match, format, messageName) => {
+                    messages[messageName] ??= this.locale[messageName]?.trim() || this.defaultLocale[messageName].message;
+                });
+
+                return messages;
+            },
+            hasVarOrMsg({placeholders, message}) {
+                return [placeholders, message.includes('__MSG')].some(v => v);
             },
             async clickLoadLocaleFileButton() {
                 let locale = await this.importFromFile();
