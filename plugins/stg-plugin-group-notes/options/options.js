@@ -18,7 +18,7 @@ const nativeMessaging = $('#nativeMessaging');
 
 loadSettings().then(setNodeValues).then(setEvents);
 
-Listeners.permissions.onRemoved(() => {
+Listeners.permissions.onRemoved.add(() => {
     nativeMessaging.checked = false;
     locationNodeDownloads.checked = true;
     locationNodeHost.disabled = true;

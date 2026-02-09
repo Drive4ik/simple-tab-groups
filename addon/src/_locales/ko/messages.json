@@ -15,7 +15,7 @@
         "message": "탭 아이콘을 그룹 아이콘으로 지정",
         "description": "Set tab icon as group icon"
     },
-    "moveTabToGroupDisabledTitle": {
+    "moveTabToGroupTitle": {
         "message": "탭을 그룹으로 이동",
         "description": "Move tab to group title"
     },
@@ -587,7 +587,7 @@
         "message": "이 북마크는 허용하지 않습니다.",
         "description": "This bookmark is not allowed"
     },
-    "openLinkInGroupDisabledTitle": {
+    "openLinkInGroupTitle": {
         "message": "그룹에서 링크 열기",
         "description": "Open link in group title"
     },
@@ -895,7 +895,7 @@
         "message": "기본 설정",
         "description": "No container"
     },
-    "reopenTabsWithTemporaryContainersInNew": {
+    "reopenTabsWithTemporaryContainers": {
         "message": "새 탭에서 임시 컨테이너가 있는 탭 다시 열기",
         "description": "Reopen tabs with temporary containers in new"
     },

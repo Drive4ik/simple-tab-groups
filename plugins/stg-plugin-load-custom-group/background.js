@@ -8,10 +8,10 @@ import Listeners from './listeners.js\
 ';
 import * as Constants from './constants.js';
 import * as Utils from './utils.js';
-import Notification from './notification.js';
+import Notification from './notification.js?addListeners';
 import Lang from './lang.js';
 
-Listeners.runtime.onMessageExternal(async (request, sender) => {
+Listeners.runtime.onMessageExternal.add(async (request, sender) => {
     if (sender.id !== Constants.STG_ID) {
         return 'Only STG support';
     }
@@ -39,7 +39,7 @@ Listeners.runtime.onMessageExternal(async (request, sender) => {
     }
 });
 
-Listeners.runtime.onMessage((message, sender) => {
+Listeners.runtime.onMessage.add((message, sender) => {
     if (sender.id !== browser.runtime.id) {
         return;
     }
@@ -51,7 +51,7 @@ Listeners.runtime.onMessage((message, sender) => {
     }
 });
 
-Listeners.action.onClicked(async () => {
+Listeners.action.onClicked.add(async () => {
     try {
         const {groupId} = await browser.storage.local.get('groupId');
         const responce = await Utils.sendExternalMessage('load-custom-group', {groupId});
@@ -69,7 +69,7 @@ Listeners.action.onClicked(async () => {
     }
 });
 
-Listeners.menus.onClicked(info => {
+Listeners.menus.onClicked.add(info => {
     if (info.menuItemId === 'openSettings') {
         browser.runtime.openOptionsPage();
     }
@@ -132,6 +132,6 @@ async function setup() {
     });
 }
 
-Listeners.commands.onChanged(() => updateAction());
+Listeners.commands.onChanged.add(() => updateAction());
 
-Listeners.onExtensionStart(setup);
+Listeners.onExtensionStart.add(setup);

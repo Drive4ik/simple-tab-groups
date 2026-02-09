@@ -15,7 +15,7 @@
         "message": "Definiere Tab-Icon als Gruppierung-Icon",
         "description": "Set tab icon as group icon"
     },
-    "moveTabToGroupDisabledTitle": {
+    "moveTabToGroupTitle": {
         "message": "Bewege Tab in eine Gruppierung",
         "description": "Move tab to group title"
     },

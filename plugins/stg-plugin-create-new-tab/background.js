@@ -6,12 +6,12 @@ import Listeners from './listeners.js\
 ';
 import * as Constants from './constants.js';
 import * as Utils from './utils.js';
-import Notification from './notification.js';
+import Notification from './notification.js?addListeners';
 import Lang from './lang.js';
 
 const TEMPORARY_CONTAINER = 'temporary-container';
 
-Listeners.runtime.onMessageExternal((request, sender) => {
+Listeners.runtime.onMessageExternal.add((request, sender) => {
     if (sender.id !== Constants.STG_ID) {
         console.error(`Only STG support`);
         return;
@@ -32,7 +32,7 @@ Listeners.runtime.onMessageExternal((request, sender) => {
     }
 });
 
-Listeners.action.onClicked(async () => {
+Listeners.action.onClicked.add(async () => {
     try {
         const {ok, error, group} = await getWindowGroup(browser.windows.WINDOW_ID_CURRENT);
 
@@ -137,6 +137,6 @@ async function setup() {
     reloadWindowActions();
 }
 
-Listeners.commands.onChanged(reloadWindowActions);
+Listeners.commands.onChanged.add(reloadWindowActions);
 
-Listeners.onExtensionStart(setup);
+Listeners.onExtensionStart.add(setup);

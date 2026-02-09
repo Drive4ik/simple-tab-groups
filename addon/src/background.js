@@ -38,7 +38,7 @@ import {
     objToNativeError
 } from '/js/logger-utils.js';
 import * as Utils from '/js/utils.js';
-import Notification from '/js/notification.js';
+import Notification from '/js/notification.js?addListeners';
 import JSON from '/js/json.js';
 import BatchProcessor from '/js/batch-processor.js';
 import Lang from '/js/lang.js';
@@ -48,6 +48,8 @@ import * as Cache from '/js/cache.js';
 import * as File from '/js/file.js';
 import * as Host from '/js/host.js';
 import * as Menus from '/js/menus.js';
+import * as MenusMain from '/js/menus-main.js';
+// import * as MenusBookmark from '/js/menus-bookmark.js';
 import * as Groups from '/js/groups.js';
 import * as Tabs from '/js/tabs.js';
 import * as Windows from '/js/windows.js';
@@ -409,7 +411,11 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
 
             await Tabs.remove(Array.from(tabsIdsToRemove));
 
-            await updateMoveTabMenus();
+            await MenusMain.groupLoaded(groupToShow, windowId);
+
+            if (groupToHide) {
+                await MenusMain.updateGroup(groupToHide);
+            }
 
             await Browser.actionLoading(false);
 
@@ -1034,12 +1040,6 @@ const onCreatedWindow = catchFunc(async function onCreatedWindow(win) {
 
 function onFocusChangedWindow(windowId) {
     !storage.IS_TEMPORARY && logger.log('onFocusChangedWindow', windowId);
-
-    if (browser.windows.WINDOW_ID_NONE !== windowId && options.showContextMenuOnTabs) {
-        Menus.update('set-tab-icon-as-group-icon', {
-            enabled: Boolean(Cache.getWindowGroup(windowId)),
-        }).catch(() => {});
-    }
 }
 
 const onRemovedWindow = catchFunc(async function onRemovedWindow(windowId) {
@@ -1075,455 +1075,6 @@ const onRemovedWindow = catchFunc(async function onRemovedWindow(windowId) {
 
     log.stop();
 }, logger);
-
-async function updateMoveTabMenus() {
-    const log = logger.start('updateMoveTabMenus');
-
-    const menusToRemove = [
-        Menus.ContextType.BOOKMARK,
-        Menus.ContextType.TAB,
-        Menus.ContextType.LINK,
-        'exportAllGroupsToBookmarks',
-        'reopenTabsWithTemporaryContainersInNew',
-    ];
-
-    for (const id of menusToRemove) {
-        if (Menus.has(id)) {
-            await Menus.remove(id);
-        }
-    }
-
-    const hasBookmarksPermission = await Bookmarks.hasPermission();
-
-    if (!options.showContextMenuOnTabs && !options.showContextMenuOnLinks && !hasBookmarksPermission) {
-        log.stop('there are no menu creation permissions/options');
-        return;
-    }
-
-    const {groups} = await Groups.load();
-
-    hasBookmarksPermission && await Menus.create({
-        id: Menus.ContextType.BOOKMARK,
-        title: Lang('openBookmarkInGroup'),
-        contexts: [Menus.ContextType.BOOKMARK],
-    });
-
-    options.showContextMenuOnTabs && await Menus.create({
-        id: Menus.ContextType.TAB,
-        title: Lang('moveTabToGroupDisabledTitle'),
-        contexts: [Menus.ContextType.TAB],
-    });
-
-    options.showContextMenuOnLinks && await Menus.create({
-        id: Menus.ContextType.LINK,
-        title: Lang('openLinkInGroupDisabledTitle'),
-        contexts: [Menus.ContextType.LINK],
-    });
-
-    options.showContextMenuOnTabs && await Menus.create({
-        title: Containers.TEMPORARY.name,
-        icon: Containers.TEMPORARY.iconUrl,
-        parentId: Menus.ContextType.TAB,
-        contexts: [Menus.ContextType.TAB],
-        async onClick(info, tab) {
-            if (!Utils.isUrlAllowToCreate(tab.url)) {
-                Notification(['thisUrlsAreNotSupported', tab.url]);
-                return;
-            }
-
-            await Tabs.create({
-                ...tab,
-                index: null,
-                active: info.button.RIGHT,
-                cookieStoreId: Constants.TEMPORARY_CONTAINER,
-            });
-        },
-    });
-
-    options.showContextMenuOnTabs && await Menus.create({
-        id: 'set-tab-icon-as-group-icon',
-        title: Lang('setTabIconAsGroupIcon'),
-        icon: '/icons/image.svg',
-        parentId: Menus.ContextType.TAB,
-        contexts: [Menus.ContextType.TAB],
-        async onClick(info, tab) {
-            const groupId = Cache.getWindowGroup(tab.windowId);
-
-            if (!groupId) {
-                Menus.update(info.menuItemId, {enabled: false});
-                return;
-            }
-
-            Cache.applyTabSession(tab);
-
-            tab = Utils.normalizeTabFavIcon(tab);
-
-            await Groups.setIconUrl(groupId, tab.favIconUrl);
-        },
-    });
-
-    options.showContextMenuOnTabs && groups.length && await Menus.create({
-        type: Menus.ItemType.SEPARATOR,
-        parentId: Menus.ContextType.TAB,
-        contexts: [Menus.ContextType.TAB],
-    });
-
-    options.showContextMenuOnLinks && await Menus.create({
-        title: Containers.TEMPORARY.name,
-        icon: Containers.TEMPORARY.iconUrl,
-        parentId: Menus.ContextType.LINK,
-        contexts: [Menus.ContextType.LINK],
-        async onClick(info) {
-            if (!Utils.isUrlAllowToCreate(info.linkUrl)) {
-                return;
-            }
-
-            if (!Utils.isUrlAllowToCreate(info.linkUrl)) {
-                Notification(['thisUrlsAreNotSupported', info.linkUrl]);
-                return;
-            }
-
-            await Tabs.create({
-                url: info.linkUrl,
-                title: info.linkText,
-                active: info.button.RIGHT,
-                cookieStoreId: Constants.TEMPORARY_CONTAINER,
-            });
-        },
-    });
-
-    options.showContextMenuOnLinks && groups.length && await Menus.create({
-        type: Menus.ItemType.SEPARATOR,
-        parentId: Menus.ContextType.LINK,
-        contexts: [Menus.ContextType.LINK],
-    });
-
-    hasBookmarksPermission && await Menus.create({
-        title: Containers.TEMPORARY.name,
-        icon: Containers.TEMPORARY.iconUrl,
-        parentId: Menus.ContextType.BOOKMARK,
-        contexts: [Menus.ContextType.BOOKMARK],
-        async onClick(info) {
-            if (!info.bookmarkId) {
-                Notification('bookmarkNotAllowed');
-                return;
-            }
-
-            const [bookmark] = await browser.bookmarks.get(info.bookmarkId);
-
-            if (bookmark.type !== browser.bookmarks.BookmarkTreeNodeType.BOOKMARK) {
-                Notification('bookmarkNotAllowed');
-                return;
-            }
-
-            if (!Utils.isUrlAllowToCreate(bookmark.url)) {
-                Notification(['thisUrlsAreNotSupported', bookmark.url]);
-                return;
-            }
-
-            await Tabs.create({
-                url: bookmark.url,
-                title: bookmark.title,
-                active: info.button.RIGHT,
-                cookieStoreId: Constants.TEMPORARY_CONTAINER,
-            });
-        },
-    });
-
-    hasBookmarksPermission && groups.length && await Menus.create({
-        type: Menus.ItemType.SEPARATOR,
-        parentId: Menus.ContextType.BOOKMARK,
-        contexts: [Menus.ContextType.BOOKMARK],
-    });
-
-    for (const group of groups) {
-        if (group.isArchive) {
-            continue;
-        }
-
-        const groupId = group.id,
-            groupIcon = Groups.getIconUrl(group),
-            groupTitle = String(Groups.getTitle(group, 'withSticky withActiveGroup withContainer'));
-
-        options.showContextMenuOnTabs && await Menus.create({
-            title: groupTitle,
-            icon: groupIcon,
-            parentId: Menus.ContextType.TAB,
-            contexts: [Menus.ContextType.TAB],
-            async onClick(info, tab) {
-                const tabIds = await Tabs.getHighlightedIds(tab.windowId, tab);
-
-                await Tabs.move(tabIds, groupId, {
-                    showTabAfterMovingItIntoThisGroup: info.button.RIGHT,
-                });
-
-                if (!info.button.RIGHT && info.modifiers.includes('Ctrl')) { // todo make util for modifier with MAC
-                    await Tabs.discard(tabIds);
-                }
-            },
-        });
-
-        options.showContextMenuOnLinks && await Menus.create({
-            title: groupTitle,
-            icon: groupIcon,
-            parentId: Menus.ContextType.LINK,
-            contexts: [Menus.ContextType.LINK],
-            async onClick(info) {
-                if (!Utils.isUrlAllowToCreate(info.linkUrl)) {
-                    Notification(['thisUrlsAreNotSupported', info.linkUrl]);
-                    return;
-                }
-
-                const newTab = await Tabs.add(groupId, undefined, info.linkUrl, info.linkText);
-
-                if (info.button.RIGHT) {
-                    await applyGroup(newTab.windowId, groupId, newTab.id);
-                }
-            },
-        });
-
-        hasBookmarksPermission && await Menus.create({
-            title: groupTitle,
-            icon: groupIcon,
-            parentId: Menus.ContextType.BOOKMARK,
-            contexts: [Menus.ContextType.BOOKMARK],
-            async onClick(info) {
-                if (!info.bookmarkId) {
-                    Notification('bookmarkNotAllowed');
-                    return;
-                }
-
-                await Browser.actionLoading();
-
-                const [bookmark] = await browser.bookmarks.getSubTree(info.bookmarkId);
-                const tabsToCreate = [];
-
-                if (bookmark.type === browser.bookmarks.BookmarkTreeNodeType.BOOKMARK) {
-                    bookmark.children = [bookmark];
-                }
-
-                await findBookmarks(bookmark);
-
-                async function findBookmarks(folder) {
-                    for (let b of folder.children) {
-                        if (b.type === browser.bookmarks.BookmarkTreeNodeType.FOLDER) {
-                            await findBookmarks(b);
-                        } else if (b.type === browser.bookmarks.BookmarkTreeNodeType.BOOKMARK) {
-                            tabsToCreate.push({
-                                title: b.title,
-                                url: b.url,
-                            });
-                        }
-                    }
-                }
-
-                if (tabsToCreate.length) {
-                    const {group} = await Groups.load(groupId);
-                    const [firstTab] = await createTabsSafe(Groups.setNewTabsParams(tabsToCreate, group));
-
-                    await Browser.actionLoading(false);
-
-                    if (info.button.RIGHT) {
-                        await applyGroup(undefined, groupId, firstTab.id);
-                    } else {
-                        Notification(['tabsCreatedCount', tabsToCreate.length]);
-                    }
-                } else {
-                    await Browser.actionLoading(false);
-                    Notification('tabsNotCreated');
-                }
-            },
-        });
-    }
-
-    options.showContextMenuOnTabs && await Menus.create({
-        title: Lang('createNewGroup'),
-        icon: '/icons/group-new.svg',
-        parentId: Menus.ContextType.TAB,
-        contexts: [Menus.ContextType.TAB],
-        async onClick(info, tab) {
-            const tabIds = await Tabs.getHighlightedIds(tab.windowId, tab);
-
-            await onBackgroundMessage({
-                action: 'add-new-group',
-                proposalTitle: tab.title,
-                tabIds: tabIds,
-                windowId: info.button.RIGHT ? tab.windowId : undefined,
-            }, self);
-        },
-    });
-
-    options.showContextMenuOnLinks && await Menus.create({
-        title: Lang('createNewGroup'),
-        icon: '/icons/group-new.svg',
-        parentId: Menus.ContextType.LINK,
-        contexts: [Menus.ContextType.LINK],
-        async onClick(info) {
-            if (!Utils.isUrlAllowToCreate(info.linkUrl)) {
-                Notification(['thisUrlsAreNotSupported', info.linkUrl]);
-                return;
-            }
-
-            let { ok, group } = await onBackgroundMessage({
-                action: 'add-new-group',
-                proposalTitle: info.linkText,
-            }, self);
-
-            if (!ok) {
-                group = await Groups.add(undefined, undefined, info.linkText);
-                ok = true;
-            }
-
-            if (ok && group) {
-                let newTab = await Tabs.add(group.id, undefined, info.linkUrl, info.linkText);
-
-                if (info.button.RIGHT) {
-                    await applyGroup(undefined, group.id, newTab.id);
-                }
-            }
-        },
-    });
-
-    hasBookmarksPermission && await Menus.create({
-        title: Lang('createNewGroup'),
-        icon: '/icons/group-new.svg',
-        parentId: Menus.ContextType.BOOKMARK,
-        contexts: [Menus.ContextType.BOOKMARK],
-        async onClick(info) {
-            if (!info.bookmarkId) {
-                Notification('bookmarkNotAllowed');
-                return;
-            }
-
-            let [bookmark] = await browser.bookmarks.get(info.bookmarkId);
-
-            if (bookmark.type === browser.bookmarks.BookmarkTreeNodeType.BOOKMARK) {
-                if (!Utils.isUrlAllowToCreate(bookmark.url)) {
-                    Notification('bookmarkNotAllowed');
-                    return;
-                }
-
-                let { ok, group } = await onBackgroundMessage({
-                    action: 'add-new-group',
-                    proposalTitle: bookmark.title,
-                }, self);
-
-                if (!ok) {
-                    group = await Groups.add(undefined, undefined, bookmark.title);
-                    ok = true;
-                }
-
-                if (ok && group) {
-                    let newTab = await Tabs.add(group.id, undefined, bookmark.url, bookmark.title);
-
-                    if (info.button.RIGHT) {
-                        await applyGroup(undefined, group.id, newTab.id);
-                    }
-                }
-            } else if (bookmark.type === browser.bookmarks.BookmarkTreeNodeType.FOLDER) {
-                let [folder] = await browser.bookmarks.getSubTree(info.bookmarkId),
-                    groupsCreatedCount = 0;
-
-                async function addBookmarkFolderAsGroup(folder) {
-                    let tabsToCreate = [];
-
-                    for (let bookmark of folder.children) {
-                        if (bookmark.type === browser.bookmarks.BookmarkTreeNodeType.FOLDER) {
-                            await addBookmarkFolderAsGroup(bookmark);
-                        } else if (bookmark.type === browser.bookmarks.BookmarkTreeNodeType.BOOKMARK) {
-                            tabsToCreate.push({
-                                title: bookmark.title,
-                                url: bookmark.url,
-                            });
-                        }
-                    }
-
-                    if (tabsToCreate.length) {
-                        let newGroup = await Groups.add(undefined, undefined, folder.title);
-
-                        await createTabsSafe(Groups.setNewTabsParams(tabsToCreate, newGroup));
-
-                        groupsCreatedCount++;
-                    }
-                }
-
-                await Browser.actionLoading();
-                await addBookmarkFolderAsGroup(folder);
-                await Browser.actionLoading(false);
-
-                if (groupsCreatedCount) {
-                    Notification(['groupsCreatedCount', groupsCreatedCount]);
-                } else {
-                    Notification('noGroupsCreated');
-                }
-            } else {
-                Notification('bookmarkNotAllowed');
-            }
-        },
-    });
-
-    hasBookmarksPermission && await Menus.create({
-        id: 'exportAllGroupsToBookmarks',
-        title: Lang('exportAllGroupsToBookmarks'),
-        icon: '/icons/bookmark.svg',
-        contexts: [Menus.ContextType.BROWSER_ACTION],
-        async onClick() {
-            await Browser.actionLoading();
-
-            const {groups} = await Groups.load(null, true);
-
-            await Bookmarks.exportGroups(groups);
-
-            await Browser.actionLoading(false);
-
-            // Notification('allGroupsExportedToBookmarks'); // ? maybe not needed anymore
-        },
-    });
-
-    await Menus.create({
-        id: 'reopenTabsWithTemporaryContainersInNew',
-        title: Lang('reopenTabsWithTemporaryContainersInNew'),
-        icon: Containers.TEMPORARY.iconUrl,
-        contexts: [Menus.ContextType.BROWSER_ACTION],
-        async onClick(info) {
-            const allTabs = await Tabs.get(null, null, null, undefined, true, true),
-                tabsToCreate = [];
-
-            const tabsIdsToRemove = allTabs
-                .filter(tab => Containers.isTemporary(tab.cookieStoreId))
-                .map(function (tab) {
-                    tabsToCreate.push({
-                        ...tab,
-                        cookieStoreId: Constants.TEMPORARY_CONTAINER,
-                    });
-
-                    return tab.id;
-                });
-
-            if (tabsToCreate.length) {
-                await Browser.actionLoading();
-
-                const newTabs = await Promise.all(tabsToCreate.map(Tabs.create));
-
-                const tabsToHide = newTabs.filter(tab => tab.groupId && !Cache.getWindowId(tab.groupId));
-
-                await Tabs.hide(tabsToHide, true);
-
-                // remove old tabs
-                await Tabs.remove(tabsIdsToRemove);
-
-                // remove temporary containers
-                if (info.button.RIGHT) {
-                    await Containers.removeUnusedTemporaryContainers(newTabs);
-                }
-
-                await Browser.actionLoading(false);
-            }
-        },
-    });
-
-    log.stop();
-}
 
 const moveTabsBatch = new BatchProcessor(async (groupId, tabIds) => {
     const log = logger.start('moveTabsBatch', {groupId, tabIds});
@@ -1712,10 +1263,6 @@ const onBeforeTabRequest = catchFunc(async function onBeforeTabRequest({tabId, u
 const onPermissionsAdded = catchFunc(async function onPermissionsAdded(permissions) {
     const log = logger.start('onPermissionsAdded', permissions);
 
-    if (Permissions.hasAny(permissions, Permissions.BOOKMARKS)) {
-        await updateMoveTabMenus();
-    }
-
     if (Permissions.hasAny(permissions, Permissions.BROWSER_SETTINGS)) {
         await BrowserSettings.set(options.browserSettings);
     }
@@ -1733,6 +1280,10 @@ const onPermissionsRemoved = catchFunc(async function onPermissionsRemoved(permi
             });
         }
     }
+
+    // if (Permissions.hasAny(permissions, Permissions.BOOKMARKS)) {
+    //     await MenusMain.permissionChanged();
+    // }
 
     log.stop();
 }, logger);
@@ -1755,58 +1306,65 @@ async function onAlarm({name}) {
 }
 
 // wait for reload addon if found update
-// Listeners.runtime.onUpdateAvailable(() => Utils.safeReloadAddon());
+// Listeners.runtime.onUpdateAvailable.add(() => Utils.safeReloadAddon());
 
 function addListenerOnBeforeRequest() {
     logger.log('addListenerOnBeforeRequest');
-    Listeners.webRequest.onBeforeRequest(onBeforeTabRequest);
+    Listeners.webRequest.onBeforeRequest.add(onBeforeTabRequest);
 }
 
 function removeListenerOnBeforeRequest() {
     logger.log('removeListenerOnBeforeRequest');
-    Listeners.webRequest.onBeforeRequest();
+    Listeners.webRequest.onBeforeRequest.clear();
 }
 
 function addEvents() {
     logger.info('addEvents');
 
-    Listeners.tabs.onActivated(onActivatedTab);
-    Listeners.tabs.onCreated(onCreatedTab);
-    Listeners.tabs.onUpdated(onUpdatedTab);
-    Listeners.tabs.onRemoved(onRemovedTab);
-    Listeners.tabs.onMoved(onMovedTab);
-    Listeners.tabs.onDetached(onDetachedTab);
-    Listeners.tabs.onAttached(onAttachedTab);
+    Listeners.tabs.onActivated.add(onActivatedTab);
+    Listeners.tabs.onCreated.add(onCreatedTab);
+    Listeners.tabs.onUpdated.add(onUpdatedTab);
+    Listeners.tabs.onRemoved.add(onRemovedTab);
+    Listeners.tabs.onMoved.add(onMovedTab);
+    Listeners.tabs.onDetached.add(onDetachedTab);
+    Listeners.tabs.onAttached.add(onAttachedTab);
 
-    Listeners.windows.onCreated(onCreatedWindow);
-    Listeners.windows.onFocusChanged(onFocusChangedWindow);
-    Listeners.windows.onRemoved(onRemovedWindow);
+    Listeners.windows.onCreated.add(onCreatedWindow);
+    Listeners.windows.onFocusChanged.add(onFocusChangedWindow);
+    Listeners.windows.onRemoved.add(onRemovedWindow);
 
-    Permissions.onAdded(onPermissionsAdded);
-    Permissions.onRemoved(onPermissionsRemoved);
+    Permissions.onAdded.add(onPermissionsAdded);
+    Permissions.onRemoved.add(onPermissionsRemoved);
 
-    Listeners.alarms.onAlarm(onAlarm);
+    Listeners.alarms.onAlarm.add(onAlarm);
+
+    Menus.addListeners();
+    MenusMain.addListeners();
 }
 
 function removeEvents() {
     logger.info('removeEvents');
 
-    Listeners.tabs.onActivated();
-    Listeners.tabs.onCreated();
-    Listeners.tabs.onUpdated();
-    Listeners.tabs.onRemoved();
-    Listeners.tabs.onMoved();
-    Listeners.tabs.onDetached();
-    Listeners.tabs.onAttached();
+    Listeners.tabs.onActivated.clear();
+    Listeners.tabs.onCreated.clear();
+    Listeners.tabs.onUpdated.clear();
+    Listeners.tabs.onRemoved.clear();
+    Listeners.tabs.onMoved.clear();
+    Listeners.tabs.onDetached.clear();
+    Listeners.tabs.onAttached.clear();
 
-    Listeners.windows.onCreated();
-    Listeners.windows.onFocusChanged();
-    Listeners.windows.onRemoved();
+    Listeners.windows.onCreated.clear();
+    Listeners.windows.onFocusChanged.clear();
+    Listeners.windows.onRemoved.clear();
 
-    Permissions.onAdded();
-    Permissions.onRemoved();
+    Permissions.onAdded.clear();
+    Permissions.onRemoved.clear();
 
-    Listeners.alarms.onAlarm();
+    Listeners.alarms.onAlarm.clear();
+
+    Notification.removeListeners();
+    Menus.removeListeners();
+    MenusMain.removeListeners();
 
     removeListenerOnBeforeRequest();
 }
@@ -1815,11 +1373,11 @@ function removeEvents() {
 
 self.sendMessageFromBackground = Messages.sendMessageFromBackground;
 
-Listeners.runtime.onConnect(Messages.createListenerOnConnectedBackground(onBackgroundMessage));
-Listeners.runtime.onMessage(onBackgroundMessage);
-Listeners.commands.onCommand(name => onBackgroundMessage(name, self));
+Listeners.runtime.onConnect.add(Messages.createListenerOnConnectedBackground(onBackgroundMessage));
+Listeners.runtime.onMessage.add(onBackgroundMessage);
+Listeners.commands.onCommand.add(name => onBackgroundMessage(name, self));
 
-Listeners.runtime.onMessageExternal(async function onMessageExternal(request, sender) {
+Listeners.runtime.onMessageExternal.add(async function onMessageExternal(request, sender) {
     const log = logger.start(['info', 'onMessageExternal'], `RECEIVED-EXTERNAL-ACTION#${request?.action}`, { request, sender });
 
     if (request?.action === 'ignore-ext-for-reopen-container') {
@@ -2580,10 +2138,6 @@ async function saveOptions(_options) {
         await Containers.updateTemporaryContainerTitle(options.temporaryContainerTitle);
     }
 
-    if (optionsKeys.some(key => ['showContextMenuOnTabs', 'showContextMenuOnLinks'].includes(key))) {
-        await updateMoveTabMenus();
-    }
-
     sendMessageFromBackground('options-updated', {
         keys: optionsKeys,
     });
@@ -2985,8 +2539,6 @@ self.saveOptions = saveOptions;
 self.createTabsSafe = createTabsSafe;
 
 self.sendExternalMessage = sendExternalMessage;
-
-self.updateMoveTabMenus = updateMoveTabMenus;
 
 self.applyGroup = applyGroup;
 
@@ -4007,7 +3559,7 @@ async function restoreOldExtensionUrls(parseUrlFunc) {
 
 // { reason: "update", previousVersion: "3.0.1", temporary: true }
 // { reason: "install", temporary: true }
-Listeners.runtime.onInstalled(({reason, previousVersion, temporary}) => {
+Listeners.runtime.onInstalled.add(({reason, previousVersion, temporary}) => {
     const log = logger.start('runtime.onInstalled', {reason, previousVersion, temporary});
 
     if (temporary) {
@@ -4149,11 +3701,9 @@ async function init() {
         const dataChanged = new Set;
 
         await Containers.init(data.temporaryContainerTitle);
-
         log.log('containers inited');
 
         await Management.init();
-
         log.log('Management inited');
 
         Management.detectConflictedExtensions();
@@ -4181,9 +3731,7 @@ async function init() {
             if (Constants.IS_WINDOWS && await Host.hasPermission()) {
                 Host.checkVersion().catch(e => {
                     Notification(e, {
-                        tab: {
-                            url: Constants.HOST.DOWNLOAD_URL,
-                        },
+                        module: ['browser', 'tabs.create', {url: Constants.HOST.DOWNLOAD_URL}],
                     });
                 });
             } else {
@@ -4203,7 +3751,7 @@ async function init() {
             log.error('no windows found');
             storage.notFoundWindowsAddonStoppedWorking = 1;
             // Notification('notFoundWindowsAddonStoppedWorking');
-            Listeners.windows.onCreated(() => browser.runtime.reload());
+            Listeners.windows.onCreated.add(() => browser.runtime.reload());
             throw '';
         } else if (storage.notFoundWindowsAddonStoppedWorking) {
             log.warn('try run grand restore, attempt:', storage.notFoundWindowsAddonStoppedWorking);
@@ -4241,19 +3789,16 @@ async function init() {
         let tabs = Utils.concatTabs(windows);
 
         await Containers.removeUnusedTemporaryContainers(tabs);
-
         log.log('Containers.removeUnusedTemporaryContainers finish');
 
         await restoreOldExtensionUrls();
-
         log.log('restoreOldExtensionUrls finish');
 
         resetLocalBackupAlarm();
         resetSyncAlarm();
 
-        await updateMoveTabMenus();
-
-        log.log('updateMoveTabMenus finish');
+        await MenusMain.create();
+        log.log('MenusMain.create finish');
 
         addEvents();
 
@@ -4301,10 +3846,10 @@ async function setActionToReloadAddon() {
         enable: true,
     });
 
-    Listeners.browserAction.onClicked(() => browser.runtime.reload());
+    Listeners.browserAction.onClicked.add(() => browser.runtime.reload());
 }
 
-Listeners.onExtensionStart(async () => {
+Listeners.onExtensionStart.add(async () => {
     await Browser.action({
         title: '__MSG_loading__',
         badgeBackgroundColor: 'transparent',

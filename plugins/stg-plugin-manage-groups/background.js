@@ -5,10 +5,10 @@ import Listeners from './listeners.js\
 ';
 import * as Constants from './constants.js';
 import * as Utils from './utils.js';
-import Notification from './notification.js';
+import Notification from './notification.js?addListeners';
 import Lang from './lang.js';
 
-Listeners.action.onClicked(async () => {
+Listeners.action.onClicked.add(async () => {
     try {
         const responce = await Utils.sendExternalMessage('open-manage-groups');
 
@@ -42,6 +42,6 @@ async function setup() {
     updateActionTitle();
 }
 
-Listeners.commands.onChanged(updateActionTitle);
+Listeners.commands.onChanged.add(updateActionTitle);
 
-Listeners.onExtensionStart(setup);
+Listeners.onExtensionStart.add(setup);

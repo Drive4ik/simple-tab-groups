@@ -15,7 +15,7 @@
         "message": "このタブのアイコンをグループのアイコンに設定する",
         "description": "Set tab icon as group icon"
     },
-    "moveTabToGroupDisabledTitle": {
+    "moveTabToGroupTitle": {
         "message": "タブをグループへ移動する",
         "description": "Move tab to group title"
     },
@@ -623,7 +623,7 @@
         "message": "このブックマークは許可されていません",
         "description": "This bookmark is not allowed"
     },
-    "openLinkInGroupDisabledTitle": {
+    "openLinkInGroupTitle": {
         "message": "グループにリンクを開く",
         "description": "Open link in group title"
     },
@@ -983,7 +983,7 @@
         "message": "既定",
         "description": "No container"
     },
-    "reopenTabsWithTemporaryContainersInNew": {
+    "reopenTabsWithTemporaryContainers": {
         "message": "新しい一時コンテナーでタブを再び開く",
         "description": "Reopen tabs with temporary containers in new"
     },

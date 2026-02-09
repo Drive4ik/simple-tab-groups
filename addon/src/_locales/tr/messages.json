@@ -15,7 +15,7 @@
         "message": "Sekme ikonunu grup ikonu yap",
         "description": "Set tab icon as group icon"
     },
-    "moveTabToGroupDisabledTitle": {
+    "moveTabToGroupTitle": {
         "message": "Sekmeyi gruba taşı",
         "description": "Move tab to group title"
     },

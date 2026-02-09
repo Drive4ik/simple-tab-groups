@@ -36,3 +36,11 @@ export async function nativeGet(area, keysData, log, errorCounter = 0) {
         return nativeGet(area, keysData, log, errorCounter);
     }
 }
+
+export function isChangedBooleanKey(key, changes) {
+    if (typeof changes[key]?.newValue !== 'boolean' || typeof changes[key]?.oldValue !== 'boolean') {
+        return false;
+    }
+
+    return changes[key].newValue !== changes[key].oldValue;
+}

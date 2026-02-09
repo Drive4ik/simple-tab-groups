@@ -15,7 +15,7 @@
         "message": "Définir l’icône de l'onglet en tant qu'icône de groupe",
         "description": "Set tab icon as group icon"
     },
-    "moveTabToGroupDisabledTitle": {
+    "moveTabToGroupTitle": {
         "message": "Transférer l'onglet dans le groupe",
         "description": "Move tab to group title"
     },
@@ -623,7 +623,7 @@
         "message": "Ce marque-page n'est pas autorisé",
         "description": "This bookmark is not allowed"
     },
-    "openLinkInGroupDisabledTitle": {
+    "openLinkInGroupTitle": {
         "message": "Ouvrir le lien dans le groupe",
         "description": "Open link in group title"
     },
@@ -983,7 +983,7 @@
         "message": "Aucun contexte",
         "description": "No container"
     },
-    "reopenTabsWithTemporaryContainersInNew": {
+    "reopenTabsWithTemporaryContainers": {
         "message": "Ré-ouvrir les onglets en contexte temporaire dans un nouveau",
         "description": "Reopen tabs with temporary containers in new"
     },

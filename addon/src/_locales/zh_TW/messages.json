@@ -15,7 +15,7 @@
         "message": "將分頁圖示設為群組圖示",
         "description": "Set tab icon as group icon"
     },
-    "moveTabToGroupDisabledTitle": {
+    "moveTabToGroupTitle": {
         "message": "將分頁移至群組",
         "description": "Move tab to group title"
     },
@@ -623,7 +623,7 @@
         "message": "不允許存取此書籤",
         "description": "This bookmark is not allowed"
     },
-    "openLinkInGroupDisabledTitle": {
+    "openLinkInGroupTitle": {
         "message": "在群組中開啟連結",
         "description": "Open link in group title"
     },
@@ -983,7 +983,7 @@
         "message": "預設",
         "description": "No container"
     },
-    "reopenTabsWithTemporaryContainersInNew": {
+    "reopenTabsWithTemporaryContainers": {
         "message": "於暫存容器中重新開啟分頁",
         "description": "Reopen tabs with temporary containers in new"
     },

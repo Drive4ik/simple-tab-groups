@@ -20,10 +20,10 @@ const extensions = {};
 if (Constants.IS_BACKGROUND_PAGE) {
     const onChangedBinded = catchFunc(onChanged, logger);
 
-    Listeners.management.onEnabled(onChangedBinded);
-    Listeners.management.onDisabled(onChangedBinded);
-    Listeners.management.onInstalled(onChangedBinded);
-    Listeners.management.onUninstalled(onChangedBinded);
+    Listeners.management.onEnabled.add(onChangedBinded);
+    Listeners.management.onDisabled.add(onChangedBinded);
+    Listeners.management.onInstalled.add(onChangedBinded);
+    Listeners.management.onUninstalled.add(onChangedBinded);
 }
 
 export async function init() {

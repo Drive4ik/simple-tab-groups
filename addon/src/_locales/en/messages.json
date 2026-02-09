@@ -27,7 +27,7 @@
         "message": "Set tab icon as group icon",
         "description": "Set tab icon as group icon"
     },
-    "moveTabToGroupDisabledTitle": {
+    "moveTabToGroupTitle": {
         "message": "Move tab to group",
         "description": "Move tab to group title"
     },
@@ -691,7 +691,7 @@
         "message": "This bookmark is not allowed",
         "description": "This bookmark is not allowed"
     },
-    "openLinkInGroupDisabledTitle": {
+    "openLinkInGroupTitle": {
         "message": "Open link in group",
         "description": "Open link in group title"
     },
@@ -1051,7 +1051,7 @@
         "message": "Default",
         "description": "No container"
     },
-    "reopenTabsWithTemporaryContainersInNew": {
+    "reopenTabsWithTemporaryContainers": {
         "message": "Reopen tabs with temporary containers in new",
         "description": "Reopen tabs with temporary containers in new"
     },

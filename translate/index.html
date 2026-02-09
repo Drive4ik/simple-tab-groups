@@ -72,7 +72,7 @@
                     <div class="control has-icons-left">
                         <div :class="['select is-fullwidth', {'is-loading': availableLocalesLoading}]">
                             <select v-model="componentLocale" :disabled="!componentName">
-                                <option disabled value="">Select component locale</option>
+                                <option disabled hidden value="">Select component locale</option>
                                 <option v-for="locale in locales" :value="locale" v-html="locale"></option>
                             </select>
                         </div>

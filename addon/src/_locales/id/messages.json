@@ -15,7 +15,7 @@
         "message": "Atur ikon tab sebagai ikon grup",
         "description": "Set tab icon as group icon"
     },
-    "moveTabToGroupDisabledTitle": {
+    "moveTabToGroupTitle": {
         "message": "Pindahkan tab ke grup",
         "description": "Move tab to group title"
     },
@@ -599,7 +599,7 @@
         "message": "Bookmark ini tidak diizinkan",
         "description": "This bookmark is not allowed"
     },
-    "openLinkInGroupDisabledTitle": {
+    "openLinkInGroupTitle": {
         "message": "Buka tautan di grup",
         "description": "Open link in group title"
     },
@@ -955,7 +955,7 @@
         "message": "Bawaan",
         "description": "No container"
     },
-    "reopenTabsWithTemporaryContainersInNew": {
+    "reopenTabsWithTemporaryContainers": {
         "message": "Buka kembali tab dengan wadah sementara di baru",
         "description": "Reopen tabs with temporary containers in new"
     },

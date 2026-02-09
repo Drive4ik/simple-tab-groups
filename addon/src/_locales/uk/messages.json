@@ -19,7 +19,7 @@
         "message": "Встановити значок групи з цієї вкладки",
         "description": "Set tab icon as group icon"
     },
-    "moveTabToGroupDisabledTitle": {
+    "moveTabToGroupTitle": {
         "message": "Перемістити до групи",
         "description": "Move tab to group title"
     },
@@ -683,7 +683,7 @@
         "message": "Ця закладка не підтримується",
         "description": "This bookmark is not allowed"
     },
-    "openLinkInGroupDisabledTitle": {
+    "openLinkInGroupTitle": {
         "message": "Відкрити посилання в групі",
         "description": "Open link in group title"
     },
@@ -1043,7 +1043,7 @@
         "message": "Без контейнера",
         "description": "No container"
     },
-    "reopenTabsWithTemporaryContainersInNew": {
+    "reopenTabsWithTemporaryContainers": {
         "message": "Перевідкрити вкладки з тимчасовими контейнерами",
         "description": "Reopen tabs with temporary containers in new"
     },

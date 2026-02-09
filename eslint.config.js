@@ -34,7 +34,7 @@ export default defineConfig([
             'no-mixed-spaces-and-tabs': 'error',
             'valid-typeof': 'error',
             // 'no-redeclare': 'error',
-            // 'no-undef': 'error',
+            'no-undef': 'error',
             'no-unused-vars': 'warn',
             // 'no-extra-semi': 'warn',
             // 'semi': 'warn',

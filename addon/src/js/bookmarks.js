@@ -6,6 +6,8 @@ import * as Constants from './constants.js';
 import * as Storage from './storage.js';
 import * as Permissions from './permissions.js';
 
+export const {BOOKMARK, FOLDER, SEPARATOR} = browser.bookmarks.BookmarkTreeNodeType;
+
 const logger = new Logger(Constants.MODULES.BOOKMARKS);
 
 const storage = localStorage.create(Constants.MODULES.BOOKMARKS);
@@ -48,7 +50,7 @@ async function findGroup(group, parentId, createIfNeed = false) {
         for (const bookmarkCandidate of bookmarks) {
             if (
                 bookmarkCandidate.parentId === parentId &&
-                bookmarkCandidate.type === browser.bookmarks.BookmarkTreeNodeType.FOLDER
+                bookmarkCandidate.type === FOLDER
             ) {
                 bookmark = bookmarkCandidate;
                 break;
@@ -64,7 +66,7 @@ async function findGroup(group, parentId, createIfNeed = false) {
         bookmark = await browser.bookmarks.create({
             title: group.title,
             parentId,
-            type: browser.bookmarks.BookmarkTreeNodeType.FOLDER,
+            type: FOLDER,
         });
 
         storage[group.id] = bookmark.id;
@@ -139,8 +141,6 @@ export async function exportGroup(group, groupIndex) {
         log.stop('no permission');
     }
 
-    const {BOOKMARK} = browser.bookmarks.BookmarkTreeNodeType;
-
     const groupBookmark = await getGroup(group, true);
 
     storage[group.id] = groupBookmark.id;
@@ -208,4 +208,12 @@ export async function exportGroups(groups) {
     log.stop();
 
     return true;
+}
+
+export function get(idOrIdList) {
+    return browser.bookmarks.get(idOrIdList);
+}
+
+export function getSubTree(id) {
+    return browser.bookmarks.getSubTree(id);
 }

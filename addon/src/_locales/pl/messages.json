@@ -15,7 +15,7 @@
         "message": "Ustaw ikonę karty jako ikonę grupy",
         "description": "Set tab icon as group icon"
     },
-    "moveTabToGroupDisabledTitle": {
+    "moveTabToGroupTitle": {
         "message": "Przesuń kartę do grupy",
         "description": "Move tab to group title"
     },
@@ -623,7 +623,7 @@
         "message": "Nie mogę otworzyć tej zakładki.",
         "description": "This bookmark is not allowed"
     },
-    "openLinkInGroupDisabledTitle": {
+    "openLinkInGroupTitle": {
         "message": "Otwórz link w grupie",
         "description": "Open link in group title"
     },
@@ -983,7 +983,7 @@
         "message": "Brak kontekstu",
         "description": "No container"
     },
-    "reopenTabsWithTemporaryContainersInNew": {
+    "reopenTabsWithTemporaryContainers": {
         "message": "Otwórz ponownie zakładki z tymczasowymi kontekstami w nowym",
         "description": "Reopen tabs with temporary containers in new"
     },

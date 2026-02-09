@@ -99,7 +99,7 @@ export default {
 
                 <li class="is-disabled">
                     <figure class="image is-16x16"></figure>
-                    <span class="colon" v-text="lang('moveTabToGroupDisabledTitle')"></span>
+                    <span class="colon" v-text="lang('moveTabToGroupTitle')"></span>
                 </li>
 
                 <li

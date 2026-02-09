@@ -15,7 +15,7 @@
         "message": "将标签页的图标设为群组的图标",
         "description": "Set tab icon as group icon"
     },
-    "moveTabToGroupDisabledTitle": {
+    "moveTabToGroupTitle": {
         "message": "将标签页移到群组",
         "description": "Move tab to group title"
     },
@@ -623,7 +623,7 @@
         "message": "不允许该书签",
         "description": "This bookmark is not allowed"
     },
-    "openLinkInGroupDisabledTitle": {
+    "openLinkInGroupTitle": {
         "message": "在群组中打开链接",
         "description": "Open link in group title"
     },
@@ -983,7 +983,7 @@
         "message": "无身份",
         "description": "No container"
     },
-    "reopenTabsWithTemporaryContainersInNew": {
+    "reopenTabsWithTemporaryContainers": {
         "message": "在新的临时身份标签页容器中重新打开标签页",
         "description": "Reopen tabs with temporary containers in new"
     },

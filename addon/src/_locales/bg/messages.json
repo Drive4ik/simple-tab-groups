@@ -15,7 +15,7 @@
         "message": "Пиктограмата на раздела е пиктограма на групата",
         "description": "Set tab icon as group icon"
     },
-    "moveTabToGroupDisabledTitle": {
+    "moveTabToGroupTitle": {
         "message": "Преместване в друга група",
         "description": "Move tab to group title"
     },
@@ -623,7 +623,7 @@
         "message": "Отметката е забранена",
         "description": "This bookmark is not allowed"
     },
-    "openLinkInGroupDisabledTitle": {
+    "openLinkInGroupTitle": {
         "message": "Отваряне в група",
         "description": "Open link in group title"
     },
@@ -983,7 +983,7 @@
         "message": "Без изолатор",
         "description": "No container"
     },
-    "reopenTabsWithTemporaryContainersInNew": {
+    "reopenTabsWithTemporaryContainers": {
         "message": "Отваряне на раздели във временни изолатори в нови",
         "description": "Reopen tabs with temporary containers in new"
     },

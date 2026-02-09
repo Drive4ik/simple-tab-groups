@@ -13,10 +13,10 @@ import * as Utils from './utils.js';
 import * as MainUtils from './main-utils.js';
 import * as Host from './host.js';
 import * as File from './file.js';
-import Notification from './notification.js';
+import Notification from './notification.js?addListeners';
 import Lang from './lang.js';
 
-Listeners.runtime.onMessageExternal(async (request, sender) => {
+Listeners.runtime.onMessageExternal.add(async (request, sender) => {
     if (sender.id !== Constants.STG_ID) {
         throw new Error('Only STG support');
     }
@@ -64,7 +64,7 @@ Listeners.runtime.onMessageExternal(async (request, sender) => {
     }
 });
 
-Listeners.menus.onClicked(async info => {
+Listeners.menus.onClicked.add(async info => {
     if (info.menuItemId === 'openInTab') {
         MainUtils.openInTab();
     } else if (info.menuItemId === 'openOptions') {
@@ -74,13 +74,13 @@ Listeners.menus.onClicked(async info => {
     }
 });
 
-Listeners.permissions.onRemoved(async () => {
+Listeners.permissions.onRemoved.add(async () => {
     await browser.storage.local.set({
         autoBackupLocation: MainConstants.AUTO_BACKUP_LOCATIONS.DOWNLOADS,
     });
 });
 
-Listeners.alarms.onAlarm(async ({name}) => {
+Listeners.alarms.onAlarm.add(async ({name}) => {
     if (name === 'backup') {
         const settings = Object.assign({...MainConstants.defaultOptions}, await browser.storage.local.get());
 
@@ -98,7 +98,7 @@ Listeners.alarms.onAlarm(async ({name}) => {
     }
 });
 
-Listeners.storage.local.onChanged(async changes => {
+Listeners.storage.local.onChanged.add(async changes => {
     if (changes.autoBackupEnable || changes.autoBackupIntervalKey || changes.autoBackupIntervalValue) {
         await resetBackupAlarm();
     }
@@ -144,6 +144,12 @@ async function init() {
 }
 
 async function setup() {
+    if (setup.done) {
+        return;
+    }
+
+    setup.done = true;
+
     await browser.action.setBadgeBackgroundColor({
         color: 'transparent',
     });
@@ -165,11 +171,7 @@ async function setup() {
     });
 }
 
-Listeners.onExtensionStart(setup);
-
-Listeners.runtime.onInstalled(async ({reason, previousVersion}) => {
-    Listeners.onExtensionStart(null, {removeListener: true});
-
+Listeners.runtime.onInstalled.add(async ({reason, previousVersion}) => {
     if (reason === browser.runtime.OnInstalledReason.UPDATE) {
         const [major] = previousVersion.split('.');
 
@@ -184,3 +186,5 @@ Listeners.runtime.onInstalled(async ({reason, previousVersion}) => {
 
     setup();
 });
+
+Listeners.onExtensionStart.add(() => self.setTimeout(setup, 50));

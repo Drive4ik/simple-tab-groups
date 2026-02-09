@@ -15,7 +15,7 @@
         "message": "Stel tabbladicoon in als groepsicoon",
         "description": "Set tab icon as group icon"
     },
-    "moveTabToGroupDisabledTitle": {
+    "moveTabToGroupTitle": {
         "message": "Tabblad naar groep verplaatsen",
         "description": "Move tab to group title"
     },
@@ -623,7 +623,7 @@
         "message": "Deze bladwijzer is niet toegelaten",
         "description": "This bookmark is not allowed"
     },
-    "openLinkInGroupDisabledTitle": {
+    "openLinkInGroupTitle": {
         "message": "Open link in groep",
         "description": "Open link in group title"
     },
@@ -983,7 +983,7 @@
         "message": "Standaard",
         "description": "No container"
     },
-    "reopenTabsWithTemporaryContainersInNew": {
+    "reopenTabsWithTemporaryContainers": {
         "message": "Heropen tabs met tijdelijke containers in nieuw",
         "description": "Reopen tabs with temporary containers in new"
     },

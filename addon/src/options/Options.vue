@@ -152,7 +152,7 @@ export default {
                 },
                 'hr': null,
                 'move-tab-to-group': {
-                    title: 'moveTabToGroupDisabledTitle',
+                    title: 'moveTabToGroupTitle',
                     icon: '',
                 },
             },
@@ -246,8 +246,8 @@ export default {
         this.$on('options-reloaded', () => this.addCustomWatchers());
 
         this.loadPermissions();
-        Permissions.onAdded(() => this.loadPermissions());
-        Permissions.onRemoved(() => this.loadPermissions());
+        Permissions.onAdded.add(() => this.loadPermissions());
+        Permissions.onRemoved.add(() => this.loadPermissions());
 
         this.loadGroups();
 
@@ -279,9 +279,11 @@ export default {
             });
 
             this.optionsWatch('browserSettings', async browserSettings => {
-                const rawSettings = await BrowserSettings.set(browserSettings);
-                await this.applyRawBrowserSettings(rawSettings);
-                return this.options.browserSettings;
+                if (await BrowserSettings.hasPermission()) {
+                    const rawSettings = await BrowserSettings.set(browserSettings);
+                    await this.applyRawBrowserSettings(rawSettings);
+                    return this.options.browserSettings;
+                }
             }, {deep: true});
 
             this.optionsWatch('autoBackupIntervalValue', value => Utils.clamp(value, 1, 50));

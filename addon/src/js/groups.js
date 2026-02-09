@@ -12,6 +12,7 @@ import * as Browser from './browser.js';
 import * as Bookmarks from './bookmarks.js';
 import * as Management from './management.js';
 import * as Menus from './menus.js';
+import * as MenusMain from './menus-main.js';
 // import * as Messages from './messages.js';
 // import JSON from './json.js';
 import * as Tabs from './tabs.js';
@@ -20,6 +21,27 @@ import * as Utils from './utils.js';
 const logger = new Logger(Constants.MODULES.GROUPS);
 
 const mainStorage = localStorage.create(Constants.MODULES.BACKGROUND);
+
+const KEYS_RESPONSIBLE_VIEW = new Set([
+    'title',
+    'iconUrl',
+    'iconColor',
+    'iconViewType',
+    'isArchive',
+    'isSticky',
+    'newTabContainer',
+    'prependTitleToWindow',
+]);
+
+const DEPENDENT_KEYS_FOR_EXTERNAL_EXTENSIONS = new Set([
+    'title',
+    'iconUrl',
+    'iconColor',
+    'iconViewType',
+    'isArchive',
+    'isSticky',
+    'newTabContainer',
+]);
 
 // if set return {group, groups, groupIndex}
 export async function load(groupId = null, withTabs = false, includeFavIconUrl, includeThumbnail) {
@@ -220,7 +242,7 @@ export async function add(windowId, tabIds = [], title = null) {
         windowId,
     });
 
-    await backgroundSelf.updateMoveTabMenus();
+    await MenusMain.groupAdded(newGroup, windowId);
 
     log.stop(newGroup.id);
     return newGroup;
@@ -270,11 +292,11 @@ export async function remove(groupId) {
     if (!group.isArchive) {
         log.log('removing group tabs...');
         await Tabs.remove(group.tabs, true);
-
-        await backgroundSelf.updateMoveTabMenus();
     }
 
-    await addUndoRemove(group); // after updateMoveTabMenus
+    await MenusMain.groupRemoved(group).catch(log.onCatch('cant remove menus', false));
+
+    await addUndoRemove(group);
 
     await Bookmarks.removeGroup(group).catch(log.onCatch('cant remove bookmark', false));
 
@@ -305,7 +327,7 @@ async function addUndoRemove(groupToRemove) {
         title: Lang('undoRemoveGroupItemTitle', groupToRemove.title),
         contexts: [Menus.ContextType.BROWSER_ACTION],
         icons: getIconUrl(groupToRemove, 16),
-        onClick: () => restore(groupToRemove.id),
+        module: ['groups', 'restore', groupToRemove.id],
     });
 
     const {showNotificationAfterGroupDelete} = await Storage.get('showNotificationAfterGroupDelete');
@@ -346,13 +368,13 @@ export async function restore(groupId) {
 
     await save(groups);
 
-    await backgroundSelf.updateMoveTabMenus();
-
     if (tabs.length && !group.isArchive) {
         await Browser.actionLoading();
         group.tabs = await backgroundSelf.createTabsSafe(setNewTabsParams(tabs, group), true);
         await Browser.actionLoading(false);
     }
+
+    await MenusMain.groupAdded(group);
 
     backgroundSelf.sendMessageFromBackground('group-added', {
         group: group,
@@ -363,7 +385,7 @@ export async function restore(groupId) {
     });
 
     log.stop('success restored', group.id);
-};
+}
 
 export async function update(groupId, updateData) {
     const log = logger.start('update', {groupId, updateData});
@@ -373,9 +395,9 @@ export async function update(groupId, updateData) {
         delete updateData.iconUrl;
     }
 
-    const updateDataKeys = Object.keys(updateData);
+    const updateDataKeys = new Set(Object.keys(updateData));
 
-    if (!updateDataKeys.length) {
+    if (!updateDataKeys.size) {
         log.stop('no updateData keys to update');
         return;
     }
@@ -388,7 +410,7 @@ export async function update(groupId, updateData) {
 
     // updateData = JSON.clone(updateData); // clone need for fix bug: dead object after close tab which create object
 
-    if (updateDataKeys.includes('title')) {
+    if (updateDataKeys.has('title')) {
         const {defaultGroupProps} = await getDefaults();
         updateData.title = createTitle(updateData.title, groupId, defaultGroupProps).slice(0, 256);
     }
@@ -404,23 +426,22 @@ export async function update(groupId, updateData) {
         },
     });
 
-    if (updateDataKeys.some(key => ExternalExtensionGroupDependentKeys.has(key))) {
+    if (updateDataKeys.intersection(DEPENDENT_KEYS_FOR_EXTERNAL_EXTENSIONS).size) {
         backgroundSelf.sendExternalMessage('group-updated', {
             group: mapForExternalExtension(group),
         });
     }
 
-    if (KEYS_RESPONSIBLE_VIEW.some(key => updateDataKeys.includes(key))) {
-        await backgroundSelf.updateMoveTabMenus();
-
+    if (updateDataKeys.intersection(KEYS_RESPONSIBLE_VIEW).size) {
         await Browser.actionGroup(group);
+        await MenusMain.updateGroup(group).catch(log.onCatch('cant update menus', false));
     }
 
-    if (updateDataKeys.includes('title')) {
+    if (updateDataKeys.has('title')) {
         await Bookmarks.updateGroupTitle(group).catch(log.onCatch('cant update title', false));
     }
 
-    if (updateDataKeys.includes('exportToBookmarks')) {
+    if (updateDataKeys.has('exportToBookmarks')) {
         if (updateData.exportToBookmarks) {
             const {group: groupToExport, groupIndex} = await load(group.id, true);
             await Bookmarks.exportGroup(groupToExport, groupIndex).catch(log.onCatch('cant update bookmark', false));
@@ -432,26 +453,16 @@ export async function update(groupId, updateData) {
     log.stop();
 }
 
-const KEYS_RESPONSIBLE_VIEW = Object.freeze([
-    'title',
-    'iconUrl',
-    'iconColor',
-    'iconViewType',
-    'isArchive',
-    'isSticky',
-    'prependTitleToWindow',
-]);
-
 export async function move(groupId, newGroupIndex) {
     const log = logger.start('move', {groupId, newGroupIndex});
 
-    let {groups, groupIndex} = await load(groupId);
+    const {groups, groupIndex} = await load(groupId);
 
     groups.splice(newGroupIndex, 0, groups.splice(groupIndex, 1)[0]);
 
     await save(groups, true);
 
-    await backgroundSelf.updateMoveTabMenus();
+    await MenusMain.groupsUpdated(groups);
 
     log.stop();
 }
@@ -463,7 +474,7 @@ export async function sort(vector = 'asc') {
         log.throwError(`invalid sort vector: ${vector}`);
     }
 
-    let {groups} = await load();
+    const {groups} = await load();
 
     if ('asc' === vector) {
         groups.sort(Utils.sortBy('title'));
@@ -473,7 +484,7 @@ export async function sort(vector = 'asc') {
 
     await save(groups, true);
 
-    await backgroundSelf.updateMoveTabMenus();
+    await MenusMain.groupsUpdated(groups);
 
     log.stop();
 }
@@ -567,7 +578,7 @@ export async function unload(groupId) {
 
     await Browser.actionLoading(false);
 
-    await backgroundSelf.updateMoveTabMenus();
+    await MenusMain.groupUnloaded(group, windowId);
 
     backgroundSelf.sendMessageFromBackground('group-unloaded', {
         groupId,
@@ -633,20 +644,10 @@ export async function archiveToggle(groupId) {
 
     await Browser.actionLoading(false);
 
-    await backgroundSelf.updateMoveTabMenus();
+    await MenusMain.updateGroup(group);
 
     log.stop();
 }
-
-const ExternalExtensionGroupDependentKeys = new Set([
-    'title',
-    'isArchive',
-    'isSticky',
-    'iconColor',
-    'iconUrl',
-    'iconViewType',
-    'newTabContainer',
-]);
 
 export function mapForExternalExtension(group) {
     return {
@@ -869,12 +870,12 @@ export function createTitle(title = null, groupId = null, defaultGroupProps = {}
 }
 
 export function getTitle({id, title, isArchive, isSticky, tabs, iconViewType, newTabContainer}, args = '') {
-    const withActiveGroup = args.includes('withActiveGroup'),
-        withCountTabs = args.includes('withCountTabs'),
-        withContainer = args.includes('withContainer'),
-        withSticky = args.includes('withSticky'),
-        withTabs = args.includes('withTabs'),
-        beforeTitle = [];
+    const withActiveGroup = args.includes('withActiveGroup');
+    const withCountTabs = args.includes('withCountTabs');
+    const withContainer = args.includes('withContainer');
+    const withSticky = args.includes('withSticky');
+    const withTabs = args.includes('withTabs');
+    const beforeTitle = [];
 
     if (withSticky && isSticky) {
         beforeTitle.push(Constants.STICKY_SYMBOL);
@@ -938,4 +939,18 @@ export function tabsCountMessage(tabs, groupIsArchived, lang = true) {
     }
 
     return activeTabsCount ? (activeTabsCount + '/' + tabs.length) : tabs.length;
+}
+
+export function getMenuId(groupId, context) {
+    return `${context}-${groupId}`;
+}
+
+export async function getMenuProperties(group, context, {showArchivedGroups}) {
+    return {
+        id: getMenuId(group.id, context),
+        title: getTitle(group, 'withSticky withActiveGroup withContainer'),
+        icon: getIconUrl(group),
+        enabled: !group.isArchive,
+        visible: !group.isArchive ? true : showArchivedGroups,
+    };
 }

@@ -55,6 +55,10 @@ function setLoggerFuncs() {
             startArgs = [...startArgs[0], ...startArgs.slice(1)];
         }
 
+        if (typeof startArgs[0] === 'function') {
+            startArgs[0] = getFuncName(startArgs[0]);
+        }
+
         const logger = new Logger(startArgs.shift(), this.prefixes.slice());
 
         logger.enabled = this.enabled;
@@ -296,8 +300,12 @@ export function clearLogs() {
     logs.length = 0;
 }
 
+function getFuncName(func) {
+    return func.name || 'anonymous';
+}
+
 export function catchFunc(asyncFunc, logger) {
-    const name = asyncFunc.name || 'anonymous';
+    const name = getFuncName(asyncFunc);
     const fromStack = new Error().stack;
 
     return async function() {

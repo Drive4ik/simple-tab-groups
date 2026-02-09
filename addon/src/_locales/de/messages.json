@@ -15,7 +15,7 @@
         "message": "Tab-Symbol als Gruppensymbol setzen",
         "description": "Set tab icon as group icon"
     },
-    "moveTabToGroupDisabledTitle": {
+    "moveTabToGroupTitle": {
         "message": "Tab zu Gruppe verschieben",
         "description": "Move tab to group title"
     },
@@ -623,7 +623,7 @@
         "message": "Dieses Lesezeichen ist nicht erlaubt",
         "description": "This bookmark is not allowed"
     },
-    "openLinkInGroupDisabledTitle": {
+    "openLinkInGroupTitle": {
         "message": "Öffne Link in der Gruppe",
         "description": "Open link in group title"
     },
@@ -983,7 +983,7 @@
         "message": "Kein Container",
         "description": "No container"
     },
-    "reopenTabsWithTemporaryContainersInNew": {
+    "reopenTabsWithTemporaryContainers": {
         "message": "Öffne die Tabs erneut in einem temporären Container",
         "description": "Reopen tabs with temporary containers in new"
     },

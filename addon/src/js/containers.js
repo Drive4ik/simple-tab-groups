@@ -40,15 +40,15 @@ if (Constants.IS_BACKGROUND_PAGE) {
 }
 
 function addListeners(options) {
-    Listeners.contextualIdentities.onCreated(catchFunc(onCreated, logger), options);
-    Listeners.contextualIdentities.onUpdated(catchFunc(onUpdated, logger), options);
-    Listeners.contextualIdentities.onRemoved(catchFunc(onRemoved, logger), options);
+    Listeners.contextualIdentities.onCreated.add(catchFunc(onCreated, logger), options);
+    Listeners.contextualIdentities.onUpdated.add(catchFunc(onUpdated, logger), options);
+    Listeners.contextualIdentities.onRemoved.add(catchFunc(onRemoved, logger), options);
 }
 
 function removeListeners() {
-    Listeners.contextualIdentities.onCreated();
-    Listeners.contextualIdentities.onUpdated();
-    Listeners.contextualIdentities.onRemoved();
+    Listeners.contextualIdentities.onCreated.clear();
+    Listeners.contextualIdentities.onUpdated.clear();
+    Listeners.contextualIdentities.onRemoved.clear();
 }
 
 export async function init() {

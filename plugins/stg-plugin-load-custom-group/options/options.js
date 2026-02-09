@@ -25,7 +25,7 @@ groupsSelect.addEventListener('change', async () => {
     Utils.sendMessage('group-selected');
 });
 
-Listeners.runtime.onMessageExternal(async (request, sender) => {
+Listeners.runtime.onMessageExternal.add(async (request, sender) => {
     if (sender.id !== Constants.STG_ID) {
         return;
     }

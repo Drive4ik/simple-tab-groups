@@ -15,7 +15,7 @@
         "message": "Imposta l'icona del gruppo",
         "description": "Set tab icon as group icon"
     },
-    "moveTabToGroupDisabledTitle": {
+    "moveTabToGroupTitle": {
         "message": "Sposta la scheda nel gruppo",
         "description": "Move tab to group title"
     },
@@ -623,7 +623,7 @@
         "message": "Questo segnalibro non è consentito",
         "description": "This bookmark is not allowed"
     },
-    "openLinkInGroupDisabledTitle": {
+    "openLinkInGroupTitle": {
         "message": "Apri il link nel gruppo",
         "description": "Open link in group title"
     },
@@ -983,7 +983,7 @@
         "message": "Predefinito",
         "description": "No container"
     },
-    "reopenTabsWithTemporaryContainersInNew": {
+    "reopenTabsWithTemporaryContainers": {
         "message": "Riapri le schede in container temporanei in nuovi container",
         "description": "Reopen tabs with temporary containers in new"
     },

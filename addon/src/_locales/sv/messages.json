@@ -15,7 +15,7 @@
         "message": "Använd som ikon för nuvarande grupp",
         "description": "Set tab icon as group icon"
     },
-    "moveTabToGroupDisabledTitle": {
+    "moveTabToGroupTitle": {
         "message": "Flytta flik till grupp",
         "description": "Move tab to group title"
     },

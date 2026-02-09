@@ -15,7 +15,7 @@
         "message": "Configure o ícone da aba como ícone do grupo",
         "description": "Set tab icon as group icon"
     },
-    "moveTabToGroupDisabledTitle": {
+    "moveTabToGroupTitle": {
         "message": "Mover aba para o grupo",
         "description": "Move tab to group title"
     },
@@ -623,7 +623,7 @@
         "message": "Este favorito não é permitido",
         "description": "This bookmark is not allowed"
     },
-    "openLinkInGroupDisabledTitle": {
+    "openLinkInGroupTitle": {
         "message": "Abrir link em algum grupo",
         "description": "Open link in group title"
     },
@@ -983,7 +983,7 @@
         "message": "Nenhum contêiner",
         "description": "No container"
     },
-    "reopenTabsWithTemporaryContainersInNew": {
+    "reopenTabsWithTemporaryContainers": {
         "message": "Reabrir guias com contêineres temporários em novos",
         "description": "Reopen tabs with temporary containers in new"
     },

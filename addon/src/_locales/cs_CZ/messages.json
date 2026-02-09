@@ -15,7 +15,7 @@
         "message": "Nastav ikonu panelu jako ikonu skupiny",
         "description": "Set tab icon as group icon"
     },
-    "moveTabToGroupDisabledTitle": {
+    "moveTabToGroupTitle": {
         "message": "Přesunout panel do skupiny",
         "description": "Move tab to group title"
     },
@@ -623,7 +623,7 @@
         "message": "Tento typ záložky není podporován",
         "description": "This bookmark is not allowed"
     },
-    "openLinkInGroupDisabledTitle": {
+    "openLinkInGroupTitle": {
         "message": "Otevřít odkaz ve skupině",
         "description": "Open link in group title"
     },
@@ -983,7 +983,7 @@
         "message": "Žádný",
         "description": "No container"
     },
-    "reopenTabsWithTemporaryContainersInNew": {
+    "reopenTabsWithTemporaryContainers": {
         "message": "Znovu otevřít panely v dočasných kontejnerech",
         "description": "Reopen tabs with temporary containers in new"
     },

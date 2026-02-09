@@ -15,7 +15,7 @@
         "message": "Το εικονίδιο του tab να γίνει εικονίδιο του group",
         "description": "Set tab icon as group icon"
     },
-    "moveTabToGroupDisabledTitle": {
+    "moveTabToGroupTitle": {
         "message": "Μετακίνηση του tab στο group",
         "description": "Move tab to group title"
     },

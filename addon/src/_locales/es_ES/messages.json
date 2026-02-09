@@ -15,7 +15,7 @@
         "message": "Usar icono de la pestaña como icono del grupo",
         "description": "Set tab icon as group icon"
     },
-    "moveTabToGroupDisabledTitle": {
+    "moveTabToGroupTitle": {
         "message": "Mover pestaña al grupo",
         "description": "Move tab to group title"
     },
@@ -623,7 +623,7 @@
         "message": "Este marcador no está permitido",
         "description": "This bookmark is not allowed"
     },
-    "openLinkInGroupDisabledTitle": {
+    "openLinkInGroupTitle": {
         "message": "Abrir enlace en un grupo",
         "description": "Open link in group title"
     },
@@ -983,7 +983,7 @@
         "message": "Sin contenedor",
         "description": "No container"
     },
-    "reopenTabsWithTemporaryContainersInNew": {
+    "reopenTabsWithTemporaryContainers": {
         "message": "Reabrir las pestañas en contenedores temporales como nuevas",
         "description": "Reopen tabs with temporary containers in new"
     },

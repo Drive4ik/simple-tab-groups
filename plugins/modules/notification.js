@@ -4,19 +4,26 @@ import Listeners from './listeners.js\
 ';
 import * as Constants from './constants.js';
 import Lang from './lang.js';
+import runModule from './module-runner.js';
 
 export const MIN_EXPIRES = 5;
 export const MAX_EXPIRES = 10 * 60;
 const DEFAULT_EXPIRES = 45;
 const PREFIX = 'notification-';
 const ALARM_PREFIX = 'hide-notification-';
-const MODULES = {
-    browser,
-};
 
-if (Constants.IS_BACKGROUND_PAGE) {
-    Listeners.notifications.onClicked(onClicked);
-    Listeners.alarms.onAlarm(onAlarm);
+if (new URL(import.meta.url).searchParams.has('addListeners')) {
+    addListeners();
+}
+
+export function addListeners() {
+    Listeners.notifications.onClicked.add(onClicked);
+    Listeners.alarms.onAlarm.add(onAlarm);
+}
+
+export function removeListeners() {
+    Listeners.notifications.onClicked.remove(onClicked);
+    Listeners.alarms.onAlarm.remove(onAlarm);
 }
 
 function wrapId(notificationId) {
@@ -42,54 +49,9 @@ async function onClicked(wrappedId) {
 
     await remove(notificationId);
 
-    if (notification.action === 'open-options') {
-        await browser.runtime.openOptionsPage();
-        return;
-    }
-
-    if (notification.tab) {
-        notification.tab.active ??= true;
-        await browser.tabs.create(notification.tab);
-        return;
-    }
-
     if (notification.module) {
-        /* module name/url is case sensitive!
-        string - 'module-name@someFunc'   arguments are not supported!
-        array - ['module-name', 'someFunc', 'arg1', 'arg2', {arg3: true}]
-        object - {
-            name: 'module-name',
-            method: 'someFunc',
-            args: ['arg1', 'arg2', {arg3: true}],
-        }
-        */
-        let moduleName;
-        let moduleMethod;
-        let moduleArgs;
-
-        if (typeof notification.module === 'string') {
-            notification.module = notification.module.split('@', 2);
-        }
-
-        if (Array.isArray(notification.module)) {
-            [moduleName, moduleMethod, ...moduleArgs] = notification.module;
-        } else {
-            moduleName = notification.module.name;
-            moduleMethod = notification.module.method;
-            moduleArgs = notification.module.args;
-        }
-
-        moduleName = MODULES[moduleName] ? moduleName : `./${moduleName}.js`;
-        moduleMethod ||= 'default';
-        moduleArgs ||= [];
-
         try {
-            const module = await (MODULES[moduleName] ?? import(moduleName));
-            const methodParts = moduleMethod.split('.');
-            const method = methodParts.reduce((obj, key) => obj?.[key], module)
-                ?? methodParts.reduce((obj, key) => obj?.[key], module.default);
-
-            await method(...moduleArgs);
+            await runModule(notification.module);
         } catch (e) {
             if (notification.logError) {
                 if (self.logger) {
@@ -99,8 +61,6 @@ async function onClicked(wrappedId) {
                 }
             }
         }
-
-        return;
     }
 }
 
@@ -165,6 +125,8 @@ async function clearWhenExpired(notificationId, expires) {
 Notification.MIN_EXPIRES = MIN_EXPIRES;
 Notification.MAX_EXPIRES = MAX_EXPIRES;
 Notification.clear = clear;
+Notification.addListeners = addListeners;
+Notification.removeListeners = removeListeners;
 
 async function create({id, iconUrl, title, message}) {
     // https://developer.mozilla.org/en-US/Add-ons/WebExtensions/API/notifications/NotificationOptions

@@ -1,36 +1,41 @@
+/*
+use like:
+import Listeners from './listeners.js?runtime.onInstalled&tabs.onCreated';
+var unsubscribeSomeFuncListener = Listeners.runtime.onInstalled.add(someFunc);
+Listeners.runtime.onInstalled.remove(someFunc); // return is someFunc was removed
+Listeners.tabs.onCreated.has(someFunc); // return true if someFunc in listeners list
+Listeners.tabs.onCreated.clear(); // remove all listeners, ! but doesn't unsubscribe from real browser listeners. return deleted listeners count
+*/
 
-const listeners = {};
-
-const CUSTOM_EVENT_SCHEMES = new Map;
+const Listeners = {};
 
 const ON_EXTENSION_START_TIME_STORAGE_KEY = '__ext_start_time';
 
-export async function getExtensionStartTime() {
-    const {[ON_EXTENSION_START_TIME_STORAGE_KEY]: EXTENSION_START_TIME} =
-        await browser.storage.session.get(ON_EXTENSION_START_TIME_STORAGE_KEY);
+const DEFAULT_EVENT_PREFS = {
+    waitListener: true,
+    pendingPromiseTimeout: 8_000, // used only if waitListener && returnPromise are true
+    calledOnce: false, // an event that is triggered once
+};
 
-    return EXTENSION_START_TIME;
-}
-
-async function setExtensionStartTime(EXTENSION_START_TIME) {
-    await browser.storage.session.set({
-        [ON_EXTENSION_START_TIME_STORAGE_KEY]: EXTENSION_START_TIME,
-    });
-}
+const mockedEventNames = new Set;
+const CUSTOM_EVENT_SCHEMES = new Map;
 
 CUSTOM_EVENT_SCHEMES.set('onExtensionStart', {
+    calledOnce: true,
     event: {
-        timer: 0,
-        async addListener(listener, {delay = 0} = {}) {
-            const EXTENSION_START_TIME = await getExtensionStartTime();
+        async addListener(realListener) {
+            const isFirstGlobalPromise = !self.__extensionStartPromise;
+            const EXTENSION_START_TIME = await (self.__extensionStartPromise ??= getExtensionStartTime());
 
             if (!EXTENSION_START_TIME) {
-                await setExtensionStartTime(Date.now() + delay);
-                this.timer = self.setTimeout(listener, delay);
+                if (isFirstGlobalPromise) {
+                    await setExtensionStartTime(Date.now());
+                }
+
+                realListener();
             }
-        },
-        removeListener() {
-            self.clearTimeout(this.timer);
+
+            delete self.__extensionStartPromise;
         },
     },
 });
@@ -45,23 +50,68 @@ CUSTOM_EVENT_SCHEMES.set('runtime.onMessageExternal', {
     noListenerPromiseHandler: () => Promise.reject(new Error('No listener for "runtime.onMessageExternal", please call back later')),
 });
 
+CUSTOM_EVENT_SCHEMES.set('runtime.onInstalled', {
+    calledOnce: true,
+});
+
+CUSTOM_EVENT_SCHEMES.set('runtime.onStartup', {
+    calledOnce: true,
+});
+
+CUSTOM_EVENT_SCHEMES.set('runtime.onUpdateAvailable', {
+    calledOnce: true,
+});
+
 CUSTOM_EVENT_SCHEMES.set('webRequest.onBeforeRequest', {
     waitListener: false,
     returnPromise: true,
     noListenerPromiseHandler: () => ({}),
+    async resoveMultipleListeners(promises) {
+        const outcome = {
+            canceled: false,
+            redirectUrl: null,
+        };
+
+        const responses = await Promise.all(promises);
+
+        for (let response of responses) {
+            response ??= {};
+
+            if (response.cancel) {
+                outcome.canceled = true;
+                break;
+            }
+
+            outcome.redirectUrl ??= response.redirectUrl;
+        }
+
+        if (outcome.canceled) {
+            return {cancel: true};
+        } else if (outcome.redirectUrl) {
+            return {redirectUrl: outcome.redirectUrl};
+        }
+
+        return {};
+    },
 });
 
-const DEFAULT_EVENT_PREFS = {
-    waitListener: true,
-};
-
 for (const [eventName, eventJsonParameters] of new URL(import.meta.url).searchParams) {
+    if (mockedEventNames.has(eventName)) {
+        throw new Error(`Detect duplicate ${eventName}`);
+    }
+
+    mockedEventNames.add(eventName);
+
     const eventPrefs = {
         name: eventName,
         ...DEFAULT_EVENT_PREFS,
     };
 
     Object.assign(eventPrefs, CUSTOM_EVENT_SCHEMES.get(eventPrefs.name));
+
+    if (eventPrefs.returnPromise && eventPrefs.calledOnce) {
+        throw new Error(`returnPromise and calledOnce cannot be true at the same time for ${eventPrefs.name}`);
+    }
 
     let eventParameters = [];
 
@@ -71,17 +121,18 @@ for (const [eventName, eventJsonParameters] of new URL(import.meta.url).searchPa
         } catch {
             throw new Error(`Invalid JSON value for listener event "${eventPrefs.name}" json: ${eventJsonParameters}`);
         }
-    }
 
-    if (!Array.isArray(eventParameters)) {
-        throw new Error(`Arguments for "${eventPrefs.name}" must be an array!`);
+        if (!Array.isArray(eventParameters)) {
+            throw new Error(`Arguments for "${eventPrefs.name}" must be an array!`);
+        }
     }
 
     createMockedListener(eventPrefs, ...eventParameters);
 }
 
 function createMockedListener(eventPrefs, ...eventParameters) {
-    let listener = null;
+    const listeners = new Set;
+    const calledOnceListeners = new Set;
     let pendingArgs = null;
     let pending = null;
 
@@ -94,59 +145,128 @@ function createMockedListener(eventPrefs, ...eventParameters) {
 
     event.addListener(realListener, ...eventParameters);
 
-    const settlePending = () => pending?.resolve(eventPrefs.noListenerPromiseHandler(eventPrefs.name));
-
-    function setListener(func = null, options = {}) {
-        if (options.addListener) {
-            event.addListener(realListener, ...eventParameters);
-        } else if (options.removeListener) {
-            event.removeListener?.(realListener);
-            settlePending();
-            return;
+    function settlePending() {
+        self.clearTimeout(pending?.timer);
+        pending?.resolve(eventPrefs.noListenerPromiseHandler(...(pendingArgs ?? [])));
+        if (!eventPrefs.calledOnce) {
+            pendingArgs = null;
         }
-
-        options.waitListener ??= eventPrefs.waitListener;
-
-        listener = func;
-
-        if (listener && eventPrefs.waitListener && options.waitListener && pendingArgs) {
-            if (eventPrefs.returnPromise) {
-                pending.resolve(listener(...pendingArgs));
-            } else {
-                listener(...pendingArgs);
-            }
-        }
-
-        pendingArgs = null;
-        settlePending();
         pending = null;
     }
 
-    function realListener(...args) {
-        if (listener) {
-            return listener(...args);
+    function processListeners(args) {
+        const promises = [];
+
+        for (const listener of listeners) {
+            if (eventPrefs.calledOnce) {
+                if (calledOnceListeners.has(listener)) {
+                    continue;
+                }
+
+                calledOnceListeners.add(listener);
+            }
+
+            try {
+                const result = listener(...args);
+
+                if (eventPrefs.returnPromise) {
+                    promises.push(result);
+                }
+            } catch (e) {
+                console.error('Catch error:', e, 'when calling listener:', listener, 'with args:', args, 'event name:', eventPrefs.name);
+
+                if (eventPrefs.returnPromise) {
+                    return Promise.reject(e);
+                }
+            }
         }
 
-        if (eventPrefs.waitListener) {
-            pendingArgs = args;
-
-            if (eventPrefs.returnPromise) {
-                settlePending();
-                pending = Promise.withResolvers();
-                return pending.promise;
-            }
-        } else if (eventPrefs.returnPromise) {
-            return eventPrefs.noListenerPromiseHandler(eventPrefs.name);
+        if (eventPrefs.returnPromise) {
+            let response = eventPrefs.resoveMultipleListeners?.(promises);
+            response ??= promises.find(v => v instanceof Promise);
+            response ??= promises.find(v => v);
+            return response;
         }
     }
 
-    eventPrefs.name.split('.').reduce((schema, eventNamePart, index, self) => {
-        if (index < self.length - 1) {
+    function add(listener, {waitListener = eventPrefs.waitListener} = {}) {
+        if (!has(listener)) {
+            listeners.add(listener);
+
+            if (waitListener && pendingArgs) {
+                const promisedResult = processListeners(pendingArgs);
+
+                if (eventPrefs.returnPromise) {
+                    pending.resolve(promisedResult);
+                }
+            }
+
+            settlePending();
+        }
+
+        return () => remove(listener);
+    }
+
+    function remove(listener) {
+        const deleted = listeners.delete(listener);
+        calledOnceListeners.delete(listener);
+        settlePending();
+        return deleted;
+    }
+
+    function has(listener) {
+        return listeners.has(listener);
+    }
+
+    function clear() {
+        const size = listeners.size;
+        listeners.clear();
+        calledOnceListeners.clear();
+
+        // if (fullUnsubscribe) {
+        //     event.removeListener?.(realListener);
+        // }
+        return size;
+    }
+
+    function realListener(...args) {
+        if (listeners.size) {
+            return processListeners(args);
+        }
+
+        if (eventPrefs.waitListener) {
+            if (eventPrefs.returnPromise) {
+                settlePending();
+                pending = Promise.withResolvers();
+                pendingArgs = args;
+                pending.timer = self.setTimeout(settlePending, eventPrefs.pendingPromiseTimeout);
+                return pending.promise;
+            }
+
+            pendingArgs = args;
+        } else if (eventPrefs.returnPromise) {
+            return eventPrefs.noListenerPromiseHandler(...args);
+        }
+    }
+
+    eventPrefs.name.split('.').reduce((schema, eventNamePart, index, selfArr) => {
+        if (index < selfArr.length - 1) {
             return schema[eventNamePart] ??= {};
         }
 
-        schema[eventNamePart] = setListener;
-    }, listeners);
+        schema[eventNamePart] = {add, remove, has, clear};
+    }, Listeners);
 }
 
-export default Object.freeze(listeners); // use like listeners.runtime.onInstalled(func);
+export async function getExtensionStartTime() {
+    const storage = await browser.storage.session.get(ON_EXTENSION_START_TIME_STORAGE_KEY);
+    return storage[ON_EXTENSION_START_TIME_STORAGE_KEY];
+}
+
+async function setExtensionStartTime(EXTENSION_START_TIME) {
+    await browser.storage.session.set({
+        [ON_EXTENSION_START_TIME_STORAGE_KEY]: EXTENSION_START_TIME,
+    });
+}
+
+export default Object.freeze(Listeners);
