@@ -132,70 +132,6 @@ self.CacheTabs = Cache.tabs;
 self.CacheLastTabsState = Cache.lastTabsState;
 self.CacheWindows = Cache.windows;
 
-async function createTabsSafe(tabs, tryRestoreOpeners, hideTabs = true) {
-    const log = logger.start('createTabsSafe', {tryRestoreOpeners, hideTabs}, tabs.map(tab => Utils.extractKeys(tab, [
-        'id',
-        'cookieStoreId',
-        'openerTabId',
-        'groupId',
-        // 'favIconUrl',
-        // 'thumbnail',
-    ])));
-
-    if (!tabs.length) {
-        log.stop('no tabs');
-        return [];
-    }
-
-    const isEnabledTreeTabsExt = Constants.TREE_TABS_EXTENSIONS.some(id => Management.isEnabled(id));
-    const oldNewTabIds = {};
-
-    let newTabs = [];
-
-    for (const tab of tabs) {
-        delete tab.active;
-        delete tab.index;
-        delete tab.windowId;
-    }
-
-    if (tryRestoreOpeners && isEnabledTreeTabsExt && tabs.some(tab => tab.openerTabId)) {
-        log.log('tryRestoreOpeners');
-        for (const tab of tabs) {
-            if (tab.id && tab.openerTabId) {
-                tab.openerTabId = oldNewTabIds[tab.openerTabId];
-            }
-
-            const newTab = await Tabs.create(tab, true);
-
-            if (tab.id) {
-                oldNewTabIds[tab.id] = newTab.id;
-            }
-
-            newTabs.push(newTab);
-        }
-    } else {
-        log.log('creating tabs');
-        tabs.forEach(tab => delete tab.openerTabId);
-        newTabs = await Promise.all(tabs.map(tab => Tabs.create(tab, true)));
-    }
-
-    newTabs = await Tabs.moveNative(newTabs, {
-        index: -1,
-    });
-
-    if (hideTabs) {
-        const tabsToHide = newTabs.filter(tab => !tab.pinned && tab.groupId && !Cache.getWindowId(tab.groupId));
-
-        log.log('hide tabs length:', tabsToHide.length);
-
-        await Tabs.hide(tabsToHide, true);
-    }
-
-    log.stop();
-
-    return newTabs;
-}
-
 function sendExternalMessage(...args) {
     if (!storage.inited) {
         logger.warn('sendExternalMessage addon not yet loaded');
@@ -2435,7 +2371,7 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
 
         if (data.pinnedTabs.length) {
             Management.replaceMozExtensionTabUrls(data.pinnedTabs, 'uuid');
-            await createTabsSafe(data.pinnedTabs, false, false);
+            await Tabs.createMultiple(data.pinnedTabs, false, false);
         }
     }
 
@@ -2535,8 +2471,6 @@ async function cloudSync(auto = false, trust = null, revision = null) {
 }
 
 self.saveOptions = saveOptions;
-
-self.createTabsSafe = createTabsSafe;
 
 self.sendExternalMessage = sendExternalMessage;
 
@@ -3418,7 +3352,7 @@ async function syncTabs(groups, allTabs) {
         }
 
         if (newTabs.length) {
-            newTabs = await createTabsSafe(newTabs, true);
+            newTabs = await Tabs.createMultiple(newTabs, true);
 
             tabs = tabs.map(tab => tab ? tab : newTabs.shift());
         }
@@ -3505,10 +3439,10 @@ async function tryRestoreMissedTabs() {
         .filter(Boolean);
 
     try {
-        await createTabsSafe(tabsToRestore, true);
+        await Tabs.createMultiple(tabsToRestore, true);
     } catch (e) {
         setActionToReloadAddon();
-        log.logError('cant createTabsSafe', e);
+        log.logError('cant createMultiple', e);
         log.stopError();
         return;
     }

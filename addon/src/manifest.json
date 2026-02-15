@@ -96,7 +96,7 @@
             "description": "__MSG_openSidebarTitle__"
         },
         "open-manage-groups": {
-            "description": "__MSG_hotkeyActionTitleOpenManageGroups__"
+            "description": "__MSG_manageGroupsTitle__"
         },
         "move-selected-tabs-to-custom-group": {
             "description": "__MSG_hotkeyActionTitleMoveSelectedTabsToCustomGroup__"

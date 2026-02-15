@@ -94,6 +94,68 @@ export async function create({url, active, pinned, title, index, windowId, opene
     return newTab;
 }
 
+export async function createMultiple(tabs, tryRestoreOpeners, hideTabs = true) {
+    const log = logger.start('createMultiple', {tryRestoreOpeners, hideTabs}, tabs.map(tab => Utils.extractKeys(tab, [
+        'id',
+        'cookieStoreId',
+        'openerTabId',
+        'groupId',
+    ])));
+
+    if (!tabs.length) {
+        log.stop('no tabs');
+        return [];
+    }
+
+    const isEnabledTreeTabsExt = Constants.TREE_TABS_EXTENSIONS.some(id => Management.isEnabled(id));
+    const oldNewTabIds = {};
+
+    let newTabs = [];
+
+    for (const tab of tabs) {
+        delete tab.active;
+        delete tab.index;
+        delete tab.windowId;
+    }
+
+    if (tryRestoreOpeners && isEnabledTreeTabsExt && tabs.some(tab => tab.openerTabId)) {
+        log.log('tryRestoreOpeners');
+        for (const tab of tabs) {
+            if (tab.id && tab.openerTabId) {
+                tab.openerTabId = oldNewTabIds[tab.openerTabId];
+            }
+
+            const newTab = await create(tab, true);
+
+            if (tab.id) {
+                oldNewTabIds[tab.id] = newTab.id;
+            }
+
+            newTabs.push(newTab);
+        }
+    } else {
+        log.log('creating tabs');
+        tabs.forEach(tab => delete tab.openerTabId);
+        newTabs = await Promise.all(tabs.map(tab => create(tab, true)));
+    }
+
+    newTabs = await moveNative(newTabs, {
+        index: -1,
+    });
+
+    if (hideTabs) {
+        const tabsToHide = newTabs.filter(tab => !tab.pinned && tab.groupId && !Cache.getWindowId(tab.groupId));
+
+        log.log('hide tabs length:', tabsToHide.length);
+
+        await hide(tabsToHide, true);
+    }
+
+    log.stop();
+
+    return newTabs;
+}
+
 export async function createUrlOnce(url) {
     let [tab] = await browser.tabs.query({
         url: url.includes('#') ? url.slice(0, url.indexOf('#')) : url,
@@ -263,7 +325,7 @@ export async function add(groupId, cookieStoreId, url, title) {
     const {group} = await Groups.load(groupId);
 
     // TODO get rid of BG
-    const [tab] = await backgroundSelf.createTabsSafe([{
+    const [tab] = await createMultiple([{
         url,
         title,
         cookieStoreId,

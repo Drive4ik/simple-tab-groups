@@ -370,7 +370,7 @@ export async function restore(groupId) {
 
     if (tabs.length && !group.isArchive) {
         await Browser.actionLoading();
-        group.tabs = await backgroundSelf.createTabsSafe(setNewTabsParams(tabs, group), true);
+        group.tabs = await Tabs.createMultiple(setNewTabsParams(tabs, group), true);
         await Browser.actionLoading(false);
     }
 
@@ -609,7 +609,7 @@ export async function archiveToggle(groupId) {
 
         Management.replaceMozExtensionTabUrls(group.tabs, 'uuid');
 
-        await backgroundSelf.createTabsSafe(setNewTabsParams(group.tabs, group), true);
+        await Tabs.createMultiple(setNewTabsParams(group.tabs, group), true);
 
         group.tabs = [];
     } else {

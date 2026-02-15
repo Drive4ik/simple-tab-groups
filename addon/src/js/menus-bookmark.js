@@ -264,7 +264,7 @@ export async function openInGroup(groupId, info) {
 
     if (tabsToCreate.length) {
         const {group} = await Groups.load(groupId);
-        const [firstTab] = await self.createTabsSafe(Groups.setNewTabsParams(tabsToCreate, group));
+        const [firstTab] = await Tabs.createMultiple(Groups.setNewTabsParams(tabsToCreate, group));
 
         await Browser.actionLoading(false);
 
@@ -341,7 +341,7 @@ export async function createNewGroup(info) {
 
             if (tabsToCreate.length) {
                 const newGroup = await Groups.add(undefined, undefined, folder.title);
-                await self.createTabsSafe(Groups.setNewTabsParams(tabsToCreate, newGroup));
+                await Tabs.createMultiple(Groups.setNewTabsParams(tabsToCreate, newGroup));
                 groupsCreatedCount++;
             }
         }

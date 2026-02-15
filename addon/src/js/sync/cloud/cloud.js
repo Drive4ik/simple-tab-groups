@@ -226,7 +226,7 @@ export async function sync(trust = null, revision = null, progressFunc = null) {
             if (tabsToCreate.length) {
                 tabsToCreate.map(tab => tab.groupId = group.id);
 
-                const newTabs = await backgroundSelf.createTabsSafe(tabsToCreate),
+                const newTabs = await Tabs.createMultiple(tabsToCreate),
                     [newTab] = newTabs,
                     existTab = group.tabs.find(tab => !tab.new);
 
