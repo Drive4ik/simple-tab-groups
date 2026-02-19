@@ -1,5 +1,5 @@
 import Listeners from './listeners.js\
-?onExtensionStart=[{"delay":100}]\
+?extension.onStart=[{"delay":100}]\
 &runtime.onInstalled\
 &runtime.onMessageExternal\
 &menus.onClicked\
@@ -13,7 +13,7 @@ import * as Utils from './utils.js';
 import * as MainUtils from './main-utils.js';
 import * as Host from './host.js';
 import * as File from './file.js';
-import Notification from './notification.js?addListeners';
+import Notification from './notification.js?add-listeners';
 import Lang from './lang.js';
 
 Listeners.runtime.onMessageExternal.add(async (request, sender) => {
@@ -187,4 +187,4 @@ Listeners.runtime.onInstalled.add(async ({reason, previousVersion}) => {
     setup();
 });
 
-Listeners.onExtensionStart.add(() => self.setTimeout(setup, 50));
+Listeners.extension.onStart.add(() => self.setTimeout(setup, 50));

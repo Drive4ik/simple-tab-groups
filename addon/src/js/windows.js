@@ -129,9 +129,15 @@ export async function createPopup(createData, once = true) {
     let win;
 
     if (once) {
-        const windows = await browser.windows.getAll({populate: true});
+        const windows = await browser.windows.getAll({
+            windowTypes: [createData.type],
+            populate: true,
+        }).catch(e => {
+            log.logError(["can't get", createData.type], e);
+            return [];
+        });
 
-        win = windows.filter(Utils.isWindowAllow).find(win => win.tabs[0].url.startsWith(createData.url));
+        win = windows.find(win => win.tabs[0].url.startsWith(createData.url));
 
         if (win && createData.focused) {
             await setFocus(win.id);

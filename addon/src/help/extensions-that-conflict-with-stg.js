@@ -1,15 +1,13 @@
 
 import Lang from '/js/lang.js?translate-page';
-import * as Constants from '/js/constants.js';
-import * as Management from '/js/management.js';
+import * as Extensions from '/js/extensions.js';
 
 const $ = window.document.querySelector.bind(window.document);
 
 function createExtensionBlock(ext) {
     const img = document.createElement('img');
-    // img.addEventListener('error', () => img.remove())
-    // img.src = Management.getExtensionIcon(ext); // can't have permission to read other addon icon :((
     img.src = '/icons/extension-generic.svg';
+    Extensions.loadIconUrl(ext.id, img.src).then(icon => img.src = icon);
 
     const text = document.createElement('span');
     text.innerText = ext.name;
@@ -28,12 +26,12 @@ function createExtensionBlock(ext) {
     const buttons = document.createElement('div');
     buttons.classList.add('block-content-buttons');
 
-    if (ext.enabled) {
+    if (Extensions.isEnabled(ext.id)) {
         const button = document.createElement('button');
         button.classList.add('primary');
 
         const setContent = () => {
-            const isIgnored = Management.isIgnoredConflictedExtension(ext.id);
+            const isIgnored = Extensions.isIgnoredConflicted(ext.id);
 
             if (isIgnored) {
                 button.innerText = Lang('ignoreConflictedExtDontIgnore');
@@ -45,14 +43,14 @@ function createExtensionBlock(ext) {
             button.classList.toggle('danger-button', !isIgnored);
         };
 
-        setContent(ext.id);
+        setContent();
 
         button.addEventListener('click', () => {
-            if (Management.isIgnoredConflictedExtension(ext.id)) {
-                Management.dontIgnoreConflictedExtension(ext.id);
+            if (Extensions.isIgnoredConflicted(ext.id)) {
+                Extensions.dontIgnoreConflicted(ext.id);
                 setContent();
             } else if (confirm(Lang('ignoreConflictedExtConfirm'))) {
-                Management.ignoreConflictedExtension(ext.id);
+                Extensions.ignoreConflicted(ext.id);
                 setContent();
             }
         });
@@ -68,10 +66,9 @@ function createExtensionBlock(ext) {
 }
 
 async function showConflictedExtensions() {
-    const conflictedExtensions = await browser.management.getAll()
-        .then(addons => addons.filter(addon => Constants.CONFLICTED_EXTENSIONS.includes(addon.id)));
+    const conflictedExtensions = Extensions.getConflicted();
 
-    if (!conflictedExtensions.some(ext => ext.enabled)) {
+    if (!conflictedExtensions.some(ext => Extensions.isEnabled(ext.id))) {
         window.close();
         return;
     }
@@ -82,21 +79,16 @@ async function showConflictedExtensions() {
     $enabledExt.textContent = $disabledExt.textContent = '';
 
     for (const ext of conflictedExtensions) {
-        if (ext.enabled) {
-            $enabledExt.appendChild(createExtensionBlock(ext));
+        const block = createExtensionBlock(ext);
+
+        if (Extensions.isEnabled(ext.id)) {
+            $enabledExt.appendChild(block);
         } else {
-            $disabledExt.appendChild(createExtensionBlock(ext));
+            $disabledExt.appendChild(block);
         }
     }
-
-    return true;
 }
 
-const doAddListeners = await showConflictedExtensions();
+Extensions.onChanged(showConflictedExtensions);
 
-if (doAddListeners) {
-    browser.management.onEnabled.addListener(showConflictedExtensions);
-    browser.management.onDisabled.addListener(showConflictedExtensions);
-    browser.management.onInstalled.addListener(showConflictedExtensions);
-    browser.management.onUninstalled.addListener(showConflictedExtensions);
-}
+showConflictedExtensions();

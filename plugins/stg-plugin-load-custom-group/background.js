@@ -1,5 +1,5 @@
 import Listeners from './listeners.js\
-?onExtensionStart\
+?extension.onStart\
 &action.onClicked\
 &menus.onClicked\
 &commands.onChanged\
@@ -8,7 +8,7 @@ import Listeners from './listeners.js\
 ';
 import * as Constants from './constants.js';
 import * as Utils from './utils.js';
-import Notification from './notification.js?addListeners';
+import Notification from './notification.js?add-listeners';
 import Lang from './lang.js';
 
 Listeners.runtime.onMessageExternal.add(async (request, sender) => {
@@ -134,4 +134,4 @@ async function setup() {
 
 Listeners.commands.onChanged.add(() => updateAction());
 
-Listeners.onExtensionStart.add(setup);
+Listeners.extension.onStart.add(setup);

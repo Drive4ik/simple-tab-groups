@@ -2,7 +2,7 @@
 use like:
 import Listeners from './listeners.js?runtime.onInstalled&tabs.onCreated';
 var unsubscribeSomeFuncListener = Listeners.runtime.onInstalled.add(someFunc);
-Listeners.runtime.onInstalled.remove(someFunc); // return is someFunc was removed
+Listeners.runtime.onInstalled.remove(someFunc); // return true if someFunc was removed from listeners list
 Listeners.tabs.onCreated.has(someFunc); // return true if someFunc in listeners list
 Listeners.tabs.onCreated.clear(); // remove all listeners, ! but doesn't unsubscribe from real browser listeners. return deleted listeners count
 */
@@ -20,22 +20,35 @@ const DEFAULT_EVENT_PREFS = {
 const mockedEventNames = new Set;
 const CUSTOM_EVENT_SCHEMES = new Map;
 
-CUSTOM_EVENT_SCHEMES.set('onExtensionStart', {
+const isFirstExtensionStartTimePromise = !self.__getExtensionStartTimePromise;
+self.__getExtensionStartTimePromise ??= getExtensionStartTime();
+
+CUSTOM_EVENT_SCHEMES.set('extension.onStart', {
     calledOnce: true,
     event: {
         async addListener(realListener) {
-            const isFirstGlobalPromise = !self.__extensionStartPromise;
-            const EXTENSION_START_TIME = await (self.__extensionStartPromise ??= getExtensionStartTime());
+            const EXTENSION_START_TIME = await self.__getExtensionStartTimePromise;
 
             if (!EXTENSION_START_TIME) {
-                if (isFirstGlobalPromise) {
+                if (isFirstExtensionStartTimePromise) {
                     await setExtensionStartTime(Date.now());
                 }
 
                 realListener();
             }
+        },
+    },
+});
 
-            delete self.__extensionStartPromise;
+CUSTOM_EVENT_SCHEMES.set('extension.onWake', {
+    calledOnce: true,
+    event: {
+        async addListener(realListener) {
+            const EXTENSION_START_TIME = await self.__getExtensionStartTimePromise;
+
+            if (EXTENSION_START_TIME) {
+                realListener();
+            }
         },
     },
 });

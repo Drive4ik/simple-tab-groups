@@ -7,7 +7,7 @@ import * as Constants from './constants.js';
 import * as Utils from './utils.js';
 import * as Cache from './cache.js';
 import * as Containers from './containers.js';
-import * as Management from './management.js';
+import * as Extensions from './extensions.js';
 import * as Groups from './groups.js';
 import * as Windows from './windows.js';
 // import * as Storage from './storage.js';
@@ -26,7 +26,7 @@ export async function create({url, active, pinned, title, index, windowId, opene
     if (url) {
         if (Utils.isUrlAllowToCreate(url)) {
             if (url.startsWith('moz-extension')) {
-                const uuid = Management.extractUUID(url);
+                const uuid = Extensions.extractUUID(url);
 
                 if (Utils.isUUID(uuid)) {
                     tab.url = url;
@@ -107,7 +107,6 @@ export async function createMultiple(tabs, tryRestoreOpeners, hideTabs = true) {
         return [];
     }
 
-    const isEnabledTreeTabsExt = Constants.TREE_TABS_EXTENSIONS.some(id => Management.isEnabled(id));
     const oldNewTabIds = {};
 
     let newTabs = [];
@@ -118,7 +117,7 @@ export async function createMultiple(tabs, tryRestoreOpeners, hideTabs = true) {
         delete tab.windowId;
     }
 
-    if (tryRestoreOpeners && isEnabledTreeTabsExt && tabs.some(tab => tab.openerTabId)) {
+    if (tryRestoreOpeners && Extensions.hasTreeTabs() && tabs.some(tab => tab.openerTabId)) {
         log.log('tryRestoreOpeners');
         for (const tab of tabs) {
             if (tab.id && tab.openerTabId) {

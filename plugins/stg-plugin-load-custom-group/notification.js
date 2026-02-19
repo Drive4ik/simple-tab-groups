@@ -12,7 +12,7 @@ const DEFAULT_EXPIRES = 45;
 const PREFIX = 'notification-';
 const ALARM_PREFIX = 'hide-notification-';
 
-if (new URL(import.meta.url).searchParams.has('addListeners')) {
+if (new URL(import.meta.url).searchParams.has('add-listeners')) {
     addListeners();
 }
 

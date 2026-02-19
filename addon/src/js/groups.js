@@ -10,7 +10,7 @@ import Lang from '/js/lang.js';
 import * as Containers from './containers.js';
 import * as Browser from './browser.js';
 import * as Bookmarks from './bookmarks.js';
-import * as Management from './management.js';
+import * as Extensions from './extensions.js';
 import * as Menus from './menus.js';
 import * as MenusMain from './menus-main.js';
 // import * as Messages from './messages.js';
@@ -607,7 +607,7 @@ export async function archiveToggle(groupId) {
     if (group.isArchive) {
         group.isArchive = false;
 
-        Management.replaceMozExtensionTabUrls(group.tabs, 'uuid');
+        Extensions.tabsToUUID(group.tabs);
 
         await Tabs.createMultiple(setNewTabsParams(group.tabs, group), true);
 
@@ -624,7 +624,7 @@ export async function archiveToggle(groupId) {
             ({group, groups} = await load(groupId, true));
         }
 
-        Management.replaceMozExtensionTabUrls(group.tabs, 'id');
+        Extensions.tabsToId(group.tabs);
 
         tabsToRemove = group.tabs;
 

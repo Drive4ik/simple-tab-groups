@@ -2,6 +2,7 @@
 import Lang from '/js/lang.js?translate-page';
 import * as Messages from '/js/messages.js';
 import * as Constants from '/js/constants.js';
+import * as Extensions from '/js/extensions.js';
 import * as Storage from '/js/storage.js';
 import {INNER_HTML, safeHtml} from '/js/utils.js';
 
@@ -24,12 +25,6 @@ function getContainer(cookieStoreId) {
     }
 }
 
-function loadConflictedExt(id) {
-    if (id) {
-        return browser.management.get(id).catch(() => {});
-    }
-}
-
 function applyContainerStyles(parentNode, container) {
     parentNode.querySelector('container-name').classList = `userContext-icon identity-icon-${container.icon} identity-color-${container.color}`;
 }
@@ -43,7 +38,7 @@ async function init() {
         conflictedExtId = urlParams.get('conflictedExtId'),
         groupId = urlParams.get('groupId'),
         asInfo = urlParams.get('asInfo'),
-        conflictedExt = await loadConflictedExt(conflictedExtId),
+        conflictedExt = Extensions.getById(conflictedExtId),
         group = await loadGroup(groupId),
         destContainer = await getContainer(destCookieStoreId),
         anotherContainer = await getContainer(anotherCookieStoreId);
@@ -57,12 +52,11 @@ async function init() {
 
     async function isDepsOk() {
         const tabGroupId = await browser.sessions.getTabValue(currentTab.id, 'groupId'),
-            conflictedExt = await loadConflictedExt(conflictedExtId),
             group = await loadGroup(groupId),
             destContainer = await getContainer(destCookieStoreId),
             anotherContainer = await getContainer(anotherCookieStoreId);
 
-        if (!conflictedExt?.enabled) {
+        if (!Extensions.isEnabled(conflictedExtId)) {
             openTab(url, destCookieStoreId);
             return;
         } else if (groupId !== tabGroupId) {
@@ -83,7 +77,7 @@ async function init() {
     }
 
     if (asInfo) {
-        if (!conflictedExt?.enabled || !group || !destContainer || destContainer.notFound || !anotherContainer || anotherContainer.notFound) {
+        if (!Extensions.isEnabled(conflictedExtId) || !group || !destContainer || destContainer.notFound || !anotherContainer || anotherContainer.notFound) {
             browser.tabs.remove(currentTab.id);
             return;
         }
@@ -94,10 +88,9 @@ async function init() {
             return;
         }
 
-        window.onfocus = isDepsOk;
-
-        browser.management.onDisabled.addListener(isDepsOk);
-        browser.management.onUninstalled.addListener(isDepsOk);
+        window.addEventListener('focus', isDepsOk);
+        Extensions.onDisabled.add(isDepsOk);
+        Extensions.onUninstalled.add(isDepsOk);
         browser.tabs.onAttached.addListener((id, {newPosition, newWindowId}) => {
             if (id === currentTab.id) {
                 currentTab.index = newPosition;
@@ -112,7 +105,7 @@ async function init() {
     $('#redirect-url').innerText = url;
     $('#helpPageOpenInContainerDesc1')[INNER_HTML] = Lang('helpPageOpenInContainerDesc1', [safeHtml(group.title), safeHtml(destContainer.name)]);
     applyContainerStyles($('#helpPageOpenInContainerDesc1'), destContainer);
-    // $('#another-addon-img').src = Management.getExtensionIcon(conflictedExt);//can't have permission to read other addon icon :((
+    Extensions.loadIconUrl(conflictedExtId, $('#another-addon-img').src).then(icon => $('#another-addon-img').src = icon);
     $('#another-addon-name').innerText = conflictedExt.name;
     $('#helpPageOpenInContainerDesc3')[INNER_HTML] = Lang('helpPageOpenInContainerDesc3', [safeHtml(anotherContainer.name), safeHtml(conflictedExt.name)]);
     applyContainerStyles($('#helpPageOpenInContainerDesc3'), anotherContainer);

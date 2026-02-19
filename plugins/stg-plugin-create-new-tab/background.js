@@ -1,12 +1,12 @@
 import Listeners from './listeners.js\
-?onExtensionStart\
+?extension.onStart\
 &action.onClicked\
 &commands.onChanged\
 &runtime.onMessageExternal\
 ';
 import * as Constants from './constants.js';
 import * as Utils from './utils.js';
-import Notification from './notification.js?addListeners';
+import Notification from './notification.js?add-listeners';
 import Lang from './lang.js';
 
 const TEMPORARY_CONTAINER = 'temporary-container';
@@ -139,4 +139,4 @@ async function setup() {
 
 Listeners.commands.onChanged.add(reloadWindowActions);
 
-Listeners.onExtensionStart.add(setup);
+Listeners.extension.onStart.add(setup);

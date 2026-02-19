@@ -1,11 +1,11 @@
 import Listeners from './listeners.js\
-?onExtensionStart\
+?extension.onStart\
 &action.onClicked\
 &commands.onChanged\
 ';
 import * as Constants from './constants.js';
 import * as Utils from './utils.js';
-import Notification from './notification.js?addListeners';
+import Notification from './notification.js?add-listeners';
 import Lang from './lang.js';
 
 Listeners.action.onClicked.add(async () => {
@@ -46,4 +46,4 @@ async function setup() {
 
 Listeners.commands.onChanged.add(updateActionTitle);
 
-Listeners.onExtensionStart.add(setup);
+Listeners.extension.onStart.add(setup);

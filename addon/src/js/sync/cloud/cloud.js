@@ -4,7 +4,7 @@ import * as Constants from '/js/constants.js';
 import * as Containers from '/js/containers.js';
 import * as Tabs from '/js/tabs.js';
 import * as Groups from '/js/groups.js';
-import * as Management from '/js/management.js';
+import * as Extensions from '/js/extensions.js';
 import * as Utils from '/js/utils.js';
 import Lang from '/js/lang.js';
 import JSON from '/js/json.js';
@@ -321,7 +321,7 @@ async function syncGroups(localData, cloudData, sourceOfTruth, changes) {
 
     for (const group of localGroups) {
         if (!group.isArchive) {
-            Management.replaceMozExtensionTabUrls(group.tabs, 'id');
+            Extensions.tabsToId(group.tabs);
         }
     }
 
@@ -334,7 +334,7 @@ async function syncGroups(localData, cloudData, sourceOfTruth, changes) {
         }
     }
 
-    const hasSomeTreeTabsExtension = Constants.TREE_TABS_EXTENSIONS.some(id => Management.isEnabled(id));
+    const hasSomeTreeTabsExtension = Extensions.hasTreeTabs();
 
     function prepareForSaveTabs(tabs, prepareFor, groupIsArchive) {
         if (prepareFor !== LOCAL && prepareFor !== CLOUD) throw new Error('invalid "prepareFor" argument');
@@ -623,7 +623,7 @@ async function syncGroups(localData, cloudData, sourceOfTruth, changes) {
 
     for (const group of resultLocalGroups) {
         if (!group.isArchive) {
-            Management.replaceMozExtensionTabUrls(group.tabs, 'uuid');
+            Extensions.tabsToUUID(group.tabs);
         }
     }
 

@@ -1,6 +1,6 @@
 
 import Listeners, {getExtensionStartTime} from '/js/listeners.js\
-?onExtensionStart\
+?extension.onStart\
 &tabs.onActivated\
 &tabs.onCreated\
 &tabs.onUpdated=[{"properties":["title","status","favIconUrl","hidden","pinned","discarded","audible"]}]\
@@ -38,7 +38,7 @@ import {
     objToNativeError
 } from '/js/logger-utils.js';
 import * as Utils from '/js/utils.js';
-import Notification from '/js/notification.js?addListeners';
+import Notification from '/js/notification.js?add-listeners';
 import JSON from '/js/json.js';
 import BatchProcessor from '/js/batch-processor.js';
 import Lang from '/js/lang.js';
@@ -53,7 +53,7 @@ import * as MenusMain from '/js/menus-main.js';
 import * as Groups from '/js/groups.js';
 import * as Tabs from '/js/tabs.js';
 import * as Windows from '/js/windows.js';
-import * as Management from '/js/management.js';
+import * as Extensions from '/js/extensions.js?auto-detect-conflicted';
 import * as Bookmarks from '/js/bookmarks.js';
 import * as Permissions from '/js/permissions.js';
 import * as BrowserSettings from '/js/browser-settings.js';
@@ -141,7 +141,7 @@ function sendExternalMessage(...args) {
     const message = Messages.normalizeSendData(...args);
 
     for (const [exId, params] of Object.entries(Constants.EXTENSIONS_WHITE_LIST)) {
-        if (params.postActions?.includes(message.action) && Management.isEnabled(exId)) {
+        if (params.postActions?.includes(message.action) && Extensions.isEnabled(exId)) {
             Messages.sendExternalMessage(exId, message);
         }
     }
@@ -1117,7 +1117,8 @@ const onBeforeTabRequest = catchFunc(async function onBeforeTabRequest({tabId, u
         return {};
     }
 
-    const originExt = Management.getExtensionByUUID(Management.extractUUID(originUrl)) || {};
+    const originExt = Extensions.getByUUID(Extensions.extractUUID(originUrl));
+    const originExtEnabled = originExt && Extensions.isEnabled(originExt.id);
 
     function getNewAddonTabUrl(asInfo) {
         const params = {
@@ -1135,7 +1136,7 @@ const onBeforeTabRequest = catchFunc(async function onBeforeTabRequest({tabId, u
         return Utils.setUrlSearchParams(Constants.PAGES.HELP.OPEN_IN_CONTAINER, params);
     }
 
-    if (Constants.CONFLICTED_EXTENSIONS_FOR_REOPEN_TAB_IN_CONTAINER.includes(originExt.id) && originExt.enabled) {
+    if (originExtEnabled && Constants.CONFLICTED_EXTENSIONS_FOR_REOPEN_TAB_IN_CONTAINER.includes(originExt.id)) {
         let showNotif = storage.ignoreExtensionsForReopenTabInContainer ?? 0;
 
         if (showNotif < 3) {
@@ -1171,8 +1172,8 @@ const onBeforeTabRequest = catchFunc(async function onBeforeTabRequest({tabId, u
         if (originUrl.startsWith('moz-extension')) {
             if (tab.hidden) {
                 //
-            } else {
-                if (!ignoreExtForReopenContainer.has(originExt.id) && originExt.enabled) {
+            } else if (originExtEnabled) {
+                if (!ignoreExtForReopenContainer.has(originExt.id)) {
                     newTabParams.active = true;
                     newTabParams.url = getNewAddonTabUrl();
                 }
@@ -1301,6 +1302,8 @@ function removeEvents() {
     Notification.removeListeners();
     Menus.removeListeners();
     MenusMain.removeListeners();
+
+    Extensions.removeListeners();
 
     removeListenerOnBeforeRequest();
 }
@@ -2167,7 +2170,7 @@ async function createBackup(includeTabFavIcons, includeTabThumbnails, isAutoBack
     pinnedTabs = pinnedTabs.filter(tab => Utils.isUrlAllowToCreate(tab.url));
 
     if (pinnedTabs.length) {
-        Management.replaceMozExtensionTabUrls(pinnedTabs, 'id');
+        Extensions.tabsToId(pinnedTabs);
         data.pinnedTabs = Tabs.prepareForSave(pinnedTabs); // TODO remove from all
     }
 
@@ -2175,7 +2178,7 @@ async function createBackup(includeTabFavIcons, includeTabThumbnails, isAutoBack
 
     data.groups = groups.map(group => {
         if (!group.isArchive) {
-            Management.replaceMozExtensionTabUrls(group.tabs, 'id');
+            Extensions.tabsToId(group.tabs);
         }
 
         group.tabs = Tabs.prepareForSave(group.tabs, false, includeTabFavIcons, includeTabThumbnails);
@@ -2306,7 +2309,7 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
         }
 
         if (!newGroup.isArchive) {
-            Management.replaceMozExtensionTabUrls(newGroup.tabs, 'uuid');
+            Extensions.tabsToUUID(newGroup.tabs);
         }
 
         for (const tab of newGroup.tabs) {
@@ -2362,7 +2365,7 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
     if (Array.isArray(data.pinnedTabs)) {
         const currentPinnedTabs = await Tabs.get(null, true, null);
 
-        Management.replaceMozExtensionTabUrls(currentPinnedTabs, 'id');
+        Extensions.tabsToId(currentPinnedTabs);
 
         data.pinnedTabs = data.pinnedTabs.filter(tab => {
             tab.pinned = true;
@@ -2370,7 +2373,7 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
         });
 
         if (data.pinnedTabs.length) {
-            Management.replaceMozExtensionTabUrls(data.pinnedTabs, 'uuid');
+            Extensions.tabsToUUID(data.pinnedTabs);
             await Tabs.createMultiple(data.pinnedTabs, false, false);
         }
     }
@@ -2849,7 +2852,7 @@ async function runMigrateForData(data, applyToCurrentInstance = true) {
                             uuid = urlObj.searchParams.get('uuid');
 
                         if (uuid) {
-                            let ext = Management.getExtensionByUUID(uuid);
+                            let ext = Extensions.getByUUID(uuid);
 
                             if (ext) {
                                 urlObj.searchParams.set('conflictedExtId', ext.id);
@@ -3080,7 +3083,7 @@ async function runMigrateForData(data, applyToCurrentInstance = true) {
                     delete group.bookmarkId;
 
                     if (group.isArchive) {
-                        Management.replaceMozExtensionTabUrls(group.tabs, 'id');
+                        Extensions.tabsToId(group.tabs);
                     }
                 }
 
@@ -3637,11 +3640,6 @@ async function init() {
         await Containers.init(data.temporaryContainerTitle);
         log.log('containers inited');
 
-        await Management.init();
-        log.log('Management inited');
-
-        Management.detectConflictedExtensions();
-
         const resultMigrate = await runMigrateForData(data);
 
         if (resultMigrate.migrated) {
@@ -3783,7 +3781,7 @@ async function setActionToReloadAddon() {
     Listeners.browserAction.onClicked.add(() => browser.runtime.reload());
 }
 
-Listeners.onExtensionStart.add(async () => {
+Listeners.extension.onStart.add(async () => {
     await Browser.action({
         title: '__MSG_loading__',
         badgeBackgroundColor: 'transparent',

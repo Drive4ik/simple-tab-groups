@@ -17,7 +17,7 @@ import Logger, {errorEventHandler} from '/js/logger.js';
 import Notification from '/js/notification.js';
 import Lang from '/js/lang.js?translate-page';
 import * as Utils from '/js/utils.js';
-import * as Management from '/js/management.js';
+import * as Extensions from '/js/extensions.js';
 import * as Containers from '/js/containers.js';
 import * as Bookmarks from '/js/bookmarks.js';
 import * as Storage from '/js/storage.js';
@@ -79,7 +79,6 @@ const {
 });
 
 await Containers.init();
-await Management.init();
 
 export default {
     name: Constants.MODULES.OPTIONS,
@@ -776,10 +775,10 @@ export default {
         },
 
         isInstalledExtension(id) {
-            return Management.isInstalled(id);
+            return Extensions.isInstalled(id);
         },
         isEnabledExtension(id) {
-            return Management.isEnabled(id);
+            return Extensions.isEnabled(id);
         },
         getPluginIcon(id) {
             const firstPart = String(id).slice(0, -3);
@@ -1603,7 +1602,7 @@ export default {
                     <a href="https://addons.mozilla.org/firefox/user/1017663/" target="_blank" class="colon" v-text="lang('plugins')"></a>
                 </div>
 
-                <div v-for="(plugin, uuid) in PLUGINS" :key="uuid" class="field">
+                <div v-for="(plugin, guid) in PLUGINS" :key="guid" class="field">
                     <span class="icon-text">
                         <figure class="icon image is-16x16">
                             <img :src="getPluginIcon(plugin.id)" alt="plugin icon">
@@ -1611,8 +1610,8 @@ export default {
 
                         <a :href="plugin.url" target="_blank" v-text="plugin.title"></a>
 
-                        <figure v-if="isInstalledExtension(uuid)" class="icon image is-16x16">
-                            <img v-if="isEnabledExtension(uuid)" class="has-text-success" src="/icons/check-square.svg" />
+                        <figure v-if="isInstalledExtension(guid)" class="icon image is-16x16">
+                            <img v-if="isEnabledExtension(guid)" class="has-text-success" src="/icons/check-square.svg" />
                             <img v-else src="/icons/square-xmark.svg" />
                         </figure>
                     </span>
