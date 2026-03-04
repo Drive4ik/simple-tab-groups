@@ -129,7 +129,7 @@ Notification.addListeners = addListeners;
 Notification.removeListeners = removeListeners;
 
 async function create({id, iconUrl, title, message}) {
-    // https://developer.mozilla.org/en-US/Add-ons/WebExtensions/API/notifications/NotificationOptions
+    // https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/notifications/NotificationOptions
     // Only 'type', 'iconUrl', 'title', and 'message' are supported.
     return await browser.notifications.create(wrapId(id), {
         type: 'basic',
