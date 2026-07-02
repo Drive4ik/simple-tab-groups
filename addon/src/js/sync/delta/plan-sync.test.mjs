@@ -698,6 +698,43 @@ const REMOTE = 'devRemote';
         Object.keys(plan.optionsToApply).length === 0, JSON.stringify(plan.optionsToApply));
 }
 
+// SECURITY: option.set for local-only keys in a (tampered) pulled log ⇒ never applied
+{
+    const pulledSnapshot = {groups: [], options: {}, watermark: {}};
+    const pulledDeltaLogs = [{deviceId: REMOTE, events: [
+        {seq: 1, ts: 100, op: 'option.set', key: 'syncBackupBeforeApply', value: false},
+        {seq: 2, ts: 101, op: 'option.set', key: 'autoSyncEnable', value: true},
+        {seq: 3, ts: 102, op: 'option.set', key: 'autoBackupEnable', value: false},
+        {seq: 4, ts: 103, op: 'option.set', key: 'colorScheme', value: 'dark'},
+    ]}];
+    const localState = {groups: [], options: {syncBackupBeforeApply: true, autoSyncEnable: false, autoBackupEnable: true, colorScheme: 'light'}};
+
+    const plan = planSync({pulledSnapshot, pulledDeltaLogs, localPendingEvents: [], selfDeviceId: SELF, localState});
+
+    check('optionsToApply drops local-only key syncBackupBeforeApply from tampered log',
+        !('syncBackupBeforeApply' in plan.optionsToApply), JSON.stringify(plan.optionsToApply));
+    check('optionsToApply drops local-only key autoSyncEnable from tampered log',
+        !('autoSyncEnable' in plan.optionsToApply), JSON.stringify(plan.optionsToApply));
+    check('optionsToApply drops local-only key autoBackupEnable from tampered log',
+        !('autoBackupEnable' in plan.optionsToApply), JSON.stringify(plan.optionsToApply));
+    check('optionsToApply still applies synced key alongside dropped ones',
+        plan.optionsToApply.colorScheme === 'dark', JSON.stringify(plan.optionsToApply));
+}
+
+// SECURITY: local-only options carried by the pulled snapshot itself ⇒ never applied
+{
+    const pulledSnapshot = {groups: [], options: {syncProvider: 'evil', autoBackupFilePath: '../../etc', colorScheme: 'dark'}, watermark: {}};
+    const localState = {groups: [], options: {syncProvider: 'github-gist', autoBackupFilePath: 'STG-backups/', colorScheme: 'light'}};
+
+    const plan = planSync({pulledSnapshot, pulledDeltaLogs: [], localPendingEvents: [], selfDeviceId: SELF, localState});
+
+    check('optionsToApply drops local-only keys carried by the snapshot',
+        !('syncProvider' in plan.optionsToApply) && !('autoBackupFilePath' in plan.optionsToApply),
+        JSON.stringify(plan.optionsToApply));
+    check('optionsToApply keeps synced key carried by the snapshot',
+        plan.optionsToApply.colorScheme === 'dark', JSON.stringify(plan.optionsToApply));
+}
+
 // object-valued option diff by content (defaultGroupProps)
 {
     const pulledSnapshot = {groups: [], options: {}, watermark: {}};

@@ -18,7 +18,7 @@
  *
  * ## Purity (hard requirement)
  * No `browser.*`, no network, no `constants.js` import. Only depends on the pure
- * `replay.js`. Inputs are read, never mutated.
+ * `replay.js` and `option-keys.js`. Inputs are read, never mutated.
  *
  * ## Shapes
  *   pulledSnapshot   : { groups: [...], watermark?: { [deviceId]: seq } }
@@ -42,6 +42,7 @@
  */
 
 import {replay} from './replay.js';
+import {isSyncedOptionKey} from './option-keys.js';
 
 /**
  * Deep clone of a plain JSON-ish value (mirrors replay.js to stay obviously pure).
@@ -471,8 +472,9 @@ function computeGroupsOrder(resolvedGroups, localGroups) {
  * never touched (an option is only ever set, never deleted, by sync); a key whose
  * resolved value equals local is omitted (no spurious write / side-effect).
  *
- * The synced-key filtering happens UPSTREAM (capture only logs synced keys → replay only
- * resolves those), so `resolvedOptions` already excludes `sync*`/`autoBackup*`.
+ * The capture side only logs synced keys, but the pulled logs are UNTRUSTED input (a
+ * tampered gist can carry `option.set` for any key), so non-synced keys — `sync*`,
+ * `autoBackup*`, the explicit local-only list — are filtered out here too, never applied.
  *
  * @param {object} resolvedOptions - resolved synced settings from replay.
  * @param {object} localOptions - this device's current values for the same keys.
@@ -484,6 +486,9 @@ function diffOptionsToApply(resolvedOptions, localOptions) {
     const toApply = {};
 
     for (const key of Object.keys(resolved)) {
+        if (!isSyncedOptionKey(key)) {
+            continue;
+        }
         if (JSON.stringify(resolved[key]) !== JSON.stringify(local[key])) {
             toApply[key] = deepClone(resolved[key]);
         }
