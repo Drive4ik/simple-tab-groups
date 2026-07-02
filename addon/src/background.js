@@ -54,6 +54,7 @@ import * as BrowserSettings from '/js/browser-settings.js';
 import * as Cloud from '/js/sync/cloud/cloud.js?can-do-synchronization';
 import {deltaSynchronization, resetSyncState} from '/js/sync/delta/delta-sync.js';
 import * as DeltaCapture from '/js/sync/delta/delta-capture.js';
+import {invalidateCaptureGate} from '/js/sync/delta/capture-gate-state.js';
 
 const storage = localStorage.create(Constants.MODULES.BACKGROUND);
 
@@ -1160,6 +1161,7 @@ async function saveOptions(_options) {
     }
 
     if (optionsKeys.some(key => ['syncEnable', 'autoSyncEnable', 'syncOptionsLocation', 'syncIntervalKey', 'syncIntervalValue'].includes(key))) {
+        invalidateCaptureGate();
         await resetSyncAlarm();
     }
 

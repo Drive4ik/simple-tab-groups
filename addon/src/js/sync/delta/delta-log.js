@@ -60,11 +60,14 @@ import Logger from '/js/logger.js';
 import {getDeviceId} from './device-id.js';
 import {sanitizeGroupIconUrl} from './url-sync.js';
 import DeltaLogStore from './delta-log-store.js';
+import {isCaptureGateOpen} from './capture-gate-state.js';
 
 const logger = new Logger('DeltaLog');
 
 /** Event schema version (the `v` field in the persisted file). */
 export const SCHEMA_VERSION = 1;
+
+export const MAX_EVENTS = 10_000;
 
 /** browser.storage.local key holding this device's event log. */
 const STORAGE_KEY = 'syncDeltaLog';
@@ -105,6 +108,76 @@ let loadingPromise = null;
 
 // serializes persistence so overlapping appends keep order and don't clobber
 let writeChain = Promise.resolve();
+
+let metaPersisted = false;
+
+let overflowHandler = null;
+
+export function onOverflow(handler) {
+    overflowHandler = handler;
+}
+
+function dropOverflow() {
+    if (events.length <= MAX_EVENTS) {
+        return 0;
+    }
+
+    const dropped = events.splice(0, events.length - MAX_EVENTS);
+    return dropped[dropped.length - 1].seq;
+}
+
+function notifyOverflow(droppedThroughSeq) {
+    logger.warn('event cap exceeded: dropped oldest events', {droppedThroughSeq, cap: MAX_EVENTS});
+    try {
+        overflowHandler?.(droppedThroughSeq);
+    } catch (e) {
+        logger.onCatch('onOverflow handler', false)(e);
+    }
+}
+
+let storeOutOfSync = false;
+
+function enqueueWrite(operation) {
+    const write = writeChain.then(async () => {
+        if (storeOutOfSync) {
+            await DeltaLogStore.replaceEvents(events);
+            storeOutOfSync = false;
+        }
+        return operation();
+    });
+    writeChain = write.then(() => {}, () => {
+        storeOutOfSync = true;
+    });
+    return write;
+}
+
+function currentMeta() {
+    return {v: SCHEMA_VERSION, deviceId: getDeviceId()};
+}
+
+function persistAppended(newEvents) {
+    const droppedThroughSeq = dropOverflow();
+    const eventsToPut = droppedThroughSeq
+        ? newEvents.filter(event => event.seq > droppedThroughSeq)
+        : newEvents;
+
+    const write = enqueueWrite(async () => {
+        if (!metaPersisted) {
+            await DeltaLogStore.saveMeta(currentMeta());
+            metaPersisted = true;
+        }
+        await DeltaLogStore.putEvents(eventsToPut);
+        if (droppedThroughSeq) {
+            await DeltaLogStore.deleteUpTo(droppedThroughSeq);
+        }
+    });
+
+    if (droppedThroughSeq) {
+        notifyOverflow(droppedThroughSeq);
+    }
+
+    return write;
+}
 
 function stripHistoricalTabFavicon(tabRecord) {
     if (tabRecord && typeof tabRecord === 'object' && Object.hasOwn(tabRecord, 'favIconUrl')) {
@@ -172,17 +245,18 @@ function stripEventBloat(event) {
  */
 function ensureLoaded() {
     return loadingPromise ??= (async () => {
-        const fromIdb = await DeltaLogStore.load();
+        const {meta, events: storedEvents} = await DeltaLogStore.load();
+        metaPersisted = Boolean(meta);
 
-        let migratedFromStorageLocal = false;
-        let log = fromIdb;
-        if (!log) {
+        let legacyLog = null;
+        if (!meta && storedEvents.length === 0) {
             const stored = await browser.storage.local.get(STORAGE_KEY);
-            log = stored[STORAGE_KEY];
-            migratedFromStorageLocal = Boolean(log);
+            legacyLog = stored[STORAGE_KEY] ?? null;
         }
 
-        events = Array.isArray(log?.events) ? log.events : [];
+        events = legacyLog
+            ? (Array.isArray(legacyLog.events) ? legacyLog.events : [])
+            : storedEvents;
         lastSeq = events.length ? events[events.length - 1].seq : 0;
 
         let changed = false;
@@ -192,33 +266,38 @@ function ensureLoaded() {
             }
         }
 
-        if (migratedFromStorageLocal) {
+        const droppedThroughSeq = dropOverflow();
+
+        if (legacyLog) {
             logger.info('migrated delta log from storage.local to IndexedDB', {events: events.length});
-            await persist();
+            await enqueueWrite(async () => {
+                await DeltaLogStore.saveMeta(currentMeta());
+                metaPersisted = true;
+                await DeltaLogStore.replaceEvents(events);
+            });
             await browser.storage.local.remove(STORAGE_KEY);
-        } else if (changed) {
-            logger.info('migrated stored delta log: stripped historical favicons/thumbnails/icons', {events: events.length});
-            await persist();
+        } else if (changed || droppedThroughSeq) {
+            if (changed) {
+                logger.info('migrated stored delta log: stripped historical favicons/thumbnails/icons', {events: events.length});
+            }
+            await enqueueWrite(async () => {
+                if (droppedThroughSeq) {
+                    await DeltaLogStore.deleteUpTo(droppedThroughSeq);
+                }
+                if (changed) {
+                    await DeltaLogStore.putEvents(events);
+                }
+            });
+        }
+
+        if (droppedThroughSeq) {
+            notifyOverflow(droppedThroughSeq);
         }
     })().catch(err => {
         // let a later first touch retry instead of permanently caching the rejection.
         loadingPromise = null;
         throw err;
     });
-}
-
-/**
- * Persist the current in-memory log. Serialized through `writeChain`.
- * @returns {Promise<void>}
- */
-function persist() {
-    writeChain = writeChain.then(() => DeltaLogStore.save({
-        v: SCHEMA_VERSION,
-        deviceId: getDeviceId(),
-        events,
-    }));
-
-    return writeChain;
 }
 
 /**
@@ -236,6 +315,10 @@ export async function append(op, payload = {}) {
         return;
     }
 
+    if (!await isCaptureGateOpen()) {
+        return;
+    }
+
     await ensureLoaded();
 
     const event = {
@@ -247,7 +330,7 @@ export async function append(op, payload = {}) {
 
     events.push(event);
 
-    await persist();
+    await persistAppended([event]);
 
     return event;
 }
@@ -262,6 +345,10 @@ export async function append(op, payload = {}) {
  */
 export async function appendMany(items) {
     if (!Array.isArray(items) || items.length === 0) {
+        return [];
+    }
+
+    if (!await isCaptureGateOpen()) {
         return [];
     }
 
@@ -286,7 +373,7 @@ export async function appendMany(items) {
     }
 
     if (appended.length) {
-        await persist();
+        await persistAppended(appended);
     }
 
     return appended;
@@ -325,7 +412,7 @@ export async function getEventsSince(seq) {
 export async function clearUpTo(seq) {
     await ensureLoaded();
     events = events.filter(event => event.seq > seq);
-    await persist();
+    await enqueueWrite(() => DeltaLogStore.deleteUpTo(seq));
 }
 
 /**
@@ -355,7 +442,7 @@ export async function clear() {
     // touch re-run the memoized hydration cleanly instead of being short-circuited by the
     // already-resolved promise from before the reset.
     loadingPromise = null;
-    await persist();
+    await enqueueWrite(() => DeltaLogStore.replaceEvents([]));
 }
 
 /**
@@ -407,6 +494,7 @@ export async function fastForwardSeqsAbove(minSeq) {
     }
     lastSeq += offset;
 
-    await persist();
+    const shifted = events.slice();
+    await enqueueWrite(() => DeltaLogStore.replaceEvents(shifted));
     return true;
 }

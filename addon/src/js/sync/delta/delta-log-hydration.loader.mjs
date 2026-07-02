@@ -23,7 +23,7 @@ const STUBS = {
     `,
     'stg:logger': `
         export default function Logger() {
-            return { info() {}, log() {}, warn() {}, error() {} };
+            return { info() {}, log() {}, warn() {}, error() {}, onCatch() { return () => {}; } };
         }
     `,
     'stg:device-id': `
@@ -33,10 +33,17 @@ const STUBS = {
     `,
     'stg:delta-log-store': `
         function idb() { return globalThis.__deltaLogIdb; }
-        async function load() { return idb().load(); }
-        async function save(record) { return idb().save(record); }
-        async function remove() { return idb().remove(); }
-        export default { load, save, remove };
+        export default {
+            load: (...args) => idb().load(...args),
+            saveMeta: (...args) => idb().saveMeta(...args),
+            putEvents: (...args) => idb().putEvents(...args),
+            deleteUpTo: (...args) => idb().deleteUpTo(...args),
+            replaceEvents: (...args) => idb().replaceEvents(...args),
+        };
+    `,
+    'stg:capture-gate-state': `
+        export async function isCaptureGateOpen() { return globalThis.__captureGateOpen ?? true; }
+        export function invalidateCaptureGate() {}
     `,
 };
 
@@ -46,6 +53,7 @@ const SPECIFIER_TO_STUB = {
     '/js/logger.js': 'stg:logger',
     './device-id.js': 'stg:device-id',
     './delta-log-store.js': 'stg:delta-log-store',
+    './capture-gate-state.js': 'stg:capture-gate-state',
 };
 
 export async function resolve(specifier, context, nextResolve) {

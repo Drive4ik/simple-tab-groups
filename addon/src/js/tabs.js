@@ -1310,14 +1310,15 @@ export async function move(tabIds, groupId, params = {}) {
         // grouped tab's only other route into sync is the bootstrap snapshot — and if that
         // snapshot misses it (unloaded group, capture timing) the tab silently fails to
         // replicate, while a group-pinned tab survives because setTabGroupPinned emits its
-        // own explicit delta. Mirror that here: emit an explicit tab.add for each moved
-        // grouped tab so it has a snapshot-independent replication route, exactly like
-        // pinned tabs. DeltaCapture.tabAdded self-suppresses during sync-apply (isApplying)
-        // so the apply path that calls move() never recurses, gates on the syncable
-        // allow-list, and is idempotent w.r.t. bootstrap (once the uid is logged, bootstrap
-        // won't double-add it). The groupId session value is committed above, so tabAdded
-        // (which reads Cache.getTabGroup) sees the tab as grouped. Best-effort, never blocks.
-        await Promise.all(tabs.map(tab => DeltaCapture.tabAdded(tab)));
+        // own explicit delta. Mirror that here: emit an explicit tab.add for the moved
+        // grouped tabs (one batched append for the whole move) so they have a
+        // snapshot-independent replication route, exactly like pinned tabs.
+        // DeltaCapture.tabsAdded self-suppresses during sync-apply (isApplying) so the
+        // apply path that calls move() never recurses, gates on the syncable allow-list,
+        // and is idempotent w.r.t. bootstrap (once the uid is logged, bootstrap won't
+        // double-add it). The groupId session value is committed above, so tabsAdded
+        // (which reads Cache.getTabGroup) sees the tabs as grouped. Best-effort, never blocks.
+        await DeltaCapture.tabsAdded(tabs);
 
         Groups.sendUpdatedAll();
 
