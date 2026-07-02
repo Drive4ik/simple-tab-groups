@@ -449,10 +449,15 @@ async function applyBrowserOps(browserOps, resolvedSnapshot) {
                 }
             }
 
+            const archiveTransitions = [];
             for (const props of browserOps.groupsToUpdate) {
                 const existing = byId.get(props.id);
                 if (existing) {
-                    Object.assign(existing, props);
+                    const {props: plainProps, archiveTransition} = extractArchiveTransition(existing.isArchive, props);
+                    Object.assign(existing, plainProps);
+                    if (archiveTransition !== null) {
+                        archiveTransitions.push({groupId: existing.id, isArchive: archiveTransition});
+                    }
                 }
             }
 
@@ -475,6 +480,14 @@ async function applyBrowserOps(browserOps, resolvedSnapshot) {
             }
 
             await Groups.save(nextGroups);
+
+            for (const {groupId, isArchive} of archiveTransitions) {
+                if (removeIds.has(groupId)) {
+                    continue;
+                }
+                await Groups.setArchiveStateWhileHoldingLock(groupId, isArchive)
+                    .catch(log.onCatch(['cant apply archive state', groupId], false));
+            }
             endPhase();
         }
 
@@ -614,23 +627,16 @@ async function applyBrowserOps(browserOps, resolvedSnapshot) {
         }
         endCreatePhase?.();
 
-        // --- tabs move: resolve live tab ids by uid, move with skipTrackingFlag
         if (browserOps.tabsToMove.length) {
             const endPhase = beginApplyPhase('tabs-move', log);
-            const liveByUid = await buildLiveTabIndexByUid();
+            const liveByUid = await buildLiveTabRecordByUid();
 
             for (const move of browserOps.tabsToMove) {
-                const tabId = liveByUid.get(move.uid);
-                if (tabId == null) {
-                    continue; // tab not live (resurrected ones surface as create, not move)
+                const liveTab = liveByUid.get(move.uid);
+                if (liveTab == null) {
+                    continue;
                 }
-                const windowId = Cache.getWindowId(move.target?.groupId);
-                const moveProps = {index: move.target?.index};
-                if (Number.isFinite(windowId)) {
-                    moveProps.windowId = windowId;
-                }
-                await Tabs.moveNative([{id: tabId}], moveProps, true)
-                    .catch(log.onCatch(['cant move tab', move.uid], false));
+                await applyTabMove(liveTab, move.target || {}, log);
             }
             endPhase();
         }
@@ -1331,6 +1337,37 @@ async function buildLiveTabRecordByUid() {
     return byUid;
 }
 
+async function applyTabMove(liveTab, target, log) {
+    const groupId = target.groupId;
+    const destinationWindowId = groupId != null ? Cache.getWindowId(groupId) : null;
+    const groupChanged = groupId != null && Cache.getTabGroup(liveTab.id) !== groupId;
+
+    if (!groupChanged) {
+        const moveProps = {index: target.index};
+        if (Number.isFinite(destinationWindowId)) {
+            moveProps.windowId = destinationWindowId;
+        }
+        await Tabs.moveNative([{id: liveTab.id}], moveProps, true)
+            .catch(log.onCatch(['cant move tab', liveTab.id], false));
+        return;
+    }
+
+    if (Number.isFinite(destinationWindowId)) {
+        await Tabs.moveNative([{id: liveTab.id}], {index: target.index, windowId: destinationWindowId}, true)
+            .catch(log.onCatch(['cant move tab', liveTab.id], false));
+        if (liveTab.hidden) {
+            await Tabs.show([{id: liveTab.id}], true)
+                .catch(log.onCatch(['cant show moved tab', liveTab.id], false));
+        }
+    } else if (!liveTab.hidden) {
+        await Tabs.hide([{id: liveTab.id}], true)
+            .catch(log.onCatch(['cant hide moved tab', liveTab.id], false));
+    }
+
+    await Cache.setTabGroup(liveTab.id, groupId)
+        .catch(log.onCatch(['cant set moved tab group', liveTab.id], false));
+}
+
 /**
  * Apply ONE `tabsToUpdate` entry's content changes to a live tab through the SAME
  * mechanism the create path uses (Cache session values for STG-display fields; a guarded
@@ -1519,26 +1556,42 @@ export async function resetSyncState() {
         return {ok: false, inProgress: true};
     }
 
+    inProgress = true;
+
     const log = logger.start(resetSyncState);
 
     const selfDeviceId = getDeviceId();
 
-    delete storage[baselineKey(selfDeviceId)];
-    delete storage[lastPushedSeqKey(selfDeviceId)];
-    delete storage[watermarkKey(selfDeviceId)];
-    // a hard reset clears the whole local log, so any deferred-truncation marker (a seq into
-    // that log) is moot — drop it so a stale seq can't trim the post-reset re-issued log.
-    delete storage[pendingTruncateKey(selfDeviceId)];
+    try {
+        storage[resetPendingKey(selfDeviceId)] = '1';
 
-    await DeltaLog.clear();
+        delete storage[baselineKey(selfDeviceId)];
+        delete storage[lastPushedSeqKey(selfDeviceId)];
+        delete storage[watermarkKey(selfDeviceId)];
+        delete storage[pendingTruncateKey(selfDeviceId)];
 
-    // arm the E2 reconciliation for the next sync (see the doc-comment above and the
-    // RESET_PENDING_PREFIX flag handling in deltaSynchronization).
-    storage[resetPendingKey(selfDeviceId)] = '1';
+        await DeltaLog.clear();
 
-    log.stop('reset local delta-sync state (cloud untouched)', {selfDeviceId});
+        log.stop('reset local delta-sync state (cloud untouched)', {selfDeviceId});
 
-    return {ok: true};
+        return {ok: true};
+    } finally {
+        inProgress = false;
+    }
+}
+
+export function extractArchiveTransition(currentIsArchive, props) {
+    if (!props || !Object.hasOwn(props, 'isArchive')) {
+        return {props, archiveTransition: null};
+    }
+
+    const {isArchive, ...plainProps} = props;
+
+    if (Boolean(isArchive) === Boolean(currentIsArchive)) {
+        return {props, archiveTransition: null};
+    }
+
+    return {props: plainProps, archiveTransition: Boolean(isArchive)};
 }
 
 /**
@@ -1767,12 +1820,10 @@ async function pushLocalPendingOnly(Cloud, selfDeviceId, localPendingEvents, las
     // The full self delta file = the entire local log (cloud-self == last-pushed under the
     // unchanged precondition, so cloud-self + pending == all local events). Map outbound
     // container ids to portable keys exactly as the full path does for the self file.
-    // DEEP-CLONE first: DeltaLog.getEvents() returns the in-memory event OBJECTS (only the
-    // array is copied), and mapEventContainers mutates cookieStoreId IN PLACE — writing the
-    // portable key back into the live local log would corrupt the next cycle's outbound
-    // mapping (and persist a portable id locally). Cloning isolates this round's push.
+    // DeltaLog.getEvents() returns deep clones, so the in-place mapping below can never
+    // write portable keys back into the live local log.
     const {mapToPortable} = buildOutboundContainerMapping(null);
-    const allEvents = structuredClone(await DeltaLog.getEvents());
+    const allEvents = await DeltaLog.getEvents();
     for (const event of allEvents) {
         mapEventContainers(event, mapToPortable);
     }
@@ -2141,22 +2192,22 @@ export async function deltaSynchronization() {
             },
         });
 
-        if (applyOutcome.deferred) {
-            // user is mutating → we yielded this cycle WITHOUT applying or pushing. Reschedule
-            // soon and exit cleanly (a deferral is NOT an error; the next cycle re-pulls and
-            // applies once the user's burst settles). No watermark/baseline write happened.
-            log.info('apply DEFERRED: user is mutating groups/tabs; rescheduling sync soon', {
+        if (applyOutcome.deferred || applyOutcome.watchdog) {
+            log.info('apply did not complete this cycle: skipping push/watermark/baseline; rescheduling sync soon', {
+                deferred: applyOutcome.deferred === true,
+                watchdog: applyOutcome.watchdog === true,
                 userActive: isUserActive(),
             });
             await rescheduleSoonAfterDefer(log);
 
             syncResult.ok = true;
-            syncResult.deferred = true;
+            syncResult.deferred = applyOutcome.deferred === true;
+            syncResult.watchdog = applyOutcome.watchdog === true;
             syncResult.progress = lastProgress;
             syncResult.changes = {local: false, cloud: false};
 
             send('sync-end', syncResult);
-            log.stop('deferred to user');
+            log.stop(applyOutcome.watchdog ? 'apply watchdog tripped: no push this cycle' : 'deferred to user');
             return syncResult;
         }
 

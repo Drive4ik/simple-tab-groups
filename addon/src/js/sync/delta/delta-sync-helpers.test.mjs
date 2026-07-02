@@ -525,6 +525,48 @@ function fastForwardSeqsAbove(logState, minSeq) {
 }
 
 // ---------------------------------------------------------------------------
+// extractArchiveTransition: copy kept identical to delta-sync.js (same convention as
+// buildLocalState above). An isArchive flip must NOT be blind-assigned + saved (Storage.set
+// wipes a non-archived group's stored tabs), so the apply splits it out and routes it
+// through the real archive machinery; plain prop updates stay as-is.
+// ---------------------------------------------------------------------------
+function extractArchiveTransition(currentIsArchive, props) {
+    if (!props || !Object.hasOwn(props, 'isArchive')) {
+        return {props, archiveTransition: null};
+    }
+
+    const {isArchive, ...plainProps} = props;
+
+    if (Boolean(isArchive) === Boolean(currentIsArchive)) {
+        return {props, archiveTransition: null};
+    }
+
+    return {props: plainProps, archiveTransition: Boolean(isArchive)};
+}
+
+{
+    const flip = extractArchiveTransition(false, {id: 'g1', title: 'T', isArchive: true});
+    check('archive transition detected on false -> true', flip.archiveTransition === true);
+    check('transition strips isArchive from the plain props', !Object.hasOwn(flip.props, 'isArchive') && flip.props.title === 'T');
+
+    const unflip = extractArchiveTransition(true, {id: 'g1', isArchive: false});
+    check('archive transition detected on true -> false', unflip.archiveTransition === false);
+    check('unarchive transition also strips isArchive', !Object.hasOwn(unflip.props, 'isArchive'));
+
+    const same = extractArchiveTransition(true, {id: 'g1', isArchive: true, title: 'X'});
+    check('no transition when isArchive is unchanged', same.archiveTransition === null);
+    check('unchanged isArchive keeps the full props', same.props.isArchive === true && same.props.title === 'X');
+
+    const absent = extractArchiveTransition(false, {id: 'g1', title: 'X'});
+    check('no transition when the update carries no isArchive', absent.archiveTransition === null && absent.props.title === 'X');
+
+    const coerced = extractArchiveTransition(undefined, {id: 'g1', isArchive: false});
+    check('undefined current and explicit false compare equal (no spurious toggle)', coerced.archiveTransition === null);
+
+    check('null props never crash', extractArchiveTransition(false, null).archiveTransition === null);
+}
+
+// ---------------------------------------------------------------------------
 console.log(`\n${passed} passed, ${failures.length} failed`);
 if (failures.length) {
     process.exit(1);

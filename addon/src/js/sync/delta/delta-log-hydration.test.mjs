@@ -442,6 +442,74 @@ async function freshLog({idbRecord, storageLocal = {}} = {}) {
         `saveCallCount=${idb2.saveCallCount}`);
 }
 
+{
+    const oversizedIcon = 'data:image/png;base64,' + 'A'.repeat(60000);
+    const idbRecord = {
+        v: 1,
+        deviceId: 'test-device',
+        events: [
+            {seq: 1, ts: 1, op: 'group.modify', group: {id: 'g1', title: 'G1', iconUrl: oversizedIcon, tabs: [
+                {uid: 't1', url: 'https://a', title: 'A', favIconUrl: 'data:image/png;base64,AAAA', thumbnail: 'data:image/jpeg;base64,BBBB'},
+                {uid: 't2', url: 'https://b', title: 'B', favIconUrl: 'https://b/favicon.ico'},
+            ]}},
+            {seq: 2, ts: 2, op: 'group.add', group: {id: 'g2', title: 'G2', iconUrl: 'data:image/png;base64,small', tabs: []}},
+        ],
+    };
+    const {idb, mod} = await freshLog({idbRecord});
+
+    const p = mod.getEvents();
+    await Promise.resolve();
+    idb.releaseLoads();
+    const events = await p;
+
+    const migrated = events[0].group;
+    check('migration strips group-event tab favicons', migrated.tabs.every(t => !Object.hasOwn(t, 'favIconUrl')),
+        JSON.stringify(migrated.tabs));
+    check('migration strips group-event tab thumbnails', migrated.tabs.every(t => !Object.hasOwn(t, 'thumbnail')),
+        JSON.stringify(migrated.tabs));
+    check('migration drops an oversized group iconUrl', !Object.hasOwn(migrated, 'iconUrl'),
+        JSON.stringify(Object.keys(migrated)));
+    check('migration keeps a small group iconUrl', events[1].group.iconUrl === 'data:image/png;base64,small');
+    check('migration keeps group identity fields', migrated.id === 'g1' && migrated.title === 'G1' && migrated.tabs[0].url === 'https://a');
+    check('group-event migration rewrites the log exactly once', idb.saveCallCount === 1,
+        `saveCallCount=${idb.saveCallCount}`);
+
+    const {idb: idb2, mod: mod2} = await freshLog({idbRecord: idb.record});
+    const p2 = mod2.getEvents();
+    await Promise.resolve();
+    idb2.releaseLoads();
+    await p2;
+    check('group-event migration is idempotent (no re-save on a clean log)', idb2.saveCallCount === 0,
+        `saveCallCount=${idb2.saveCallCount}`);
+}
+
+{
+    const {idb, mod} = await freshLog();
+
+    const p = mod.append(mod.OPS.TAB_ADD, {groupId: 1, tab: {uid: 't1', url: 'https://a', title: 'A', cookieStoreId: 'firefox-container-5'}});
+    await Promise.resolve();
+    idb.releaseLoads();
+    await p;
+
+    const [pending] = await mod.getEventsSince(0);
+    pending.tab.cookieStoreId = 'Workbluebriefcase';
+    pending.tab.url = 'mutated';
+
+    const [rereadSince] = await mod.getEventsSince(0);
+    check('getEventsSince returns clones: caller mutation never leaks into the log',
+        rereadSince.tab.cookieStoreId === 'firefox-container-5' && rereadSince.tab.url === 'https://a',
+        JSON.stringify(rereadSince.tab));
+
+    const [copy] = await mod.getEvents();
+    copy.tab.cookieStoreId = 'Shoppingredcart';
+    const [reread] = await mod.getEvents();
+    check('getEvents returns clones: caller mutation never leaks into the log',
+        reread.tab.cookieStoreId === 'firefox-container-5', JSON.stringify(reread.tab));
+
+    check('a re-read after outbound container mapping still holds the LOCAL cookieStoreId (no double-mapping)',
+        rereadSince.tab.cookieStoreId.startsWith('firefox-container-'), rereadSince.tab.cookieStoreId);
+}
+
 // ---------------------------------------------------------------------------
 console.log(`\n${passed} passed, ${failures.length} failed`);
 if (failures.length) {

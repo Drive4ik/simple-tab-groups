@@ -201,6 +201,19 @@ const isPc2Temp = () => false;
     check('event: non-container option.set untouched', otherOpt.value === true);
 }
 
+{
+    const registry = {};
+    const out = makeOutboundMapper(PC1_CONTAINERS, registry, isDefault, isPc1Temp);
+
+    const event = {op: 'tab.add', groupId: 'g', tab: {uid: 't', cookieStoreId: 'firefox-container-1'}};
+    mapEventContainers(event, out);
+    check('double-map hazard: first outbound pass yields the portable key', event.tab.cookieStoreId === 'Workbluebriefcase');
+
+    mapEventContainers(event, out);
+    check('double-map hazard: re-mapping an already-portable key silently degrades it to DEFAULT_MARKER',
+        event.tab.cookieStoreId === DEFAULT_MARKER, event.tab.cookieStoreId);
+}
+
 // ---------------------------------------------------------------------------
 console.log(`\n${passed} passed, ${failures.length} failed`);
 if (failures.length) {

@@ -58,6 +58,7 @@ import '/js/prefixed-storage.js';
 import * as Utils from '/js/utils.js';
 import Logger from '/js/logger.js';
 import {getDeviceId} from './device-id.js';
+import {sanitizeGroupIconUrl} from './url-sync.js';
 import DeltaLogStore from './delta-log-store.js';
 
 const logger = new Logger('DeltaLog');
@@ -105,30 +106,43 @@ let loadingPromise = null;
 // serializes persistence so overlapping appends keep order and don't clobber
 let writeChain = Promise.resolve();
 
-/**
- * Strip the favicon from the tab record a HISTORICAL event carries, in place (migration).
- *
- * Recovery for the multi-GB `syncDeltaLog` bloat: a single favicon-only event was duplicated
- * across hundreds of thousands of already-stored events. Those historical favicons are
- * REDUNDANT — the snapshot keeps each tab's latest favicon and the live tabs re-capture it
- * within a sync or two — so on hydrate we drop EVERY event's `favIconUrl` unconditionally
- * (not just data:/oversized ones). This collapses the existing bloat without a manual reset,
- * favicons re-establish from live state, and it's idempotent: a log with no favicons left
- * triggers no rewrite. Favicons are cosmetic, so identity (url/title/group/pinned) is
- * untouched. Going forward there are NO favicon-only events (the favicon just rides along as
- * one field of a record written for a real change), so the log stays small.
- *
- * @param {object} event - a single delta event (mutated in place).
- * @returns {boolean} true if the event was modified.
- */
-function stripEventFavicon(event) {
-    // tab.add / tab.modify / pinned.add / pinned.modify all carry the record under `tab`.
-    const tab = event?.tab;
-    if (tab && typeof tab === 'object' && Object.hasOwn(tab, 'favIconUrl')) {
-        delete tab.favIconUrl;
+function stripHistoricalTabFavicon(tabRecord) {
+    if (tabRecord && typeof tabRecord === 'object' && Object.hasOwn(tabRecord, 'favIconUrl')) {
+        delete tabRecord.favIconUrl;
         return true;
     }
     return false;
+}
+
+function stripHistoricalGroupBloat(group) {
+    if (!group || typeof group !== 'object') {
+        return false;
+    }
+
+    let changed = false;
+
+    if (typeof group.iconUrl === 'string' && sanitizeGroupIconUrl(group.iconUrl) === undefined) {
+        delete group.iconUrl;
+        changed = true;
+    }
+
+    for (const groupTab of Array.isArray(group.tabs) ? group.tabs : []) {
+        if (stripHistoricalTabFavicon(groupTab)) {
+            changed = true;
+        }
+        if (groupTab && typeof groupTab === 'object' && Object.hasOwn(groupTab, 'thumbnail')) {
+            delete groupTab.thumbnail;
+            changed = true;
+        }
+    }
+
+    return changed;
+}
+
+function stripEventBloat(event) {
+    const tabChanged = stripHistoricalTabFavicon(event?.tab);
+    const groupChanged = stripHistoricalGroupBloat(event?.group);
+    return tabChanged || groupChanged;
 }
 
 /**
@@ -171,11 +185,9 @@ function ensureLoaded() {
         events = Array.isArray(log?.events) ? log.events : [];
         lastSeq = events.length ? events[events.length - 1].seq : 0;
 
-        // one-time recovery: strip favicons from already-stored events and rewrite if any were
-        // found. Done after `events`/`lastSeq` are set so persist() writes the cleaned log.
         let changed = false;
         for (const event of events) {
-            if (stripEventFavicon(event)) {
+            if (stripEventBloat(event)) {
                 changed = true;
             }
         }
@@ -185,7 +197,7 @@ function ensureLoaded() {
             await persist();
             await browser.storage.local.remove(STORAGE_KEY);
         } else if (changed) {
-            logger.info('migrated stored delta log: stripped historical favicons', {events: events.length});
+            logger.info('migrated stored delta log: stripped historical favicons/thumbnails/icons', {events: events.length});
             await persist();
         }
     })().catch(err => {
@@ -281,23 +293,26 @@ export async function appendMany(items) {
 }
 
 /**
- * Returns a shallow copy of all events currently in this device's log.
+ * Returns a deep clone of all events currently in this device's log. Callers may
+ * mutate the result freely (e.g. the transport's in-place container mapping)
+ * without corrupting the log state.
  * @returns {Promise<object[]>}
  */
 export async function getEvents() {
     await ensureLoaded();
-    return events.slice();
+    return structuredClone(events);
 }
 
 /**
- * Returns events with `seq` strictly greater than `seq` (in order).
- * Used by the future transport to push only not-yet-synced events.
+ * Returns deep clones of the events with `seq` strictly greater than `seq` (in
+ * order). Used by the transport to push only not-yet-synced events; clones for
+ * the same reason as {@link getEvents}.
  * @param {number} seq
  * @returns {Promise<object[]>}
  */
 export async function getEventsSince(seq) {
     await ensureLoaded();
-    return events.filter(event => event.seq > seq);
+    return structuredClone(events.filter(event => event.seq > seq));
 }
 
 /**
