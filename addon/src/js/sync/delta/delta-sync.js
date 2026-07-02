@@ -614,23 +614,16 @@ async function applyBrowserOps(browserOps, resolvedSnapshot) {
         }
         endCreatePhase?.();
 
-        // --- tabs move: resolve live tab ids by uid, move with skipTrackingFlag
         if (browserOps.tabsToMove.length) {
             const endPhase = beginApplyPhase('tabs-move', log);
-            const liveByUid = await buildLiveTabIndexByUid();
+            const liveByUid = await buildLiveTabRecordByUid();
 
             for (const move of browserOps.tabsToMove) {
-                const tabId = liveByUid.get(move.uid);
-                if (tabId == null) {
-                    continue; // tab not live (resurrected ones surface as create, not move)
+                const liveTab = liveByUid.get(move.uid);
+                if (liveTab == null) {
+                    continue;
                 }
-                const windowId = Cache.getWindowId(move.target?.groupId);
-                const moveProps = {index: move.target?.index};
-                if (Number.isFinite(windowId)) {
-                    moveProps.windowId = windowId;
-                }
-                await Tabs.moveNative([{id: tabId}], moveProps, true)
-                    .catch(log.onCatch(['cant move tab', move.uid], false));
+                await applyTabMove(liveTab, move.target || {}, log);
             }
             endPhase();
         }
@@ -1329,6 +1322,37 @@ async function buildLiveTabRecordByUid() {
         }
     }
     return byUid;
+}
+
+async function applyTabMove(liveTab, target, log) {
+    const groupId = target.groupId;
+    const destinationWindowId = groupId != null ? Cache.getWindowId(groupId) : null;
+    const groupChanged = groupId != null && Cache.getTabGroup(liveTab.id) !== groupId;
+
+    if (!groupChanged) {
+        const moveProps = {index: target.index};
+        if (Number.isFinite(destinationWindowId)) {
+            moveProps.windowId = destinationWindowId;
+        }
+        await Tabs.moveNative([{id: liveTab.id}], moveProps, true)
+            .catch(log.onCatch(['cant move tab', liveTab.id], false));
+        return;
+    }
+
+    if (Number.isFinite(destinationWindowId)) {
+        await Tabs.moveNative([{id: liveTab.id}], {index: target.index, windowId: destinationWindowId}, true)
+            .catch(log.onCatch(['cant move tab', liveTab.id], false));
+        if (liveTab.hidden) {
+            await Tabs.show([{id: liveTab.id}], true)
+                .catch(log.onCatch(['cant show moved tab', liveTab.id], false));
+        }
+    } else if (!liveTab.hidden) {
+        await Tabs.hide([{id: liveTab.id}], true)
+            .catch(log.onCatch(['cant hide moved tab', liveTab.id], false));
+    }
+
+    await Cache.setTabGroup(liveTab.id, groupId)
+        .catch(log.onCatch(['cant set moved tab group', liveTab.id], false));
 }
 
 /**
