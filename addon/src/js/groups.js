@@ -1136,7 +1136,7 @@ export function isLoaded(groupId) {
     return true;
 }
 
-export async function unload(groupId) {
+export async function unload(groupId, ignoreSharing = false) {
     const log = logger.start('unload', groupId);
 
     if (!groupId) {
@@ -1169,8 +1169,14 @@ export async function unload(groupId) {
 
     // group-pinned tabs are currently browser-pinned; exclude them from the
     // microphone/camera guard (we unpin them ourselves before hiding, below).
-    if (group.tabs.some(tab => !isGroupPinned(tab) && Tabs.isCanNotBeHidden(tab))) {
-        Notification('notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera');
+    const sharingTabs = group.tabs.filter(tab => !isGroupPinned(tab) && Tabs.isCanNotBeHidden(tab));
+
+    if (sharingTabs.length && !ignoreSharing) {
+        const titles = sharingTabs.map(tab => Tabs.getTitle(tab, false, 20)).join(', ');
+        Notification(['notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera', titles], {
+            module: ['groups', 'unload', groupId, true],
+            expires: Notification.MAX_EXPIRES,
+        });
         log.stopError('some Tab Can Not Be Hidden');
         return false;
     }
