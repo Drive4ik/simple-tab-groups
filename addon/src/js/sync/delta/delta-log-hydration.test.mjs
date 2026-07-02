@@ -483,6 +483,33 @@ async function freshLog({idbRecord, storageLocal = {}} = {}) {
         `saveCallCount=${idb2.saveCallCount}`);
 }
 
+{
+    const {idb, mod} = await freshLog();
+
+    const p = mod.append(mod.OPS.TAB_ADD, {groupId: 1, tab: {uid: 't1', url: 'https://a', title: 'A', cookieStoreId: 'firefox-container-5'}});
+    await Promise.resolve();
+    idb.releaseLoads();
+    await p;
+
+    const [pending] = await mod.getEventsSince(0);
+    pending.tab.cookieStoreId = 'Workbluebriefcase';
+    pending.tab.url = 'mutated';
+
+    const [rereadSince] = await mod.getEventsSince(0);
+    check('getEventsSince returns clones: caller mutation never leaks into the log',
+        rereadSince.tab.cookieStoreId === 'firefox-container-5' && rereadSince.tab.url === 'https://a',
+        JSON.stringify(rereadSince.tab));
+
+    const [copy] = await mod.getEvents();
+    copy.tab.cookieStoreId = 'Shoppingredcart';
+    const [reread] = await mod.getEvents();
+    check('getEvents returns clones: caller mutation never leaks into the log',
+        reread.tab.cookieStoreId === 'firefox-container-5', JSON.stringify(reread.tab));
+
+    check('a re-read after outbound container mapping still holds the LOCAL cookieStoreId (no double-mapping)',
+        rereadSince.tab.cookieStoreId.startsWith('firefox-container-'), rereadSince.tab.cookieStoreId);
+}
+
 // ---------------------------------------------------------------------------
 console.log(`\n${passed} passed, ${failures.length} failed`);
 if (failures.length) {

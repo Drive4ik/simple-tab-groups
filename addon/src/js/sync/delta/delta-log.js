@@ -293,23 +293,26 @@ export async function appendMany(items) {
 }
 
 /**
- * Returns a shallow copy of all events currently in this device's log.
+ * Returns a deep clone of all events currently in this device's log. Callers may
+ * mutate the result freely (e.g. the transport's in-place container mapping)
+ * without corrupting the log state.
  * @returns {Promise<object[]>}
  */
 export async function getEvents() {
     await ensureLoaded();
-    return events.slice();
+    return structuredClone(events);
 }
 
 /**
- * Returns events with `seq` strictly greater than `seq` (in order).
- * Used by the future transport to push only not-yet-synced events.
+ * Returns deep clones of the events with `seq` strictly greater than `seq` (in
+ * order). Used by the transport to push only not-yet-synced events; clones for
+ * the same reason as {@link getEvents}.
  * @param {number} seq
  * @returns {Promise<object[]>}
  */
 export async function getEventsSince(seq) {
     await ensureLoaded();
-    return events.filter(event => event.seq > seq);
+    return structuredClone(events.filter(event => event.seq > seq));
 }
 
 /**

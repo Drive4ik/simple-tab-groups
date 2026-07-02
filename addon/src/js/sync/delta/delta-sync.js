@@ -1767,12 +1767,10 @@ async function pushLocalPendingOnly(Cloud, selfDeviceId, localPendingEvents, las
     // The full self delta file = the entire local log (cloud-self == last-pushed under the
     // unchanged precondition, so cloud-self + pending == all local events). Map outbound
     // container ids to portable keys exactly as the full path does for the self file.
-    // DEEP-CLONE first: DeltaLog.getEvents() returns the in-memory event OBJECTS (only the
-    // array is copied), and mapEventContainers mutates cookieStoreId IN PLACE — writing the
-    // portable key back into the live local log would corrupt the next cycle's outbound
-    // mapping (and persist a portable id locally). Cloning isolates this round's push.
+    // DeltaLog.getEvents() returns deep clones, so the in-place mapping below can never
+    // write portable keys back into the live local log.
     const {mapToPortable} = buildOutboundContainerMapping(null);
-    const allEvents = structuredClone(await DeltaLog.getEvents());
+    const allEvents = await DeltaLog.getEvents();
     for (const event of allEvents) {
         mapEventContainers(event, mapToPortable);
     }
