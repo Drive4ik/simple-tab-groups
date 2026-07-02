@@ -550,6 +550,48 @@ const TEST_META = {v: 1, deviceId: 'test-device'};
         rereadSince.tab.cookieStoreId.startsWith('firefox-container-'), rereadSince.tab.cookieStoreId);
 }
 
+// --- 10. a failed persist does not poison the write chain -------------------------
+{
+    const {idb, mod} = await freshLog();
+
+    const pWarm = mod.getEvents();
+    await Promise.resolve();
+    await Promise.resolve();
+    idb.releaseLoads();
+    await pWarm;
+
+    let failNextPut = true;
+    const realPutEvents = idb.putEvents.bind(idb);
+    idb.putEvents = async list => {
+        if (failNextPut) {
+            failNextPut = false;
+            idb.putEventsCallCount++;
+            throw new Error('disk full');
+        }
+        return realPutEvents(list);
+    };
+
+    let firstAppendThrew = false;
+    try {
+        await mod.append(mod.OPS.GROUP_ADD, {group: {id: 1, title: 'g1'}});
+    } catch {
+        firstAppendThrew = true;
+    }
+    check('a failed persist surfaces its error to the caller once', firstAppendThrew === true);
+
+    const e2 = await mod.append(mod.OPS.GROUP_ADD, {group: {id: 2, title: 'g2'}});
+    check('the write chain recovers: the next append persists', e2?.seq === 2, `e2=${JSON.stringify(e2)}`);
+
+    const storedSeqs = idb.storedEvents().map(e => e.seq);
+    check('the recovered write resyncs the event that failed to persist',
+        storedSeqs.length === 2 && storedSeqs[0] === 1 && storedSeqs[1] === 2,
+        `storedSeqs=${JSON.stringify(storedSeqs)}`);
+
+    const all = await mod.getEvents();
+    check('the in-memory log kept both events across the failed persist', all.length === 2,
+        `len=${all.length}`);
+}
+
 // ---------------------------------------------------------------------------
 console.log(`\n${passed} passed, ${failures.length} failed`);
 if (failures.length) {

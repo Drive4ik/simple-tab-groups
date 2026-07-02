@@ -108,9 +108,20 @@ let writeChain = Promise.resolve();
 
 let metaPersisted = false;
 
+let storeOutOfSync = false;
+
 function enqueueWrite(operation) {
-    writeChain = writeChain.then(operation);
-    return writeChain;
+    const write = writeChain.then(async () => {
+        if (storeOutOfSync) {
+            await DeltaLogStore.replaceEvents(events);
+            storeOutOfSync = false;
+        }
+        return operation();
+    });
+    writeChain = write.then(() => {}, () => {
+        storeOutOfSync = true;
+    });
+    return write;
 }
 
 function currentMeta() {
