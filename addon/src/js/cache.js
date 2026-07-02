@@ -288,7 +288,8 @@ async function loadTabGroupPinned(id) {
             return tabs[id].groupPinned;
         }
 
-        return tabs[id].groupPinned = await addPromise(tabs[id], browser.sessions.getTabValue(id, GROUP_PINNED_KEY));
+        const groupPinned = await addPromise(tabs[id], browser.sessions.getTabValue(id, GROUP_PINNED_KEY));
+        return tabs[id].groupPinned = groupPinned === true;
     }
 }
 

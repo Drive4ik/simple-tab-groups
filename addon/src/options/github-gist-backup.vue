@@ -6,6 +6,7 @@ import '/js/prefixed-storage.js';
 import * as Constants from '/js/constants.js';
 import Lang from '/js/lang.js';
 import * as Storage from '/js/storage.js';
+import * as Cloud from '/js/sync/cloud/cloud.js';
 import {isReservedFileName} from '/js/sync/delta/layout.js';
 
 import syncAreaMixin from '/js/mixins/sync-area.mixin.js';
@@ -51,7 +52,7 @@ export default {
             this.$watch('syncTabFavIcons', value => Storage.set({syncTabFavIcons: value}));
         });
 
-        this.$on('sync-finish', () => this.area.load(false));
+        this.syncCloudOffListeners.add(Cloud.on('sync-finish', () => this.area.load(false)));
     },
     methods: {
         lang: Lang,
@@ -222,7 +223,7 @@ export default {
                             <span class="is-underline-dotted" v-text="item.committed_at_relative"></span>
                             <span v-text="item.committed_at_time_short"></span>
                             <small v-if="item.change_status?.total" class="brackets-round">
-                                <span class="colon">changes</span>
+                                <span class="colon" v-text="lang('backupChangesLabel')"></span>
                                 <span class="changes" v-text="item.change_status.total"></span>
                             </small>
                         </a>

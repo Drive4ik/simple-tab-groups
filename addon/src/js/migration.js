@@ -846,6 +846,21 @@ migrations.push({
     },
 });
 
+migrations.push({
+    version: '5.5.2',
+    migration(data) {
+        if (Array.isArray(data.contextMenuTab) && !data.contextMenuTab.includes('pin-in-group')) {
+            const moveToGroupIndex = data.contextMenuTab.indexOf('move-tab-to-group');
+
+            if (moveToGroupIndex === -1) {
+                data.contextMenuTab.push('pin-in-group');
+            } else {
+                data.contextMenuTab.splice(moveToGroupIndex, 0, 'pin-in-group');
+            }
+        }
+    },
+});
+
 export default async function(data, applyToCurrentInstance = false) {
     const DATA_VERSION = data?.version;
 

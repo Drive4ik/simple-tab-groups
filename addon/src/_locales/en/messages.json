@@ -1443,6 +1443,10 @@
         "message": "Create backup",
         "description": "Button that pushes the current full state to the cloud as a new gist revision"
     },
+    "backupChangesLabel": {
+        "message": "changes",
+        "description": "Label prefixing the change count of a cloud backup revision"
+    },
     "resetSyncStateButton": {
         "message": "Reset sync state",
         "description": "Reset this device's local sync state (recovery action)"

@@ -413,8 +413,8 @@ async function pinGroupTabs(tabs = [], windowId) {
  *
  * @param {object[]} tabs - the group's tabs being hidden.
  */
-async function unpinGroupTabs(tabs = []) {
-    const pinnedGroupTabs = tabs.filter(isGroupPinned);
+async function unpinGroupTabs(tabs = [], shouldUnpin = isGroupPinned) {
+    const pinnedGroupTabs = tabs.filter(shouldUnpin);
 
     if (!pinnedGroupTabs.length) {
         return; // common case: no-op
@@ -510,13 +510,13 @@ export async function setTabGroupPinned(tabId, groupPinned, targetGroupId) {
             const destinationGroupIsShownInTabWindow = Cache.getWindowGroup(tab.windowId) === groupId;
 
             if (!destinationGroupIsShownInTabWindow) {
-                await unpinGroupTabs([tab]);
+                await unpinGroupTabs([tab], t => t.pinned);
                 await Tabs.hide([tab], true);
             } else if (groupPinned) {
                 const existingPinned = group.tabs.filter(t => t.id !== tabId && isGroupPinned(t));
                 await pinGroupTabs([tab, ...existingPinned], windowId);
             } else {
-                await unpinGroupTabs([tab]);
+                await unpinGroupTabs([tab], t => t.pinned);
                 await pinGroupTabs(group.tabs.filter(isGroupPinned), windowId);
             }
         }
@@ -1136,7 +1136,7 @@ export function isLoaded(groupId) {
     return true;
 }
 
-export async function unload(groupId) {
+export async function unload(groupId, ignoreSharing = false) {
     const log = logger.start('unload', groupId);
 
     if (!groupId) {
@@ -1169,8 +1169,14 @@ export async function unload(groupId) {
 
     // group-pinned tabs are currently browser-pinned; exclude them from the
     // microphone/camera guard (we unpin them ourselves before hiding, below).
-    if (group.tabs.some(tab => !isGroupPinned(tab) && Tabs.isCanNotBeHidden(tab))) {
-        Notification('notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera');
+    const sharingTabs = group.tabs.filter(tab => !isGroupPinned(tab) && Tabs.isCanNotBeHidden(tab));
+
+    if (sharingTabs.length && !ignoreSharing) {
+        const titles = sharingTabs.map(tab => Tabs.getTitle(tab, false, 20)).join(', ');
+        Notification(['notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera', titles], {
+            module: ['groups', 'unload', groupId, true],
+            expires: Notification.MAX_EXPIRES,
+        });
         log.stopError('some Tab Can Not Be Hidden');
         return false;
     }
