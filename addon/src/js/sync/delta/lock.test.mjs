@@ -7,7 +7,7 @@
  *      may-write, who-won, and the stamp shape. Imported + exercised directly.
  *   2. The impure acquire/release PROTOCOL in githubgist.js (which pulls in browser
  *      fetch/localStorage and can't load under node). Exactly as conditional-fetch.test.mjs
- *      does for isUnchangedSince, we re-implement that small control flow here over a mocked
+ *      does for beginSyncCycle, we re-implement that small control flow here over a mocked
  *      provider and pin the contract: acquire when free / not when held-fresh-by-other /
  *      acquire when expired / two racers resolve ONE winner / release clears the lock.
  *
@@ -81,29 +81,35 @@ function check(name, cond, detail) {
 // ===================== impure acquire/release protocol =======================
 // A minimal in-memory model of the gist lock file + the SERVER clock, plus a faithful copy
 // of githubgist.js acquireLock/releaseLock control flow (kept identical: read → canWriteLock
-// → write stamp → confirm re-read → didWinLock; release deletes the file). The confirm
-// "delay" is modeled by an injected hook that lets a test simulate a peer writing in the gap.
+// → write stamp → confirm re-read → didWinLock; a failure AFTER our stamp was written
+// best-effort releases it so a failed confirm can't strand the lock for the whole TTL;
+// release deletes the file). The confirm "delay" is modeled by an injected onConfirmGap hook
+// that lets a test simulate a peer writing in the gap; readConfirm models the confirm
+// re-read and may throw to simulate a transport failure.
 function makeGistLockModel({serverNow}) {
     let lockFile = null; // mirrors the LOCK_FILE_NAME content, or null when absent
 
-    // acquire, parameterized by an onConfirmGap() hook the test uses to inject a racing peer
-    // write between our write and the confirm re-read.
-    const acquireLock = (deviceId, onConfirmGap = () => {}) => {
+    const releaseLock = () => { lockFile = null; };      // delete the lock file (idempotent)
+
+    const acquireLock = (deviceId, {onConfirmGap = () => {}, readConfirm = () => lockFile} = {}) => {
+        let stamped = false;
         try {
             const lock = lockFile;                       // 1. read (refreshes server clock IRL)
             if (!canWriteLock(lock, deviceId, serverNow)) {
                 return false;                            //    held fresh by other ⇒ back off
             }
             lockFile = makeLockStamp(deviceId, serverNow); // 2. write our stamp
+            stamped = true;
             onConfirmGap();                              // (confirm delay; peer may write here)
-            const confirmed = lockFile;                  // 3. re-read
+            const confirmed = readConfirm();             // 3. re-read (may throw)
             return didWinLock(confirmed, deviceId);      //    won iff still ours
         } catch {
+            if (stamped) {
+                releaseLock();                           // never strand our own stamp
+            }
             return false;                                // fail-safe: not acquired
         }
     };
-
-    const releaseLock = () => { lockFile = null; };      // delete the lock file (idempotent)
 
     return {
         acquireLock,
@@ -167,6 +173,21 @@ function makeGistLockModel({serverNow}) {
 
     // after release, a peer can freely acquire
     check('release: a peer acquires the freed lock', g5.acquireLock('C') === true);
+
+    // confirm-read failure AFTER a successful stamp: not acquired AND our stamp is
+    // best-effort released, so peers are not blocked for the whole TTL by a lock
+    // nobody holds.
+    const g6 = makeGistLockModel({serverNow: NOW});
+    const confirmFailed = g6.acquireLock('A', {readConfirm: () => { throw new Error('network down'); }});
+    check('confirm failure: returns not-acquired', confirmFailed === false);
+    check('confirm failure: our own stranded stamp is released', g6.raw === null);
+    check('confirm failure: a peer acquires immediately (no TTL wait)', g6.acquireLock('B') === true);
+
+    // losing the confirm race is NOT a failure: the winner's stamp must stay intact
+    const g7 = makeGistLockModel({serverNow: NOW});
+    const lost = g7.acquireLock('A', {onConfirmGap: () => g7.peerWrite('B')});
+    check('lost race: not acquired', lost === false);
+    check('lost race: the winning peer stamp is left intact (no release)', g7.raw?.deviceId === 'B');
 }
 
 // ============================ summary ========================================
