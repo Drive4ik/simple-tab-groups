@@ -192,3 +192,42 @@ export function sanitizeFavIconUrl(favIconUrl) {
     }
     return favIconUrl;
 }
+
+export function sanitizeGroupIconUrl(iconUrl) {
+    if (typeof iconUrl !== 'string' || !iconUrl) {
+        return undefined;
+    }
+    if (iconUrl.length > MAX_SYNCABLE_FAVICON_LENGTH) {
+        return undefined;
+    }
+    return iconUrl;
+}
+
+export function sanitizeGroupRecordForSync(group) {
+    if (!group || typeof group !== 'object') {
+        return group;
+    }
+
+    const sanitized = structuredClone(group);
+
+    if (typeof sanitized.iconUrl === 'string' && sanitizeGroupIconUrl(sanitized.iconUrl) === undefined) {
+        delete sanitized.iconUrl;
+    }
+
+    for (const tab of Array.isArray(sanitized.tabs) ? sanitized.tabs : []) {
+        if (!tab || typeof tab !== 'object') {
+            continue;
+        }
+        delete tab.thumbnail;
+        if (Object.hasOwn(tab, 'favIconUrl')) {
+            const favIconUrl = sanitizeFavIconUrl(tab.favIconUrl);
+            if (favIconUrl === undefined) {
+                delete tab.favIconUrl;
+            } else {
+                tab.favIconUrl = favIconUrl;
+            }
+        }
+    }
+
+    return sanitized;
+}

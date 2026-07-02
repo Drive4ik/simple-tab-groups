@@ -21,7 +21,7 @@
  * Intentionally NOT matched by eslint (config targets addon/**\/*.js, not .mjs).
  */
 
-import {sanitizeFavIconUrl, MAX_SYNCABLE_FAVICON_LENGTH} from './url-sync.js';
+import {sanitizeFavIconUrl, MAX_SYNCABLE_FAVICON_LENGTH, sanitizeGroupIconUrl, sanitizeGroupRecordForSync} from './url-sync.js';
 
 let passed = 0;
 const failures = [];
@@ -114,6 +114,41 @@ const HUGE_URL_FAVICON = 'https://a/favicon.ico?' + 'A'.repeat(MAX_SYNCABLE_FAVI
     const rec2 = buildTabRecord({...liveTab, title: 'Inbox (4)', favIconUrl: 'https://gmail.com/new.ico'});
     check('a later record carries the NEW current favicon (latest-wins, 1 copy)',
         rec2.favIconUrl === 'https://gmail.com/new.ico');
+}
+
+{
+    const archivedGroup = {
+        id: 'g1',
+        title: 'Archived',
+        isArchive: true,
+        iconUrl: 'data:image/png;base64,' + 'B'.repeat(200),
+        tabs: [
+            {uid: 't1', url: 'https://a', title: 'A', favIconUrl: NORMAL_DATA_FAVICON, thumbnail: 'data:image/jpeg;base64,' + 'C'.repeat(5000)},
+            {uid: 't2', url: 'https://b', title: 'B', favIconUrl: 'https://b/favicon.ico'},
+        ],
+    };
+    const sanitized = sanitizeGroupRecordForSync(archivedGroup);
+
+    check('group record: tab thumbnails stripped', sanitized.tabs.every(t => !Object.hasOwn(t, 'thumbnail')));
+    check('group record: data: tab favicon dropped', !Object.hasOwn(sanitized.tabs[0], 'favIconUrl'));
+    check('group record: url tab favicon kept', sanitized.tabs[1].favIconUrl === 'https://b/favicon.ico');
+    check('group record: small data: group icon kept', sanitized.iconUrl === archivedGroup.iconUrl);
+    check('group record: other props preserved', sanitized.id === 'g1' && sanitized.isArchive === true && sanitized.tabs[0].url === 'https://a');
+    check('group record: source group untouched',
+        Object.hasOwn(archivedGroup.tabs[0], 'thumbnail') && archivedGroup.tabs[0].favIconUrl === NORMAL_DATA_FAVICON);
+
+    const oversizedIconGroup = {id: 'g2', title: 'G2', iconUrl: 'data:image/png;base64,' + 'D'.repeat(MAX_SYNCABLE_FAVICON_LENGTH + 1), tabs: []};
+    check('group record: oversized data: group icon dropped', !Object.hasOwn(sanitizeGroupRecordForSync(oversizedIconGroup), 'iconUrl'));
+
+    const nullIconGroup = {id: 'g3', title: 'G3', iconUrl: null, tabs: []};
+    check('group record: null group icon preserved', sanitizeGroupRecordForSync(nullIconGroup).iconUrl === null);
+}
+
+{
+    check('sanitizeGroupIconUrl keeps a small data: icon', sanitizeGroupIconUrl('data:image/png;base64,AAA') === 'data:image/png;base64,AAA');
+    check('sanitizeGroupIconUrl keeps a small url icon', sanitizeGroupIconUrl('https://a/icon.svg') === 'https://a/icon.svg');
+    check('sanitizeGroupIconUrl drops an oversized icon', sanitizeGroupIconUrl('x'.repeat(MAX_SYNCABLE_FAVICON_LENGTH + 1)) === undefined);
+    check('sanitizeGroupIconUrl drops empty/non-string values', sanitizeGroupIconUrl('') === undefined && sanitizeGroupIconUrl(null) === undefined);
 }
 
 // ---------------------------------------------------------------------------

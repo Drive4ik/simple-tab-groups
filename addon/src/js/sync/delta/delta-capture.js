@@ -47,7 +47,7 @@ import * as Cache from '/js/cache.js';
 import * as Constants from '/js/constants.js';
 import * as DeltaLog from './delta-log.js';
 import {syncedOptionKeys} from './option-keys.js';
-import {isUrlSyncable, unwrapStubUrl, sanitizeFavIconUrl} from './url-sync.js';
+import {isUrlSyncable, unwrapStubUrl, sanitizeFavIconUrl, sanitizeGroupRecordForSync} from './url-sync.js';
 import {computeGroupRelativeIndex} from './group-relative-index.js';
 import {isAppliedNavigationEcho} from './applied-nav-echo.js';
 
@@ -472,7 +472,7 @@ export async function groupAdded(group) {
             return;
         }
 
-        await DeltaLog.append(DeltaLog.OPS.GROUP_ADD, {group});
+        await DeltaLog.append(DeltaLog.OPS.GROUP_ADD, {group: sanitizeGroupRecordForSync(group)});
     } catch (e) {
         logger.onCatch('groupAdded', false)(e);
     }
@@ -490,7 +490,7 @@ export async function groupModified(fullGroup) {
             return;
         }
 
-        await DeltaLog.append(DeltaLog.OPS.GROUP_MODIFY, {group: fullGroup});
+        await DeltaLog.append(DeltaLog.OPS.GROUP_MODIFY, {group: sanitizeGroupRecordForSync(fullGroup)});
     } catch (e) {
         logger.onCatch('groupModified', false)(e);
     }
