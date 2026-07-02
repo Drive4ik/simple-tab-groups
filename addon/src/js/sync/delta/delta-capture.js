@@ -301,6 +301,30 @@ function buildTabRecord(tab, uid, groupRelativeIndex, snapshot = null) {
     return record;
 }
 
+async function tabAddItem(tab) {
+    const groupId = Cache.getTabGroup(tab.id);
+    if (!groupId) {
+        return null;
+    }
+
+    if (!isUrlSyncable(unwrapStubUrl(tab.url))) {
+        return null;
+    }
+
+    const uid = await resolveUid(tab.id);
+    if (!uid) {
+        return null;
+    }
+
+    const index = await getGroupRelativeIndex(tab.id, tab.windowId, groupId);
+
+    return {
+        op: DeltaLog.OPS.TAB_ADD,
+        groupId,
+        tab: buildTabRecord(tab, uid, index),
+    };
+}
+
 /**
  * Record a tab addition (op `tab.add`). Called from tabs.js `onCreated` after skip
  * checks. Ignores pinned / ungrouped tabs (no groupId ⇒ STG doesn't track it).
@@ -312,31 +336,35 @@ export async function tabAdded(tab) {
             return;
         }
 
-        const groupId = Cache.getTabGroup(tab.id);
-        if (!groupId) {
+        const item = await tabAddItem(tab);
+        if (!item) {
             return;
         }
 
-        // gate on the SYNCABLE allow-list (the unwrapped url so a stub-rendered tab is
-        // judged by its original about: url). Non-syncable urls (about:blank/newtab/…)
-        // are noise and never enter the log.
-        if (!isUrlSyncable(unwrapStubUrl(tab.url))) {
-            return;
-        }
-
-        const uid = await resolveUid(tab.id);
-        if (!uid) {
-            return;
-        }
-
-        const index = await getGroupRelativeIndex(tab.id, tab.windowId, groupId);
-
-        await DeltaLog.append(DeltaLog.OPS.TAB_ADD, {
-            groupId,
-            tab: buildTabRecord(tab, uid, index),
-        });
+        const {op, ...payload} = item;
+        await DeltaLog.append(op, payload);
     } catch (e) {
         logger.onCatch('tabAdded', false)(e);
+    }
+}
+
+export async function tabsAdded(tabs) {
+    try {
+        if (isApplying()) {
+            return;
+        }
+
+        const items = [];
+        for (const tab of tabs) {
+            const item = await tabAddItem(tab);
+            if (item) {
+                items.push(item);
+            }
+        }
+
+        await DeltaLog.appendMany(items);
+    } catch (e) {
+        logger.onCatch('tabsAdded', false)(e);
     }
 }
 
@@ -562,12 +590,11 @@ export async function optionsChanged(savedOptions) {
             return;
         }
 
-        for (const [key, value] of Object.entries(savedOptions || {})) {
-            if (!SYNCED_OPTION_KEYS.has(key)) {
-                continue;
-            }
-            await DeltaLog.append(DeltaLog.OPS.OPTION_SET, {key, value});
-        }
+        const items = Object.entries(savedOptions || {})
+            .filter(([key]) => SYNCED_OPTION_KEYS.has(key))
+            .map(([key, value]) => ({op: DeltaLog.OPS.OPTION_SET, key, value}));
+
+        await DeltaLog.appendMany(items);
     } catch (e) {
         logger.onCatch('optionsChanged', false)(e);
     }
