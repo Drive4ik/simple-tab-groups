@@ -753,9 +753,17 @@
         "message": "Вивантажити вкладку з пам'яті",
         "description": "Discard tab"
     },
+    "pinTabInGroupTitle": {
+        "message": "Закріпити в групі",
+        "description": "Pin this tab within its group (pinned only while the group is active)"
+    },
     "pinTabInCurrentGroupTitle": {
         "message": "Закріпити в поточній групі",
         "description": "Pin a tab that is not yet in a group into the window's active group (pinned only while that group is active)"
+    },
+    "unpinTabInGroupTitle": {
+        "message": "Відкріпити від групи",
+        "description": "Remove the group-scoped pin from this tab"
     },
     "folderNameTitle": {
         "message": "Ім'я теки",
@@ -1423,6 +1431,18 @@
         "message": "Створити резервну копію",
         "description": "Button that pushes the current full state to the cloud as a new gist revision"
     },
+    "backupChangesLabel": {
+        "message": "змін",
+        "description": "Label prefixing the change count of a cloud backup revision"
+    },
+    "resetSyncStateButton": {
+        "message": "Скинути стан синхронізації",
+        "description": "Reset this device's local sync state (recovery action)"
+    },
+    "resetSyncStateConfirm": {
+        "message": "Це очистить локальний стан синхронізації лише на цьому пристрої (базовий стан та журнал змін). Дані в хмарі НЕ зачіпаються. Наступна синхронізація пройде як перша: нічого не буде видалено, а поточні вкладки будуть повторно надіслані в хмару.",
+        "description": "Confirmation text for the reset sync state action"
+    },
     "syncEnableTitle": {
         "message": "Увімкнути синхронізацію з хмарою",
         "description": "Enable sync to the cloud"
@@ -1434,6 +1454,22 @@
     "cloudSyncEveryTitle": {
         "message": "Синхронізувати з хмарою кожні",
         "description": "Cloud sync every"
+    },
+    "syncBackupBeforeApply": {
+        "message": "Створювати резервну копію перед застосуванням змін синхронізації (рекомендовано)",
+        "description": "Toggle: take a local STG backup before delta-sync applies any change, so a bad sync can be rolled back"
+    },
+    "syncSleepNewTabs": {
+        "message": "Створювати нові синхронізовані вкладки сплячими (рекомендовано)",
+        "description": "Toggle: tabs created by sync show title+favicon and only load when activated"
+    },
+    "syncSleepPinnedTabs": {
+        "message": "Присипляти синхронізовані закріплені вкладки (Firefox за замовчуванням завантажує закріплені вкладки)",
+        "description": "Toggle: also create synced pinned tabs asleep via create-then-discard; off by default since pinned tabs normally load"
+    },
+    "syncActivatePreviouslyActiveTabs": {
+        "message": "Активувати вкладки, які були активними на іншому пристрої",
+        "description": "Sub-toggle: load a synced tab if it was active (loaded) on the source machine"
     },
     "syncSettingsLocation": {
         "message": "Розташування налаштувань синхронізації",

@@ -753,9 +753,17 @@
         "message": "Выгрузить вкладку из памяти",
         "description": "Discard tab"
     },
+    "pinTabInGroupTitle": {
+        "message": "Закрепить в группе",
+        "description": "Pin this tab within its group (pinned only while the group is active)"
+    },
     "pinTabInCurrentGroupTitle": {
         "message": "Закрепить в текущей группе",
         "description": "Pin a tab that is not yet in a group into the window's active group (pinned only while that group is active)"
+    },
+    "unpinTabInGroupTitle": {
+        "message": "Открепить от группы",
+        "description": "Remove the group-scoped pin from this tab"
     },
     "folderNameTitle": {
         "message": "Имя папки",
@@ -1423,6 +1431,18 @@
         "message": "Создать резервную копию",
         "description": "Button that pushes the current full state to the cloud as a new gist revision"
     },
+    "backupChangesLabel": {
+        "message": "изменений",
+        "description": "Label prefixing the change count of a cloud backup revision"
+    },
+    "resetSyncStateButton": {
+        "message": "Сбросить состояние синхронизации",
+        "description": "Reset this device's local sync state (recovery action)"
+    },
+    "resetSyncStateConfirm": {
+        "message": "Это очистит локальное состояние синхронизации только на этом устройстве (базовое состояние и журнал изменений). Данные в облаке НЕ затрагиваются. Следующая синхронизация пройдёт как первая: ничего не будет удалено, а текущие вкладки будут повторно отправлены в облако.",
+        "description": "Confirmation text for the reset sync state action"
+    },
     "syncEnableTitle": {
         "message": "Включить синхронизацию с облаком",
         "description": "Enable sync to the cloud"
@@ -1434,6 +1454,22 @@
     "cloudSyncEveryTitle": {
         "message": "Синхронизировать с облаком каждые",
         "description": "Cloud sync every"
+    },
+    "syncBackupBeforeApply": {
+        "message": "Создавать резервную копию перед применением изменений синхронизации (рекомендуется)",
+        "description": "Toggle: take a local STG backup before delta-sync applies any change, so a bad sync can be rolled back"
+    },
+    "syncSleepNewTabs": {
+        "message": "Создавать новые синхронизированные вкладки спящими (рекомендуется)",
+        "description": "Toggle: tabs created by sync show title+favicon and only load when activated"
+    },
+    "syncSleepPinnedTabs": {
+        "message": "Усыплять синхронизированные закреплённые вкладки (Firefox по умолчанию загружает закреплённые вкладки)",
+        "description": "Toggle: also create synced pinned tabs asleep via create-then-discard; off by default since pinned tabs normally load"
+    },
+    "syncActivatePreviouslyActiveTabs": {
+        "message": "Активировать вкладки, которые были активны на другом устройстве",
+        "description": "Sub-toggle: load a synced tab if it was active (loaded) on the source machine"
     },
     "syncSettingsLocation": {
         "message": "Расположение настроек синхронизации",

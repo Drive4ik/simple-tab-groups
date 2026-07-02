@@ -223,7 +223,7 @@ export default {
                             <span class="is-underline-dotted" v-text="item.committed_at_relative"></span>
                             <span v-text="item.committed_at_time_short"></span>
                             <small v-if="item.change_status?.total" class="brackets-round">
-                                <span class="colon">changes</span>
+                                <span class="colon" v-text="lang('backupChangesLabel')"></span>
                                 <span class="changes" v-text="item.change_status.total"></span>
                             </small>
                         </a>
