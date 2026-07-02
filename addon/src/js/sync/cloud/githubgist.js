@@ -669,26 +669,30 @@ export default class GithubGist {
      * @returns {Promise<boolean>} true iff this device now holds the lock.
      */
     async acquireLock(deviceId, progressFunc = null) {
+        let stamped = false;
+
         try {
             const lock = await this.readFile(LOCK_FILE_NAME, progressFunc);
             const serverNow = this.getServerTimeMs() ?? Date.now();
 
             if (!canWriteLock(lock, deviceId, serverNow)) {
-                return false; // held, fresh, and another device's ⇒ back off
+                return false;
             }
 
             await this.writeFiles({
                 [LOCK_FILE_NAME]: makeLockStamp(deviceId, serverNow),
             });
 
-            // short confirm delay so a racing peer's write becomes observable, then re-read:
-            // exactly one stamp survives the last write, and the read-back reveals the winner.
+            stamped = true;
+
             await Utils.wait(LOCK_CONFIRM_DELAY_MS);
 
             const confirmed = await this.readFile(LOCK_FILE_NAME, progressFunc);
             return didWinLock(confirmed, deviceId);
         } catch {
-            // any failure ⇒ treat as not-acquired (fail-safe: skip the cycle, retry later).
+            if (stamped) {
+                await this.releaseLock();
+            }
             return false;
         }
     }
