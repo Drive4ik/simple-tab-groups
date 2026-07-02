@@ -45,33 +45,60 @@ function check(name, cond, detail) {
 }
 
 /**
- * Controllable in-memory mock of the IndexedDB delta-log store (`delta-log-store.js`).
+ * Controllable in-memory mock of the IndexedDB delta-log store (`delta-log-store.js`):
+ * one entry per event keyed by seq, plus a meta record.
  *
  * `load` returns a promise that ONLY resolves when the test calls `releaseLoads()`, so two
  * concurrent first-touch callers can both be parked mid-hydration — exactly the window the
  * old guard left open. `loadCallCount` proves how many loads the module actually issued.
  * The loader stub reads/writes this object via `globalThis.__deltaLogIdb`.
  */
-function makeMockIdb(record) {
+function makeMockIdb({meta, events = []} = {}) {
     let pendingLoadResolvers = [];
+    const eventsBySeq = new Map(events.map(event => [event.seq, structuredClone(event)]));
     const mock = {
-        record,
+        meta: meta === undefined ? undefined : structuredClone(meta),
         loadCallCount: 0,
-        saveCallCount: 0,
-        removeCallCount: 0,
+        saveMetaCallCount: 0,
+        putEventsCallCount: 0,
+        deleteUpToCallCount: 0,
+        replaceEventsCallCount: 0,
+        storedEvents() {
+            return [...eventsBySeq.keys()].sort((a, b) => a - b).map(seq => eventsBySeq.get(seq));
+        },
         async load() {
             mock.loadCallCount++;
-            const snapshot = mock.record === undefined ? undefined : structuredClone(mock.record);
+            const snapshot = {
+                meta: mock.meta === undefined ? undefined : structuredClone(mock.meta),
+                events: structuredClone(mock.storedEvents()),
+            };
             await new Promise(resolve => pendingLoadResolvers.push(resolve));
             return snapshot;
         },
-        async save(rec) {
-            mock.saveCallCount++;
-            mock.record = structuredClone(rec);
+        async saveMeta(newMeta) {
+            mock.saveMetaCallCount++;
+            mock.meta = structuredClone(newMeta);
         },
-        async remove() {
-            mock.removeCallCount++;
-            mock.record = undefined;
+        async putEvents(list) {
+            mock.putEventsCallCount++;
+            for (const event of list) {
+                eventsBySeq.set(event.seq, structuredClone(event));
+            }
+        },
+        async deleteUpTo(seq) {
+            mock.deleteUpToCallCount++;
+            for (const key of [...eventsBySeq.keys()]) {
+                if (key <= seq) {
+                    eventsBySeq.delete(key);
+                }
+            }
+        },
+        async replaceEvents(list) {
+            mock.replaceEventsCallCount++;
+            eventsBySeq.clear();
+            for (const event of list) {
+                eventsBySeq.set(event.seq, structuredClone(event));
+            }
         },
         releaseLoads() {
             const resolvers = pendingLoadResolvers;
@@ -127,11 +154,11 @@ function makeMockStorage(initial = {}) {
 
 /**
  * Install a fresh IDB mock + storage.local mock + a freshly-imported delta-log module
- * (module state is per-import). `idbRecord` seeds the IndexedDB store; `storageLocal` seeds
- * the legacy storage.local store (e.g. {syncDeltaLog: {...}} to exercise migration).
+ * (module state is per-import). `meta`/`events` seed the IndexedDB store; `storageLocal`
+ * seeds the legacy storage.local store (e.g. {syncDeltaLog: {...}} to exercise migration).
  */
-async function freshLog({idbRecord, storageLocal = {}} = {}) {
-    const idb = makeMockIdb(idbRecord);
+async function freshLog({meta, events, storageLocal = {}} = {}) {
+    const idb = makeMockIdb({meta, events});
     globalThis.__deltaLogIdb = idb;
     const storage = makeMockStorage(storageLocal);
     globalThis.browser = {storage: {local: storage}};
@@ -139,6 +166,8 @@ async function freshLog({idbRecord, storageLocal = {}} = {}) {
     const mod = await import(`./delta-log.js?fresh=${Math.random()}`);
     return {idb, storage, mod};
 }
+
+const TEST_META = {v: 1, deviceId: 'test-device'};
 
 // --- 1. THE RACE: two concurrent first-touch ops, both parked mid-hydration -------
 {
@@ -176,6 +205,11 @@ async function freshLog({idbRecord, storageLocal = {}} = {}) {
     const e3 = await mod.append(mod.OPS.GROUP_ADD, {group: {id: 3, title: 'g3'}});
     check('next append continues monotonically (lastSeq not rewound)', e3.seq === 3,
         `e3.seq=${e3.seq}`);
+
+    check('appends persist one meta record exactly once', idb.saveMetaCallCount === 1,
+        `saveMetaCallCount=${idb.saveMetaCallCount}`);
+    check('all appended events are persisted per-event', idb.storedEvents().length === 3,
+        JSON.stringify(idb.storedEvents().map(e => e.seq)));
 }
 
 // --- 2. concurrent append + getEvents (capture racing the transport) --------------
@@ -200,15 +234,11 @@ async function freshLog({idbRecord, storageLocal = {}} = {}) {
 
 // --- 3. hydration reads an EXISTING persisted IDB log without losing the new append --
 {
-    const idbRecord = {
-        v: 1,
-        deviceId: 'test-device',
-        events: [
-            {seq: 1, ts: 1, op: 'group.add', group: {id: 1, title: 'g1'}},
-            {seq: 2, ts: 2, op: 'group.add', group: {id: 2, title: 'g2'}},
-        ],
-    };
-    const {idb, storage, mod} = await freshLog({idbRecord});
+    const seeded = [
+        {seq: 1, ts: 1, op: 'group.add', group: {id: 1, title: 'g1'}},
+        {seq: 2, ts: 2, op: 'group.add', group: {id: 2, title: 'g2'}},
+    ];
+    const {idb, storage, mod} = await freshLog({meta: TEST_META, events: seeded});
 
     const p1 = mod.append(mod.OPS.GROUP_ADD, {group: {id: 3, title: 'g3'}});
     const p2 = mod.getLastSeq();
@@ -227,19 +257,20 @@ async function freshLog({idbRecord, storageLocal = {}} = {}) {
     check('hydrating from IDB does not touch storage.local',
         storage.getCallCount === 0 && storage.removeCallCount === 0,
         `get=${storage.getCallCount} remove=${storage.removeCallCount}`);
+    check('an append to a log with stored meta does not rewrite the meta record',
+        idb.saveMetaCallCount === 0, `saveMetaCallCount=${idb.saveMetaCallCount}`);
+    check('the append persisted only the new event (no whole-log rewrite)',
+        idb.putEventsCallCount === 1 && idb.replaceEventsCallCount === 0,
+        `putEvents=${idb.putEventsCallCount} replaceEvents=${idb.replaceEventsCallCount}`);
 }
 
 // --- 4. favicon migration still runs exactly once on hydrate (from IDB) ------------
 {
-    const idbRecord = {
-        v: 1,
-        deviceId: 'test-device',
-        events: [
-            {seq: 1, ts: 1, op: 'tab.add', groupId: 1, tab: {uid: 't1', url: 'https://a', title: 'A', favIconUrl: 'data:image/png;base64,AAAA'}},
-            {seq: 2, ts: 2, op: 'tab.modify', groupId: 1, tab: {uid: 't1', url: 'https://a', title: 'B', favIconUrl: 'https://a/favicon.ico'}},
-        ],
-    };
-    const {idb, mod} = await freshLog({idbRecord});
+    const seeded = [
+        {seq: 1, ts: 1, op: 'tab.add', groupId: 1, tab: {uid: 't1', url: 'https://a', title: 'A', favIconUrl: 'data:image/png;base64,AAAA'}},
+        {seq: 2, ts: 2, op: 'tab.modify', groupId: 1, tab: {uid: 't1', url: 'https://a', title: 'B', favIconUrl: 'https://a/favicon.ico'}},
+    ];
+    const {idb, mod} = await freshLog({meta: TEST_META, events: seeded});
 
     // two concurrent first-touch reads — migration must run once, not twice.
     const p1 = mod.getEvents();
@@ -251,10 +282,13 @@ async function freshLog({idbRecord, storageLocal = {}} = {}) {
 
     check('migration strips favicons from all stored events', a.every(e => !Object.hasOwn(e.tab ?? {}, 'favIconUrl')),
         JSON.stringify(a));
-    // migration rewrites the log exactly once (one save for the migration). A second get-touch
-    // must not re-run the body, so no extra save beyond the single migration write.
-    check('favicon migration rewrites the log exactly once (single save)', idb.saveCallCount === 1,
-        `saveCallCount=${idb.saveCallCount}`);
+    // migration rewrites the events exactly once. A second get-touch must not re-run the
+    // body, so no extra write beyond the single migration rewrite.
+    check('favicon migration rewrites the log exactly once (single write)', idb.putEventsCallCount === 1,
+        `putEventsCallCount=${idb.putEventsCallCount}`);
+    check('favicon migration strips the persisted events too',
+        idb.storedEvents().every(e => !Object.hasOwn(e.tab ?? {}, 'favIconUrl')),
+        JSON.stringify(idb.storedEvents()));
     check('a single load serves both concurrent first-touch reads', idb.loadCallCount === 1,
         `loadCallCount=${idb.loadCallCount}`);
 
@@ -278,6 +312,8 @@ async function freshLog({idbRecord, storageLocal = {}} = {}) {
     const loadsAfterClear = idb.loadCallCount;
     check('clear() reuses the already-resolved hydration (no extra load during clear)',
         loadsAfterClear === 1, `got ${loadsAfterClear}`);
+    check('clear() empties the persisted events', idb.storedEvents().length === 0,
+        JSON.stringify(idb.storedEvents()));
 
     // clear() dropped the memoized promise, so the NEXT first touch re-runs hydration cleanly
     // (re-issues a load) rather than being short-circuited by the stale resolved promise.
@@ -350,8 +386,8 @@ async function freshLog({idbRecord, storageLocal = {}} = {}) {
 
     check('appendMany skips invalid ops but keeps the valid ones',
         appended.length === validCount, `len=${appended.length}`);
-    check('appendMany persists the whole batch in ONE save', idb.saveCallCount === 1,
-        `saveCallCount=${idb.saveCallCount}`);
+    check('appendMany persists the whole batch in ONE write', idb.putEventsCallCount === 1,
+        `putEventsCallCount=${idb.putEventsCallCount}`);
 
     const batchSeqs = appended.map(e => e.seq);
     check('appendMany assigns sequential seqs from 1 with no gaps',
@@ -379,14 +415,15 @@ async function freshLog({idbRecord, storageLocal = {}} = {}) {
     idb.releaseLoads();
     await pRead;
 
-    check('appendMany on an empty store issues no save during hydration',
-        idb.saveCallCount === 0, `saveCallCount=${idb.saveCallCount}`);
+    check('hydrating an empty store issues no writes',
+        idb.saveMetaCallCount === 0 && idb.putEventsCallCount === 0 && idb.replaceEventsCallCount === 0,
+        `saveMeta=${idb.saveMetaCallCount} putEvents=${idb.putEventsCallCount} replaceEvents=${idb.replaceEventsCallCount}`);
 
     const result = await mod.appendMany([]);
     check('appendMany([]) returns an empty array', Array.isArray(result) && result.length === 0,
         JSON.stringify(result));
-    check('appendMany([]) issues no save', idb.saveCallCount === 0,
-        `saveCallCount=${idb.saveCallCount}`);
+    check('appendMany([]) issues no write', idb.putEventsCallCount === 0,
+        `putEventsCallCount=${idb.putEventsCallCount}`);
 }
 
 // --- 9. legacy storage.local -> IndexedDB migration -------------------------------
@@ -413,20 +450,22 @@ async function freshLog({idbRecord, storageLocal = {}} = {}) {
         `len=${events.length}`);
     check('migration reads storage.local exactly once', storage.getCallCount === 1,
         `getCallCount=${storage.getCallCount}`);
-    check('migration saves the adopted log into IndexedDB exactly once', idb.saveCallCount === 1,
-        `saveCallCount=${idb.saveCallCount}`);
+    check('migration saves the adopted meta into IndexedDB exactly once', idb.saveMetaCallCount === 1,
+        `saveMetaCallCount=${idb.saveMetaCallCount}`);
+    check('migration writes the adopted events into IndexedDB exactly once', idb.replaceEventsCallCount === 1,
+        `replaceEventsCallCount=${idb.replaceEventsCallCount}`);
     check('migration removes the legacy storage.local key exactly once', storage.removeCallCount === 1,
         `removeCallCount=${storage.removeCallCount}`);
     check('migration removed the legacy syncDeltaLog from storage.local',
         storage.rawStore().syncDeltaLog === undefined, JSON.stringify(storage.rawStore()));
     check('migration persisted the adopted log into the IDB store',
-        Array.isArray(idb.record?.events) && idb.record.events.length === 2,
-        JSON.stringify(idb.record));
+        idb.storedEvents().length === 2 && idb.meta?.deviceId === 'test-device',
+        JSON.stringify({meta: idb.meta, events: idb.storedEvents()}));
     check('favicon strip still runs during the storage.local migration',
         events.every(e => !Object.hasOwn(e.tab ?? {}, 'favIconUrl')), JSON.stringify(events));
 
     // a second hydration reads from IDB and does NOT re-read or re-remove storage.local.
-    const {idb: idb2, storage: storage2, mod: mod2} = await freshLog({idbRecord: idb.record});
+    const {idb: idb2, storage: storage2, mod: mod2} = await freshLog({meta: idb.meta, events: idb.storedEvents()});
     const pEvents2 = mod2.getEvents();
     await Promise.resolve();
     idb2.releaseLoads();
@@ -438,24 +477,21 @@ async function freshLog({idbRecord, storageLocal = {}} = {}) {
         `getCallCount=${storage2.getCallCount}`);
     check('second hydration does NOT remove storage.local', storage2.removeCallCount === 0,
         `removeCallCount=${storage2.removeCallCount}`);
-    check('second hydration does not re-save (no further migration)', idb2.saveCallCount === 0,
-        `saveCallCount=${idb2.saveCallCount}`);
+    check('second hydration does not re-write (no further migration)',
+        idb2.saveMetaCallCount === 0 && idb2.putEventsCallCount === 0 && idb2.replaceEventsCallCount === 0,
+        `saveMeta=${idb2.saveMetaCallCount} putEvents=${idb2.putEventsCallCount} replaceEvents=${idb2.replaceEventsCallCount}`);
 }
 
 {
     const oversizedIcon = 'data:image/png;base64,' + 'A'.repeat(60000);
-    const idbRecord = {
-        v: 1,
-        deviceId: 'test-device',
-        events: [
-            {seq: 1, ts: 1, op: 'group.modify', group: {id: 'g1', title: 'G1', iconUrl: oversizedIcon, tabs: [
-                {uid: 't1', url: 'https://a', title: 'A', favIconUrl: 'data:image/png;base64,AAAA', thumbnail: 'data:image/jpeg;base64,BBBB'},
-                {uid: 't2', url: 'https://b', title: 'B', favIconUrl: 'https://b/favicon.ico'},
-            ]}},
-            {seq: 2, ts: 2, op: 'group.add', group: {id: 'g2', title: 'G2', iconUrl: 'data:image/png;base64,small', tabs: []}},
-        ],
-    };
-    const {idb, mod} = await freshLog({idbRecord});
+    const seeded = [
+        {seq: 1, ts: 1, op: 'group.modify', group: {id: 'g1', title: 'G1', iconUrl: oversizedIcon, tabs: [
+            {uid: 't1', url: 'https://a', title: 'A', favIconUrl: 'data:image/png;base64,AAAA', thumbnail: 'data:image/jpeg;base64,BBBB'},
+            {uid: 't2', url: 'https://b', title: 'B', favIconUrl: 'https://b/favicon.ico'},
+        ]}},
+        {seq: 2, ts: 2, op: 'group.add', group: {id: 'g2', title: 'G2', iconUrl: 'data:image/png;base64,small', tabs: []}},
+    ];
+    const {idb, mod} = await freshLog({meta: TEST_META, events: seeded});
 
     const p = mod.getEvents();
     await Promise.resolve();
@@ -471,16 +507,20 @@ async function freshLog({idbRecord, storageLocal = {}} = {}) {
         JSON.stringify(Object.keys(migrated)));
     check('migration keeps a small group iconUrl', events[1].group.iconUrl === 'data:image/png;base64,small');
     check('migration keeps group identity fields', migrated.id === 'g1' && migrated.title === 'G1' && migrated.tabs[0].url === 'https://a');
-    check('group-event migration rewrites the log exactly once', idb.saveCallCount === 1,
-        `saveCallCount=${idb.saveCallCount}`);
+    check('group-event migration rewrites the log exactly once', idb.putEventsCallCount === 1,
+        `putEventsCallCount=${idb.putEventsCallCount}`);
+    check('group-event migration strips the persisted events too',
+        idb.storedEvents()[0].group.tabs.every(t => !Object.hasOwn(t, 'favIconUrl') && !Object.hasOwn(t, 'thumbnail')),
+        JSON.stringify(idb.storedEvents()[0].group.tabs));
 
-    const {idb: idb2, mod: mod2} = await freshLog({idbRecord: idb.record});
+    const {idb: idb2, mod: mod2} = await freshLog({meta: idb.meta, events: idb.storedEvents()});
     const p2 = mod2.getEvents();
     await Promise.resolve();
     idb2.releaseLoads();
     await p2;
-    check('group-event migration is idempotent (no re-save on a clean log)', idb2.saveCallCount === 0,
-        `saveCallCount=${idb2.saveCallCount}`);
+    check('group-event migration is idempotent (no re-save on a clean log)',
+        idb2.saveMetaCallCount === 0 && idb2.putEventsCallCount === 0 && idb2.replaceEventsCallCount === 0,
+        `saveMeta=${idb2.saveMetaCallCount} putEvents=${idb2.putEventsCallCount} replaceEvents=${idb2.replaceEventsCallCount}`);
 }
 
 {

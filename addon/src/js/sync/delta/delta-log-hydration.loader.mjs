@@ -33,10 +33,13 @@ const STUBS = {
     `,
     'stg:delta-log-store': `
         function idb() { return globalThis.__deltaLogIdb; }
-        async function load() { return idb().load(); }
-        async function save(record) { return idb().save(record); }
-        async function remove() { return idb().remove(); }
-        export default { load, save, remove };
+        export default {
+            load: (...args) => idb().load(...args),
+            saveMeta: (...args) => idb().saveMeta(...args),
+            putEvents: (...args) => idb().putEvents(...args),
+            deleteUpTo: (...args) => idb().deleteUpTo(...args),
+            replaceEvents: (...args) => idb().replaceEvents(...args),
+        };
     `,
 };
 
