@@ -54,47 +54,64 @@ export const PROVIDER_GOOGLE_DRIVE = 'google-drive';
  * flow uses. A multi-file container is located by the presence of the snapshot
  * file, so absence of the container resolves to "empty" rather than throwing.
  *
- * @property {(name: string, progressFunc: ?function) => Promise<?Object>} readFile
+ * @property {(name: string, progressFunc: ?function, cycle: ?object) => Promise<?Object>} readFile
  *      Read+parse one named file from the container. Resolves with the parsed
  *      content, or `null` if the file (or the whole container) is absent. Large
  *      files are fetched transparently. A malformed JSON file throws
- *      `Error('githubInvalidGistContent')`.
+ *      `Error('githubInvalidGistContent')`. When a `cycle` handle is passed, the
+ *      read is served from the cycle's cached container state (one download per
+ *      sync cycle instead of one per read).
  *
  * @property {(progressFunc: ?function) => Promise<string[]>} listFiles
  *      List the names of every file in the container (`[]` if no container yet).
  *
- * @property {(prefix: string, progressFunc: ?function) => Promise<Array<{name: string, content: Object}>>} readAllMatching
+ * @property {(prefix: string, progressFunc: ?function, cycle: ?object) => Promise<Array<{name: string, content: Object}>>} readAllMatching
  *      Read+parse every file whose name starts with `prefix` (e.g. all per-device
  *      delta logs). Resolves with `[{name, content}, ...]` (`[]` if no container).
+ *      Served from the `cycle` cache like `readFile`.
  *
- * @property {(contents: Object<string, Object>, description: ?string, progressFunc: ?function) => Promise<CloudInfo>} writeFiles
+ * @property {(contents: Object<string, Object>, progressFunc: ?function, cycle: ?object) => Promise<CloudInfo>} writeFiles
  *      Write multiple files in a single atomic request (creating the container on
  *      first write). `contents` maps file name → content object. Resolves with the
- *      resulting `CloudInfo`. Per-file granularity lets concurrent devices write
- *      their own delta files without clobbering each other.
+ *      resulting `CloudInfo` taken from the write RESPONSE (no follow-up read).
+ *      Updates a passed `cycle` handle's cached state with that response, so later
+ *      reads and the cycle commit see exactly the revision this write produced.
+ *      Per-file granularity lets concurrent devices write their own delta files
+ *      without clobbering each other.
  *
  * @property {(name: string, progressFunc: ?function) => Promise<CloudInfo>} deleteFile
- *      Delete a single named file from the container (compaction primitive, P4).
- *      Resolves with the resulting `CloudInfo`. Throws `Error('githubNotFound')`
+ *      Delete a single named file from the container. Resolves with the resulting
+ *      `CloudInfo` from the write response. Throws `Error('githubNotFound')`
  *      if there is no container.
  *
- * --- Conditional-pull fast path (optimization, optional) ----------------------
- * Lets the sync engine skip the download + replay/apply when the remote container is
- * byte-for-byte unchanged since the last cycle, using the backend's native conditional
- * request (e.g. HTTP ETag / If-None-Match). Both methods are OPTIONAL and FAIL-SAFE: a
- * provider that doesn't implement them simply omits them, and the engine falls back to an
- * unconditional full fetch (correctness is identical either way).
+ * --- Sync-cycle fast path + read cache (optimization, optional) ----------------
+ * `beginSyncCycle` opens a per-cycle handle that (a) answers "did the remote change
+ * since the last SUCCESSFUL cycle?" with ONE conditional request, and (b) caches the
+ * container state fetched by that probe so every read in the cycle reuses it. The
+ * unchanged verdict is FAIL-SAFE: `cycle.unchanged` is true ONLY on a positive
+ * confirmation — the backend's conditional-request marker matched (e.g. HTTP 304), or
+ * the container's non-lock-file content fingerprint is identical to the marker
+ * committed by the last successful cycle (so advisory-lock churn by peers does not
+ * defeat the fast path). No marker, first sync, discovery, or any transport error ⇒
+ * `unchanged: false` (full fetch; correctness identical to an unconditional sync).
  *
- * @property {(progressFunc: ?function) => Promise<boolean>} [isUnchangedSince]
- *      Probe whether the container changed since the last pull. Resolves `true` ONLY when
- *      the backend positively confirms "unchanged" (so the engine may skip pull+apply this
- *      cycle); resolves `false` on ANY doubt (no prior marker, first sync, discovery, or
- *      transport error) so the engine does a full fetch. MUST NOT throw.
+ * The marker lifecycle is the engine's responsibility: `commitSyncCycle` persists the
+ * marker for the state recorded in the cycle handle, and the engine calls it ONLY
+ * after a fully successful cycle (pull+apply+push complete, or the confirmed-unchanged
+ * fast path). A failed/aborted cycle never commits, so the marker always points at the
+ * last revision this device actually reconciled. Lock stamp writes and the lock-file
+ * delete never advance the marker (the fingerprint ignores the lock file, and
+ * `releaseLock` bypasses the cycle handle).
  *
- * @property {(progressFunc: ?function) => Promise<void>} [refreshEtagFromWrite]
- *      Refresh the provider's stored conditional-request marker from the container's
- *      current state after a successful write/push, so the NEXT `isUnchangedSince` probe
- *      compares against the just-pushed revision. Best-effort; MUST NOT throw.
+ * @property {(progressFunc: ?function) => Promise<{unchanged: boolean}>} [beginSyncCycle]
+ *      Open the cycle handle. MUST NOT throw (errors resolve to `{unchanged: false}`).
+ *      The handle is opaque apart from `unchanged`; thread it through the cycle's
+ *      readFile/readAllMatching/writeFiles/acquireLock calls.
+ *
+ * @property {(cycle: ?object) => void} [commitSyncCycle]
+ *      Persist the conditional-request marker for the cycle's final recorded state.
+ *      Call ONLY after the cycle fully succeeded. No-op when the cycle never fetched
+ *      or wrote container state (e.g. a confirmed-304 fast path with nothing to push).
  *
  * --- Advisory distributed lock (Part A, optional) -----------------------------
  * Serializes sync cycles across devices so two don't write the snapshot concurrently. Since
@@ -103,13 +120,17 @@ export const PROVIDER_GOOGLE_DRIVE = 'google-drive';
  * via a server-clock TTL. All three methods are OPTIONAL: a provider omitting them simply runs
  * unserialized (deferred self-truncation in delta-sync.js is the data-safety backstop).
  *
- * @property {(deviceId: string, progressFunc: ?function) => Promise<boolean>} [acquireLock]
+ * @property {(deviceId: string, progressFunc: ?function, cycle: ?object) => Promise<boolean>} [acquireLock]
  *      Try to acquire the lock for `deviceId`. Resolves `true` iff this device now holds it,
- *      `false` if a peer holds a fresh lock or on ANY error (caller skips + retries). MUST NOT throw.
+ *      `false` if a peer holds a fresh lock or on ANY error (caller skips + retries). MUST NOT
+ *      throw. A failure after the stamp write best-effort releases the own stamp so a crashed
+ *      confirm cannot strand the lock for the whole TTL. The initial lock read is served from
+ *      the `cycle` cache; the confirm re-read is always fresh and refreshes the cycle cache.
  *
  * @property {(progressFunc: ?function) => Promise<void>} [releaseLock]
  *      Release the lock (delete the lock file). Idempotent + best-effort; MUST NOT throw.
- *      Always call in a `finally` (success, error, and watchdog paths).
+ *      Always call in a `finally` (success, error, and watchdog paths). Never updates the
+ *      cycle handle or the conditional-request marker.
  *
  * @property {() => ?number} [getServerTimeMs]
  *      The SERVER time (ms) most recently observed from a response `Date` header, or null if

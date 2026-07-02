@@ -359,8 +359,8 @@ export function buildLocalState(loadedGroups, syncedOptions = {}, livePinnedTabs
  * @param {object} Cloud - provider instance.
  * @returns {Promise<{snapshot: {groups: object[], watermark?: object}, snapshotExists: boolean}>}
  */
-async function resolveBaseSnapshot(Cloud) {
-    const snapshot = await Cloud.readFile(SNAPSHOT_FILE_NAME);
+async function resolveBaseSnapshot(Cloud, cycle) {
+    const snapshot = await Cloud.readFile(SNAPSHOT_FILE_NAME, null, cycle);
     if (snapshot) {
         return {snapshot, snapshotExists: true};
     }
@@ -378,8 +378,8 @@ async function resolveBaseSnapshot(Cloud) {
  * @param {object} Cloud - provider instance.
  * @returns {Promise<Array<{name: string, deviceId: string, events: object[]}>>}
  */
-async function resolvePulledDeltaLogs(Cloud) {
-    const files = await Cloud.readAllMatching(DELTA_FILE_PREFIX);
+async function resolvePulledDeltaLogs(Cloud, cycle) {
+    const files = await Cloud.readAllMatching(DELTA_FILE_PREFIX, null, cycle);
 
     return (files || []).map(({name, content}) => ({
         name,
@@ -1754,12 +1754,11 @@ async function gatherLocalPending(selfDeviceId, log) {
  * @param {string} selfDeviceId
  * @param {object[]} localPendingEvents - this device's pending events (post-bootstrap).
  * @param {number} lastPushedSeq
- * @param {object} pulledContainers - currently null on this path; outbound mapping seeds an
- *   empty registry (the pending events carry their own local cookieStoreIds to translate).
+ * @param {?object} cycle - sync-cycle handle from the provider's beginSyncCycle.
  * @param {object} log - parent logger context.
  * @returns {Promise<{pushed: boolean}>}
  */
-async function pushLocalPendingOnly(Cloud, selfDeviceId, localPendingEvents, lastPushedSeq, log) {
+async function pushLocalPendingOnly(Cloud, selfDeviceId, localPendingEvents, lastPushedSeq, cycle, log) {
     if (!localPendingEvents.length) {
         return {pushed: false}; // remote unchanged AND nothing local to push ⇒ true no-op
     }
@@ -1783,7 +1782,7 @@ async function pushLocalPendingOnly(Cloud, selfDeviceId, localPendingEvents, las
             deviceId: selfDeviceId,
             events: allEvents,
         },
-    });
+    }, null, cycle);
 
     // advance lastPushedSeq to the highest pending seq so we don't re-push next cycle.
     const maxSelfSeq = localPendingEvents.reduce(
@@ -1791,10 +1790,6 @@ async function pushLocalPendingOnly(Cloud, selfDeviceId, localPendingEvents, las
         lastPushedSeq,
     );
     storage[lastPushedSeqKey(selfDeviceId)] = maxSelfSeq;
-
-    // refresh the stored ETag from the post-push gist so the NEXT probe compares against
-    // the revision we just created (otherwise our own push reads back as "changed").
-    await Cloud.refreshEtagFromWrite?.();
 
     log.info('conditional fast path: pushed local pending without pull/apply', {
         events: localPendingEvents.length,
@@ -1871,20 +1866,14 @@ export async function deltaSynchronization() {
         // full pull and fast-forward this device's log above the stale cloud watermark[self].
         const resetPending = !!storage[resetPendingKey(selfDeviceId)];
 
-        // 0b. CONDITIONAL FAST PATH: ask the provider whether the remote changed since our
-        // last pull (HTTP ETag / If-None-Match). FAIL-SAFE: `isUnchangedSince` returns true
-        // ONLY on a positive "unchanged" confirmation (no stored marker / first sync /
-        // discovery / any transport error all return false ⇒ full fetch below). When it is
-        // unchanged we SKIP the download + replay/plan/apply entirely, but STILL push this
-        // device's pending local events so a local change propagates. The provider may not
-        // implement the probe at all (optional contract) ⇒ treated as "changed" (full fetch).
-        // SKIPPED while a reset is pending (resetPending), see E2 above.
-        const remoteUnchanged = !resetPending
-            && (Cloud.isUnchangedSince ? await Cloud.isUnchangedSince() : false);
+        const cycle = Cloud.beginSyncCycle ? await Cloud.beginSyncCycle() : null;
+        const remoteUnchanged = !resetPending && !!cycle?.unchanged;
         if (remoteUnchanged) {
             const {pushed} = await pushLocalPendingOnly(
-                Cloud, selfDeviceId, localPendingEvents, lastPushedSeq, log,
+                Cloud, selfDeviceId, localPendingEvents, lastPushedSeq, cycle, log,
             );
+
+            Cloud.commitSyncCycle?.(cycle);
 
             progress(100);
             syncResult.ok = true;
@@ -1910,7 +1899,7 @@ export async function deltaSynchronization() {
         // backstop. The conditional fast path above is exempt: it writes only this device's
         // per-device delta file (never the snapshot), which never clobbers a peer.
         if (Cloud.acquireLock) {
-            lockAcquired = await Cloud.acquireLock(selfDeviceId);
+            lockAcquired = await Cloud.acquireLock(selfDeviceId, null, cycle);
             if (!lockAcquired) {
                 log.info('advisory lock held by a peer; skipping this cycle, retry soon');
                 await rescheduleSoonAfterLockContention(log);
@@ -1928,9 +1917,9 @@ export async function deltaSynchronization() {
         }
 
         // 1. pull base snapshot (empty default on a brand-new gist) and all device delta logs
-        const {snapshot: pulledSnapshot, snapshotExists} = await resolveBaseSnapshot(Cloud);
+        const {snapshot: pulledSnapshot, snapshotExists} = await resolveBaseSnapshot(Cloud, cycle);
         progress(30);
-        const pulledDeltaLogs = await resolvePulledDeltaLogs(Cloud);
+        const pulledDeltaLogs = await resolvePulledDeltaLogs(Cloud, cycle);
         progress(45);
 
         // 1a. E2 RESET/WATERMARK-TRAP RECONCILIATION. If a local reset rewound our lastSeq
@@ -2211,13 +2200,8 @@ export async function deltaSynchronization() {
         // still PATCH the snapshot. writeFiles with only the snapshot covers that; an empty
         // object would be a no-op, so guard it.
         if (Object.keys(filesToWrite).length) {
-            await Cloud.writeFiles(filesToWrite);
+            await Cloud.writeFiles(filesToWrite, null, cycle);
         }
-
-        // refresh the stored conditional-request ETag from the post-push gist so the NEXT
-        // cycle's isUnchangedSince probe compares against the revision we just wrote (else
-        // our own push always reads back as "changed"). Optional + best-effort (fail-safe).
-        await Cloud.refreshEtagFromWrite?.();
 
         if (plan.deltaFileToWrite) {
             // advance lastPushedSeq to the highest self seq written
@@ -2299,6 +2283,8 @@ export async function deltaSynchronization() {
         // step threw, control jumps to catch and the baseline is left untouched, so we
         // never record a state we didn't actually reconcile.
         saveBaseline(selfDeviceId, baselineFromSnapshot(plan.resolvedSnapshot));
+
+        Cloud.commitSyncCycle?.(cycle);
 
         progress(100);
 

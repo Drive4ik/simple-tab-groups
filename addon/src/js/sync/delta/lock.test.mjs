@@ -7,7 +7,7 @@
  *      may-write, who-won, and the stamp shape. Imported + exercised directly.
  *   2. The impure acquire/release PROTOCOL in githubgist.js (which pulls in browser
  *      fetch/localStorage and can't load under node). Exactly as conditional-fetch.test.mjs
- *      does for isUnchangedSince, we re-implement that small control flow here over a mocked
+ *      does for beginSyncCycle, we re-implement that small control flow here over a mocked
  *      provider and pin the contract: acquire when free / not when held-fresh-by-other /
  *      acquire when expired / two racers resolve ONE winner / release clears the lock.
  *
