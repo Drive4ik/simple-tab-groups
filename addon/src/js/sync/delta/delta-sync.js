@@ -190,6 +190,15 @@ function pendingTruncateKey(deviceId) {
     return PENDING_TRUNCATE_PREFIX + deviceId;
 }
 
+DeltaLog.onOverflow(() => {
+    const selfDeviceId = getDeviceId();
+    delete storage[baselineKey(selfDeviceId)];
+    delete storage[lastPushedSeqKey(selfDeviceId)];
+    delete storage[watermarkKey(selfDeviceId)];
+    delete storage[pendingTruncateKey(selfDeviceId)];
+    storage[resetPendingKey(selfDeviceId)] = '1';
+});
+
 /**
  * Load this device's persisted baseline. Returns empty sets on first run (or if the
  * stored value is missing/corrupt) — the conservative default: an empty baseline

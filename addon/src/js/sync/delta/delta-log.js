@@ -67,6 +67,8 @@ const logger = new Logger('DeltaLog');
 /** Event schema version (the `v` field in the persisted file). */
 export const SCHEMA_VERSION = 1;
 
+export const MAX_EVENTS = 10_000;
+
 /** browser.storage.local key holding this device's event log. */
 const STORAGE_KEY = 'syncDeltaLog';
 
@@ -109,6 +111,30 @@ let writeChain = Promise.resolve();
 
 let metaPersisted = false;
 
+let overflowHandler = null;
+
+export function onOverflow(handler) {
+    overflowHandler = handler;
+}
+
+function dropOverflow() {
+    if (events.length <= MAX_EVENTS) {
+        return 0;
+    }
+
+    const dropped = events.splice(0, events.length - MAX_EVENTS);
+    return dropped[dropped.length - 1].seq;
+}
+
+function notifyOverflow(droppedThroughSeq) {
+    logger.warn('event cap exceeded: dropped oldest events', {droppedThroughSeq, cap: MAX_EVENTS});
+    try {
+        overflowHandler?.(droppedThroughSeq);
+    } catch (e) {
+        logger.onCatch('onOverflow handler', false)(e);
+    }
+}
+
 let storeOutOfSync = false;
 
 function enqueueWrite(operation) {
@@ -130,13 +156,27 @@ function currentMeta() {
 }
 
 function persistAppended(newEvents) {
-    return enqueueWrite(async () => {
+    const droppedThroughSeq = dropOverflow();
+    const eventsToPut = droppedThroughSeq
+        ? newEvents.filter(event => event.seq > droppedThroughSeq)
+        : newEvents;
+
+    const write = enqueueWrite(async () => {
         if (!metaPersisted) {
             await DeltaLogStore.saveMeta(currentMeta());
             metaPersisted = true;
         }
-        await DeltaLogStore.putEvents(newEvents);
+        await DeltaLogStore.putEvents(eventsToPut);
+        if (droppedThroughSeq) {
+            await DeltaLogStore.deleteUpTo(droppedThroughSeq);
+        }
     });
+
+    if (droppedThroughSeq) {
+        notifyOverflow(droppedThroughSeq);
+    }
+
+    return write;
 }
 
 function stripHistoricalTabFavicon(tabRecord) {
@@ -226,6 +266,8 @@ function ensureLoaded() {
             }
         }
 
+        const droppedThroughSeq = dropOverflow();
+
         if (legacyLog) {
             logger.info('migrated delta log from storage.local to IndexedDB', {events: events.length});
             await enqueueWrite(async () => {
@@ -234,9 +276,22 @@ function ensureLoaded() {
                 await DeltaLogStore.replaceEvents(events);
             });
             await browser.storage.local.remove(STORAGE_KEY);
-        } else if (changed) {
-            logger.info('migrated stored delta log: stripped historical favicons/thumbnails/icons', {events: events.length});
-            await enqueueWrite(() => DeltaLogStore.putEvents(events));
+        } else if (changed || droppedThroughSeq) {
+            if (changed) {
+                logger.info('migrated stored delta log: stripped historical favicons/thumbnails/icons', {events: events.length});
+            }
+            await enqueueWrite(async () => {
+                if (droppedThroughSeq) {
+                    await DeltaLogStore.deleteUpTo(droppedThroughSeq);
+                }
+                if (changed) {
+                    await DeltaLogStore.putEvents(events);
+                }
+            });
+        }
+
+        if (droppedThroughSeq) {
+            notifyOverflow(droppedThroughSeq);
         }
     })().catch(err => {
         // let a later first touch retry instead of permanently caching the rejection.

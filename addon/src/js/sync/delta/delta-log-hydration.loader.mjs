@@ -23,7 +23,7 @@ const STUBS = {
     `,
     'stg:logger': `
         export default function Logger() {
-            return { info() {}, log() {}, warn() {}, error() {} };
+            return { info() {}, log() {}, warn() {}, error() {}, onCatch() { return () => {}; } };
         }
     `,
     'stg:device-id': `

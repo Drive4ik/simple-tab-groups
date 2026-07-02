@@ -625,6 +625,81 @@ const TEST_META = {v: 1, deviceId: 'test-device'};
     delete globalThis.__captureGateOpen;
 }
 
+// --- 12. event cap: an oversized batch head-drops and reports the overflow ---------
+{
+    const {idb, mod} = await freshLog();
+
+    const overflows = [];
+    mod.onOverflow(seq => overflows.push(seq));
+
+    const extra = 5;
+    const batch = Array.from({length: mod.MAX_EVENTS + extra}, (_, i) => ({
+        op: mod.OPS.GROUP_ADD,
+        group: {id: i + 1, title: `g${i + 1}`},
+    }));
+
+    const p = mod.appendMany(batch);
+    await Promise.resolve();
+    await Promise.resolve();
+    idb.releaseLoads();
+    await p;
+
+    const all = await mod.getEvents();
+    check('the cap bounds the in-memory log', all.length === mod.MAX_EVENTS,
+        `len=${all.length}`);
+    check('the cap drops the OLDEST events', all[0].seq === extra + 1 && all[all.length - 1].seq === mod.MAX_EVENTS + extra,
+        `first=${all[0].seq} last=${all[all.length - 1].seq}`);
+    check('the overflow handler is told the highest dropped seq', overflows.length === 1 && overflows[0] === extra,
+        JSON.stringify(overflows));
+    check('the cap bounds the persisted log too', idb.storedEvents().length === mod.MAX_EVENTS,
+        `stored=${idb.storedEvents().length}`);
+    check('the dropped head is deleted from the store', idb.storedEvents()[0].seq === extra + 1,
+        `firstStored=${idb.storedEvents()[0].seq}`);
+
+    const next = await mod.append(mod.OPS.GROUP_ADD, {group: {id: 0, title: 'next'}});
+    check('an append into a full log drops exactly one head event', next.seq === mod.MAX_EVENTS + extra + 1
+        && (await mod.getEvents()).length === mod.MAX_EVENTS
+        && overflows.length === 2 && overflows[1] === extra + 1,
+        `next=${next.seq} overflows=${JSON.stringify(overflows)}`);
+
+    mod.onOverflow(null);
+}
+
+// --- 13. event cap: an over-cap STORED log is trimmed on hydrate --------------------
+{
+    const overCap = 7;
+    const seeded = Array.from({length: 10_000 + overCap}, (_, i) => ({
+        seq: i + 1,
+        ts: i + 1,
+        op: 'group.add',
+        group: {id: i + 1, title: `g${i + 1}`},
+    }));
+    const {idb, mod} = await freshLog({meta: TEST_META, events: seeded});
+
+    check('the seeded cap matches the module cap', mod.MAX_EVENTS === 10_000,
+        `MAX_EVENTS=${mod.MAX_EVENTS}`);
+
+    const overflows = [];
+    mod.onOverflow(seq => overflows.push(seq));
+
+    const pRead = mod.getEvents();
+    await Promise.resolve();
+    idb.releaseLoads();
+    const all = await pRead;
+
+    check('hydration trims an over-cap stored log', all.length === mod.MAX_EVENTS,
+        `len=${all.length}`);
+    check('hydration keeps the newest events', all[0].seq === overCap + 1,
+        `first=${all[0].seq}`);
+    check('hydration reports the trim to the overflow handler',
+        overflows.length === 1 && overflows[0] === overCap, JSON.stringify(overflows));
+    check('hydration deletes the trimmed head from the store', idb.deleteUpToCallCount === 1
+        && idb.storedEvents().length === mod.MAX_EVENTS && idb.storedEvents()[0].seq === overCap + 1,
+        `deleteUpTo=${idb.deleteUpToCallCount} stored=${idb.storedEvents().length}`);
+
+    mod.onOverflow(null);
+}
+
 // ---------------------------------------------------------------------------
 console.log(`\n${passed} passed, ${failures.length} failed`);
 if (failures.length) {
