@@ -6,6 +6,7 @@ import '/js/prefixed-storage.js';
 import * as Constants from '/js/constants.js';
 import Lang from '/js/lang.js';
 import * as Storage from '/js/storage.js';
+import * as Cloud from '/js/sync/cloud/cloud.js';
 import {isReservedFileName} from '/js/sync/delta/layout.js';
 
 import syncAreaMixin from '/js/mixins/sync-area.mixin.js';
@@ -51,7 +52,7 @@ export default {
             this.$watch('syncTabFavIcons', value => Storage.set({syncTabFavIcons: value}));
         });
 
-        this.$on('sync-finish', () => this.area.load(false));
+        this.syncCloudOffListeners.add(Cloud.on('sync-finish', () => this.area.load(false)));
     },
     methods: {
         lang: Lang,

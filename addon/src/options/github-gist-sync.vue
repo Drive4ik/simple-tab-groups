@@ -6,6 +6,7 @@ import '/js/prefixed-storage.js';
 import * as Constants from '/js/constants.js';
 import Lang from '/js/lang.js';
 import * as Storage from '/js/storage.js';
+import * as Cloud from '/js/sync/cloud/cloud.js';
 
 import syncAreaMixin from '/js/mixins/sync-area.mixin.js';
 import syncCloudMixin from '/js/mixins/sync-cloud.mixin.js';
@@ -47,7 +48,7 @@ export default {
                 });
             });
 
-        this.$on('sync-finish', () => this.area.load(false));
+        this.syncCloudOffListeners.add(Cloud.on('sync-finish', () => this.area.load(false)));
     },
     methods: {
         lang: Lang,
