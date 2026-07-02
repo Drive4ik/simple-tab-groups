@@ -41,6 +41,10 @@ const STUBS = {
             replaceEvents: (...args) => idb().replaceEvents(...args),
         };
     `,
+    'stg:capture-gate-state': `
+        export async function isCaptureGateOpen() { return globalThis.__captureGateOpen ?? true; }
+        export function invalidateCaptureGate() {}
+    `,
 };
 
 const SPECIFIER_TO_STUB = {
@@ -49,6 +53,7 @@ const SPECIFIER_TO_STUB = {
     '/js/logger.js': 'stg:logger',
     './device-id.js': 'stg:device-id',
     './delta-log-store.js': 'stg:delta-log-store',
+    './capture-gate-state.js': 'stg:capture-gate-state',
 };
 
 export async function resolve(specifier, context, nextResolve) {

@@ -60,6 +60,7 @@ import Logger from '/js/logger.js';
 import {getDeviceId} from './device-id.js';
 import {sanitizeGroupIconUrl} from './url-sync.js';
 import DeltaLogStore from './delta-log-store.js';
+import {isCaptureGateOpen} from './capture-gate-state.js';
 
 const logger = new Logger('DeltaLog');
 
@@ -259,6 +260,10 @@ export async function append(op, payload = {}) {
         return;
     }
 
+    if (!await isCaptureGateOpen()) {
+        return;
+    }
+
     await ensureLoaded();
 
     const event = {
@@ -285,6 +290,10 @@ export async function append(op, payload = {}) {
  */
 export async function appendMany(items) {
     if (!Array.isArray(items) || items.length === 0) {
+        return [];
+    }
+
+    if (!await isCaptureGateOpen()) {
         return [];
     }
 

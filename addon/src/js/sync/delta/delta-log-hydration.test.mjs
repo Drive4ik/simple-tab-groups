@@ -592,6 +592,39 @@ const TEST_META = {v: 1, deviceId: 'test-device'};
         `len=${all.length}`);
 }
 
+// --- 11. capture gate: appends are inert while sync is not usable ------------------
+{
+    const {idb, mod} = await freshLog();
+    globalThis.__captureGateOpen = false;
+
+    const gatedSingle = await mod.append(mod.OPS.GROUP_ADD, {group: {id: 1, title: 'g1'}});
+    const gatedBatch = await mod.appendMany([{op: mod.OPS.GROUP_ADD, group: {id: 2, title: 'g2'}}]);
+
+    check('a gated append returns nothing', gatedSingle === undefined, JSON.stringify(gatedSingle));
+    check('a gated appendMany returns an empty array',
+        Array.isArray(gatedBatch) && gatedBatch.length === 0, JSON.stringify(gatedBatch));
+    check('a gated append does not even hydrate the log', idb.loadCallCount === 0,
+        `loadCallCount=${idb.loadCallCount}`);
+    check('a gated append writes nothing',
+        idb.saveMetaCallCount === 0 && idb.putEventsCallCount === 0 && idb.replaceEventsCallCount === 0,
+        `saveMeta=${idb.saveMetaCallCount} putEvents=${idb.putEventsCallCount} replaceEvents=${idb.replaceEventsCallCount}`);
+
+    globalThis.__captureGateOpen = true;
+
+    const pOpen = mod.append(mod.OPS.GROUP_ADD, {group: {id: 3, title: 'g3'}});
+    await Promise.resolve();
+    await Promise.resolve();
+    idb.releaseLoads();
+    const opened = await pOpen;
+
+    check('opening the gate lets appends through again starting at seq 1',
+        opened?.seq === 1, `opened=${JSON.stringify(opened)}`);
+    check('the gated events never reached the store', idb.storedEvents().length === 1,
+        JSON.stringify(idb.storedEvents().map(e => e.seq)));
+
+    delete globalThis.__captureGateOpen;
+}
+
 // ---------------------------------------------------------------------------
 console.log(`\n${passed} passed, ${failures.length} failed`);
 if (failures.length) {

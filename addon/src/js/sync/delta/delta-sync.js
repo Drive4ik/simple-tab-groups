@@ -52,6 +52,7 @@ import {CloudError, send, ALARM_NAME_RETRY} from '../cloud/cloud.js?can-do-synch
 import {runSyncApply, isUserActive, DEFAULT_SYNC_APPLY_WATCHDOG_MS} from './user-priority-lock.js';
 import * as DeltaLog from './delta-log.js';
 import * as DeltaCapture from './delta-capture.js';
+import {invalidateCaptureGate} from './capture-gate-state.js';
 import {getDeviceId} from './device-id.js';
 import {planSync, computeBootstrapEvents, baselineFromSnapshot} from './plan-sync.js';
 import {
@@ -1891,6 +1892,8 @@ export async function deltaSynchronization() {
         const syncOptions = syncOptionsLocation === Constants.SYNC_STORAGE_FSYNC
             ? await SyncStorage.get()
             : await Storage.get(null, Constants.DEFAULT_SYNC_OPTIONS);
+
+        invalidateCaptureGate();
 
         try {
             Cloud = createCloudProvider(syncProvider, syncOptions);
