@@ -1556,26 +1556,28 @@ export async function resetSyncState() {
         return {ok: false, inProgress: true};
     }
 
+    inProgress = true;
+
     const log = logger.start(resetSyncState);
 
     const selfDeviceId = getDeviceId();
 
-    delete storage[baselineKey(selfDeviceId)];
-    delete storage[lastPushedSeqKey(selfDeviceId)];
-    delete storage[watermarkKey(selfDeviceId)];
-    // a hard reset clears the whole local log, so any deferred-truncation marker (a seq into
-    // that log) is moot — drop it so a stale seq can't trim the post-reset re-issued log.
-    delete storage[pendingTruncateKey(selfDeviceId)];
+    try {
+        storage[resetPendingKey(selfDeviceId)] = '1';
 
-    await DeltaLog.clear();
+        delete storage[baselineKey(selfDeviceId)];
+        delete storage[lastPushedSeqKey(selfDeviceId)];
+        delete storage[watermarkKey(selfDeviceId)];
+        delete storage[pendingTruncateKey(selfDeviceId)];
 
-    // arm the E2 reconciliation for the next sync (see the doc-comment above and the
-    // RESET_PENDING_PREFIX flag handling in deltaSynchronization).
-    storage[resetPendingKey(selfDeviceId)] = '1';
+        await DeltaLog.clear();
 
-    log.stop('reset local delta-sync state (cloud untouched)', {selfDeviceId});
+        log.stop('reset local delta-sync state (cloud untouched)', {selfDeviceId});
 
-    return {ok: true};
+        return {ok: true};
+    } finally {
+        inProgress = false;
+    }
 }
 
 export function extractArchiveTransition(currentIsArchive, props) {
