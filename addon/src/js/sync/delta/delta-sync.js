@@ -2190,22 +2190,22 @@ export async function deltaSynchronization() {
             },
         });
 
-        if (applyOutcome.deferred) {
-            // user is mutating → we yielded this cycle WITHOUT applying or pushing. Reschedule
-            // soon and exit cleanly (a deferral is NOT an error; the next cycle re-pulls and
-            // applies once the user's burst settles). No watermark/baseline write happened.
-            log.info('apply DEFERRED: user is mutating groups/tabs; rescheduling sync soon', {
+        if (applyOutcome.deferred || applyOutcome.watchdog) {
+            log.info('apply did not complete this cycle: skipping push/watermark/baseline; rescheduling sync soon', {
+                deferred: applyOutcome.deferred === true,
+                watchdog: applyOutcome.watchdog === true,
                 userActive: isUserActive(),
             });
             await rescheduleSoonAfterDefer(log);
 
             syncResult.ok = true;
-            syncResult.deferred = true;
+            syncResult.deferred = applyOutcome.deferred === true;
+            syncResult.watchdog = applyOutcome.watchdog === true;
             syncResult.progress = lastProgress;
             syncResult.changes = {local: false, cloud: false};
 
             send('sync-end', syncResult);
-            log.stop('deferred to user');
+            log.stop(applyOutcome.watchdog ? 'apply watchdog tripped: no push this cycle' : 'deferred to user');
             return syncResult;
         }
 
