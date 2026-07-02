@@ -1401,6 +1401,7 @@ async function applyTabContentUpdate(liveTab, target, log) {
         // needlessly re-navigated. The redirect case itself converges via the narrowed echo
         // guard (the redirect target is now captured + pushed, so the cloud learns Y).
         if (Object.hasOwn(target, 'url') && liveTab.discarded !== true
+            && isUrlSyncable(unwrapStubUrl(target.url))
             && shouldNavigateLiveTabUrl(liveTab.url, target.url)) {
             await browser.tabs.update(liveId, {url: target.url})
                 .catch(log.onCatch(['cant update tab url', liveId], false));
