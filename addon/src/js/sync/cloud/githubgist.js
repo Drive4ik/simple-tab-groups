@@ -160,31 +160,43 @@ export default class GithubGist {
         }
     }
 
+    #matchesGistName(gist) {
+        return !!gist && !gist.public && gist.description === this.#gistName;
+    }
+
+    #holdsConfiguredFile(gist) {
+        return !!gist && !gist.public && !!gist.files?.[this.#fileName];
+    }
+
     async #getGistById(gistId) {
         try {
             const gist = await this.#request('GET', `${this.#mainUrl}/${gistId}`);
-            const usable = gist && !gist.public && gist.description === this.#gistName;
+            const usable = this.#matchesGistName(gist) || this.#holdsConfiguredFile(gist);
             return usable ? gist : null;
         } catch {
             return null;
         }
     }
 
-    async #findGistByName(page = 1) {
+    async #findGistByName(page = 1, fileMatch = null) {
         const gists = await this.#request('GET', this.#mainUrl, {
             page,
             per_page: this.#perPage,
         });
 
-        const gist = gists.find(g => !g.public && g.description === this.#gistName);
+        const named = gists.find(g => this.#matchesGistName(g));
 
-        if (gist) {
-            return gist;
-        } else if (gists.length === this.#perPage) {
-            return this.#findGistByName(++page);
+        if (named) {
+            return named;
         }
 
-        return null;
+        fileMatch ??= gists.find(g => this.#holdsConfiguredFile(g)) ?? null;
+
+        if (gists.length === this.#perPage) {
+            return this.#findGistByName(page + 1, fileMatch);
+        }
+
+        return fileMatch;
     }
 
     async getInfo(revision = null, progressFunc = null) {

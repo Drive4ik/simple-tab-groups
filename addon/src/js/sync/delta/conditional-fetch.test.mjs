@@ -343,6 +343,66 @@ function planCycle({remoteUnchanged, hasPending}) {
         isRetryable({}) === false && getRateLimitResetMs({}) === null);
 }
 
+// ===== gist discovery: description match with pre-fork file-based fallback ======
+// Pure model of githubgist.js #findGistByName / #getGistById. A gist is picked by
+// description === gistName first; when no page has a description match, the pre-fork
+// predicate (private gist whose files contain the configured fileName) adopts an
+// existing upstream gist so upgrading users keep their history.
+{
+    const GIST_NAME = 'Simple Tab Groups';
+    const FILE_NAME = 'STG-backup.json';
+
+    const matchesGistName = g => !!g && !g.public && g.description === GIST_NAME;
+    const holdsConfiguredFile = g => !!g && !g.public && !!g.files?.[FILE_NAME];
+
+    function findGistByName(pages, perPage, page = 1, fileMatch = null) {
+        const gists = pages[page - 1] ?? [];
+        const named = gists.find(g => matchesGistName(g));
+        if (named) {
+            return named;
+        }
+        fileMatch ??= gists.find(g => holdsConfiguredFile(g)) ?? null;
+        if (gists.length === perPage) {
+            return findGistByName(pages, perPage, page + 1, fileMatch);
+        }
+        return fileMatch;
+    }
+
+    const isUsableById = g => matchesGistName(g) || holdsConfiguredFile(g);
+
+    const named = {id: 'named', public: false, description: GIST_NAME, files: {}};
+    const upstream = {id: 'upstream', public: false, description: 'Резервная копия', files: {[FILE_NAME]: {}}};
+    const publicNamed = {id: 'pub', public: true, description: GIST_NAME, files: {[FILE_NAME]: {}}};
+    const unrelated = {id: 'other', public: false, description: 'notes', files: {'todo.md': {}}};
+
+    check('discovery: description match wins',
+        findGistByName([[unrelated, named]], 30)?.id === 'named');
+
+    check('discovery: no description match ⇒ adopts pre-fork gist holding the file',
+        findGistByName([[unrelated, upstream]], 30)?.id === 'upstream');
+
+    check('discovery: description match on a later page beats an earlier file match',
+        findGistByName([[upstream, unrelated], [named]], 2)?.id === 'named');
+
+    check('discovery: file fallback found on page 1 survives paging to the end',
+        findGistByName([[upstream, unrelated], [unrelated]], 2)?.id === 'upstream');
+
+    check('discovery: public gists are never adopted',
+        findGistByName([[publicNamed]], 30) === null);
+
+    check('discovery: nothing matches ⇒ null (create a new gist later)',
+        findGistByName([[unrelated]], 30) === null);
+
+    check('discovery: cached-id revalidation accepts an adopted pre-fork gist',
+        isUsableById(upstream) === true);
+
+    check('discovery: cached-id revalidation accepts a description-named gist',
+        isUsableById(named) === true);
+
+    check('discovery: cached-id revalidation rejects public/unrelated gists',
+        isUsableById(publicNamed) === false && isUsableById(unrelated) === false);
+}
+
 // ============================ summary ========================================
 console.log(`\n${passed} passed, ${failures.length} failed`);
 if (failures.length) {
