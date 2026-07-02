@@ -449,10 +449,15 @@ async function applyBrowserOps(browserOps, resolvedSnapshot) {
                 }
             }
 
+            const archiveTransitions = [];
             for (const props of browserOps.groupsToUpdate) {
                 const existing = byId.get(props.id);
                 if (existing) {
-                    Object.assign(existing, props);
+                    const {props: plainProps, archiveTransition} = extractArchiveTransition(existing.isArchive, props);
+                    Object.assign(existing, plainProps);
+                    if (archiveTransition !== null) {
+                        archiveTransitions.push({groupId: existing.id, isArchive: archiveTransition});
+                    }
                 }
             }
 
@@ -475,6 +480,14 @@ async function applyBrowserOps(browserOps, resolvedSnapshot) {
             }
 
             await Groups.save(nextGroups);
+
+            for (const {groupId, isArchive} of archiveTransitions) {
+                if (removeIds.has(groupId)) {
+                    continue;
+                }
+                await Groups.setArchiveStateWhileHoldingLock(groupId, isArchive)
+                    .catch(log.onCatch(['cant apply archive state', groupId], false));
+            }
             endPhase();
         }
 
@@ -1563,6 +1576,20 @@ export async function resetSyncState() {
     log.stop('reset local delta-sync state (cloud untouched)', {selfDeviceId});
 
     return {ok: true};
+}
+
+export function extractArchiveTransition(currentIsArchive, props) {
+    if (!props || !Object.hasOwn(props, 'isArchive')) {
+        return {props, archiveTransition: null};
+    }
+
+    const {isArchive, ...plainProps} = props;
+
+    if (Boolean(isArchive) === Boolean(currentIsArchive)) {
+        return {props, archiveTransition: null};
+    }
+
+    return {props: plainProps, archiveTransition: Boolean(isArchive)};
 }
 
 /**

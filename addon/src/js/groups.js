@@ -1226,6 +1226,16 @@ export async function archiveToggle(...args) {
     return runUserMutation(() => archiveToggleCore(...args));
 }
 
+export async function setArchiveStateWhileHoldingLock(groupId, isArchive) {
+    const {group} = await load(groupId);
+
+    if (!group || Boolean(group.isArchive) === Boolean(isArchive)) {
+        return null;
+    }
+
+    return archiveToggleCore(groupId);
+}
+
 async function archiveToggleCore(groupId) {
     const log = logger.start('archiveToggle', groupId);
 
