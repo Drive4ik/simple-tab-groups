@@ -413,8 +413,8 @@ async function pinGroupTabs(tabs = [], windowId) {
  *
  * @param {object[]} tabs - the group's tabs being hidden.
  */
-async function unpinGroupTabs(tabs = []) {
-    const pinnedGroupTabs = tabs.filter(isGroupPinned);
+async function unpinGroupTabs(tabs = [], shouldUnpin = isGroupPinned) {
+    const pinnedGroupTabs = tabs.filter(shouldUnpin);
 
     if (!pinnedGroupTabs.length) {
         return; // common case: no-op
@@ -510,13 +510,13 @@ export async function setTabGroupPinned(tabId, groupPinned, targetGroupId) {
             const destinationGroupIsShownInTabWindow = Cache.getWindowGroup(tab.windowId) === groupId;
 
             if (!destinationGroupIsShownInTabWindow) {
-                await unpinGroupTabs([tab]);
+                await unpinGroupTabs([tab], t => t.pinned);
                 await Tabs.hide([tab], true);
             } else if (groupPinned) {
                 const existingPinned = group.tabs.filter(t => t.id !== tabId && isGroupPinned(t));
                 await pinGroupTabs([tab, ...existingPinned], windowId);
             } else {
-                await unpinGroupTabs([tab]);
+                await unpinGroupTabs([tab], t => t.pinned);
                 await pinGroupTabs(group.tabs.filter(isGroupPinned), windowId);
             }
         }
