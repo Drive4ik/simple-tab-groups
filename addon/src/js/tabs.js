@@ -478,13 +478,6 @@ function onRemoved(tabId, {isWindowClosing, windowId}) {
 }
 
 async function onMoved(tabId, {windowId, /* fromIndex, */ toIndex}) {
-    // A2: settle before capture reads. Mirrors onCreated/onUpdated. The move event fires the
-    // instant the browser starts the move; without this wait the cache groupId and the live
-    // browser index getGroupRelativeIndex reads can still reflect the PRE-move state →
-    // wrong group-relative index (peer tab order breaks) or a dropped move. Also lets the
-    // skip.removed/tracking + skipTrackingWindows lists populate (onCreated runs after 50ms).
-    await Utils.wait(50 + 20);
-
     if (skip.removed.has(tabId)) {
         logger.log(onMoved, '🛑 skip removed tab:', tabId);
         return;
@@ -499,6 +492,12 @@ async function onMoved(tabId, {windowId, /* fromIndex, */ toIndex}) {
         logger.log(onMoved, '🛑 skip tracking tab:', tabId, 'for window:', windowId);
         return;
     }
+
+    // A2: settle before capture reads. Mirrors onCreated/onUpdated. The move event fires the
+    // instant the browser starts the move; without this wait the cache groupId and the live
+    // browser index getGroupRelativeIndex reads can still reflect the PRE-move state →
+    // wrong group-relative index (peer tab order breaks) or a dropped move.
+    await Utils.wait(50 + 20);
 
     const groupId = Cache.getTabGroup(tabId);
 
@@ -521,11 +520,6 @@ async function onMoved(tabId, {windowId, /* fromIndex, */ toIndex}) {
 }
 
 async function onDetached(tabId, {oldWindowId}) { // notice: called before onAttached
-    // A2: settle before reading cache state. Mirrors onMoved/onAttached so the
-    // skip.removed/tracking + skipTrackingWindows lists are populated and the detach has
-    // committed before this handler routes the tab.
-    await Utils.wait(50 + 20);
-
     if (skip.removed.has(tabId)) {
         logger.log(onDetached, '🛑 skip removed tab:', tabId);
         return;
@@ -541,6 +535,10 @@ async function onDetached(tabId, {oldWindowId}) { // notice: called before onAtt
         return;
     }
 
+    // A2: settle before reading cache state so the detach has committed before this
+    // handler routes the tab.
+    await Utils.wait(50 + 20);
+
     const groupId = Cache.getWindowGroup(oldWindowId);
 
     logger.log(onDetached, {tabId, oldWindowId, groupId});
@@ -549,12 +547,6 @@ async function onDetached(tabId, {oldWindowId}) { // notice: called before onAtt
 }
 
 async function onAttached(tabId, {newWindowId}) { // called when tabs.move()
-    // A2: settle before capture reads. The attach event fires as the browser begins placing
-    // the tab in the new window; without this wait setTabGroup below and the group-relative
-    // index read can reflect the pre-attach state. Also lets the skip + skipTrackingWindows
-    // lists populate. Mirrors onCreated/onUpdated.
-    await Utils.wait(50 + 20);
-
     if (skip.removed.has(tabId)) {
         logger.log(onAttached, '🛑 skip removed tab:', tabId);
         return;
@@ -569,6 +561,11 @@ async function onAttached(tabId, {newWindowId}) { // called when tabs.move()
         logger.log(onAttached, '🛑 skip tracking tab:', tabId, 'for window:', newWindowId);
         return;
     }
+
+    // A2: settle before capture reads. The attach event fires as the browser begins placing
+    // the tab in the new window; without this wait setTabGroup below and the group-relative
+    // index read can reflect the pre-attach state. Mirrors onCreated/onUpdated.
+    await Utils.wait(50 + 20);
 
     const log = logger.start(onAttached, {tabId, newWindowId});
 
