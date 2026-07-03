@@ -1725,6 +1725,10 @@ async function initializeGroupWindows(windows, currentGroupIds) {
         }
 
         win.tabs.forEach(function (tab) {
+            if (Groups.isPinnedGroupId(tab.groupId)) {
+                return;
+            }
+
             if (tab.groupId && !currentGroupIds.includes(tab.groupId)) {
                 delete tab.groupId;
                 Cache.removeTabGroup(tab.id).catch(log.onCatch(['cant removeTabGroup', tab.id], false));
@@ -1838,6 +1842,8 @@ async function init() {
         }
 
         dataChanged.add(Groups.normalizeContainersInGroups(data.groups));
+
+        dataChanged.add(Groups.ensurePinnedGroup(data.groups));
 
         if (data.autoBackupLocation === Constants.AUTO_BACKUP_LOCATIONS.HOST) {
             if (Constants.IS_WINDOWS && await Host.hasPermission()) {
