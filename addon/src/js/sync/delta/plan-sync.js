@@ -251,10 +251,10 @@ export function planSync({pulledSnapshot, pulledDeltaLogs, localPendingEvents, s
     };
 }
 
-export function computeBootstrapEvents(localState, priorBaseline, knownLocalLogUids, knownLocalLogGroupIds, knownLocalLogOptionKeys) {
+export function computeBootstrapEvents(localState, priorBaseline, knownLocalLogUids, knownLocalLogGroupRecordIds, knownLocalLogOptionKeys) {
     const baseline = normalizeBaseline(priorBaseline);
     const logUids = new Set(knownLocalLogUids || []);
-    const logGroupIds = new Set(knownLocalLogGroupIds || []);
+    const logGroupRecordIds = new Set(knownLocalLogGroupRecordIds || []);
     const logOptionKeys = new Set(knownLocalLogOptionKeys || []);
 
     const events = [];
@@ -267,7 +267,7 @@ export function computeBootstrapEvents(localState, priorBaseline, knownLocalLogU
             continue;
         }
 
-        if (!baseline.groupIds.has(group.id) && !logGroupIds.has(group.id)) {
+        if (!baseline.groupIds.has(group.id) && !logGroupRecordIds.has(group.id)) {
             const {tabs, ...props} = group;
             void tabs;
             events.push({op: 'group.add', group: deepClone(props)});
