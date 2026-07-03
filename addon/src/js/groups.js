@@ -396,6 +396,11 @@ export async function setTabGroupPinned(tabId, groupPinned, targetGroupId) {
 
     let groupId = Cache.getTabGroup(tabId);
 
+    if (isPinnedGroupId(groupId) && !targetGroupId) {
+        log.stopWarn('cannot unpin inside the pinned group, drag it into a group instead', tabId);
+        return false;
+    }
+
     let newlyEnteredGroup = false;
 
     if (targetGroupId && groupId !== targetGroupId) {
@@ -653,6 +658,16 @@ async function hidePinnedGroup(group) {
 
     log.stop();
     return true;
+}
+
+export async function refreshPinnedGroupIfShown() {
+    const {group} = await load(PINNED_GROUP_ID, true);
+    const windowId = getPinnedGroupShownWindowId(group);
+
+    if (windowId && group.tabs.length) {
+        await Tabs.show(group.tabs, true);
+        await pinGroupTabs(group.tabs, windowId);
+    }
 }
 
 export async function togglePinnedGroupInWindow(windowId) {

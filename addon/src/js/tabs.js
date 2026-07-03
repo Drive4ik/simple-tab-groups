@@ -1037,7 +1037,10 @@ export async function move(tabIds, groupId, params = {}) {
     const pinnedToGroupPin = [];
 
     tabs = tabs.filter(function(tab) {
-        if (tab.pinned) {
+        const fromPinnedGroup = !params._pinnedAlreadyHandled &&
+            Groups.isPinnedGroupId(tab.groupId ?? Cache.getTabGroup(tab.id));
+
+        if (tab.pinned || fromPinnedGroup) {
             if (!params._pinnedAlreadyHandled) {
                 pinnedToGroupPin.push(tab);
                 continueTracking([tab], skippedTabs);
@@ -1192,6 +1195,10 @@ export async function move(tabIds, groupId, params = {}) {
     if (tabsCantHide.size) {
         log.log('notify thisTabsCanNotBeHidden');
         Notification(['thisTabsCanNotBeHidden', Array.from(tabsCantHide).join(', ')]);
+    }
+
+    if (Groups.isPinnedGroupId(groupId)) {
+        await Groups.refreshPinnedGroupIfShown();
     }
 
     if (!tabs.length) {
