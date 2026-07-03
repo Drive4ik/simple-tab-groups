@@ -35,6 +35,8 @@ export function fillHistory(windows) {
 }
 
 export async function applyByPosition(direction, windowId, groups, currentGroupId) {
+    groups = groups.filter(group => !isPinnedGroup(group));
+
     if (!groups.length) {
         return false;
     }

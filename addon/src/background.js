@@ -601,13 +601,19 @@ async function onBackgroundMessage(message, sender) {
                 result.ok = await Groups.applyByHistory('prev', currentWindow.id, notArchivedGroups);
                 break;
             case 'load-first-group':
-                if (notArchivedGroups.length) {
-                    result.ok = await Groups.apply(currentWindow.id, notArchivedGroups.shift().id);
+                {
+                    const navigableGroups = notArchivedGroups.filter(group => !Groups.isPinnedGroup(group));
+                    if (navigableGroups.length) {
+                        result.ok = await Groups.apply(currentWindow.id, navigableGroups.shift().id);
+                    }
                 }
                 break;
             case 'load-last-group':
-                if (notArchivedGroups.length) {
-                    result.ok = await Groups.apply(currentWindow.id, notArchivedGroups.pop().id);
+                {
+                    const navigableGroups = notArchivedGroups.filter(group => !Groups.isPinnedGroup(group));
+                    if (navigableGroups.length) {
+                        result.ok = await Groups.apply(currentWindow.id, navigableGroups.pop().id);
+                    }
                 }
                 break;
             case 'load-custom-group':
