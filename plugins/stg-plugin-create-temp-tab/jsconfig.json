@@ -1,0 +1,15 @@
+{
+    "include": [
+        "**/*.js"
+    ],
+
+    "compilerOptions": {
+        "target": "ESNext",
+        "module": "ESNext",
+        "moduleResolution": "Bundler"
+    },
+
+    "typeAcquisition": {
+        "include": ["firefox-webext-browser"]
+    }
+}

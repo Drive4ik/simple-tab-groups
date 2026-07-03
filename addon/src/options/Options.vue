@@ -396,7 +396,10 @@ export default {
             try {
                 file = await File.loadJson();
             } catch (e) {
-                Notification(e);
+                if (e.type !== 'cancel') {
+                    Notification(e);
+                }
+
                 return;
             }
 
@@ -429,7 +432,10 @@ export default {
                 file = await File.loadJson();
                 oldOptions = file.data;
             } catch (e) {
-                Notification(e);
+                if (e.type !== 'cancel') {
+                    Notification(e);
+                }
+
                 return;
             }
 
@@ -514,7 +520,10 @@ export default {
                 file = await File.loadJson();
                 panoramaOptions = file.data;
             } catch (e) {
-                Notification(e);
+                if (e.type !== 'cancel') {
+                    Notification(e);
+                }
+
                 return;
             }
 
@@ -599,7 +608,10 @@ export default {
                 file = await File.loadJson();
                 syncTabOptions = file.data;
             } catch (e) {
-                Notification(e);
+                if (e.type !== 'cancel') {
+                    Notification(e);
+                }
+
                 return;
             }
 

@@ -1,22 +1,16 @@
 {
     "include": [
-        "addon/**/*.js",
-        "plugins/**/*.js",
-        "translate/**/*.js"
+        "addon/src/**/*.js"
     ],
 
     "compilerOptions": {
-        "target": "ES2024",
+        "target": "ESNext",
         "module": "ESNext",
         "moduleResolution": "Bundler",
 
-        "baseUrl": ".",
         "paths": {
-            "/js/*": ["addon/src/js/*"]
+            "/js/*": ["./addon/src/js/*"]
         },
-
-        // "checkJs": true,
-        // "noImplicitAny": false
     },
 
     "typeAcquisition": {

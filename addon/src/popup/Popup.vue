@@ -258,7 +258,7 @@ export default {
 
             if (request.addTabs.length) {
                 const group = this.groups.find(gr => gr.id === request.groupId);
-                group.tabs.push(...request.addTabs.map(this.mapTab, this));
+                group.tabs.push(...request.addTabs.map(tab => this.mapTab(tab, group.isArchive)));
             }
         },
 
@@ -1507,7 +1507,7 @@ html {
         }
 
         &:not(.no-hover):hover,
-        &:focus,
+        &:focus-visible,
         &.is-context-active {
             background-color: var(--item-background-color-hover);
         }
@@ -1547,7 +1547,7 @@ html {
             display: flex;
             align-items: center;
             align-self: stretch;
-            padding-inline: var(--bulma-block-spacing);
+            /* padding-inline: var(--bulma-block-spacing); */
             white-space: nowrap;
             gap: var(--gap-indent);
         }
@@ -1555,10 +1555,14 @@ html {
         .flex-on-hover {
             display: flex;
             visibility: hidden;
+            width: 0;
+            overflow: hidden; /* for icon */
         }
 
         &:hover .flex-on-hover {
             visibility: visible;
+            width: auto;
+            padding-inline: var(--bulma-block-spacing);
         }
     }
 

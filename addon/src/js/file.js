@@ -18,6 +18,7 @@ export async function load(accept = '*/*', readAs = 'text') { // readAs: text, u
     input.accept = accept;
     input.initialValue = input.value;
 
+    input.addEventListener('cancel', reject);
     input.addEventListener('change', () => {
         if (input.initialValue === input.value) {
             return reject('no changes');
