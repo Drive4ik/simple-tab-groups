@@ -91,10 +91,19 @@ export default class GithubGist {
     }
 
     static apiUrl = 'https://api.github.com';
+    static authorizedHosts = new Set(['api.github.com', 'gist.githubusercontent.com']);
     static defaultHeaders = {
         'Accept': 'application/vnd.github+json',
         'X-GitHub-Api-Version': '2022-11-28',
     };
+
+    static isAuthorizedHost(url) {
+        try {
+            return GithubGist.authorizedHosts.has(new URL(url).hostname);
+        } catch {
+            return false;
+        }
+    }
 
     get #mainUrl() {
         return `${GithubGist.apiUrl}/gists`;
@@ -582,6 +591,9 @@ export default class GithubGist {
 
         if (isApi) {
             Object.assign(options.headers, GithubGist.defaultHeaders);
+        }
+
+        if (GithubGist.isAuthorizedHost(url)) {
             options.headers.Authorization = `Bearer ${this.#token}`;
         }
 
