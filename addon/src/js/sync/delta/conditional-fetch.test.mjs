@@ -509,6 +509,42 @@ function makeRemote() {
         isUsableById(publicNamed) === false && isUsableById(unrelated) === false);
 }
 
+// ===== raw-gist auth: private truncated-file refetch must carry the token =======
+// Pure model of githubgist.js #requestRaw host-authorization decision. A private gist file
+// over GitHub's ~1MB truncation threshold is refetched from its raw_url, which lives on
+// gist.githubusercontent.com (NOT api.github.com). The Authorization header must be attached
+// for BOTH GitHub-owned hosts, else the raw fetch is anonymous and a private gist 401s,
+// misreported as githubInvalidToken. Scoped to an exact-hostname allowlist so the token is
+// never leaked to a spoofed/redirected non-GitHub host.
+{
+    const authorizedHosts = new Set(['api.github.com', 'gist.githubusercontent.com']);
+    const isAuthorizedHost = url => {
+        try {
+            return authorizedHosts.has(new URL(url).hostname);
+        } catch {
+            return false;
+        }
+    };
+
+    check('raw-auth: api.github.com is authorized',
+        isAuthorizedHost('https://api.github.com/gists/abc') === true);
+
+    check('raw-auth: gist raw host is authorized (truncated-file refetch)',
+        isAuthorizedHost('https://gist.githubusercontent.com/user/id/raw/sha/STG-sync-delta.json') === true);
+
+    check('raw-auth: unrelated host is NOT authorized',
+        isAuthorizedHost('https://example.com/raw/file') === false);
+
+    check('raw-auth: subdomain-spoof host is NOT authorized (exact hostname match)',
+        isAuthorizedHost('https://gist.githubusercontent.com.evil.com/raw/file') === false);
+
+    check('raw-auth: token-in-userinfo spoof is NOT authorized',
+        isAuthorizedHost('https://gist.githubusercontent.com@evil.com/raw/file') === false);
+
+    check('raw-auth: malformed url ⇒ not authorized (fail-safe)',
+        isAuthorizedHost('not a url') === false);
+}
+
 // ============================ summary ========================================
 console.log(`\n${passed} passed, ${failures.length} failed`);
 if (failures.length) {
