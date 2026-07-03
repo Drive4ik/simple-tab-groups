@@ -35,6 +35,8 @@ export function fillHistory(windows) {
 }
 
 export async function applyByPosition(direction, windowId, groups, currentGroupId) {
+    groups = groups.filter(group => !isPinnedGroup(group));
+
     if (!groups.length) {
         return false;
     }
@@ -66,6 +68,11 @@ export async function apply(windowId, groupId, activeTabId, applyFromHistory = f
     } else if (windowsWithLoadingGroups.has(windowId)) {
         log.stopWarn('window in loading state now', windowId);
         return false;
+    }
+
+    if (isPinnedGroupId(groupId)) {
+        log.stop('pinned group toggle');
+        return togglePinnedGroupInWindow(windowId);
     }
 
     windowsWithLoadingGroups.add(windowId);
@@ -317,7 +324,11 @@ function isGroupPinned(tab) {
     if (tab.groupPinned === true) {
         return true;
     }
-    return Cache.getTabGroupPinned(Tabs.extractId(tab));
+    const id = Tabs.extractId(tab);
+    if ((tab.groupId ?? Cache.getTabGroup(id)) === PINNED_GROUP_ID) {
+        return true;
+    }
+    return Cache.getTabGroupPinned(id);
 }
 
 async function pinGroupTabs(tabs = [], windowId) {
@@ -386,6 +397,11 @@ export async function setTabGroupPinned(tabId, groupPinned, targetGroupId) {
     const log = logger.start('setTabGroupPinned', {tabId, groupPinned, targetGroupId});
 
     let groupId = Cache.getTabGroup(tabId);
+
+    if (isPinnedGroupId(groupId) && !targetGroupId) {
+        log.stopWarn('cannot unpin inside the pinned group, drag it into a group instead', tabId);
+        return false;
+    }
 
     let newlyEnteredGroup = false;
 
@@ -592,6 +608,97 @@ export function createId() {
     return self.crypto.randomUUID();
 }
 
+export const PINNED_GROUP_ID = '70696e6e-6564-4000-8000-000000000001';
+
+export function isPinnedGroup(group) {
+    return group?.isPinnedGroup === true;
+}
+
+export function isPinnedGroupId(groupId) {
+    return groupId === PINNED_GROUP_ID;
+}
+
+export function getPinnedGroup(groups) {
+    return groups.find(isPinnedGroup);
+}
+
+function getPinnedGroupShownWindowId(group) {
+    const shownTab = group?.tabs?.find(tab => !tab.hidden);
+    return shownTab ? shownTab.windowId : null;
+}
+
+async function showPinnedGroupInWindow(group, windowId) {
+    const log = logger.start('showPinnedGroupInWindow', {windowId, count: group.tabs.length});
+
+    if (group.tabs.length) {
+        if (group.tabs.some(tab => tab.windowId !== windowId)) {
+            group.tabs = await Tabs.moveNative(group.tabs, {
+                index: -1,
+                windowId,
+            }, true);
+        }
+
+        await Tabs.show(group.tabs, true);
+        await pinGroupTabs(group.tabs, windowId);
+    }
+
+    sendUpdatedAll();
+    Tabs.sendUpdatedGroup(group.id);
+
+    log.stop();
+    return true;
+}
+
+async function hidePinnedGroup(group) {
+    const log = logger.start('hidePinnedGroup', {count: group.tabs.length});
+
+    await unpinGroupTabs(group.tabs);
+    await Tabs.hide(group.tabs, true);
+
+    sendUpdatedAll();
+    Tabs.sendUpdatedGroup(group.id);
+
+    log.stop();
+    return true;
+}
+
+export async function refreshPinnedGroupIfShown() {
+    const {group} = await load(PINNED_GROUP_ID, true);
+    const windowId = getPinnedGroupShownWindowId(group);
+
+    if (windowId && group.tabs.length) {
+        await Tabs.show(group.tabs, true);
+        await pinGroupTabs(group.tabs, windowId);
+    }
+}
+
+export async function togglePinnedGroupInWindow(windowId) {
+    const {group} = await load(PINNED_GROUP_ID, true);
+
+    if (!group) {
+        return false;
+    }
+
+    if (getPinnedGroupShownWindowId(group) === windowId) {
+        return hidePinnedGroup(group);
+    }
+
+    return showPinnedGroupInWindow(group, windowId);
+}
+
+export function ensurePinnedGroup(groups) {
+    if (groups.some(isPinnedGroup)) {
+        return false;
+    }
+
+    const group = create(PINNED_GROUP_ID, 'Pinned', {isPinnedGroup: true});
+    group.isPinnedGroup = true;
+    group.title = 'Pinned';
+    groups.unshift(group);
+
+    return true;
+}
+
 // extract "uid" from "group.id" that matches UUID
 export function extractUId(groupId) {
     return groupId?.slice(-4);
@@ -606,6 +713,7 @@ export function create(id, title, defaultGroupProps = {}) {
         iconViewType: Constants.DEFAULT_GROUP_ICON_VIEW_TYPE,
         tabs: [],
         isArchive: false,
+        isPinnedGroup: false,
         discardTabsAfterHide: false,
         discardExcludeAudioTabs: false,
         prependTitleToWindow: false,
@@ -751,6 +859,11 @@ async function removeCore(groupId) {
 
     if (!group) {
         log.stopError('groupId', groupId, 'not found');
+        return;
+    }
+
+    if (group.isPinnedGroup) {
+        log.stopError('cannot remove the pinned group', groupId);
         return;
     }
 
@@ -1107,6 +1220,12 @@ async function archiveToggleCore(groupId) {
     let {group, groups} = await load(groupId, true),
         tabsToRemove = [],
         needUpdateTabs = false;
+
+    if (group.isPinnedGroup) {
+        await Browser.actionLoading(false);
+        log.stopError('cannot archive the pinned group', groupId);
+        return;
+    }
 
     log.log('group.isArchive', group.isArchive, '=>', !group.isArchive);
 

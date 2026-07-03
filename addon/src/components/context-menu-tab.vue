@@ -94,7 +94,7 @@ export default {
                 <span v-text="lang('setTabIconAsGroupIcon')"></span>
             </li>
             <li
-                v-if="menu.includes('pin-in-group') && data.group"
+                v-if="menu.includes('pin-in-group') && data.group && !data.group.isPinnedGroup"
                 @click="$emit('pin-in-group', data.tab, !data.tab.groupPinned)">
                 <figure class="image is-16x16">
                     <img src="/icons/thumbtack.svg" />

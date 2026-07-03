@@ -601,13 +601,19 @@ async function onBackgroundMessage(message, sender) {
                 result.ok = await Groups.applyByHistory('prev', currentWindow.id, notArchivedGroups);
                 break;
             case 'load-first-group':
-                if (notArchivedGroups.length) {
-                    result.ok = await Groups.apply(currentWindow.id, notArchivedGroups.shift().id);
+                {
+                    const navigableGroups = notArchivedGroups.filter(group => !Groups.isPinnedGroup(group));
+                    if (navigableGroups.length) {
+                        result.ok = await Groups.apply(currentWindow.id, navigableGroups.shift().id);
+                    }
                 }
                 break;
             case 'load-last-group':
-                if (notArchivedGroups.length) {
-                    result.ok = await Groups.apply(currentWindow.id, notArchivedGroups.pop().id);
+                {
+                    const navigableGroups = notArchivedGroups.filter(group => !Groups.isPinnedGroup(group));
+                    if (navigableGroups.length) {
+                        result.ok = await Groups.apply(currentWindow.id, navigableGroups.pop().id);
+                    }
                 }
                 break;
             case 'load-custom-group':
@@ -1725,6 +1731,10 @@ async function initializeGroupWindows(windows, currentGroupIds) {
         }
 
         win.tabs.forEach(function (tab) {
+            if (Groups.isPinnedGroupId(tab.groupId)) {
+                return;
+            }
+
             if (tab.groupId && !currentGroupIds.includes(tab.groupId)) {
                 delete tab.groupId;
                 Cache.removeTabGroup(tab.id).catch(log.onCatch(['cant removeTabGroup', tab.id], false));
@@ -1838,6 +1848,8 @@ async function init() {
         }
 
         dataChanged.add(Groups.normalizeContainersInGroups(data.groups));
+
+        dataChanged.add(Groups.ensurePinnedGroup(data.groups));
 
         if (data.autoBackupLocation === Constants.AUTO_BACKUP_LOCATIONS.HOST) {
             if (Constants.IS_WINDOWS && await Host.hasPermission()) {

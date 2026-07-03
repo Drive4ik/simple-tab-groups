@@ -569,7 +569,11 @@ export default {
                             <img v-if="tab.thumbnail" :src="tab.thumbnail" loading="lazy" decoding="async">
                         </div>
 
-                        <div v-if="tab.groupPinned" class="group-pinned-indicator" :title="lang('pinTabInGroupTitle')">
+                        <div v-if="tab.groupPinned"
+                            :class="['group-pinned-indicator', {'is-work-group-pin': !group.isPinnedGroup}]"
+                            :style="group.isPinnedGroup ? null : {'--pin-color': group.iconColor}"
+                            @click.stop="!group.isPinnedGroup && !group.isArchive && toggleTabGroupPinned(tab, false)"
+                            :title="lang(group.isPinnedGroup ? 'pinTabInGroupTitle' : 'unpinTabInGroupTitle')">
                             <figure class="image is-16x16">
                                 <img src="/icons/thumbtack.svg" />
                             </figure>
@@ -966,6 +970,20 @@ export default {
                 right: calc(var(--inner-indent) + var(--tab-icons-size));
                 width: var(--tab-icons-size);
                 height: var(--tab-icons-size);
+            }
+
+            > .group-pinned-indicator.is-work-group-pin {
+                cursor: pointer;
+            }
+
+            > .group-pinned-indicator.is-work-group-pin > figure {
+                background-color: var(--pin-color, currentColor);
+                -webkit-mask: url(/icons/thumbtack.svg) no-repeat center / contain;
+                mask: url(/icons/thumbtack.svg) no-repeat center / contain;
+            }
+
+            > .group-pinned-indicator.is-work-group-pin img {
+                visibility: hidden;
             }
 
             &:not(.has-thumbnail) > .tab-icon {
