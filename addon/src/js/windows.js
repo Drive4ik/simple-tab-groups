@@ -186,6 +186,16 @@ async function runGrandRestore(restoredWindowIds) {
 
             glog.log('sameGroupsAllWindows:', Array.from(sameGroupsAllWindows.keys()));
 
+            const isLiveInUnrestoredWindow = Array.from(sameGroupsAllWindows.values()).some(group => {
+                return group.isLoaded && !restoredWindowIds.has(group.window.id);
+            });
+
+            if (isLiveInUnrestoredWindow) {
+                deleteTabsToRestoreByGroup(groupToKeep);
+                glog.stop('🛑 group is loaded in a window outside this restore, leave both windows intact');
+                continue;
+            }
+
             // если группа из всех окон одна
             if (sameGroupsAllWindows.size === 1) {
                 const [onlyGroup] = sameGroupsAllWindows.values();
@@ -222,21 +232,6 @@ async function runGrandRestore(restoredWindowIds) {
                 glog.log('processing other same group in window', otherSameGroup.window.id);
 
                 for (const [index, oTab] of otherSameGroup.tabs.entries()) {
-                    // удаляем другую вкладку если обе группы загружены, так как юзер мог менять вкладки в другом окне
-                    // если вкладка в востанавливаемом окне, удаляем её при условии, если восстановленные окна -
-                    // не все окна браузера, юзер мог менять вкладки в окне что осталось
-                    if (
-                        (groupToKeep.isLoaded && otherSameGroup.isLoaded) ||
-                        (
-                            restoredWindowIds.has(otherSameGroup.window.id) &&
-                            restoredWindowIds.size !== allWindowsMap.size
-                        )
-                    ) {
-                        glog.log('mark to delete', oTab.id);
-                        tabsToDelete.set(oTab.id, oTab);
-                        continue;
-                    }
-
                     const found = groupToKeep.tabs.some(tab => Tabs.isSame(oTab, tab, sameTabKeys));
 
                     if (found) {
@@ -247,27 +242,6 @@ async function runGrandRestore(restoredWindowIds) {
                         // insert tab into the same position as in the same group
                         groupToKeep.tabs.splice(index, 0, oTab);
                         tabsToMoving.set(oTab.id, oTab);
-                    }
-                }
-            }
-
-            // удаляем вкладки востановленной группы которых нет в других группах
-            if (otherSameGroupsAllWindows.size) {
-                const allOtherTabs = Utils.flatTabs(Array.from(otherSameGroupsAllWindows.values()));
-
-                for (const tab of groupToKeep.tabs) {
-                    // если вкладка из другого окна - пропускаем
-                    if (tabsToMoving.has(tab.id)) {
-                        glog.log('🛑 skip tab', tab.id, 'it will be moved to the keep group');
-                        continue;
-                    }
-
-                    const found = allOtherTabs.some(oTab => Tabs.isSame(oTab, tab, sameTabKeys));
-
-                    glog.log('tab', tab.id, 'find result in otherSameGroupsAllWindows:', found);
-
-                    if (!found) {
-                        tabsToDelete.set(tab.id, tab);
                     }
                 }
             }
