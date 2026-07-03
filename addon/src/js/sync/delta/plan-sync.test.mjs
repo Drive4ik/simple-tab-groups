@@ -29,6 +29,16 @@ function check(name, cond, detail) {
 const SELF = 'devSelf';
 const REMOTE = 'devRemote';
 
+function buildLogGroupRecordIds(events) {
+    const ids = new Set();
+    for (const event of events) {
+        if (event.group?.id != null) {
+            ids.add(event.group.id);
+        }
+    }
+    return ids;
+}
+
 // ---------------------------------------------------------------------------
 // 1. A local PENDING add: the tab already exists locally (the user just made it),
 //    so it must NOT appear in browserOps.tabsToCreate, but it MUST appear in
@@ -386,6 +396,36 @@ const REMOTE = 'devRemote';
     // re-running with everything now in the baseline yields nothing (idempotent).
     const boot2 = computeBootstrapEvents(localState, {tabUids: ['tNew', 'tInLog'], groupIds: ['gNew']}, [], []);
     check('bootstrap: everything in baseline ⇒ no events (idempotent)', boot2.length === 0, JSON.stringify(boot2));
+}
+
+// B5b. group.add dedup keys off the group-RECORD set, not any group reference.
+{
+    const localState = {groups: [
+        {id: 'gPre', title: 'Real Title', tabs: [{uid: 'tPre', url: 'http://p', index: 0}]},
+    ]};
+
+    const recordSet = buildLogGroupRecordIds([
+        {op: 'tab.move', groupId: 'gPre', uid: 'tPre'},
+        {op: 'tab.remove', groupId: 'gPre', uid: 'tOld'},
+    ]);
+    check('capture: tab-level events do NOT put the group into the record set',
+        !recordSet.has('gPre'), JSON.stringify([...recordSet]));
+
+    const bootFromTabRefs = computeBootstrapEvents(localState, {tabUids: [], groupIds: []}, [], recordSet);
+    check('bootstrap: a group referenced only by tab-level events still emits group.add with its title',
+        bootFromTabRefs.some(e => e.op === 'group.add' && e.group?.id === 'gPre' && e.group?.title === 'Real Title'),
+        JSON.stringify(bootFromTabRefs));
+
+    const recordSetWithAdd = buildLogGroupRecordIds([
+        {op: 'group.add', group: {id: 'gPre', title: 'Real Title'}},
+    ]);
+    check('capture: a group.add event DOES put the group into the record set',
+        recordSetWithAdd.has('gPre'), JSON.stringify([...recordSetWithAdd]));
+
+    const bootWithRecord = computeBootstrapEvents(localState, {tabUids: [], groupIds: []}, [], recordSetWithAdd);
+    check('bootstrap: a group already carrying a group.add in the log is not re-emitted',
+        !bootWithRecord.some(e => e.op === 'group.add' && e.group?.id === 'gPre'),
+        JSON.stringify(bootWithRecord));
 }
 
 // B6. baselineFromSnapshot collects the right ids/uids.
