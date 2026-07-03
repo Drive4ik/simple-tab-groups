@@ -519,31 +519,17 @@ export const DEFAULT_OPTIONS = Object.freeze({
 
     syncEnable: true,
     autoSyncEnable: false,
-    syncProvider: 'github-gist', // local (per-device) option, see PROVIDER_* in sync/cloud/provider.js
+    syncProvider: 'github-gist',
     syncOptionsLocation: IS_AVAILABLE_SYNC_STORAGE ? SYNC_STORAGE_FSYNC : SYNC_STORAGE_LOCAL,
     syncLastUpdate: "1970-01-01T00:00:00Z",
     syncIntervalKey: INTERVAL_KEY.minutes, // minutes, hours, days
     syncIntervalValue: 5,
     syncTabFavIcons: false,
-    // Safety net: take a local STG backup before delta-sync applies any browser-
-    // mutating change, so a bad sync can be fully rolled back. Default ON (safety
-    // first). Name starts with `sync` ⇒ LOCAL-ONLY (never roams between devices),
-    // see sync/delta/option-keys.js LOCAL_ONLY_OPTION_KEY_PREFIXES.
     syncBackupBeforeApply: true,
     syncBackupLocation: AUTO_BACKUP_LOCATIONS.DOWNLOADS,
     syncBackupFilePath: 'STG-sync-pre-apply-backups-FF-{ff-version}/STG-sync-pre-apply-backup-{slot}',
-    // "Sleep synced GROUP tabs by default" — when true, non-pinned tabs created by a
-    // sync apply are created asleep/discarded: they show title+favicon and only load
-    // when the user activates them. Default ON. All `sync*` keys are LOCAL-ONLY (never
-    // roam between devices), see sync/delta/option-keys.js LOCAL_ONLY_OPTION_KEY_PREFIXES.
     syncSleepNewTabs: true,
-    // PINNED tabs are a separate axis: they LOAD by default, because Firefox forbids
-    // creating a discarded pinned tab. When this is true STG sleeps them anyway via
-    // create-then-discard. Default OFF (pinned tabs load).
     syncSleepPinnedTabs: false,
-    // When true, a synced tab that was active/loaded (not discarded) on the SOURCE
-    // machine is activated (loaded) here, overriding sleep-by-default for those tabs.
-    // Reads the additive `loaded` field on the tab record (absent ⇒ asleep). Default OFF.
     syncActivatePreviouslyActiveTabs: false,
 
     colorScheme: 'auto', // auto, light, dark
@@ -574,7 +560,7 @@ export const ALL_OPTION_KEYS = Object.freeze(DEFAULT_OPTION_KEYS.filter(key => !
 export const ON_UPDATED_TAB_PROPERTIES = Object.freeze([ // browser.tabs not defined into web page scripts
     browser.tabs?.UpdatePropertyName.TITLE, // for cache
     browser.tabs?.UpdatePropertyName.STATUS, // for check update url and thumbnail
-    browser.tabs?.UpdatePropertyName.URL, // sync: a grouped/pinned tab navigating to a new url must propagate even without a title change (getRealTabStateChanged then exposes changeInfo.url)
+    browser.tabs?.UpdatePropertyName.URL,
     browser.tabs?.UpdatePropertyName.FAVICONURL, // for session
     browser.tabs?.UpdatePropertyName.HIDDEN,
     browser.tabs?.UpdatePropertyName.PINNED,

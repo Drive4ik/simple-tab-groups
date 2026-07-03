@@ -74,12 +74,6 @@ export async function apply(windowId, groupId, activeTabId, applyFromHistory = f
 
     let result = null;
 
-    // Tab ids THIS apply put into skip-tracking. On the error path we clear ONLY these
-    // (see catch) instead of `Tabs.clearSkipTracking()` — a GLOBAL `skip.tracking.clear()`
-    // would also wipe the skip flags an OUTER/concurrent operation (notably a delta sync's
-    // in-flight createMultiple/moveNative/hide of many tabs) still relies on, so its tab
-    // events would leak as real user actions and could drop/unpin/re-group unrelated tabs
-    // (e.g. a local-only global pinned tab). Scoping the cleanup keeps applies isolated.
     const skippedTrackingTabIds = new Set();
 
     try {
@@ -99,8 +93,6 @@ export async function apply(windowId, groupId, activeTabId, applyFromHistory = f
                 groupToHide = groups.find(gr => gr.id === oldGroupId),
                 tabsIdsToRemove = new Set;
 
-            // record the tab ids this apply will touch (show/move/pin/hide) so the error
-            // path can clear ONLY their skip flags, never the global set (see catch).
             for (const tab of groupToShow?.tabs || []) {
                 const id = Tabs.extractId(tab);
                 id != null && skippedTrackingTabIds.add(id);
@@ -119,9 +111,6 @@ export async function apply(windowId, groupId, activeTabId, applyFromHistory = f
                 throw '';
             }
 
-            // group-pinned tabs are currently browser-pinned (so isCanNotBeHidden would
-            // flag them), but we unpin them before hiding — exclude them from this guard,
-            // which is meant to catch tabs sharing microphone/camera.
             const sharingTabs = groupToHide?.tabs.filter(tab => !isGroupPinned(tab) && Tabs.isCanNotBeHidden(tab)) || [];
 
             if (sharingTabs.length && !ignoreSharing) {
@@ -150,17 +139,12 @@ export async function apply(windowId, groupId, activeTabId, applyFromHistory = f
                     await Tabs.setMute(groupToShow.tabs, false);
                 }
 
-                // group-scoped pinned tabs: pin the flagged ones and place them right
-                // after the global pinned tabs, before this group's normal tabs.
-                // No-op when no tab in the group is group-pinned.
                 await pinGroupTabs(groupToShow.tabs, windowId);
             }
 
             // link group with window
             await Cache.setWindowGroup(windowId, groupToShow.id);
 
-            // group-scoped pinned tabs of the group we're leaving must be UNPINNED before
-            // they can be HIDDEN (Firefox rejects hiding a pinned tab). No-op otherwise.
             await unpinGroupTabs(groupToHide?.tabs);
 
             // hide tabs
@@ -314,10 +298,6 @@ export async function apply(windowId, groupId, activeTabId, applyFromHistory = f
             await Browser.actionGroup(null, windowId);
 
             if (!groupWindowId) {
-                // clear ONLY the tabs this apply skip-tracked (not the global set), so a
-                // failed/reentrant apply can't strip the skip flags of an outer delta
-                // sync's in-flight tabs and turn its applied changes into "real" tab
-                // events (which previously dropped/unpinned unrelated tabs).
                 Tabs.continueTracking(skippedTrackingTabIds);
             }
         }
@@ -330,25 +310,6 @@ export async function apply(windowId, groupId, activeTabId, applyFromHistory = f
     return result;
 }
 
-// ---------------------------------------------------------------------------
-// Group-scoped pinned tabs.
-//
-// A group tab flagged `groupPinned` (per-tab session value, see cache.js) is browser-
-// pinned only WHILE its group is active, landing in the tab strip AFTER the global
-// pinned tabs and BEFORE the group's normal tabs. When its group is left, it must be
-// UNPINNED then HIDDEN — Firefox `tabs.hide()` rejects a pinned tab (STG encodes this
-// in `Tabs.isCanBeHidden`, which excludes pinned), so the order is mandatory.
-//
-// No-op for the common case: when no tab in the group carries `groupPinned`, neither
-// helper touches the browser.
-// ---------------------------------------------------------------------------
-
-/**
- * True for a group tab the user flagged as group-pinned. Consults the cache as the
- * source of truth (the `groupPinned` session value) and falls back to the tab object,
- * because `Tabs.moveNative` strips cache keys — incl. `groupPinned` — from the tab
- * objects it returns, so a cross-window move would otherwise lose the flag.
- */
 function isGroupPinned(tab) {
     if (!tab) {
         return false;
@@ -359,20 +320,11 @@ function isGroupPinned(tab) {
     return Cache.getTabGroupPinned(Tabs.extractId(tab));
 }
 
-/**
- * SHOW path: pin the group's flagged tabs and place them contiguously right after the
- * window's global pinned tabs (which always stay first), in their stored group order,
- * before the group's normal tabs. Conservative: a per-tab pin/move failure is logged
- * and skipped, never throwing — the tab is never lost.
- *
- * @param {object[]} tabs - the group's tabs (already shown), in stored order.
- * @param {number} windowId
- */
 async function pinGroupTabs(tabs = [], windowId) {
     const pinnedGroupTabs = tabs.filter(isGroupPinned);
 
     if (!pinnedGroupTabs.length) {
-        return; // common case: no-op
+        return;
     }
 
     const log = logger.start('pinGroupTabs', 'count:', pinnedGroupTabs.length, 'windowId:', windowId);
@@ -381,15 +333,11 @@ async function pinGroupTabs(tabs = [], windowId) {
     const skipped = Tabs.skipTracking(ids);
 
     try {
-        // pin via browser (lands the tabs in the pinned region, after global pinned)
         await Promise.allSettled(pinnedGroupTabs.map(tab =>
             browser.tabs.update(tab.id, {pinned: true})
                 .catch(log.onCatch(['cant pin group tab', tab.id], false))
         ));
 
-        // global pinned tabs (no groupId) always stay first; our group-pinned tabs go
-        // immediately after them, in stored group order. Move them as a contiguous block
-        // to the slot right after the last global pinned tab.
         const globalPinned = await Tabs.get(windowId, true, null).catch(() => []);
         const globalPinnedCount = globalPinned.filter(tab => !Cache.getTabGroup(tab.id)).length;
 
@@ -406,18 +354,11 @@ async function pinGroupTabs(tabs = [], windowId) {
     log.stop();
 }
 
-/**
- * LEAVE path: for the group's flagged tabs, UNPIN then HIDE (in that order — a pinned
- * tab can't be hidden). Returns the ids it unpinned so the caller's normal hide pass
- * can hide them with the rest. Conservative: failures are logged, never thrown.
- *
- * @param {object[]} tabs - the group's tabs being hidden.
- */
 async function unpinGroupTabs(tabs = [], shouldUnpin = isGroupPinned) {
     const pinnedGroupTabs = tabs.filter(shouldUnpin);
 
     if (!pinnedGroupTabs.length) {
-        return; // common case: no-op
+        return;
     }
 
     const log = logger.start('unpinGroupTabs', 'count:', pinnedGroupTabs.length);
@@ -426,15 +367,11 @@ async function unpinGroupTabs(tabs = [], shouldUnpin = isGroupPinned) {
     const skipped = Tabs.skipTracking(ids);
 
     try {
-        // unpin first so the subsequent Tabs.hide can hide them (Firefox rejects hiding
-        // a pinned tab). The `groupPinned` session flag is preserved so the next SHOW
-        // re-pins them.
         await Promise.allSettled(pinnedGroupTabs.map(tab =>
             browser.tabs.update(tab.id, {pinned: false})
                 .catch(log.onCatch(['cant unpin group tab', tab.id], false))
         ));
 
-        // reflect the live state so the caller's hide pass treats them as hideable
         pinnedGroupTabs.forEach(tab => tab.pinned = false);
     } catch (e) {
         log.logError('cant unpin group tabs', e);
@@ -445,40 +382,15 @@ async function unpinGroupTabs(tabs = [], shouldUnpin = isGroupPinned) {
     log.stop();
 }
 
-/**
- * Toggle a group tab's group-pinned flag and reflect it live if the group is loaded.
- * Persists the per-tab session flag (so it survives reload + is captured for sync via
- * `prepareForSaveTab`/delta-capture), then pins or unpins+hides the tab if its group is
- * currently shown in a window. The flag rides the group tab; the tab keeps its groupId.
- *
- * `targetGroupId` lets a GLOBAL pinned tab (no groupId) be moved INTO a group and become
- * group-pinned in one action: the tab is assigned to that group (via `Tabs.move`, which
- * un-globals it) and then flagged group-pinned. For an existing group tab `targetGroupId`
- * is ignored.
- *
- * @param {number} tabId
- * @param {boolean} [groupPinned] - desired state; defaults to toggling the current value.
- * @param {string} [targetGroupId] - assign a group-less (global pinned) tab into this group first.
- */
 export async function setTabGroupPinned(tabId, groupPinned, targetGroupId) {
     const log = logger.start('setTabGroupPinned', {tabId, groupPinned, targetGroupId});
 
     let groupId = Cache.getTabGroup(tabId);
 
-    // A5: did this call move the tab INTO the group for the first time (vs. flip the flag on a
-    // tab already in the group)? A tab newly entering has no prior tab.add in the log scoped to
-    // this group, so the sync emit below must be a tab.add — a bare tab.modify would be a
-    // modify-without-add on the peer.
     let newlyEnteredGroup = false;
 
     if (targetGroupId && groupId !== targetGroupId) {
-        // a (global) pinned tab being moved INTO a group as group-pinned, or a tab in
-        // another group being re-targeted. Tabs.move skips already-pinned tabs, so unpin
-        // it first, then move it into the target group.
         await browser.tabs.update(tabId, {pinned: false}).catch(log.onCatch(['cant unpin for move', tabId], false));
-        // _pinnedAlreadyHandled: this is the group-pin flow's own re-entrant move. The tab
-        // is already unpinned above; the flag guarantees Tabs.move won't loop back into the
-        // pinned→group-pin routing even if the browser still reports it pinned for an instant.
         await Tabs.move([tabId], targetGroupId, {showNotificationAfterMovingTabIntoThisGroup: false, _pinnedAlreadyHandled: true})
             .catch(log.onCatch(['cant move tab into group', tabId, targetGroupId], false));
         groupId = Cache.getTabGroup(tabId);
@@ -499,8 +411,6 @@ export async function setTabGroupPinned(tabId, groupPinned, targetGroupId) {
     const windowId = Cache.getWindowId(groupId);
 
     if (windowId) {
-        // group is loaded → reflect live. Re-load the group's tabs in order so the
-        // re-pin lands the tab in the correct slot (after global pinned, in group order).
         const {group} = await load(groupId, true);
         const tab = group?.tabs.find(t => t.id === tabId);
 
@@ -522,16 +432,6 @@ export async function setTabGroupPinned(tabId, groupPinned, targetGroupId) {
         }
     }
 
-    // SYNC: propagate the group-pin flip. The flag is now persisted in the cache, so
-    // buildTabRecord (via Cache.getTabGroupPinned) carries the new `pinned` value. We bump
-    // lastModified to NOW first so last-writer-wins favours this change over a stale concurrent
-    // edit. Capture only logs URL-syncable group tabs and self-suppresses during sync-apply
-    // (DeltaCapture.isApplying), so this neither double-fires nor recurses with the apply path
-    // that calls this very function. Best-effort — never blocks the toggle.
-    // A5: a tab newly moved into the group emits tab.add (the move via Tabs.move already logged
-    // an add, so this is idempotent — same uid, last-writer-wins — and guarantees the add
-    // carries the just-set group-pin flag). A flag-only flip on a tab already in the group emits
-    // tab.modify as before.
     await Cache.setTabLastModified(tabId).catch(log.onCatch(['cant bump lastModified (group-pin)', tabId], false));
     const liveTab = await Tabs.getOne(tabId);
     if (liveTab) {
@@ -549,14 +449,6 @@ export async function setTabGroupPinned(tabId, groupPinned, targetGroupId) {
     return true;
 }
 
-/**
- * Re-apply the group-pinned ordering for a currently-loaded group: pin its flagged tabs
- * and place them right after the global pinned region. Used by the sync apply path after
- * creating group-pinned tabs into a loaded group. No-op if the group isn't loaded or has
- * no group-pinned tab.
- *
- * @param {string} groupId
- */
 export async function applyGroupPinnedOrder(groupId) {
     const windowId = Cache.getWindowId(groupId);
 
@@ -588,17 +480,17 @@ function send(action, data = {}) {
 
 export function sendAdded(group, windowId) {
     send('added', {group, windowId});
-    DeltaCapture.groupAdded(group); // P1 delta log (inert); user-initiated only - sync saves via Groups.save
+    DeltaCapture.groupAdded(group);
 }
 
 export function sendUpdated(group, fullGroup) {
     send('updated', {group, fullGroup});
-    DeltaCapture.groupModified(fullGroup); // P1 delta log (inert): full record for faithful replay
+    DeltaCapture.groupModified(fullGroup);
 }
 
 export function sendRemoved(groupId, windowId) {
     send('removed', {groupId, windowId});
-    DeltaCapture.groupRemoved(groupId); // P1 delta log (inert)
+    DeltaCapture.groupRemoved(groupId);
 }
 
 export function sendLoaded(groupId, windowId, addTabs = []) {
@@ -632,10 +524,6 @@ export async function load(groupId = null, withTabs = false, includeFavIconUrl, 
     const log = logger.start('load', groupId, {withTabs, includeFavIconUrl, includeThumbnail});
 
     let [allTabs, {groups}] = await Promise.all([
-        // pinned=null ⇒ include BOTH pinned and unpinned tabs: a group-scoped pinned tab
-        // (groupPinned) is browser-pinned while its group is active, so it would be missed
-        // by pinned=false. Global pinned tabs (no groupId) are dropped by the groupId
-        // filter below, so they never leak into a group.
         withTabs ? Tabs.get(null, null, null, undefined, includeFavIconUrl, includeThumbnail) : false,
         Storage.get('groups')
     ]);
@@ -771,9 +659,6 @@ export async function getDefaults() {
     };
 }
 
-// Unlocked core: writes defaultGroupProps. Callers that ALREADY hold the user-priority
-// lock (e.g. `remove` clearing a moveToGroupIfNoneCatchTabRules) must use this to avoid a
-// self-deadlock; the public `saveDefault` below takes the lock for direct (user) callers.
 async function saveDefaultCore(defaultGroupProps) {
     const log = logger.start('saveDefault', defaultGroupProps);
 
@@ -783,15 +668,10 @@ async function saveDefaultCore(defaultGroupProps) {
 }
 
 export async function saveDefault(defaultGroupProps) {
-    // user-priority: serialize against sync apply + other user mutations (writes a groups-
-    // adjacent store). See user-priority-lock.js.
     return runUserMutation(() => saveDefaultCore(defaultGroupProps));
 }
 
 export async function add(...args) {
-    // USER PRIORITY: take the mutex for the whole create critical section so it can't
-    // interleave with a sync apply's load→modify→save (lost-update race). No network I/O
-    // happens here, so holding the lock is bounded. See user-priority-lock.js.
     return runUserMutation(() => addCore(...args));
 }
 
@@ -847,7 +727,6 @@ async function addCore(windowId, tabIds = [], title = null) {
 }
 
 export async function remove(...args) {
-    // USER PRIORITY: serialize the whole remove critical section against sync apply.
     return runUserMutation(() => removeCore(...args));
 }
 
@@ -889,7 +768,7 @@ async function removeCore(groupId) {
     if (defaultGroupProps.moveToGroupIfNoneCatchTabRules === group.id) {
         log.log('remove moveToGroupIfNoneCatchTabRules from default group props');
         delete defaultGroupProps.moveToGroupIfNoneCatchTabRules;
-        await saveDefaultCore(defaultGroupProps); // already inside the user-priority lock
+        await saveDefaultCore(defaultGroupProps);
     }
 
     if (!group.isArchive) {
@@ -913,10 +792,6 @@ const RESTORE_GROUP_PREFIX = 'restore-group-';
 async function addUndoRemove(groupToRemove) {
     const restoreId = RESTORE_GROUP_PREFIX + groupToRemove.id;
 
-    // The same group id may be removed again while a previous undo is still pending
-    // (e.g. resurrected by sync between two removes). Clear the stale undo first,
-    // mirroring restoreCore, so Menus.create won't throw on a duplicate id and only
-    // the newest undo entry remains.
     if (await Menus.has(restoreId)) {
         await Menus.remove(restoreId);
     }
@@ -948,7 +823,6 @@ async function addUndoRemove(groupToRemove) {
 }
 
 export async function restore(...args) {
-    // USER PRIORITY: undo-remove rebuilds the groups array; serialize against sync apply.
     return runUserMutation(() => restoreCore(...args));
 }
 
@@ -957,9 +831,6 @@ async function restoreCore(groupId) {
 
     const restoreId = RESTORE_GROUP_PREFIX + groupId;
 
-    // The restore action is dual-wired to both a browser-action menu item and a
-    // notification sharing this handler, so a second trigger can hit Menus.remove
-    // on an id that's already gone. Guard it (Notification.clear is idempotent).
     if (await Menus.has(restoreId)) {
         await Menus.remove(restoreId);
     }
@@ -999,7 +870,6 @@ async function restoreCore(groupId) {
 }
 
 export async function update(...args) {
-    // USER PRIORITY: load→assign→save of a group's props; serialize against sync apply.
     return runUserMutation(() => updateCore(...args));
 }
 
@@ -1063,7 +933,6 @@ async function updateCore(groupId, updateData) {
 }
 
 export async function move(...args) {
-    // USER PRIORITY: reorder load→splice→save; serialize against sync apply.
     return runUserMutation(() => moveCore(...args));
 }
 
@@ -1076,9 +945,6 @@ async function moveCore(groupId, newGroupIndex) {
 
     await save(groups, true);
 
-    // delta log: capture the reorder so it syncs. Group order is array position, so emit
-    // the group's FINAL index in the saved list. Without this the cloud kept the stale
-    // order and the next apply reverted the local reorder.
     DeltaCapture.groupMoved(groupId, groups.findIndex(gr => gr.id === groupId));
 
     await MenusMain.groupsUpdated(groups);
@@ -1087,7 +953,6 @@ async function moveCore(groupId, newGroupIndex) {
 }
 
 export async function sort(...args) {
-    // USER PRIORITY: bulk reorder load→sort→save; serialize against sync apply.
     return runUserMutation(() => sortCore(...args));
 }
 
@@ -1108,8 +973,6 @@ async function sortCore(vector = 'asc') {
 
     await save(groups, true);
 
-    // delta log: a sort is a bulk reorder. Capture each group's final index so the new
-    // order syncs (same group.move op as a single drag-reorder).
     groups.forEach((gr, index) => DeltaCapture.groupMoved(gr.id, index));
 
     await MenusMain.groupsUpdated(groups);
@@ -1167,8 +1030,6 @@ export async function unload(groupId, ignoreSharing = false) {
         return false;
     }
 
-    // group-pinned tabs are currently browser-pinned; exclude them from the
-    // microphone/camera guard (we unpin them ourselves before hiding, below).
     const sharingTabs = group.tabs.filter(tab => !isGroupPinned(tab) && Tabs.isCanNotBeHidden(tab));
 
     if (sharingTabs.length && !ignoreSharing) {
@@ -1198,8 +1059,6 @@ export async function unload(groupId, ignoreSharing = false) {
         await Tabs.createTempActiveTab(windowId, false);
     }
 
-    // unpin group-scoped pinned tabs so they can be hidden (Firefox rejects hiding a
-    // pinned tab). No-op when the group has none.
     await unpinGroupTabs(group.tabs);
 
     await Tabs.hide(group.tabs, true);
@@ -1227,8 +1086,6 @@ export async function unload(groupId, ignoreSharing = false) {
 }
 
 export async function archiveToggle(...args) {
-    // USER PRIORITY: load→toggle isArchive→save (+ tab create/remove); serialize against
-    // sync apply.
     return runUserMutation(() => archiveToggleCore(...args));
 }
 

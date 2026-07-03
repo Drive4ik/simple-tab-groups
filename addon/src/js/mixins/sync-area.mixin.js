@@ -5,11 +5,6 @@ import * as Utils from '/js/utils.js';
 import * as SyncStorage from '/js/sync/sync-storage.js';
 import GithubGist from '/js/sync/cloud/githubgist.js';
 
-// The settings page mounts three components that each use this mixin (gist access /
-// sync / backup), and each fetches gist info on `created()`. They render the SAME gist,
-// so a module-level promise cache keyed by token+name collapses those concurrent reads
-// into one `getInfo()` round-trip. A reload after a user action passes `useCache=false`
-// to force a fresh fetch (see `loadGistInfo`).
 const gistInfoPromiseCache = new Map();
 
 function gistInfoCacheKey(area) {
@@ -152,7 +147,6 @@ export default {
                     history,
                 };
             } catch {
-                //
             } finally {
                 area.loadingGist = false;
             }

@@ -1,21 +1,3 @@
-/**
- * IndexedDB-backed store for this device's delta event log.
- *
- * The log lives here instead of `browser.storage.local` so that writing it does not
- * fan out through `storage.local.onChanged`: Firefox structure-clones the full old and
- * new value once per registered listener and holds those copies, which for the ~10 MB
- * log drove resident memory to ~1.6 GB. IndexedDB writes are point updates that no
- * `onChanged` listener observes.
- *
- * Layout: one record per event (key = the event's `seq`) plus a small meta record
- * (`{v, deviceId}` under key `'self'`), so appending is a point write instead of a
- * rewrite of the whole log. A pre-existing single-record `deltaLog` store (the v1
- * layout, whole `{v, deviceId, events}` object under one key) is split into this
- * layout inside the version-upgrade transaction on first open.
- *
- * @module sync/delta/delta-log-store
- */
-
 const DB_NAME = 'stg-delta-sync';
 const DB_VERSION = 2;
 const LEGACY_STORE_NAME = 'deltaLog';

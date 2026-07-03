@@ -71,11 +71,6 @@ export default class GithubGist {
 
     #perPage = null; // max = 100
 
-    // Latest SERVER time (ms) parsed from any gist response's `Date` header. The advisory
-    // lock's TTL is computed against the SERVER clock (not this device's, which may be skewed)
-    // so a stale lock is judged by the same clock every device sees. Refreshed on every
-    // request that returns a `Date` header; null until the first such response. See
-    // {@link GithubGist#getServerTimeMs} and {@link GithubGist#acquireLock}.
     #lastServerTimeMs = null;
 
     constructor(token, fileName, gistName = fileName, perPage = 30) {
@@ -271,15 +266,6 @@ export default class GithubGist {
         return this.#processInfo(gist);
     }
 
-    // -------------------------------------------------------------------------
-    // Multi-file (delta-era) API — ADDITIVE. The single-file methods above keep
-    // working unchanged for the current sync flow; these handle the new gist
-    // layout (STG-sync-snapshot.json + per-device STG-sync-delta-*.json). Discovery
-    // is by the gist NAME (#findGist), the same gist the single-file flow resolves,
-    // so the delta files and the Cloud backup file share one named gist.
-    // See `.project/DESIGN_DELTA_SYNC.md` and ../delta/layout.js.
-    // -------------------------------------------------------------------------
-
     async #findDeltaGist() {
         this.hasGist || await this.#findGist();
     }
@@ -379,12 +365,6 @@ export default class GithubGist {
         return gist;
     }
 
-    /**
-     * Record the SERVER time from a response's `Date` header (RFC 1123) into
-     * `#lastServerTimeMs`. Best-effort: a missing/unparseable header leaves the prior value
-     * untouched. The advisory lock reads it via {@link GithubGist#getServerTimeMs}.
-     * @param {Response} response
-     */
     #captureServerTime(response) {
         const dateHeader = response?.headers?.get?.('date');
         if (!dateHeader) {
@@ -396,20 +376,10 @@ export default class GithubGist {
         }
     }
 
-    /**
-     * The SERVER time (ms) most recently observed from a gist response's `Date` header, or
-     * null if no response has carried one yet this session. Used by the advisory lock to
-     * compute / judge TTLs against GitHub's clock rather than this device's (which may be
-     * skewed). Callers fall back to `Date.now()` when this is null (see acquireLock).
-     * @returns {?number}
-     */
     getServerTimeMs() {
         return this.#lastServerTimeMs;
     }
 
-    // Read+parse one gist file object, transparently following `raw_url` for files
-    // GitHub truncates (mirrors getContent's large-file handling). Returns the
-    // parsed JSON content. Caller maps a SyntaxError to 'githubInvalidGistContent'.
     async #readFileContent(file, progressFunc = null) {
         if (file.truncated) {
             return this.#request('GET', file.raw_url, undefined, undefined, progressFunc);
@@ -420,11 +390,6 @@ export default class GithubGist {
         return content;
     }
 
-    /**
-     * List the names of every file currently in the (delta) gist.
-     * @param {?function} progressFunc
-     * @returns {Promise<string[]>} file names ([] if the gist does not exist yet).
-     */
     async listFiles(progressFunc = null) {
         await this.#findDeltaGist();
 
@@ -437,13 +402,6 @@ export default class GithubGist {
         return Object.keys(gist.files);
     }
 
-    /**
-     * Read and parse a single named file from the (delta) gist.
-     * @param {string} name - file name (e.g. SNAPSHOT_FILE_NAME).
-     * @param {?function} progressFunc
-     * @param {?object} cycle - sync-cycle handle from {@link GithubGist#beginSyncCycle}.
-     * @returns {Promise<?Object>} parsed content, or null if the file is absent.
-     */
     async readFile(name, progressFunc = null, cycle = null) {
         try {
             const progressApiFunc = this.#createProgress(0, 50, progressFunc);
@@ -473,15 +431,6 @@ export default class GithubGist {
         }
     }
 
-    /**
-     * Read+parse every gist file whose name starts with `prefix` (e.g. the
-     * DELTA_FILE_PREFIX to fetch all per-device delta logs). Truncated files are
-     * followed via `raw_url` like {@link readFile}.
-     * @param {string} prefix
-     * @param {?function} progressFunc
-     * @param {?object} cycle - sync-cycle handle from {@link GithubGist#beginSyncCycle}.
-     * @returns {Promise<Array<{name: string, content: Object}>>} ([] if no gist).
-     */
     async readAllMatching(prefix, progressFunc = null, cycle = null) {
         try {
             const progressApiFunc = this.#createProgress(0, 30, progressFunc);
@@ -498,7 +447,6 @@ export default class GithubGist {
 
             const results = [];
             for (const [index, [name, file]] of matching.entries()) {
-                // spread each file's read across the remaining 30..100 progress band
                 const from = 30 + Math.floor((index / matching.length) * 70);
                 const to = 30 + Math.floor(((index + 1) / matching.length) * 70);
                 const content = await this.#readFileContent(file, this.#createProgress(from, to, progressFunc));
@@ -515,16 +463,6 @@ export default class GithubGist {
         }
     }
 
-    /**
-     * Write multiple files in a single PATCH (or POST to create the gist on first
-     * write). `contents` is a `{ [fileName]: contentObject }` map; each value is
-     * JSON-stringified by the request machinery. Per-device delta files mean
-     * concurrent writers touch different files and never clobber each other.
-     * @param {Object<string, Object>} contents
-     * @param {?function} progressFunc
-     * @param {?object} cycle - sync-cycle handle from {@link GithubGist#beginSyncCycle}.
-     * @returns {Promise<Object>} the resulting gist info (incl. `lastUpdate`).
-     */
     async writeFiles(contents, progressFunc = null, cycle = null) {
         await this.#findDeltaGist();
 
@@ -567,13 +505,6 @@ export default class GithubGist {
         return {gist, etag: response.headers.get('etag')};
     }
 
-    /**
-     * Delete one file from the gist (PATCH with the file set to `null`, GitHub's
-     * delete primitive).
-     * @param {string} name
-     * @param {?function} progressFunc
-     * @returns {Promise<Object>} the resulting gist info.
-     */
     async deleteFile(name, progressFunc = null) {
         await this.#findDeltaGist();
 
@@ -590,32 +521,6 @@ export default class GithubGist {
         return gist;
     }
 
-    // -------------------------------------------------------------------------
-    // Advisory distributed lock (Part A) — serialize sync cycles across devices.
-    // Best-effort, NOT compare-and-set (GitHub has no conditional write): acquire =
-    // write-our-stamp THEN re-read to confirm we won any race; a crashed holder's stamp is
-    // reclaimed via the server-clock TTL. Deferred self-truncation (compaction.js) is the
-    // data-safety backstop. The lock file holds `{deviceId, expiresAt}` (server-clock ms).
-    // See ../delta/lock.js for the pure decision helpers used here.
-    // -------------------------------------------------------------------------
-
-    /**
-     * Try to ACQUIRE the advisory sync lock for `deviceId`. Protocol:
-     *   1. Read the lock file (this refreshes the server clock from the response `Date`).
-     *   2. If it is absent / stale / already ours → write our stamp `{deviceId, expiresAt}`
-     *      with `expiresAt = serverNow + LOCK_TTL_MS`. If it is held, fresh, and another
-     *      device's → DO NOT acquire (return false) without writing.
-     *   3. After writing, wait a short confirm delay then RE-READ. We won iff the re-read
-     *      stamp is still ours (a peer that wrote last in the race wins instead).
-     *
-     * Best-effort: ANY transport error returns false (caller skips this cycle and retries),
-     * never throwing — the advisory lock must never be the thing that breaks a sync.
-     *
-     * @param {string} deviceId - this device's id (getDeviceId()).
-     * @param {?function} progressFunc
-     * @param {?object} cycle - sync-cycle handle from {@link GithubGist#beginSyncCycle}.
-     * @returns {Promise<boolean>} true iff this device now holds the lock.
-     */
     async acquireLock(deviceId, progressFunc = null, cycle = null) {
         let stamped = false;
 
@@ -657,20 +562,10 @@ export default class GithubGist {
         return file ? await this.#readFileContent(file) : null;
     }
 
-    /**
-     * RELEASE the advisory sync lock by deleting the lock file (GitHub's `{file: null}`
-     * delete primitive, via {@link GithubGist#deleteFile}). Idempotent + best-effort: a
-     * missing file or any transport error is swallowed, since a stale lock is reclaimed by
-     * the TTL anyway. Always call this in a `finally` covering success, error, and the
-     * apply-watchdog path.
-     * @param {?function} progressFunc
-     * @returns {Promise<void>}
-     */
     async releaseLock(progressFunc = null) {
         try {
             await this.deleteFile(LOCK_FILE_NAME, progressFunc);
         } catch {
-            // ignore: best-effort. The TTL reclaims a lock we failed to delete.
         }
     }
 
@@ -679,15 +574,6 @@ export default class GithubGist {
         return response.json();
     }
 
-    /**
-     * Like {@link GithubGist#request} but resolves with the validated `Response`
-     * object instead of its parsed JSON body, so a caller can read response HEADERS
-     * (notably the `ETag` of a gist read/write). All status / rate-limit /
-     * scope error mapping runs BEFORE returning, identical to `#request`, so a non-ok
-     * response throws the same provider error it always did.
-     *
-     * @returns {Promise<Response>} the ok Response (body not yet consumed).
-     */
     async #requestRaw(method, url, body = null, options = {}, progressFunc = null) {
         const isApi = url.startsWith(GithubGist.apiUrl);
 
@@ -705,7 +591,6 @@ export default class GithubGist {
         } else if (body) {
             if (body.files) {
                 for (const file of Object.values(body.files)) {
-                    // a null file is GitHub's delete primitive (see deleteFile) - leave it
                     if (file && file.content && typeof file.content !== 'string') {
                         file.content = JSON.stringify(file.content, null, 2);
                     }
@@ -718,8 +603,6 @@ export default class GithubGist {
 
         const response = await this.#progressFetch(url, options, progressFunc);
 
-        // Capture the SERVER clock from every response (ok or not) so the advisory lock's TTL
-        // is judged against GitHub's clock, immune to this device's local clock skew.
         this.#captureServerTime(response);
 
         if (response.ok) {
@@ -742,15 +625,6 @@ export default class GithubGist {
             throw new Error('githubInvalidToken');
         }
 
-        // C3: rate limiting. GitHub signals it three ways, only the first of which was
-        // handled before:
-        //   1. PRIMARY limit: 403 with `x-ratelimit-remaining: 0` + `x-ratelimit-reset`.
-        //   2. SECONDARY/abuse limit: 403 or 429 with a `Retry-After` header (seconds) and
-        //      NO `x-ratelimit-remaining: 0` — previously mis-mapped to `githubTokenNoAccess`
-        //      (a non-retryable auth error).
-        //   3. 429 generally.
-        // All map to a `githubRateLimit:<unixMs>` error the retry classifier treats as
-        // retryable with backoff (respecting Retry-After when present).
         if (response.status === 403 || response.status === 429) {
             const retryAfter = response.headers.get('retry-after');
             const remaining = response.headers.get('x-ratelimit-remaining');
@@ -761,15 +635,11 @@ export default class GithubGist {
             }
 
             if (retryAfter !== null || response.status === 429) {
-                // Retry-After is delta-seconds; convert to an absolute unix-ms "reset" the
-                // CloudError formatter + retry classifier understand. Default to ~60s when the
-                // header is absent (a 429 with no Retry-After).
                 const seconds = Number(retryAfter);
                 const delayMs = Number.isFinite(seconds) && seconds >= 0 ? seconds * 1000 : 60_000;
                 throw new Error(`githubRateLimit:${Date.now() + delayMs}`);
             }
 
-            // a genuine 403 (forbidden / no gist scope) with no rate-limit signal
             throw new Error('githubTokenNoAccess');
         }
 
@@ -777,18 +647,6 @@ export default class GithubGist {
             throw new Error('githubNotFound');
         }
 
-        // C1: `If-Match` precondition failed — a concurrent writer advanced the gist since
-        // the ETag we sent. Surface a distinct marker so the snapshot-write caller can
-        // re-pull the current revision and retry once (instead of clobbering the peer).
-        if (response.status === 412) {
-            throw new Error('githubPreconditionFailed', {cause: response});
-        }
-
-        // C4: a non-API host (e.g. a truncated file's raw_url on gist.githubusercontent.com)
-        // never carries the JSON `{message, errors}` error envelope and may return an HTML
-        // 5xx body. Parsing it as JSON below would throw a SyntaxError that the read callers
-        // mis-map to `githubInvalidGistContent` (corruption) instead of a retryable transport
-        // error. Surface the raw status so the failure stays retryable, not "corrupt".
         if (!isApi) {
             throw new Error(`${response.status}: github raw request failed`, {cause: response});
         }
