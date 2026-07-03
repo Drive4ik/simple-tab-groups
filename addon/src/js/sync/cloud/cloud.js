@@ -43,8 +43,6 @@ export const TRIGGER_RETRY = 'cloud-trigger-retry';
 
 export const NETWORK_RETRY_DELAY_MINUTES = 3;
 const MAX_NETWORK_RETRY_ATTEMPTS = 3;
-// Cap the rate-limit backoff so a far-future / bogus reset timestamp can't park the retry
-// alarm for hours. A GitHub primary-limit window is at most ~60 min; we wake a bit past it.
 const MAX_RATE_LIMIT_BACKOFF_MINUTES = 65;
 
 let inProgress = false;
@@ -75,8 +73,6 @@ export class CloudError extends Error {
     }
 }
 
-// Exported so the delta transport (delta-sync.js) reuses the same broadcast channel
-// and the UI/background progress wiring works identically for both sync paths.
 export function send(action, data = {}) {
     CloudBroadcast.send({action, ...data});
 }
@@ -167,9 +163,6 @@ async function sync(trust = null, revision = null, progressFunc = null, useBacku
 
     let cloudInstance;
 
-    // The Cloud backup entry points (cloudBackupPush/cloudBackupRestore) write/read a
-    // dedicated file (githubGistBackupFileName) inside the SAME named gist (githubGistName
-    // is preserved), so the backup file never collides with the delta-sync layout files.
     if (useBackupFile && isReservedFileName(syncOptions.githubGistBackupFileName)) {
         const error = new CloudError('githubBackupFileNameReserved');
         storage.lastError = String(error);
@@ -282,14 +275,6 @@ async function sync(trust = null, revision = null, progressFunc = null, useBacku
 
     progressFunc?.(85);
 
-    // C5: DEFER the destructive local browser mutations (group unload + tab removal) until
-    // AFTER the local DB commit (saveOptions/Groups.save) below succeeds. Previously these ran
-    // first; if the later commit threw, the cloud push had already landed AND windows/tabs were
-    // already torn down, but the local options/groups DB still held the OLD state — a partial,
-    // non-rolled-back local mutation. Here we only do the non-destructive bookkeeping (mark
-    // `changes.local`, and collect the loaded-group tabs to remove); the actual removals happen
-    // post-commit, so a commit failure leaves the live browser untouched (idempotent: a re-run
-    // recomputes the same plan and removes them then).
     for (const groupToRemove of syncResult.changes.groupsToRemove) {
         syncResult.changes.local = true;
 
@@ -353,10 +338,6 @@ async function sync(trust = null, revision = null, progressFunc = null, useBacku
 
     progressFunc?.(95);
 
-    // C5: local DB commit has now succeeded (or there were no local changes) — only NOW perform
-    // the destructive browser-side teardown for removed groups/tabs. If anything above threw, we
-    // never reach here, so the live browser is left intact and consistent with the un-updated
-    // local DB.
     for (const groupToRemove of syncResult.changes.groupsToRemove) {
         if (Groups.isLoaded(groupToRemove.id)) {
             // remove group from windows
@@ -504,7 +485,6 @@ async function syncGroups(localData, cloudData, sourceOfTruth, changes) {
         }
 
         if (!changes.cloud) {
-            // ignore additive identity fields (uid/lastModified) so they don't trigger needless cloud writes
             changes.cloud = stringifyGroupsForChangeDetection(resultCloudGroups) !== stringifyGroupsForChangeDetection(cloudGroups);
         }
 
@@ -1016,11 +996,6 @@ function isEqual(value1, value2) {
     return JSON.stringify(value1) === JSON.stringify(value2);
 }
 
-// New per-tab identity fields (uid/lastModified) are additive metadata for sync (see B3).
-// They must NOT influence whether a cloud write is needed: lastModified bumps on every
-// title change and uid differs across machines, so including them in the equality check
-// would trigger needless cloud writes. The uploaded snapshot still carries them - this
-// only ignores them when deciding if a write is required.
 const CHANGE_DETECTION_IGNORE_TAB_KEYS = ['uid', 'lastModified'];
 
 function stringifyGroupsForChangeDetection(groups) {
@@ -1060,15 +1035,6 @@ function isNetworkError(error) {
     return isNetErr;
 }
 
-// C3: GitHub rate limiting (primary, secondary/abuse, or 429) is a TRANSIENT, retryable
-// condition — the provider encodes it as a `githubRateLimit:<unixResetMs>` langId (see
-// githubgist.js). Previously the retry classifier only recognised raw NetworkError strings,
-// so a rate-limited sync got NO backoff retry (and abuse-limit 403s were even mis-mapped to a
-// non-retryable auth error). Treat it as retryable and honour the reset time as the backoff.
-// The rate-limit signal can arrive either as a CloudError `langId` (legacy synchronization(),
-// which wraps provider errors) or only in the raw error `message` (delta-sync, whose catch
-// copies `String(e)` into `syncResult.message` and leaves `langId` undefined for un-wrapped
-// provider errors). Inspect BOTH so retry classification works on both sync paths.
 function syncErrorText(syncResult) {
     return [syncResult?.langId, syncResult?.message].filter(s => typeof s === 'string').join(' ');
 }
@@ -1082,13 +1048,9 @@ function getRateLimitResetMs(syncResult) {
     return Number.isFinite(resetMs) ? resetMs : null;
 }
 
-// A retryable (transient) failure: a raw network error, a GitHub rate-limit, or a snapshot
-// If-Match precondition failure (a peer wrote concurrently — C1). All warrant an automatic
-// backoff retry (which re-pulls + re-merges) rather than a user-facing hard error.
 function isRetryableSyncError(syncResult) {
     return isNetworkError(objectToNativeError(syncResult))
-        || getRateLimitResetMs(syncResult) !== null
-        || syncErrorText(syncResult).includes('githubPreconditionFailed');
+        || getRateLimitResetMs(syncResult) !== null;
 }
 
 export function onSyncUiRequestListener() {
@@ -1119,8 +1081,6 @@ export async function shouldShowSyncErrorNotification(syncResult, trigger) {
         return result;
     }
 
-    // A transient/retryable failure (network OR rate-limit) is silently retried in the
-    // background until attempts are exhausted; only then surface a notification.
     if (trigger === TRIGGER_AUTO && !isRetryableSyncError(syncResult)) {
         return true;
     }
@@ -1140,9 +1100,6 @@ export async function getSyncRetryDelayInMinutes(syncResult, trigger) {
         if (networkRetryAttempt <= MAX_NETWORK_RETRY_ATTEMPTS) {
             syncStorage.networkRetryAttempt = networkRetryAttempt;
 
-            // For a rate-limit, back off until GitHub's reset time (rounded up to whole
-            // minutes, min 1) rather than the fixed network cadence — retrying sooner just
-            // burns another rejected request. Fall back to the network cadence otherwise.
             const resetMs = getRateLimitResetMs(syncResult);
             if (resetMs !== null) {
                 const minutesUntilReset = Math.ceil((resetMs - Date.now()) / 60_000);

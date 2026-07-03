@@ -100,9 +100,6 @@ export async function updateGroup(group, settings = null) {
 
     const groupProperties = await Groups.getMenuProperties(group, CONTEXT, settings);
 
-    // Defensive: skip-and-log when the per-group menu item is absent (e.g. a group created
-    // by a delta sync via Groups.save, which bypasses the groupAdded menu path) instead of
-    // letting Menus.update throw and abort the caller (e.g. Groups.apply). See menus-tab.js.
     if (!(await Menus.has(groupProperties.id))) {
         logger.log('updateGroup: menu item missing, skipping', groupProperties.id);
         return;
@@ -132,10 +129,6 @@ export async function groupRemoved(group) {
     }
 
     const groupMenuId = await Groups.getMenuId(group.id, CONTEXT);
-    // Defensive: a per-group menu item can be absent (e.g. a group created on this device by
-    // a delta sync via Groups.save, which bypasses the groupAdded menu path). Removing a
-    // missing item throws in Menus.remove and would abort the caller. Skip-and-return,
-    // mirroring the updateGroup Menus.has() guard.
     if (!(await Menus.has(groupMenuId))) {
         return;
     }

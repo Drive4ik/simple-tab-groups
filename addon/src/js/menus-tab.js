@@ -67,10 +67,6 @@ async function createMenus(settings = null) {
         context: CONTEXT,
     });
 
-    // Group-scoped pin toggle for the clicked tab. First among STG's items so it sits at
-    // the TOP of STG's section in the native tab menu (extensions can't go above Firefox's
-    // own entries; first-among-STG-items is the achievable "top"). Hidden by default;
-    // menus.onShown reveals it (and sets the right label) based on the clicked tab's group.
     await Menus.create({
         id: TOGGLE_GROUP_PIN_ID,
         parentId: PARENT_ID,
@@ -129,11 +125,6 @@ export async function updateGroup(group, settings = null) {
 
     const groupProperties = await Groups.getMenuProperties(group, CONTEXT, settings);
 
-    // Defensive: a per-group menu item can be absent (e.g. a group created on this device
-    // by a delta sync, which persists via Groups.save and bypasses the groupAdded menu
-    // path). Updating a missing item throws in Menus.update and would abort the caller
-    // (notably Groups.apply, dropping the rest of the apply). Skip-and-log instead; the
-    // post-sync menus rebuild recreates the item.
     if (!(await Menus.has(groupProperties.id))) {
         logger.log('updateGroup: menu item missing, skipping', groupProperties.id);
         return;
@@ -181,10 +172,6 @@ export async function groupRemoved(group) {
     }
 
     const groupMenuId = await Groups.getMenuId(group.id, CONTEXT);
-    // Defensive: a per-group menu item can be absent (e.g. a group created on this device by
-    // a delta sync via Groups.save, which bypasses the groupAdded menu path). Removing a
-    // missing item throws in Menus.remove and would abort the caller. Skip-and-return,
-    // mirroring the updateGroup Menus.has() guard above.
     if (!(await Menus.has(groupMenuId))) {
         return;
     }
@@ -209,9 +196,6 @@ export function removeListeners() {
     Listeners.menus.onShown.remove(onMenusShown);
 }
 
-// Reveal/label the group-pin item for the clicked tab. The native menus API can't read
-// the clicked tab before the menu shows, so we resolve it here and refresh() the live
-// menu. Only shown for a tab that is in a group; the label reflects current groupPinned.
 async function onMenusShown(info, tab) {
     if (!info.contexts.includes(CONTEXT)) {
         return;

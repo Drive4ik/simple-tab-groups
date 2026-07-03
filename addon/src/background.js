@@ -434,7 +434,6 @@ Listeners.runtime.onMessageExternal.add(async function onMessageExternal(request
 });
 
 self.saveOptions = saveOptions;
-// exposed for the delta-sync pre-apply safety backup (sync/delta/delta-sync.js)
 self.createBackup = createBackup;
 
 const INTERNAL_MODULES = {
@@ -512,9 +511,6 @@ async function onBackgroundMessage(message, sender) {
             return result;
 
         case 'reset-cloud-sync-state':
-            // LOCAL-only recovery: clears THIS device's delta-sync state (baseline,
-            // watermarks, event log); the cloud gist is left untouched. The next sync
-            // re-establishes the baseline (empty ⇒ no removals) and re-uploads local.
             return await resetSyncState();
 
         default: break;
@@ -1169,10 +1165,6 @@ async function saveOptions(_options) {
         await Containers.updateTemporaryContainerTitle(options.temporaryContainerTitle);
     }
 
-    // Delta capture: record the just-persisted synced option keys as `option.set`
-    // deltas so settings roam between machines. This is the single option-save choke
-    // point; the capture layer filters to the synced subset and early-returns while a
-    // sync apply runs (so the transport's own option writes are not re-captured).
     await DeltaCapture.optionsChanged(optionsToSave);
 
     sendMessageFromBackground('options-updated', {
@@ -1306,10 +1298,6 @@ async function createBackup(includeTabFavIcons, includeTabThumbnails, isAutoBack
 
     data.containers = Containers.getToExport(data);
 
-    // Sync pre-apply safety backup: same full serialization + non-interactive (no
-    // saveAs dialog) write as an auto-backup, but to the CALLER-SUPPLIED path and
-    // location (the sync-backup settings, independent of the auto-backup ones) and
-    // WITHOUT touching the auto-backup timestamp/bookmarks side effects.
     if (filePathOverride) {
         data.autoBackupFilePath = filePathOverride;
 

@@ -724,9 +724,6 @@ migrations.push({
             await Promise.allSettled(windows.map(async win => {
                 const groupId = await browser.sessions.getWindowValue(win.id, 'groupId');
 
-                // Re-entrancy guard: if a previous (crashed) run already rewrote this
-                // session value to a UUID, leave it untouched. Re-running 5.5 over
-                // already-migrated session data must be a no-op, never a removal.
                 if (Utils.isUUID(groupId)) {
                     return;
                 }
@@ -750,8 +747,6 @@ migrations.push({
                 delete tab.groupId; // TODO temp
                 const groupId = await browser.sessions.getTabValue(tab.id, 'groupId');
 
-                // Re-entrancy guard: see windows above. An already-migrated UUID must
-                // not be treated as an unknown old id and removed.
                 if (Utils.isUUID(groupId)) {
                     return;
                 }
@@ -831,9 +826,6 @@ migrations.push({
 
 migrations.push({
     version: '5.5.1',
-    // Add a stable per-tab identity (uid) + lastModified for sync (see feat/sync-tab-uid / B3).
-    // Backfill inline tabs stored in `data` (archived groups, file backups). Live tabs of
-    // non-archive groups are sessions-backed and get their uid lazily on read (Cache.loadTabSession).
     migration(data) {
         const now = Utils.unixNowMs();
 

@@ -132,10 +132,6 @@ export async function update(id, updateProperties) {
     const menus = await loadAll();
 
     if (!menus[id]) {
-        // Skip-and-log instead of throwing: TOCTOU races (e.g. onMenusShown updating
-        // an item while a concurrent groupsUpdated removes/recreates it) can hit this
-        // between a defensive has() check and the call. Aborting the caller would be
-        // worse than a no-op on an already-absent item.
         log.warn([id, "doesn't exist, skip update"]);
         log.stop();
         return;
@@ -176,10 +172,6 @@ export async function remove(id, withReal = true) {
     const menus = await loadAll();
 
     if (!menus[id]) {
-        // Skip-and-log instead of throwing: the restore action is dual-wired (menu +
-        // notification), addUndoRemove may clear a stale undo, and concurrent menu
-        // rebuilds race against removes. Removing an already-absent id is a no-op, not
-        // an error worth aborting the caller for.
         log.warn([id, "doesn't exist, skip remove"]);
         log.stop();
         return;

@@ -7,9 +7,9 @@ import backgroundSelf from './background.js';
 export const GROUP_KEY = 'groupId';
 export const FAVICON_KEY = 'favIconUrl';
 export const THUMBNAIL_KEY = 'thumbnail';
-export const UID_KEY = 'uid'; // stable per-tab identity for sync (survives restarts)
-export const LAST_MODIFIED_KEY = 'lastModified'; // unix-ms, bumped when url/title changes
-export const GROUP_PINNED_KEY = 'groupPinned'; // group-scoped pin: tab is pinned only while its group is active
+export const UID_KEY = 'uid';
+export const LAST_MODIFIED_KEY = 'lastModified';
+export const GROUP_PINNED_KEY = 'groupPinned';
 export const KEYS = [GROUP_KEY, FAVICON_KEY, THUMBNAIL_KEY, UID_KEY, LAST_MODIFIED_KEY, GROUP_PINNED_KEY];
 
 export const tabs = {};
@@ -58,8 +58,6 @@ export function setTab({id, url, title, favIconUrl, cookieStoreId, openerTabId, 
 
     const nextTitle = title || url;
 
-    // bump in-memory lastModified only when url/title actually change;
-    // durable persistence happens in the async session funnels (setTabLastModified)
     if (tabs[id].lastModified && (tabs[id].url !== url || tabs[id].title !== nextTitle)) {
         tabs[id].lastModified = Utils.unixNowMs();
     }
@@ -198,8 +196,6 @@ export async function removeTabThumbnail(id) {
     delete tabs[id]?.thumbnail;
 }
 
-// uid - stable per-tab identity, assigned the first time STG tracks a tab.
-// Lazily backfilled on read so tabs created before this feature also get one.
 async function loadTabUid(id) {
     if (tabs[id]) {
         await waitPromises(tabs[id]);
@@ -234,7 +230,6 @@ export function getTabUid(id) {
     return tabs[id]?.uid;
 }
 
-// lastModified - unix-ms, set when first tracked, bumped when url/title changes
 async function loadTabLastModified(id) {
     if (tabs[id]) {
         await waitPromises(tabs[id]);
@@ -275,11 +270,6 @@ export async function removeTabUid(id) {
     delete tabs[id]?.uid;
 }
 
-// groupPinned - group-scoped pin flag. true ⇒ this group tab is pinned while its
-// group is active (after the global pinned tabs, before the group's normal tabs);
-// it is unpinned+hidden when its group is not active. Persisted per-tab so it
-// survives reload. A group-pinned tab still belongs to its group (keeps groupId);
-// it is NOT a global pinned tab.
 async function loadTabGroupPinned(id) {
     if (tabs[id]) {
         await waitPromises(tabs[id]);
