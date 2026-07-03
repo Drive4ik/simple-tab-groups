@@ -94,8 +94,8 @@ async function getGroupRelativeIndex(tabId, windowId, groupId) {
     }
 }
 
-function buildTabRecord(tab, uid, groupRelativeIndex, snapshot = null) {
-    const record = {
+function buildBaseTabRecord(tab, uid, snapshot) {
+    return {
         uid,
         url: unwrapStubUrl(tab.url),
         title: tab.title,
@@ -103,6 +103,10 @@ function buildTabRecord(tab, uid, groupRelativeIndex, snapshot = null) {
         favIconUrl: sanitizeFavIconUrl(tab.favIconUrl ?? snapshot?.favIconUrl),
         lastModified: snapshot?.lastModified ?? Cache.getTabLastModified(tab.id),
     };
+}
+
+function buildTabRecord(tab, uid, groupRelativeIndex, snapshot = null) {
+    const record = buildBaseTabRecord(tab, uid, snapshot);
     if (Number.isInteger(groupRelativeIndex)) {
         record.index = groupRelativeIndex;
     }
@@ -328,14 +332,7 @@ export async function optionsChanged(savedOptions) {
 }
 
 function buildPinnedRecord(tab, uid, snapshot = null) {
-    const record = {
-        uid,
-        url: unwrapStubUrl(tab.url),
-        title: tab.title,
-        cookieStoreId: tab.cookieStoreId,
-        favIconUrl: sanitizeFavIconUrl(tab.favIconUrl ?? snapshot?.favIconUrl),
-        lastModified: snapshot?.lastModified ?? Cache.getTabLastModified(tab.id),
-    };
+    const record = buildBaseTabRecord(tab, uid, snapshot);
     if (Number.isInteger(tab.index)) {
         record.index = tab.index;
     }

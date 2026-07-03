@@ -1,3 +1,5 @@
+import {deepClone} from './deep-clone.js';
+
 const DEFAULT_COOKIE_STORE_ID = 'firefox-default';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -44,20 +46,6 @@ const OPS = {
     PINNED_REMOVE: 'pinned.remove',
 };
 
-function deepClone(value) {
-    if (value === null || typeof value !== 'object') {
-        return value;
-    }
-    if (Array.isArray(value)) {
-        return value.map(deepClone);
-    }
-    const out = {};
-    for (const key of Object.keys(value)) {
-        out[key] = deepClone(value[key]);
-    }
-    return out;
-}
-
 function buildOrderedEvents(deltaLogs) {
     const entries = [];
 
@@ -81,18 +69,6 @@ function buildOrderedEvents(deltaLogs) {
     });
 
     return entries;
-}
-
-function insertTabAt(group, tab, index) {
-    const len = group.tabs.length;
-    let at = Number.isInteger(index) ? index : len;
-    if (at < 0) {
-        at = 0;
-    }
-    if (at > len) {
-        at = len;
-    }
-    group.tabs.splice(at, 0, tab);
 }
 
 function findTab(groups, uid) {
@@ -134,7 +110,7 @@ function applyTabUpsert(groups, event) {
     }
 
     const target = ensureGroup(groups, event.groupId);
-    insertTabAt(target, incoming, incoming.index);
+    insertInListAt(target.tabs, incoming, incoming.index);
 }
 
 function applyTabMove(groups, event) {
@@ -146,7 +122,7 @@ function applyTabMove(groups, event) {
     const [tab] = found.group.tabs.splice(found.tabIndex, 1);
 
     const target = ensureGroup(groups, event.groupId);
-    insertTabAt(target, tab, event.toIndex);
+    insertInListAt(target.tabs, tab, event.toIndex);
 }
 
 function applyTabRemove(groups, event) {

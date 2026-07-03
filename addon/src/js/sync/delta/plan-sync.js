@@ -1,19 +1,6 @@
 import {replay} from './replay.js';
 import {isSyncedOptionKey} from './option-keys.js';
-
-function deepClone(value) {
-    if (value === null || typeof value !== 'object') {
-        return value;
-    }
-    if (Array.isArray(value)) {
-        return value.map(deepClone);
-    }
-    const out = {};
-    for (const key of Object.keys(value)) {
-        out[key] = deepClone(value[key]);
-    }
-    return out;
-}
+import {deepClone} from './deep-clone.js';
 
 function buildFullLogs(pulledDeltaLogs, localPendingEvents, selfDeviceId) {
     const logs = deepClone(pulledDeltaLogs || []);

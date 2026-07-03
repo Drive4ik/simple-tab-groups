@@ -80,6 +80,18 @@ function pendingTruncateKey(deviceId) {
     return PENDING_TRUNCATE_PREFIX + deviceId;
 }
 
+function maxSeq(events, seed) {
+    return events.reduce((max, e) => (e.seq > max ? e.seq : max), seed);
+}
+
+async function stampTabIdentity(newTab, source, log, label) {
+    await Cache.setTabUid(newTab.id, source.uid).catch(log.onCatch([`cant set ${label}uid`, newTab.id], false));
+    if (source.lastModified != null) {
+        await Cache.setTabLastModified(newTab.id, source.lastModified)
+            .catch(log.onCatch([`cant set ${label}lastModified`, newTab.id], false));
+    }
+}
+
 DeltaLog.onOverflow(() => {
     const selfDeviceId = getDeviceId();
     delete storage[baselineKey(selfDeviceId)];
@@ -308,21 +320,13 @@ async function applyBrowserOps(browserOps, resolvedSnapshot) {
             const createdPool = created.filter(Boolean);
             const usedCreated = new Set();
 
-            const stamp = async (newTab, source) => {
-                await Cache.setTabUid(newTab.id, source.uid).catch(log.onCatch(['cant set uid', newTab.id], false));
-                if (source.lastModified != null) {
-                    await Cache.setTabLastModified(newTab.id, source.lastModified)
-                        .catch(log.onCatch(['cant set lastModified', newTab.id], false));
-                }
-            };
-
             const unmatchedSources = [];
             for (const source of tabs) {
                 const match = createdPool.find(t => !usedCreated.has(t.id)
                     && liveUrlMatchesSource(t.url, source.url));
                 if (match) {
                     usedCreated.add(match.id);
-                    await stamp(match, source);
+                    await stampTabIdentity(match, source, log, '');
                 } else {
                     unmatchedSources.push(source);
                 }
@@ -330,7 +334,7 @@ async function applyBrowserOps(browserOps, resolvedSnapshot) {
 
             const remainingCreated = createdPool.filter(t => !usedCreated.has(t.id));
             for (let k = 0; k < unmatchedSources.length && k < remainingCreated.length; k++) {
-                await stamp(remainingCreated[k], unmatchedSources[k]);
+                await stampTabIdentity(remainingCreated[k], unmatchedSources[k], log, '');
             }
 
             if (!Groups.isLoaded(groupId)) {
@@ -492,14 +496,6 @@ async function applyPinnedOps(browserOps, log, sleepOptions = {}) {
         const createdPool = (created || []).filter(Boolean);
         const usedCreated = new Set();
 
-        const stamp = async (newTab, source) => {
-            await Cache.setTabUid(newTab.id, source.uid).catch(log.onCatch(['cant set pinned uid', newTab.id], false));
-            if (source.lastModified != null) {
-                await Cache.setTabLastModified(newTab.id, source.lastModified)
-                    .catch(log.onCatch(['cant set pinned lastModified', newTab.id], false));
-            }
-        };
-
         const indexOf = source => source.target?.index;
         const matchesUrl = (t, source) => liveUrlMatchesSource(t.url, source.url);
         const urlCount = new Map();
@@ -519,7 +515,7 @@ async function applyPinnedOps(browserOps, log, sleepOptions = {}) {
 
             if (match) {
                 usedCreated.add(match.id);
-                await stamp(match, source);
+                await stampTabIdentity(match, source, log, 'pinned ');
             } else {
                 stillUnmatched.push(source);
             }
@@ -534,7 +530,7 @@ async function applyPinnedOps(browserOps, log, sleepOptions = {}) {
                 .sort((a, b) => (indexOf(a) ?? 0) - (indexOf(b) ?? 0));
             for (let k = 0; k < remainingSources.length && k < remainingCreated.length; k++) {
                 usedCreated.add(remainingCreated[k].id);
-                await stamp(remainingCreated[k], remainingSources[k]);
+                await stampTabIdentity(remainingCreated[k], remainingSources[k], log, 'pinned ');
             }
             const leftover = remainingSources.length - remainingCreated.length;
             if (leftover > 0) {
@@ -754,22 +750,6 @@ export function orderedGroupTabIds(resolvedUidOrder, liveTabs) {
     return sameOrder ? [] : orderedIds;
 }
 
-async function buildLiveTabIndexByUid() {
-    const {groups} = await Groups.load(null, true);
-    const byUid = new Map();
-    for (const group of groups) {
-        if (group.isArchive || !Array.isArray(group.tabs)) {
-            continue;
-        }
-        for (const tab of group.tabs) {
-            if (tab.uid != null && tab.id != null) {
-                byUid.set(tab.uid, tab.id);
-            }
-        }
-    }
-    return byUid;
-}
-
 async function buildLiveTabRecordByUid() {
     const {groups} = await Groups.load(null, true);
     const byUid = new Map();
@@ -782,6 +762,14 @@ async function buildLiveTabRecordByUid() {
                 byUid.set(tab.uid, tab);
             }
         }
+    }
+    return byUid;
+}
+
+async function buildLiveTabIndexByUid() {
+    const byUid = new Map();
+    for (const [uid, tab] of await buildLiveTabRecordByUid()) {
+        byUid.set(uid, tab.id);
     }
     return byUid;
 }
@@ -858,24 +846,20 @@ const USER_DEFER_RESCHEDULE_MINUTES = 0.2;
 
 const LOCK_CONTENDED_RESCHEDULE_MINUTES = 0.5;
 
-async function rescheduleSoonAfterDefer(log) {
+async function rescheduleSoon(log, delayInMinutes, reason) {
     try {
-        await browser.alarms.create(ALARM_NAME_RETRY, {
-            delayInMinutes: USER_DEFER_RESCHEDULE_MINUTES,
-        });
+        await browser.alarms.create(ALARM_NAME_RETRY, {delayInMinutes});
     } catch (e) {
-        log.warn('cant reschedule deferred sync; will run on next periodic alarm', String(e));
+        log.warn(`cant reschedule ${reason} sync; will run on next periodic alarm`, String(e));
     }
 }
 
-async function rescheduleSoonAfterLockContention(log) {
-    try {
-        await browser.alarms.create(ALARM_NAME_RETRY, {
-            delayInMinutes: LOCK_CONTENDED_RESCHEDULE_MINUTES,
-        });
-    } catch (e) {
-        log.warn('cant reschedule lock-contended sync; will run on next periodic alarm', String(e));
-    }
+function rescheduleSoonAfterDefer(log) {
+    return rescheduleSoon(log, USER_DEFER_RESCHEDULE_MINUTES, 'deferred');
+}
+
+function rescheduleSoonAfterLockContention(log) {
+    return rescheduleSoon(log, LOCK_CONTENDED_RESCHEDULE_MINUTES, 'lock-contended');
 }
 
 export async function resetSyncState() {
@@ -1038,11 +1022,7 @@ async function pushLocalPendingOnly(Cloud, selfDeviceId, localPendingEvents, las
         },
     }, null, cycle);
 
-    const maxSelfSeq = localPendingEvents.reduce(
-        (max, e) => (e.seq > max ? e.seq : max),
-        lastPushedSeq,
-    );
-    storage[lastPushedSeqKey(selfDeviceId)] = maxSelfSeq;
+    storage[lastPushedSeqKey(selfDeviceId)] = maxSeq(localPendingEvents, lastPushedSeq);
 
     log.info('conditional fast path: pushed local pending without pull/apply', {
         events: localPendingEvents.length,
@@ -1304,11 +1284,7 @@ export async function deltaSynchronization() {
         }
 
         if (plan.deltaFileToWrite) {
-            const maxSelfSeq = plan.deltaFileToWrite.events.reduce(
-                (max, e) => (e.seq > max ? e.seq : max),
-                lastPushedSeq,
-            );
-            storage[lastPushedSeqKey(selfDeviceId)] = maxSelfSeq;
+            storage[lastPushedSeqKey(selfDeviceId)] = maxSeq(plan.deltaFileToWrite.events, lastPushedSeq);
         }
 
         if (deferredTruncateConfirmed && confirmedTruncateSeq > 0) {
