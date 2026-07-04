@@ -5,7 +5,7 @@ import JSON from './json.js';
 
 const mainStorage = localStorage.create(Constants.MODULES.BACKGROUND);
 
-const MAX_STRING_LENGTH = 1024 * 1024 * 0.1; // ~100KB
+const MAX_STRING_LENGTH = 2048;
 
 const UNNECESSARY_LOG_STRINGS = [
     Constants.STG_BASE_URL + 'js/',
@@ -133,24 +133,30 @@ export function getFuncName(func) {
     return func.name || String(func).slice(0, 50);
 }
 
-export function normalizeArgumentValue(value) {
+export function normalizeArgumentValue(value, seen = new WeakSet()) {
     if (value instanceof Error) return normalizeError(value);
     if (typeof value === 'string') {
         if (value.startsWith('data:')) {
             return 'data:<' + value.length + '>';
         }
         if (value.length > MAX_STRING_LENGTH) {
-            return 'VERY_BIG_STRING_LENGTH_' + value.length + ': ' + value.slice(0, 200);
+            return '<str:' + value.length + '>: ' + value.slice(0, 200);
         }
         return value;
     }
-    if (Array.isArray(value)) return value.map(normalizeArgumentValue);
+    if (Array.isArray(value)) {
+        if (seen.has(value)) return undefined;
+        seen.add(value);
+        return value.map(item => normalizeArgumentValue(item, seen));
+    }
     if (value && typeof value === 'object') {
-        const clone = JSON.clone(value);
-        for (const [key, val] of Object.entries(clone)) {
-            clone[key] = normalizeArgumentValue(val);
+        if (seen.has(value)) return undefined;
+        seen.add(value);
+        const normalized = {};
+        for (const [key, val] of Object.entries(value)) {
+            normalized[key] = normalizeArgumentValue(val, seen);
         }
-        return clone;
+        return normalized;
     }
     if (typeof value === 'function') return getFuncName(value);
     return value;

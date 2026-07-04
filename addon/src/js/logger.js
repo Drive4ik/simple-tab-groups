@@ -13,7 +13,7 @@ const prefixGlue = '.'; // ➡️  →
 const storage = localStorage.create(Constants.MODULES.LOGGER);
 const mainStorage = localStorage.create(Constants.MODULES.BACKGROUND);
 
-const LOGS_RETENTION = 5_000;
+const LOGS_RETENTION = 1_000;
 const logs = [];
 
 const backgroundConnect = Constants.IS_BACKGROUND_PAGE
@@ -317,7 +317,7 @@ export function catchFunc(asyncFunc, logger) {
         } catch (e) {
             e.message = `catchFunc(${name}), error message: ${e.message}`;
             e.stack = [fromStack, 'Native error stack:', e.stack].join('\n');
-            e.arguments = JSON.clone(Array.from(arguments));
+            e.arguments = normalizeArgumentValue(Array.from(arguments));
             errorEventHandler.call(logger, e);
         }
     };
