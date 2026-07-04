@@ -166,7 +166,19 @@ async function onCreated(tab) {
     Cache.setTab(tab);
 
     if (isPinned(tab)) {
-        DeltaCapture.pinnedAdded(tab);
+        await Cache.setTabGroup(tab.id, Groups.PINNED_GROUP_ID, tab.windowId)
+            .catch(logger.onCatch("onCreated can't set pinned group", false));
+        await Cache.setTabGroupPinned(tab.id, true)
+            .catch(logger.onCatch("onCreated can't set groupPinned", false));
+
+        Cache.applyTabSession(tab);
+
+        if (!Cache.getTabUid(tab.id)) {
+            await Cache.setTabUid(tab.id)
+                .catch(logger.onCatch("onCreated can't mint uid (pinned)", false));
+        }
+
+        DeltaCapture.tabAdded(tab);
         return;
     }
 
@@ -298,32 +310,53 @@ async function onUpdated(tabId, changeInfo, tab) {
     }
 
     if (Object.hasOwn(changeInfo, 'pinned') || Object.hasOwn(changeInfo, 'hidden')) {
-        if (Object.hasOwn(changeInfo, 'pinned') && Cache.getTabGroupPinned(tab.id) && Cache.getTabGroup(tab.id)) {
+        const currentGroupId = Cache.getTabGroup(tab.id);
+        const inPinnedGroup = Groups.isPinnedGroupId(currentGroupId);
+
+        if (Object.hasOwn(changeInfo, 'pinned') && Cache.getTabGroupPinned(tab.id) && currentGroupId && !inPinnedGroup) {
             log.stop('🛑 group-pinned tab pin transition, keeping group', tab.id);
             return;
         }
 
         let tabGroupId;
 
-        if (changeInfo.pinned || changeInfo.hidden) {
-            changeInfo.pinned && log.log('remove group for pinned tab', tab.id);
-            changeInfo.hidden && log.log('remove group for hidden tab', tab.id);
-            tabGroupId = Cache.getTabGroup(tab.id);
+        if (changeInfo.pinned) {
+            log.log('absorb pinned tab into pinned group', tab.id);
 
-            if (changeInfo.pinned) {
+            if (!inPinnedGroup) {
                 const uid = Cache.getTabUid(tab.id);
-                if (uid && tabGroupId) {
-                    DeltaCapture.tabRemoved(uid, tabGroupId);
+                if (uid && currentGroupId) {
+                    DeltaCapture.tabRemoved(uid, currentGroupId);
                 }
-                DeltaCapture.pinnedAdded(tab);
+
+                await Cache.setTabGroup(tab.id, Groups.PINNED_GROUP_ID, tab.windowId)
+                    .catch(log.onCatch(["can't set pinned group", tab.id], false));
+                await Cache.setTabGroupPinned(tab.id, true)
+                    .catch(log.onCatch(["can't set groupPinned", tab.id], false));
+
+                if (!Cache.getTabUid(tab.id)) {
+                    await Cache.setTabUid(tab.id).catch(() => {});
+                }
+
+                DeltaCapture.tabAdded(tab);
             }
 
+            tabGroupId = Groups.PINNED_GROUP_ID;
+        } else if (changeInfo.hidden) {
+            log.log('remove group for hidden tab', tab.id);
+            tabGroupId = currentGroupId;
             await Cache.removeTabGroup(tab.id).catch(() => {});
         } else if (changeInfo.pinned === false) {
             log.log('tab is unpinned', tab.id);
 
             const uid = Cache.getTabUid(tab.id);
-            if (uid) {
+            if (inPinnedGroup) {
+                if (uid) {
+                    DeltaCapture.tabRemoved(uid, Groups.PINNED_GROUP_ID);
+                }
+                await Cache.setTabGroupPinned(tab.id, false)
+                    .catch(log.onCatch(["can't clear groupPinned", tab.id], false));
+            } else if (uid) {
                 DeltaCapture.pinnedRemoved(uid);
             }
 

@@ -1735,6 +1735,15 @@ async function initializeGroupWindows(windows, currentGroupIds) {
                 return;
             }
 
+            if (tab.pinned && !currentGroupIds.includes(tab.groupId)) {
+                tab.groupId = Groups.PINNED_GROUP_ID;
+                Cache.setTabGroup(tab.id, Groups.PINNED_GROUP_ID, tab.windowId)
+                    .then(() => Cache.getTabUid(tab.id) || Cache.setTabUid(tab.id))
+                    .catch(log.onCatch(['cant absorb pinned tab into pinned group', tab.id], false));
+                Cache.setTabGroupPinned(tab.id, true).catch(log.onCatch(['cant set groupPinned', tab.id], false));
+                return;
+            }
+
             if (tab.groupId && !currentGroupIds.includes(tab.groupId)) {
                 delete tab.groupId;
                 Cache.removeTabGroup(tab.id).catch(log.onCatch(['cant removeTabGroup', tab.id], false));
