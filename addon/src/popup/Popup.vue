@@ -817,9 +817,8 @@ export default {
                             </div>
                             <div class="item-title clip-text icon-text">
                                 <figure v-if="tab.groupPinned"
-                                    class="icon image is-16x16 group-pinned-indicator"
-                                    :title="lang('pinTabInGroupTitle')">
-                                    <pin-icon :color="group.isPinnedGroup ? null : group.iconColor"></pin-icon>
+                                    class="icon image is-16x16 group-pinned-indicator">
+                                    <pin-icon :color="group.iconColor"></pin-icon>
                                 </figure>
                                 <figure v-if="tab.container" :title="tab.container?.name" :class="`icon image is-16x16 userContext-icon identity-icon-${tab.container?.icon} identity-color-${tab.container?.color}`"></figure>
                                 <span class="discarded-color" v-text="getTabTitle(tab)"></span>
@@ -855,7 +854,7 @@ export default {
                                 <figure v-if="tab.groupPinned"
                                     :class="['icon image is-16x16 group-pinned-indicator', {'is-work-group-pin': !group.isPinnedGroup}]"
                                     @click.stop="!group.isPinnedGroup && toggleTabGroupPinned(tab, false)"
-                                    :title="lang(group.isPinnedGroup ? 'pinTabInGroupTitle' : 'unpinTabInGroupTitle')">
+                                    :title="group.isPinnedGroup ? null : lang('unpinTabInGroupTitle')">
                                     <pin-icon :color="group.isPinnedGroup ? null : group.iconColor"></pin-icon>
                                 </figure>
                                 <figure v-else-if="!group.isPinnedGroup && !group.isArchive"
@@ -1084,9 +1083,8 @@ export default {
                     </figure>
                     <div class="item-title clip-text icon-text">
                         <figure v-if="tab.groupPinned"
-                            class="icon image is-16x16 group-pinned-indicator"
-                            :title="lang('pinTabInGroupTitle')">
-                            <pin-icon :color="groupToShow.isPinnedGroup ? null : groupToShow.iconColor"></pin-icon>
+                            class="icon image is-16x16 group-pinned-indicator">
+                            <pin-icon :color="groupToShow.iconColor"></pin-icon>
                         </figure>
                         <figure v-if="tab.container" :title="tab.container?.name" :class="`icon image is-16x16 userContext-icon identity-icon-${tab.container?.icon} identity-color-${tab.container?.color}`"></figure>
                         <span class="discarded-color" v-text="getTabTitle(tab)"></span>
@@ -1136,7 +1134,7 @@ export default {
                             <figure v-if="tab.groupPinned"
                                 :class="['icon image is-16x16 group-pinned-indicator', {'is-work-group-pin': !groupToShow.isPinnedGroup}]"
                                 @click.stop="!groupToShow.isPinnedGroup && toggleTabGroupPinned(tab, false)"
-                                :title="lang(groupToShow.isPinnedGroup ? 'pinTabInGroupTitle' : 'unpinTabInGroupTitle')">
+                                :title="groupToShow.isPinnedGroup ? null : lang('unpinTabInGroupTitle')">
                                 <pin-icon :color="groupToShow.isPinnedGroup ? null : groupToShow.iconColor"></pin-icon>
                             </figure>
                             <figure v-else-if="!groupToShow.isPinnedGroup && !groupToShow.isArchive"
@@ -1589,13 +1587,13 @@ html {
             }
 
             .group-pinned-indicator.hover-pin {
-                visibility: hidden;
+                display: none;
                 cursor: pointer;
             }
         }
 
         &:hover .group-pinned-indicator.hover-pin {
-            visibility: visible;
+            display: flex;
         }
 
         .item-action {

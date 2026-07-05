@@ -572,9 +572,9 @@ export default {
                         </div>
 
                         <div v-if="tab.groupPinned"
-                            :class="['group-pinned-indicator', {'is-work-group-pin': !group.isPinnedGroup}]"
+                            :class="['group-pinned-indicator', {'is-work-group-pin': !group.isPinnedGroup && !group.isArchive}]"
                             @click.stop="!group.isPinnedGroup && !group.isArchive && toggleTabGroupPinned(tab, false)"
-                            :title="lang(group.isPinnedGroup ? 'pinTabInGroupTitle' : 'unpinTabInGroupTitle')">
+                            :title="group.isPinnedGroup || group.isArchive ? null : lang('unpinTabInGroupTitle')">
                             <figure class="image is-16x16">
                                 <pin-icon :color="group.isPinnedGroup ? null : group.iconColor"></pin-icon>
                             </figure>
