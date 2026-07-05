@@ -1116,7 +1116,7 @@ export async function move(tabIds, groupId, params = {}) {
 
     const groupPinnedResultTabs = [];
     for (const tab of pinnedToGroupPin) {
-        const ok = await Groups.setTabGroupPinned(tab.id, true, groupId)
+        const ok = await Groups.setTabGroupPinned(tab.id, true, groupId, params.newTabIndex)
             .catch(log.onCatch(['cant group-pin tab into group', tab.id, groupId], false));
 
         if (ok) {

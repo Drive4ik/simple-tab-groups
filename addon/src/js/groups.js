@@ -393,8 +393,8 @@ async function unpinGroupTabs(tabs = [], shouldUnpin = isGroupPinned) {
     log.stop();
 }
 
-export async function setTabGroupPinned(tabId, groupPinned, targetGroupId) {
-    const log = logger.start('setTabGroupPinned', {tabId, groupPinned, targetGroupId});
+export async function setTabGroupPinned(tabId, groupPinned, targetGroupId, newTabIndex) {
+    const log = logger.start('setTabGroupPinned', {tabId, groupPinned, targetGroupId, newTabIndex});
 
     let groupId = Cache.getTabGroup(tabId);
 
@@ -407,7 +407,7 @@ export async function setTabGroupPinned(tabId, groupPinned, targetGroupId) {
 
     if (targetGroupId && groupId !== targetGroupId) {
         await browser.tabs.update(tabId, {pinned: false}).catch(log.onCatch(['cant unpin for move', tabId], false));
-        await Tabs.move([tabId], targetGroupId, {showNotificationAfterMovingTabIntoThisGroup: false, _pinnedAlreadyHandled: true})
+        await Tabs.move([tabId], targetGroupId, {showNotificationAfterMovingTabIntoThisGroup: false, _pinnedAlreadyHandled: true, newTabIndex})
             .catch(log.onCatch(['cant move tab into group', tabId, targetGroupId], false));
         groupId = Cache.getTabGroup(tabId);
         groupPinned ??= true;
@@ -437,12 +437,11 @@ export async function setTabGroupPinned(tabId, groupPinned, targetGroupId) {
             await unpinGroupTabs([tab], t => t.pinned);
             await Tabs.hide([tab], true);
 
-            if (groupPinned && newlyEnteredGroup) {
+            if (groupPinned && newlyEnteredGroup && newTabIndex == null) {
                 await placeTabAfterGroupPins(group, tab);
             }
         } else if (groupPinned) {
-            const existingPinned = group.tabs.filter(t => t.id !== tabId && isGroupPinned(t));
-            await pinGroupTabs([tab, ...existingPinned], windowId);
+            await pinGroupTabs(group.tabs.filter(isGroupPinned), windowId);
         } else {
             await unpinGroupTabs([tab], t => t.pinned);
             await pinGroupTabs(group.tabs.filter(isGroupPinned), windowId);
