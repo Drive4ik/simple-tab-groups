@@ -61,6 +61,32 @@ function normalizeBaseline(priorBaseline) {
 
 const TAB_CONTENT_FIELDS = ['url', 'title', 'cookieStoreId', 'pinned'];
 
+const MIGRATED_PIN_CONTENT_FIELDS = ['url', 'title', 'cookieStoreId', 'favIconUrl', 'lastModified'];
+
+function foldMigratedPinsIntoGroups(snapshot) {
+    const groupTabsByUid = indexTabs(snapshot);
+    const pinnedTabs = Array.isArray(snapshot.pinnedTabs) ? snapshot.pinnedTabs : [];
+
+    snapshot.pinnedTabs = pinnedTabs.filter(pin => {
+        const migrated = pin && pin.uid != null ? groupTabsByUid.get(pin.uid) : null;
+        if (!migrated) {
+            return true;
+        }
+        if ((pin.lastModified ?? 0) > (migrated.tab.lastModified ?? 0)) {
+            for (const field of MIGRATED_PIN_CONTENT_FIELDS) {
+                if (Object.hasOwn(pin, field)) {
+                    migrated.tab[field] = deepClone(pin[field]);
+                }
+            }
+        }
+        return false;
+    });
+
+    snapshot.pinnedTabs.forEach((tab, position) => {
+        tab.index = position;
+    });
+}
+
 function resolveTabContentChanges(resolved, local) {
     const changed = {};
     for (const field of TAB_CONTENT_FIELDS) {
@@ -106,6 +132,19 @@ function diffToBrowserOps(resolvedSnapshot, localState, priorBaseline = {tabUids
     const resolvedTabs = indexTabs(resolvedSnapshot);
     const localTabs = indexTabs({groups: localGroups});
 
+    const indexPinned = list => {
+        const byUid = new Map();
+        (Array.isArray(list) ? list : []).forEach((tab, index) => {
+            if (tab && tab.uid != null) {
+                byUid.set(tab.uid, {index, tab});
+            }
+        });
+        return byUid;
+    };
+
+    const resolvedPinned = indexPinned(resolvedSnapshot.pinnedTabs);
+    const localPinned = indexPinned(localState && localState.pinnedTabs);
+
     const tabsToCreate = [];
     const tabsToRemove = [];
     const tabsToMove = [];
@@ -114,6 +153,9 @@ function diffToBrowserOps(resolvedSnapshot, localState, priorBaseline = {tabUids
     for (const [uid, {groupId, index, tab}] of resolvedTabs) {
         const local = localTabs.get(uid);
         if (!local) {
+            if (localPinned.has(uid)) {
+                continue;
+            }
             tabsToCreate.push({
                 ...deepClone(tab),
                 target: {groupId, index},
@@ -138,25 +180,15 @@ function diffToBrowserOps(resolvedSnapshot, localState, priorBaseline = {tabUids
         }
     }
 
-    const indexPinned = list => {
-        const byUid = new Map();
-        (Array.isArray(list) ? list : []).forEach((tab, index) => {
-            if (tab && tab.uid != null) {
-                byUid.set(tab.uid, {index, tab});
-            }
-        });
-        return byUid;
-    };
-
-    const resolvedPinned = indexPinned(resolvedSnapshot.pinnedTabs);
-    const localPinned = indexPinned(localState && localState.pinnedTabs);
-
     const pinnedToCreate = [];
     const pinnedToRemove = [];
     const pinnedToMove = [];
     const pinnedToUpdate = [];
 
     for (const [uid, {index, tab}] of resolvedPinned) {
+        if (localTabs.has(uid)) {
+            continue;
+        }
         const local = localPinned.get(uid);
         if (!local) {
             pinnedToCreate.push({
@@ -176,7 +208,7 @@ function diffToBrowserOps(resolvedSnapshot, localState, priorBaseline = {tabUids
     }
 
     for (const [uid] of localPinned) {
-        if (!resolvedPinned.has(uid) && priorBaseline.pinnedUids.has(uid)) {
+        if (!resolvedPinned.has(uid) && !resolvedTabs.has(uid) && priorBaseline.pinnedUids.has(uid)) {
             pinnedToRemove.push({uid});
         }
     }
@@ -228,6 +260,8 @@ export function planSync({pulledSnapshot, pulledDeltaLogs, localPendingEvents, s
     const {fullLogs, selfEvents} = buildFullLogs(pulledDeltaLogs, localPendingEvents, selfDeviceId);
 
     const {snapshot: resolvedSnapshot, watermark: newWatermark} = replay(pulledSnapshot || {groups: []}, fullLogs);
+
+    foldMigratedPinsIntoGroups(resolvedSnapshot);
 
     const pulledSelfLog = (pulledDeltaLogs || []).find(log => log.deviceId === selfDeviceId);
     const pulledSelfCount = pulledSelfLog && Array.isArray(pulledSelfLog.events) ? pulledSelfLog.events.length : 0;
@@ -301,6 +335,12 @@ export function computeBootstrapEvents(localState, priorBaseline, knownLocalLogU
         }
         if (!baseline.pinnedUids.has(tab.uid) && !logUids.has(tab.uid)) {
             events.push({op: 'pinned.add', tab: deepClone(tab)});
+        }
+    }
+
+    for (const uid of groupTabUids) {
+        if (baseline.pinnedUids.has(uid)) {
+            events.push({op: 'pinned.remove', uid});
         }
     }
 

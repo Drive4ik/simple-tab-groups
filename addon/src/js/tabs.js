@@ -26,6 +26,7 @@ import * as ConstantsBrowser from './constants-browser.js';
 import * as Storage from './storage.js';
 import * as BrowserSettings from './browser-settings.js';
 import * as DeltaCapture from './sync/delta/delta-capture.js';
+import {closedTabCapturePlan} from './sync/delta/close-capture.js';
 
 export {on, off} from './broadcast.js?channel=tabs';
 
@@ -353,6 +354,7 @@ async function onUpdated(tabId, changeInfo, tab) {
             if (inPinnedGroup) {
                 if (uid) {
                     DeltaCapture.tabRemoved(uid, Groups.PINNED_GROUP_ID);
+                    DeltaCapture.pinnedRemoved(uid);
                 }
                 await Cache.setTabGroupPinned(tab.id, false)
                     .catch(log.onCatch(["can't clear groupPinned", tab.id], false));
@@ -434,16 +436,22 @@ function onRemoved(tabId, {isWindowClosing, windowId}) {
         });
     } else {
         Cache.removeTab(tabId);
+
+        const capture = closedTabCapturePlan({uid, groupId, wasPinned}, Groups.isPinnedGroupId);
+
+        if (capture.removeFromGroupId) {
+            DeltaCapture.tabRemoved(uid, capture.removeFromGroupId);
+        }
+        if (capture.retirePinnedUid) {
+            DeltaCapture.pinnedRemoved(capture.retirePinnedUid);
+        }
+
         if (groupId) {
             send('removed', {
                 tabId,
                 groupId,
             });
-            DeltaCapture.tabRemoved(uid, groupId);
         } else {
-            if (wasPinned && uid) {
-                DeltaCapture.pinnedRemoved(uid);
-            }
             send('removed.unsync', {
                 tabId,
             });
