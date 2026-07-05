@@ -7,6 +7,7 @@ import editGroup from '../components/edit-group.vue';
 // import contextMenu from '../components/context-menu.vue';
 import contextMenuTab from '../components/context-menu-tab.vue';
 import contextMenuTabNew from '../components/context-menu-tab-new.vue';
+import pinIcon from '../components/pin-icon.vue';
 import contextMenuGroup from '../components/context-menu-group.vue';
 
 import '/js/prefixed-storage.js';
@@ -62,6 +63,7 @@ export default {
         // 'context-menu': contextMenu,
         'context-menu-tab': contextMenuTab,
         'context-menu-tab-new': contextMenuTabNew,
+        'pin-icon': pinIcon,
         'context-menu-group': contextMenuGroup,
     },
     created() {
@@ -571,11 +573,10 @@ export default {
 
                         <div v-if="tab.groupPinned"
                             :class="['group-pinned-indicator', {'is-work-group-pin': !group.isPinnedGroup}]"
-                            :style="group.isPinnedGroup ? null : {'--pin-color': group.iconColor}"
                             @click.stop="!group.isPinnedGroup && !group.isArchive && toggleTabGroupPinned(tab, false)"
                             :title="lang(group.isPinnedGroup ? 'pinTabInGroupTitle' : 'unpinTabInGroupTitle')">
                             <figure class="image is-16x16">
-                                <img src="/icons/thumbtack.svg" />
+                                <pin-icon :color="group.isPinnedGroup ? null : group.iconColor"></pin-icon>
                             </figure>
                         </div>
 
@@ -974,16 +975,6 @@ export default {
 
             > .group-pinned-indicator.is-work-group-pin {
                 cursor: pointer;
-            }
-
-            > .group-pinned-indicator.is-work-group-pin > figure {
-                background-color: var(--pin-color, currentColor);
-                -webkit-mask: url(/icons/thumbtack.svg) no-repeat center / contain;
-                mask: url(/icons/thumbtack.svg) no-repeat center / contain;
-            }
-
-            > .group-pinned-indicator.is-work-group-pin img {
-                visibility: hidden;
             }
 
             &:not(.has-thumbnail) > .tab-icon {

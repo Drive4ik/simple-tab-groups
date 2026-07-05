@@ -662,6 +662,37 @@ async function hidePinnedGroup(group) {
     return true;
 }
 
+export async function absorbNativePinnedTabs() {
+    const log = logger.start('absorbNativePinnedTabs');
+
+    const pinnedTabs = await Tabs.get(null, true, null).catch(() => []);
+
+    let absorbed = 0;
+
+    for (const tab of pinnedTabs) {
+        if (Cache.getTabGroup(tab.id)) {
+            continue;
+        }
+
+        await Cache.setTabGroup(tab.id, PINNED_GROUP_ID, tab.windowId)
+            .catch(log.onCatch(['cant absorb pinned tab', tab.id], false));
+        await Cache.setTabGroupPinned(tab.id, true)
+            .catch(log.onCatch(['cant set groupPinned', tab.id], false));
+
+        if (!Cache.getTabUid(tab.id)) {
+            await Cache.setTabUid(tab.id).catch(() => {});
+        }
+
+        absorbed++;
+    }
+
+    if (absorbed) {
+        sendUpdatedAll();
+    }
+
+    log.stop('absorbed:', absorbed);
+}
+
 export async function refreshPinnedGroupIfShown() {
     const {group} = await load(PINNED_GROUP_ID, true);
     const windowId = getPinnedGroupShownWindowId(group);

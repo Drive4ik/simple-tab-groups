@@ -598,6 +598,11 @@ export async function create({url, active, pinned, discarded, title, index, wind
 
     tab.active = !!active;
 
+    if (Groups.isPinnedGroupId(groupId)) {
+        pinned = true;
+        groupPinned = true;
+    }
+
     if (pinned) {
         tab.pinned = true;
     }
