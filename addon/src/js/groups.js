@@ -670,6 +670,8 @@ export async function absorbNativePinnedTabs() {
     let absorbed = 0;
 
     for (const tab of pinnedTabs) {
+        await Cache.loadTabSession(tab, false, false).catch(() => {});
+
         if (Cache.getTabGroup(tab.id)) {
             continue;
         }
