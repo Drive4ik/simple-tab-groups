@@ -765,6 +765,14 @@
         "message": "Відкріпити від групи",
         "description": "Remove the group-scoped pin from this tab"
     },
+    "showPinnedGroupTitle": {
+        "message": "Показати закріплені вкладки тут",
+        "description": "Show the pinned group's tabs in the current window"
+    },
+    "hidePinnedGroupTitle": {
+        "message": "Сховати закріплені вкладки",
+        "description": "Hide the pinned group's tabs"
+    },
     "folderNameTitle": {
         "message": "Ім'я теки",
         "description": "Folder name title"

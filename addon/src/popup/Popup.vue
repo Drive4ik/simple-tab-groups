@@ -858,6 +858,12 @@ export default {
                                     :title="lang(group.isPinnedGroup ? 'pinTabInGroupTitle' : 'unpinTabInGroupTitle')">
                                     <pin-icon :color="group.isPinnedGroup ? null : group.iconColor"></pin-icon>
                                 </figure>
+                                <figure v-else-if="!group.isPinnedGroup && !group.isArchive"
+                                    class="icon image is-16x16 group-pinned-indicator hover-pin"
+                                    @click.stop="toggleTabGroupPinned(tab, true)"
+                                    :title="lang('pinTabInGroupTitle')">
+                                    <pin-icon outline :color="group.iconColor"></pin-icon>
+                                </figure>
                                 <figure v-if="showMuteIconTab(tab)" class="icon image is-16x16" @click.stop="toggleMuteTab(tab)" :title="tab.audible ? lang('muteTab') : lang('unMuteTab')">
                                     <img :src="tab.audible ? '/icons/audio.svg' : '/icons/audio-mute.svg'" />
                                 </figure>
@@ -1133,6 +1139,12 @@ export default {
                                 :title="lang(groupToShow.isPinnedGroup ? 'pinTabInGroupTitle' : 'unpinTabInGroupTitle')">
                                 <pin-icon :color="groupToShow.isPinnedGroup ? null : groupToShow.iconColor"></pin-icon>
                             </figure>
+                            <figure v-else-if="!groupToShow.isPinnedGroup && !groupToShow.isArchive"
+                                class="icon image is-16x16 group-pinned-indicator hover-pin"
+                                @click.stop="toggleTabGroupPinned(tab, true)"
+                                :title="lang('pinTabInGroupTitle')">
+                                <pin-icon outline :color="groupToShow.iconColor"></pin-icon>
+                            </figure>
                             <figure
                                 v-if="showMuteIconTab(tab)"
                                 @click.stop="toggleMuteTab(tab)"
@@ -1263,6 +1275,7 @@ export default {
         @reload-all-tabs="reloadAllTabsInGroup"
         @settings="openGroupSettings"
         @remove="removeGroup"
+        @toggle-pinned-group="togglePinnedGroup"
         ></context-menu-group>
 
     <context-menu-tab ref="contextMenuTab"
@@ -1574,6 +1587,15 @@ html {
             .group-pinned-indicator.is-work-group-pin {
                 cursor: pointer;
             }
+
+            .group-pinned-indicator.hover-pin {
+                visibility: hidden;
+                cursor: pointer;
+            }
+        }
+
+        &:hover .group-pinned-indicator.hover-pin {
+            visibility: visible;
         }
 
         .item-action {

@@ -777,6 +777,14 @@
         "message": "Unpin from group",
         "description": "Remove the group-scoped pin from this tab"
     },
+    "showPinnedGroupTitle": {
+        "message": "Show pinned tabs here",
+        "description": "Show the pinned group's tabs in the current window"
+    },
+    "hidePinnedGroupTitle": {
+        "message": "Hide pinned tabs",
+        "description": "Hide the pinned group's tabs"
+    },
     "folderNameTitle": {
         "message": "Folder name",
         "description": "Folder name title"

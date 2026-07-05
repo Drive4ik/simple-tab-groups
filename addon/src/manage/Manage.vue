@@ -579,6 +579,14 @@ export default {
                                 <pin-icon :color="group.isPinnedGroup ? null : group.iconColor"></pin-icon>
                             </figure>
                         </div>
+                        <div v-else-if="!group.isPinnedGroup && !group.isArchive"
+                            class="group-pinned-indicator hover-pin"
+                            @click.stop="toggleTabGroupPinned(tab, true)"
+                            :title="lang('pinTabInGroupTitle')">
+                            <figure class="image is-16x16">
+                                <pin-icon outline :color="group.iconColor"></pin-icon>
+                            </figure>
+                        </div>
 
                         <div
                             @mousedown.middle.prevent
@@ -733,6 +741,7 @@ export default {
         @archive="toggleArchiveGroup"
         @unarchive="toggleArchiveGroup"
         @reload-all-tabs="reloadAllTabsInGroup"
+        @toggle-pinned-group="togglePinnedGroup"
         ></context-menu-group>
 
     <context-menu-tab ref="contextMenuTab"
@@ -975,6 +984,15 @@ export default {
 
             > .group-pinned-indicator.is-work-group-pin {
                 cursor: pointer;
+            }
+
+            > .group-pinned-indicator.hover-pin {
+                visibility: hidden;
+                cursor: pointer;
+            }
+
+            &:hover > .group-pinned-indicator.hover-pin {
+                visibility: visible;
             }
 
             &:not(.has-thumbnail) > .tab-icon {
