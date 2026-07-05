@@ -493,7 +493,6 @@ export const DEFAULT_OPTIONS = Object.freeze({
         'remove',
         'update-thumbnail',
         'set-group-icon',
-        'pin-in-group',
         'move-tab-to-group',
     ],
     contextMenuGroup: [
