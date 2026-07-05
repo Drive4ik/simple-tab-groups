@@ -425,26 +425,27 @@ export async function setTabGroupPinned(tabId, groupPinned, targetGroupId) {
         .catch(log.onCatch(['cant set groupPinned', tabId], false));
 
     const windowId = Cache.getWindowId(groupId);
+    const {group} = await load(groupId, true);
+    const tab = group?.tabs.find(t => t.id === tabId);
 
-    if (windowId) {
-        const {group} = await load(groupId, true);
-        const tab = group?.tabs.find(t => t.id === tabId);
+    if (tab) {
+        tab.groupPinned = groupPinned;
 
-        if (tab) {
-            tab.groupPinned = groupPinned;
+        const destinationGroupIsShownInTabWindow = windowId && Cache.getWindowGroup(tab.windowId) === groupId;
 
-            const destinationGroupIsShownInTabWindow = Cache.getWindowGroup(tab.windowId) === groupId;
+        if (!destinationGroupIsShownInTabWindow) {
+            await unpinGroupTabs([tab], t => t.pinned);
+            await Tabs.hide([tab], true);
 
-            if (!destinationGroupIsShownInTabWindow) {
-                await unpinGroupTabs([tab], t => t.pinned);
-                await Tabs.hide([tab], true);
-            } else if (groupPinned) {
-                const existingPinned = group.tabs.filter(t => t.id !== tabId && isGroupPinned(t));
-                await pinGroupTabs([tab, ...existingPinned], windowId);
-            } else {
-                await unpinGroupTabs([tab], t => t.pinned);
-                await pinGroupTabs(group.tabs.filter(isGroupPinned), windowId);
+            if (groupPinned && newlyEnteredGroup) {
+                await placeTabAfterGroupPins(group, tab);
             }
+        } else if (groupPinned) {
+            const existingPinned = group.tabs.filter(t => t.id !== tabId && isGroupPinned(t));
+            await pinGroupTabs([tab, ...existingPinned], windowId);
+        } else {
+            await unpinGroupTabs([tab], t => t.pinned);
+            await pinGroupTabs(group.tabs.filter(isGroupPinned), windowId);
         }
     }
 
@@ -463,6 +464,22 @@ export async function setTabGroupPinned(tabId, groupPinned, targetGroupId) {
 
     log.stop();
     return true;
+}
+
+async function placeTabAfterGroupPins(group, tab) {
+    const others = group.tabs
+        .filter(t => t.id !== tab.id)
+        .sort(Utils.sortBy('index'));
+
+    const pins = others.filter(isGroupPinned);
+    const anchor = pins.length ? pins[pins.length - 1].index + 1 : others[0]?.index;
+
+    if (anchor != null && tab.index !== anchor) {
+        await Tabs.moveNative([tab], {
+            index: anchor,
+            windowId: others[0]?.windowId ?? tab.windowId,
+        }, true);
+    }
 }
 
 export async function applyGroupPinnedOrder(groupId) {
