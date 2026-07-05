@@ -292,9 +292,10 @@ async function applyPinnedOps(browserOps, log, sleepOptions = {}) {
         const liveByUidForCreate = new Map(
             (await getLivePinnedTabs()).filter(t => t.uid != null).map(t => [t.uid, t.id])
         );
+        const liveGroupTabsByUid = await buildLiveTabIndexByUid();
         const pinnedToActuallyCreate = toCreate.filter(tab => {
-            if (tab.uid != null && liveByUidForCreate.has(tab.uid)) {
-                log.log('idempotent pinned create: skip already-live pinned uid', tab.uid);
+            if (tab.uid != null && (liveByUidForCreate.has(tab.uid) || liveGroupTabsByUid.has(tab.uid))) {
+                log.log('idempotent pinned create: skip already-live uid', tab.uid);
                 return false;
             }
             if (!isUrlSyncable(unwrapStubUrl(tab.url))) {
@@ -495,6 +496,9 @@ export async function applyBrowserOps(browserOps, resolvedSnapshot) {
 
         const endCreatePhase = browserOps.tabsToCreate.length ? beginApplyPhase('tabs-create', log) : null;
         const liveByUidForCreate = await buildLiveTabIndexByUid();
+        const livePinnedByUid = browserOps.tabsToCreate.length
+            ? new Map((await getLivePinnedTabs()).filter(t => t.uid != null).map(t => [t.uid, t.id]))
+            : new Map();
 
         const createsByGroup = new Map();
         for (const tab of browserOps.tabsToCreate) {
@@ -502,7 +506,7 @@ export async function applyBrowserOps(browserOps, resolvedSnapshot) {
             if (groupId == null) {
                 continue;
             }
-            if (tab.uid != null && liveByUidForCreate.has(tab.uid)) {
+            if (tab.uid != null && (liveByUidForCreate.has(tab.uid) || livePinnedByUid.has(tab.uid))) {
                 log.log('idempotent create: skip already-live tab uid', tab.uid);
                 continue;
             }
