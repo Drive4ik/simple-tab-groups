@@ -94,7 +94,7 @@ export default {
                 <span v-text="lang('setTabIconAsGroupIcon')"></span>
             </li>
             <li
-                v-if="data.group && !data.group.isPinnedGroup"
+                v-if="menu.includes('pin-in-group') && data.group && !data.group.isPinnedGroup"
                 @click="$emit('pin-in-group', data.tab, !data.tab.groupPinned)">
                 <figure class="image is-16x16">
                     <img src="/icons/thumbtack.svg" />
@@ -102,7 +102,7 @@ export default {
                 <span v-text="lang(data.tab.groupPinned ? 'unpinTabInGroupTitle' : 'pinTabInGroupTitle')"></span>
             </li>
             <li
-                v-if="data.group?.isPinnedGroup && data.targetGroup && !data.targetGroup.isPinnedGroup"
+                v-if="menu.includes('pin-in-group') && data.group?.isPinnedGroup && data.targetGroup && !data.targetGroup.isPinnedGroup"
                 @click="$emit('pin-in-group', data.tab, false, data.targetGroup.id)">
                 <figure class="image is-16x16">
                     <img src="/icons/thumbtack.svg" />
@@ -110,7 +110,7 @@ export default {
                 <span v-text="lang('unpinToCurrentGroupTitle')"></span>
             </li>
             <li
-                v-if="!data.group && data.targetGroup"
+                v-if="menu.includes('pin-in-group') && !data.group && data.targetGroup"
                 @click="$emit('pin-in-group', data.tab, true, data.targetGroup.id)">
                 <figure class="image is-16x16">
                     <img src="/icons/thumbtack.svg" />
