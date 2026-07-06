@@ -371,6 +371,8 @@ async function onUpdated(tabId, changeInfo, tab) {
             await Cache.setTabGroup(tab.id, null, tab.windowId)
                 .catch(log.onCatch(["can't set group to tab, !pinned", tab.id], false));
 
+            DeltaCapture.tabAdded(tab);
+
             tabGroupId = Cache.getTabGroup(tab.id);
         } else if (changeInfo.hidden === false) {
             log.log('tab is showing', tab.id);
