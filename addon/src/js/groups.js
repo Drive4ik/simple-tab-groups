@@ -399,8 +399,26 @@ export async function setTabGroupPinned(tabId, groupPinned, targetGroupId, newTa
     let groupId = Cache.getTabGroup(tabId);
 
     if (isPinnedGroupId(groupId) && !targetGroupId) {
-        log.stopWarn('cannot unpin inside the pinned group, drag it into a group instead', tabId);
-        return false;
+        if (groupPinned !== true) {
+            log.stopWarn('cannot unpin inside the pinned group, drag it into a group instead', tabId);
+            return false;
+        }
+
+        await Cache.setTabGroupPinned(tabId, true)
+            .catch(log.onCatch(['cant set groupPinned', tabId], false));
+        await refreshPinnedGroupIfShown();
+        await Cache.setTabLastModified(tabId).catch(log.onCatch(['cant bump lastModified (group-pin)', tabId], false));
+
+        const pinnedGroupTab = await Tabs.getOne(tabId);
+        if (pinnedGroupTab) {
+            await DeltaCapture.tabModified(pinnedGroupTab);
+        }
+
+        sendUpdatedAll();
+        Tabs.sendUpdatedGroup(groupId);
+
+        log.stop('flagged pinned-group member', tabId);
+        return true;
     }
 
     let newlyEnteredGroup = false;
@@ -719,11 +737,26 @@ export async function absorbNativePinnedTabs() {
         absorbed++;
     }
 
-    if (absorbed) {
+    let backfilled = 0;
+
+    const {group} = await load(PINNED_GROUP_ID, true);
+
+    for (const tab of group?.tabs || []) {
+        if (Cache.getTabGroupPinned(tab.id)) {
+            continue;
+        }
+
+        await Cache.setTabGroupPinned(tab.id, true)
+            .catch(log.onCatch(['cant backfill groupPinned', tab.id], false));
+
+        backfilled++;
+    }
+
+    if (absorbed || backfilled) {
         sendUpdatedAll();
     }
 
-    log.stop('absorbed:', absorbed);
+    log.stop('absorbed:', absorbed, 'backfilled:', backfilled);
 }
 
 export async function refreshPinnedGroupIfShown() {

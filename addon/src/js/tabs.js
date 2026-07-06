@@ -1235,6 +1235,11 @@ export async function move(tabIds, groupId, params = {}) {
 
         await Promise.all(tabs.map(tab => Cache.setTabGroup(tab.id, groupId)));
 
+        if (Groups.isPinnedGroupId(groupId)) {
+            await Promise.all(tabs.map(tab => Cache.setTabGroupPinned(tab.id, true)));
+            tabs.forEach(tab => tab.groupPinned = true);
+        }
+
         await DeltaCapture.tabsAdded(tabs);
 
         Groups.sendUpdatedAll();
