@@ -1274,6 +1274,7 @@ export default {
         @settings="openGroupSettings"
         @remove="removeGroup"
         @toggle-pinned-group="togglePinnedGroup"
+        :current-window-id="currentWindow?.id"
         ></context-menu-group>
 
     <context-menu-tab ref="contextMenuTab"

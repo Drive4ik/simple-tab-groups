@@ -676,10 +676,6 @@ function getPinnedGroupShownWindowId(group) {
     return shownTab ? shownTab.windowId : null;
 }
 
-export function isPinnedGroupShown(group) {
-    return getPinnedGroupShownWindowId(group) !== null;
-}
-
 async function showPinnedGroupInWindow(group, windowId) {
     const log = logger.start('showPinnedGroupInWindow', {windowId, count: group.tabs.length});
 
@@ -801,7 +797,7 @@ async function activatePinnedGroupTab(tabId, windowId) {
     const tab = await Tabs.setActive(tabId);
 
     if (tab) {
-        Windows.setFocus(tab.windowId);
+        Windows.setFocus(getPinnedGroupShownWindowId(group));
     }
 
     return Boolean(tab);

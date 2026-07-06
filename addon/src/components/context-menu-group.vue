@@ -1,7 +1,6 @@
 <script>
 import contextMenu from './context-menu.vue';
 import Lang from '/js/lang.js';
-import * as Groups from '/js/groups.js';
 
 export default {
     props: {
@@ -29,6 +28,10 @@ export default {
             type: Boolean,
             default: true,
         },
+        currentWindowId: {
+            type: Number,
+            default: null,
+        },
     },
     components: {
         'context-menu': contextMenu,
@@ -41,7 +44,10 @@ export default {
         isOpened({id}) {
             return this.openedWindows.some(win => win.groupId === id);
         },
-        isPinnedGroupShown: Groups.isPinnedGroupShown,
+        isPinnedGroupShownHere(group) {
+            const shownTab = group.tabs?.find(tab => tab.pinned);
+            return Boolean(shownTab) && shownTab.windowId === this.currentWindowId;
+        },
     },
 };
 
@@ -57,7 +63,7 @@ export default {
                 <figure class="image is-16x16">
                     <img src="/icons/thumbtack.svg" />
                 </figure>
-                <span v-text="lang(isPinnedGroupShown(data.group) ? 'hidePinnedGroupTitle' : 'showPinnedGroupTitle')"></span>
+                <span v-text="lang(isPinnedGroupShownHere(data.group) ? 'hidePinnedGroupTitle' : 'showPinnedGroupTitle')"></span>
             </li>
             <li
                 v-if="menu.includes('open-in-new-window') && !data.group.isArchive && !data.group.isPinnedGroup"

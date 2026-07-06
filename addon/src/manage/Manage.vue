@@ -742,6 +742,7 @@ export default {
         @unarchive="toggleArchiveGroup"
         @reload-all-tabs="reloadAllTabsInGroup"
         @toggle-pinned-group="togglePinnedGroup"
+        :current-window-id="currentWindow?.id"
         ></context-menu-group>
 
     <context-menu-tab ref="contextMenuTab"
