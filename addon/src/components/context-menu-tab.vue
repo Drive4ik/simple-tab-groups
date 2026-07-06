@@ -46,7 +46,7 @@ export default {
     <template v-slot="{data}">
         <ul v-if="data" class="is-unselectable">
             <li
-                v-if="menu.includes('open-in-new-window') && data.group"
+                v-if="menu.includes('open-in-new-window') && data.group && !data.group.isPinnedGroup"
                 @click="$emit('open-in-new-window', data.group, data.tab)">
                 <figure class="image is-16x16">
                     <img src="/icons/window-new.svg" />

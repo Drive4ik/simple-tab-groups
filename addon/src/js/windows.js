@@ -540,6 +540,11 @@ export async function create(groupId, activeTabId) {
         log.throwError('No group id');
     }
 
+    if (Groups.isPinnedGroupId(groupId)) {
+        log.stopWarn('pinned group cannot be opened in a new window');
+        return;
+    }
+
     const groupWindowId = Cache.getWindowId(groupId);
 
     log.log('groupWindowId', groupWindowId);

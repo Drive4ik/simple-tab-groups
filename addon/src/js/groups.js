@@ -71,8 +71,8 @@ export async function apply(windowId, groupId, activeTabId, applyFromHistory = f
     }
 
     if (isPinnedGroupId(groupId)) {
-        log.stop('pinned group toggle');
-        return togglePinnedGroupInWindow(windowId);
+        log.stop('pinned group', activeTabId ? 'activate tab' : 'toggle');
+        return activeTabId ? activatePinnedGroupTab(activeTabId, windowId) : togglePinnedGroupInWindow(windowId);
     }
 
     windowsWithLoadingGroups.add(windowId);
@@ -783,6 +783,26 @@ export async function togglePinnedGroupInWindow(windowId) {
     return showPinnedGroupInWindow(group, windowId);
 }
 
+async function activatePinnedGroupTab(tabId, windowId) {
+    const {group} = await load(PINNED_GROUP_ID, true);
+
+    if (!group?.tabs.some(tab => tab.id === tabId)) {
+        return false;
+    }
+
+    if (!getPinnedGroupShownWindowId(group)) {
+        await showPinnedGroupInWindow(group, windowId);
+    }
+
+    const tab = await Tabs.setActive(tabId);
+
+    if (tab) {
+        Windows.setFocus(tab.windowId);
+    }
+
+    return Boolean(tab);
+}
+
 export function ensurePinnedGroup(groups) {
     if (groups.some(isPinnedGroup)) {
         return false;
@@ -1379,6 +1399,7 @@ export function mapForExternalExtension(group) {
         title: getTitle(group),
         isArchive: group.isArchive,
         isSticky: group.isSticky,
+        isPinnedGroup: group.isPinnedGroup === true,
         iconUrl: getIconUrl(group),
         contextualIdentity: Containers.get(group.newTabContainer),
         windowId: Cache.getWindowId(group.id) || null,
@@ -1447,7 +1468,11 @@ export function getCatchedForTab(notArchivedGroups, currentGroup, {cookieStoreId
         return;
     }
 
-    const destGroup = notArchivedGroups.find(({catchTabContainers, catchTabRules}) => {
+    const destGroup = notArchivedGroups.find(({isPinnedGroup, catchTabContainers, catchTabRules}) => {
+        if (isPinnedGroup) {
+            return false;
+        }
+
         if (catchTabContainers.includes(cookieStoreId)) {
             return true;
         }

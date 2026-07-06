@@ -659,7 +659,7 @@ async function onBackgroundMessage(message, sender) {
                             action: 'show-groups-popup',
                             popupAction: 'load-custom-group',
                             popupTitle: Lang('hotkeyActionTitleLoadCustomGroup'),
-                            groups: notArchivedGroups.map(Groups.mapForExternalExtension),
+                            groups: notArchivedGroups.filter(group => !group.isPinnedGroup).map(Groups.mapForExternalExtension),
                             disableGroupIds: [currentGroup?.id].filter(Boolean),
                         });
 
