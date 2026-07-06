@@ -850,19 +850,19 @@ export default {
                                 <img v-if="isTabLoading(tab)" src="/icons/tab-loading.svg" />
                                 <img v-else :src="tab.favIconUrl" loading="lazy" decoding="async" />
                             </figure>
+                            <figure v-if="tab.groupPinned"
+                                :class="['icon image is-16x16 group-pinned-indicator', {'is-work-group-pin': !group.isPinnedGroup}]"
+                                @click.stop="!group.isPinnedGroup && toggleTabGroupPinned(tab, false)"
+                                :title="group.isPinnedGroup ? null : lang('unpinTabInGroupTitle')">
+                                <pin-icon :color="group.isPinnedGroup ? null : group.iconColor"></pin-icon>
+                            </figure>
+                            <figure v-else-if="!group.isPinnedGroup && !group.isArchive"
+                                class="icon image is-16x16 group-pinned-indicator hover-pin"
+                                @click.stop="toggleTabGroupPinned(tab, true)"
+                                :title="lang('pinTabInGroupTitle')">
+                                <pin-icon outline :color="group.iconColor"></pin-icon>
+                            </figure>
                             <div class="item-title clip-text icon-text">
-                                <figure v-if="tab.groupPinned"
-                                    :class="['icon image is-16x16 group-pinned-indicator', {'is-work-group-pin': !group.isPinnedGroup}]"
-                                    @click.stop="!group.isPinnedGroup && toggleTabGroupPinned(tab, false)"
-                                    :title="group.isPinnedGroup ? null : lang('unpinTabInGroupTitle')">
-                                    <pin-icon :color="group.isPinnedGroup ? null : group.iconColor"></pin-icon>
-                                </figure>
-                                <figure v-else-if="!group.isPinnedGroup && !group.isArchive"
-                                    class="icon image is-16x16 group-pinned-indicator hover-pin"
-                                    @click.stop="toggleTabGroupPinned(tab, true)"
-                                    :title="lang('pinTabInGroupTitle')">
-                                    <pin-icon outline :color="group.iconColor"></pin-icon>
-                                </figure>
                                 <figure v-if="showMuteIconTab(tab)" class="icon image is-16x16" @click.stop="toggleMuteTab(tab)" :title="tab.audible ? lang('muteTab') : lang('unMuteTab')">
                                     <img :src="tab.audible ? '/icons/audio.svg' : '/icons/audio-mute.svg'" />
                                 </figure>
@@ -1130,19 +1130,19 @@ export default {
                             <img v-if="isTabLoading(tab)" src="/icons/tab-loading.svg" />
                             <img v-else :src="tab.favIconUrl" loading="lazy" decoding="async" />
                         </figure>
+                        <figure v-if="tab.groupPinned"
+                            :class="['icon image is-16x16 group-pinned-indicator', {'is-work-group-pin': !groupToShow.isPinnedGroup}]"
+                            @click.stop="!groupToShow.isPinnedGroup && toggleTabGroupPinned(tab, false)"
+                            :title="groupToShow.isPinnedGroup ? null : lang('unpinTabInGroupTitle')">
+                            <pin-icon :color="groupToShow.isPinnedGroup ? null : groupToShow.iconColor"></pin-icon>
+                        </figure>
+                        <figure v-else-if="!groupToShow.isPinnedGroup && !groupToShow.isArchive"
+                            class="icon image is-16x16 group-pinned-indicator hover-pin"
+                            @click.stop="toggleTabGroupPinned(tab, true)"
+                            :title="lang('pinTabInGroupTitle')">
+                            <pin-icon outline :color="groupToShow.iconColor"></pin-icon>
+                        </figure>
                         <div class="item-title clip-text icon-text">
-                            <figure v-if="tab.groupPinned"
-                                :class="['icon image is-16x16 group-pinned-indicator', {'is-work-group-pin': !groupToShow.isPinnedGroup}]"
-                                @click.stop="!groupToShow.isPinnedGroup && toggleTabGroupPinned(tab, false)"
-                                :title="groupToShow.isPinnedGroup ? null : lang('unpinTabInGroupTitle')">
-                                <pin-icon :color="groupToShow.isPinnedGroup ? null : groupToShow.iconColor"></pin-icon>
-                            </figure>
-                            <figure v-else-if="!groupToShow.isPinnedGroup && !groupToShow.isArchive"
-                                class="icon image is-16x16 group-pinned-indicator hover-pin"
-                                @click.stop="toggleTabGroupPinned(tab, true)"
-                                :title="lang('pinTabInGroupTitle')">
-                                <pin-icon outline :color="groupToShow.iconColor"></pin-icon>
-                            </figure>
                             <figure
                                 v-if="showMuteIconTab(tab)"
                                 @click.stop="toggleMuteTab(tab)"
@@ -1578,33 +1578,29 @@ html {
                 gap: var(--gap-indent);
             }
 
-            .group-pinned-indicator {
-                flex: none;
-            }
+        }
 
-            .group-pinned-indicator.is-work-group-pin {
-                cursor: pointer;
-            }
+        .group-pinned-indicator {
+            flex: none;
+        }
 
-            .group-pinned-indicator.hover-pin {
-                display: none;
-                cursor: pointer;
-            }
+        .group-pinned-indicator.is-work-group-pin {
+            cursor: pointer;
+        }
 
-            .group-pinned-indicator.is-work-group-pin svg,
-            .group-pinned-indicator.hover-pin svg {
-                transform: scale(0.8);
-            }
+        .group-pinned-indicator.hover-pin {
+            display: none;
+            cursor: pointer;
+        }
 
-            .group-pinned-indicator.is-work-group-pin:hover svg,
-            .group-pinned-indicator.hover-pin:hover svg {
-                transform: scale(1);
-            }
+        .group-pinned-indicator.is-work-group-pin:hover svg,
+        .group-pinned-indicator.hover-pin:hover svg {
+            transform: scale(1.25);
+        }
 
-            .group-pinned-indicator.hover-pin:hover svg {
-                fill: currentColor;
-                fill-opacity: 0.45;
-            }
+        .group-pinned-indicator.hover-pin:hover svg {
+            fill: currentColor;
+            fill-opacity: 0.45;
         }
 
         &:hover .group-pinned-indicator.hover-pin {
