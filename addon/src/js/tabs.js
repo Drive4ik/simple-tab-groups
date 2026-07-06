@@ -259,6 +259,12 @@ async function onUpdated(tabId, changeInfo, tab) {
     // if tab was restored along with window, it needs to wait when GrantRestore will add the window to the skipTrackingWindows
     await Utils.wait(50 + 20); // 50ms for tab onCreated + 20ms as a margin
 
+    if (skip.tracking.has(tab.id) || skipTrackingWindows.has(tab.windowId)) {
+        Cache.setTab(tab);
+        logger.log(onUpdated, '🛑 skip tracking tab (after wait):', tab.id);
+        return;
+    }
+
     delete tab.groupId; // TODO tmp
 
     const log = logger.start(onUpdated, tabId, changeInfo);
@@ -476,6 +482,11 @@ async function onMoved(tabId, {windowId, /* fromIndex, */ toIndex}) {
     }
 
     await Utils.wait(50 + 20);
+
+    if (skip.tracking.has(tabId) || skipTrackingWindows.has(windowId)) {
+        logger.log(onMoved, '🛑 skip tracking tab (after wait):', tabId);
+        return;
+    }
 
     const groupId = Cache.getTabGroup(tabId);
 
