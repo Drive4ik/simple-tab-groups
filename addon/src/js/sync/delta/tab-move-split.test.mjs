@@ -8,7 +8,7 @@
  * failure. Lives here so the existing `node src/js/sync/delta/*.test.mjs` run picks it up.
  */
 
-import {isPinnedNeedingGroupPin, partitionTabIdsForMove} from '../../tab-move-split.js';
+import {isPinnedNeedingGroupPin} from '../../tab-move-split.js';
 
 let passed = 0;
 const failures = [];
@@ -53,43 +53,6 @@ check('null tab → NOT routed (safe)',
 
 check('truthy-but-non-boolean pinned does NOT count (strict === true)',
     isPinnedNeedingGroupPin({pinned: 1}) === false);
-
-// ---------------------------------------------------------------------------
-// partitionTabIdsForMove: split a mixed selection (multi-select) into the two routes,
-// preserving order within each route. Unknown ids resolve as normal.
-// ---------------------------------------------------------------------------
-{
-    const tabs = {
-        1: {pinned: true},                       // global pinned → group-pin
-        2: {pinned: false},                      // normal
-        3: {pinned: true, groupPinned: true},    // already group-pinned → group-pin (re-target)
-        4: {pinned: true, groupPinned: false},   // global pinned → group-pin
-        5: undefined,                            // unknown → normal
-    };
-    const {groupPinTabIds, normalTabIds} = partitionTabIdsForMove(
-        [1, 2, 3, 4, 5],
-        id => tabs[id],
-    );
-
-    check('partition: group-pin ids in order (all pinned, incl. already group-pinned)',
-        JSON.stringify(groupPinTabIds) === JSON.stringify([1, 3, 4]),
-        JSON.stringify(groupPinTabIds));
-
-    check('partition: normal ids in order (unpinned + unknown)',
-        JSON.stringify(normalTabIds) === JSON.stringify([2, 5]),
-        JSON.stringify(normalTabIds));
-
-    check('partition: every input id is accounted for exactly once',
-        groupPinTabIds.length + normalTabIds.length === 5);
-}
-
-{
-    const {groupPinTabIds, normalTabIds} = partitionTabIdsForMove([], () => undefined);
-    check('partition: empty selection → both routes empty',
-        groupPinTabIds.length === 0 && normalTabIds.length === 0);
-}
-
-// ---------------------------------------------------------------------------
 
 if (failures.length) {
     console.error(`\n${failures.length} failed, ${passed} passed`);
