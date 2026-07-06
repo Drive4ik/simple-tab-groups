@@ -828,7 +828,7 @@ export default {
 
                     <template v-else>
                         <div v-for="(tab, index) in group.filteredTabs" :key="index"
-                            @contextmenu="$refs.contextMenuTab.open($event, {tab, group})"
+                            @contextmenu="$refs.contextMenuTab.open($event, {tab, group, targetGroup: currentGroup})"
                             @click.stop="clickOnTab($event, tab, group)"
                             @keydown.enter="clickOnTab($event, tab, group)"
                             @keydown.delete="removeTab(tab)"
@@ -1098,7 +1098,7 @@ export default {
                         v-for="(tab, tabIndex) in groupToShow.tabs"
                         :key="tabIndex"
                         :data-tab-id="tab.id"
-                        @contextmenu="$refs.contextMenuTab.open($event, {tab, group: groupToShow})"
+                        @contextmenu="$refs.contextMenuTab.open($event, {tab, group: groupToShow, targetGroup: currentGroup})"
                         @click.stop="clickOnTab($event, tab, groupToShow)"
                         @keydown.enter="clickOnTab($event, tab, groupToShow)"
                         @keydown.left="showSectionDefault"

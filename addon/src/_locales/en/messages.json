@@ -777,6 +777,10 @@
         "message": "Unpin from group",
         "description": "Remove the group-scoped pin from this tab"
     },
+    "unpinToCurrentGroupTitle": {
+        "message": "Unpin into current group",
+        "description": "Move a pinned-group tab into the window's current group as a normal tab"
+    },
     "showPinnedGroupTitle": {
         "message": "Show pinned tabs here",
         "description": "Show the pinned group's tabs in the current window"

@@ -532,7 +532,7 @@ export default {
                             tab.container && `identity-color-${tab.container?.color}`
                         ]"
                         :title="getTabTitle(tab, true)"
-                        @contextmenu.stop.prevent="!group.isArchive && $refs.contextMenuTab.open($event, {tab, group})"
+                        @contextmenu.stop.prevent="!group.isArchive && $refs.contextMenuTab.open($event, {tab, group, targetGroup: currentGroup})"
 
                         @click.stop="!group.isArchive && clickOnTab($event, tab, group)"
 
