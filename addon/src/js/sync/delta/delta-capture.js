@@ -231,6 +231,10 @@ export async function tabMoved(tabId) {
         const windowId = Cache.getWindowId(groupId);
         const groupRelativeIndex = await getGroupRelativeIndex(tabId, windowId, groupId);
 
+        if (Cache.getTabGroup(tabId) !== groupId) {
+            return;
+        }
+
         const payload = {groupId, uid};
         if (Number.isInteger(groupRelativeIndex)) {
             payload.toIndex = groupRelativeIndex;

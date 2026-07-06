@@ -393,8 +393,8 @@ async function unpinGroupTabs(tabs = [], shouldUnpin = isGroupPinned) {
     log.stop();
 }
 
-export async function setTabGroupPinned(tabId, groupPinned, targetGroupId) {
-    const log = logger.start('setTabGroupPinned', {tabId, groupPinned, targetGroupId});
+export async function setTabGroupPinned(tabId, groupPinned, targetGroupId, newTabIndex) {
+    const log = logger.start('setTabGroupPinned', {tabId, groupPinned, targetGroupId, newTabIndex});
 
     let groupId = Cache.getTabGroup(tabId);
 
@@ -405,46 +405,61 @@ export async function setTabGroupPinned(tabId, groupPinned, targetGroupId) {
 
     let newlyEnteredGroup = false;
 
-    if (targetGroupId && groupId !== targetGroupId) {
-        await browser.tabs.update(tabId, {pinned: false}).catch(log.onCatch(['cant unpin for move', tabId], false));
-        await Tabs.move([tabId], targetGroupId, {showNotificationAfterMovingTabIntoThisGroup: false, _pinnedAlreadyHandled: true})
-            .catch(log.onCatch(['cant move tab into group', tabId, targetGroupId], false));
-        groupId = Cache.getTabGroup(tabId);
-        groupPinned ??= true;
-        newlyEnteredGroup = true;
+    const isConversionMove = Boolean(targetGroupId && groupId !== targetGroupId);
+
+    if (isConversionMove) {
+        Tabs.skipTracking([tabId]);
     }
 
-    if (!groupId) {
-        log.stopWarn('tab has no group, ignoring group-pin toggle', tabId);
-        return false;
-    }
+    try {
+        if (isConversionMove) {
+            await browser.tabs.update(tabId, {pinned: false}).catch(log.onCatch(['cant unpin for move', tabId], false));
+            await Tabs.move([tabId], targetGroupId, {showNotificationAfterMovingTabIntoThisGroup: false, _pinnedAlreadyHandled: true, newTabIndex})
+                .catch(log.onCatch(['cant move tab into group', tabId, targetGroupId], false));
 
-    groupPinned ??= !Cache.getTabGroupPinned(tabId);
+            Tabs.skipTracking([tabId]);
 
-    await Cache.setTabGroupPinned(tabId, groupPinned)
-        .catch(log.onCatch(['cant set groupPinned', tabId], false));
+            groupId = Cache.getTabGroup(tabId);
+            groupPinned ??= true;
+            newlyEnteredGroup = true;
+        }
 
-    const windowId = Cache.getWindowId(groupId);
+        if (!groupId) {
+            log.stopWarn('tab has no group, ignoring group-pin toggle', tabId);
+            return false;
+        }
 
-    if (windowId) {
+        groupPinned ??= !Cache.getTabGroupPinned(tabId);
+
+        await Cache.setTabGroupPinned(tabId, groupPinned)
+            .catch(log.onCatch(['cant set groupPinned', tabId], false));
+
+        const windowId = Cache.getWindowId(groupId);
         const {group} = await load(groupId, true);
         const tab = group?.tabs.find(t => t.id === tabId);
 
         if (tab) {
             tab.groupPinned = groupPinned;
 
-            const destinationGroupIsShownInTabWindow = Cache.getWindowGroup(tab.windowId) === groupId;
+            const destinationGroupIsShownInTabWindow = windowId && Cache.getWindowGroup(tab.windowId) === groupId;
 
             if (!destinationGroupIsShownInTabWindow) {
                 await unpinGroupTabs([tab], t => t.pinned);
                 await Tabs.hide([tab], true);
+
+                if (groupPinned && newlyEnteredGroup && newTabIndex == null) {
+                    await placeTabAfterGroupPins(group, tab);
+                }
             } else if (groupPinned) {
-                const existingPinned = group.tabs.filter(t => t.id !== tabId && isGroupPinned(t));
-                await pinGroupTabs([tab, ...existingPinned], windowId);
+                await pinGroupTabs(group.tabs.filter(isGroupPinned), windowId);
             } else {
                 await unpinGroupTabs([tab], t => t.pinned);
                 await pinGroupTabs(group.tabs.filter(isGroupPinned), windowId);
             }
+        }
+    } finally {
+        if (isConversionMove) {
+            Tabs.continueTracking([tabId]);
         }
     }
 
@@ -463,6 +478,22 @@ export async function setTabGroupPinned(tabId, groupPinned, targetGroupId) {
 
     log.stop();
     return true;
+}
+
+async function placeTabAfterGroupPins(group, tab) {
+    const others = group.tabs
+        .filter(t => t.id !== tab.id)
+        .sort(Utils.sortBy('index'));
+
+    const pins = others.filter(isGroupPinned);
+    const anchor = pins.length ? pins[pins.length - 1].index + 1 : others[0]?.index;
+
+    if (anchor != null && tab.index !== anchor) {
+        await Tabs.moveNative([tab], {
+            index: anchor,
+            windowId: others[0]?.windowId ?? tab.windowId,
+        }, true);
+    }
 }
 
 export async function applyGroupPinnedOrder(groupId) {
@@ -660,6 +691,39 @@ async function hidePinnedGroup(group) {
 
     log.stop();
     return true;
+}
+
+export async function absorbNativePinnedTabs() {
+    const log = logger.start('absorbNativePinnedTabs');
+
+    const pinnedTabs = await Tabs.get(null, true, null).catch(() => []);
+
+    let absorbed = 0;
+
+    for (const tab of pinnedTabs) {
+        await Cache.loadTabSession(tab, false, false).catch(() => {});
+
+        if (Cache.getTabGroup(tab.id)) {
+            continue;
+        }
+
+        await Cache.setTabGroup(tab.id, PINNED_GROUP_ID, tab.windowId)
+            .catch(log.onCatch(['cant absorb pinned tab', tab.id], false));
+        await Cache.setTabGroupPinned(tab.id, true)
+            .catch(log.onCatch(['cant set groupPinned', tab.id], false));
+
+        if (!Cache.getTabUid(tab.id)) {
+            await Cache.setTabUid(tab.id).catch(() => {});
+        }
+
+        absorbed++;
+    }
+
+    if (absorbed) {
+        sendUpdatedAll();
+    }
+
+    log.stop('absorbed:', absorbed);
 }
 
 export async function refreshPinnedGroupIfShown() {

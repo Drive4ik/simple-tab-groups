@@ -8,6 +8,7 @@ import editGroup from '../components/edit-group.vue';
 import contextMenu from '../components/context-menu.vue';
 import contextMenuTab from '../components/context-menu-tab.vue';
 import contextMenuTabNew from '../components/context-menu-tab-new.vue';
+import pinIcon from '../components/pin-icon.vue';
 import contextMenuGroup from '../components/context-menu-group.vue';
 
 import '/js/prefixed-storage.js';
@@ -83,6 +84,7 @@ export default {
         'context-menu': contextMenu,
         'context-menu-tab': contextMenuTab,
         'context-menu-tab-new': contextMenuTabNew,
+        'pin-icon': pinIcon,
         'context-menu-group': contextMenuGroup,
     },
     created() {
@@ -815,10 +817,8 @@ export default {
                             </div>
                             <div class="item-title clip-text icon-text">
                                 <figure v-if="tab.groupPinned"
-                                    :class="['icon image is-16x16 group-pinned-indicator', {'is-work-group-pin': !group.isPinnedGroup}]"
-                                    :style="group.isPinnedGroup ? null : {'--pin-color': group.iconColor}"
-                                    :title="lang('pinTabInGroupTitle')">
-                                    <img src="/icons/thumbtack.svg" />
+                                    class="icon image is-16x16 group-pinned-indicator">
+                                    <pin-icon :color="group.iconColor"></pin-icon>
                                 </figure>
                                 <figure v-if="tab.container" :title="tab.container?.name" :class="`icon image is-16x16 userContext-icon identity-icon-${tab.container?.icon} identity-color-${tab.container?.color}`"></figure>
                                 <span class="discarded-color" v-text="getTabTitle(tab)"></span>
@@ -850,14 +850,19 @@ export default {
                                 <img v-if="isTabLoading(tab)" src="/icons/tab-loading.svg" />
                                 <img v-else :src="tab.favIconUrl" loading="lazy" decoding="async" />
                             </figure>
+                            <figure v-if="tab.groupPinned"
+                                :class="['icon image is-16x16 group-pinned-indicator', {'is-work-group-pin': !group.isPinnedGroup}]"
+                                @click.stop="!group.isPinnedGroup && toggleTabGroupPinned(tab, false)"
+                                :title="group.isPinnedGroup ? null : lang('unpinTabInGroupTitle')">
+                                <pin-icon :color="group.isPinnedGroup ? null : group.iconColor"></pin-icon>
+                            </figure>
+                            <figure v-else-if="!group.isPinnedGroup && !group.isArchive"
+                                class="icon image is-16x16 group-pinned-indicator hover-pin"
+                                @click.stop="toggleTabGroupPinned(tab, true)"
+                                :title="lang('pinTabInGroupTitle')">
+                                <pin-icon outline :color="group.iconColor"></pin-icon>
+                            </figure>
                             <div class="item-title clip-text icon-text">
-                                <figure v-if="tab.groupPinned"
-                                    :class="['icon image is-16x16 group-pinned-indicator', {'is-work-group-pin': !group.isPinnedGroup}]"
-                                    :style="group.isPinnedGroup ? null : {'--pin-color': group.iconColor}"
-                                    @click.stop="!group.isPinnedGroup && toggleTabGroupPinned(tab, false)"
-                                    :title="lang(group.isPinnedGroup ? 'pinTabInGroupTitle' : 'unpinTabInGroupTitle')">
-                                    <img src="/icons/thumbtack.svg" />
-                                </figure>
                                 <figure v-if="showMuteIconTab(tab)" class="icon image is-16x16" @click.stop="toggleMuteTab(tab)" :title="tab.audible ? lang('muteTab') : lang('unMuteTab')">
                                     <img :src="tab.audible ? '/icons/audio.svg' : '/icons/audio-mute.svg'" />
                                 </figure>
@@ -1078,10 +1083,8 @@ export default {
                     </figure>
                     <div class="item-title clip-text icon-text">
                         <figure v-if="tab.groupPinned"
-                            :class="['icon image is-16x16 group-pinned-indicator', {'is-work-group-pin': !groupToShow.isPinnedGroup}]"
-                            :style="groupToShow.isPinnedGroup ? null : {'--pin-color': groupToShow.iconColor}"
-                            :title="lang('pinTabInGroupTitle')">
-                            <img src="/icons/thumbtack.svg" />
+                            class="icon image is-16x16 group-pinned-indicator">
+                            <pin-icon :color="groupToShow.iconColor"></pin-icon>
                         </figure>
                         <figure v-if="tab.container" :title="tab.container?.name" :class="`icon image is-16x16 userContext-icon identity-icon-${tab.container?.icon} identity-color-${tab.container?.color}`"></figure>
                         <span class="discarded-color" v-text="getTabTitle(tab)"></span>
@@ -1127,14 +1130,19 @@ export default {
                             <img v-if="isTabLoading(tab)" src="/icons/tab-loading.svg" />
                             <img v-else :src="tab.favIconUrl" loading="lazy" decoding="async" />
                         </figure>
+                        <figure v-if="tab.groupPinned"
+                            :class="['icon image is-16x16 group-pinned-indicator', {'is-work-group-pin': !groupToShow.isPinnedGroup}]"
+                            @click.stop="!groupToShow.isPinnedGroup && toggleTabGroupPinned(tab, false)"
+                            :title="groupToShow.isPinnedGroup ? null : lang('unpinTabInGroupTitle')">
+                            <pin-icon :color="groupToShow.isPinnedGroup ? null : groupToShow.iconColor"></pin-icon>
+                        </figure>
+                        <figure v-else-if="!groupToShow.isPinnedGroup && !groupToShow.isArchive"
+                            class="icon image is-16x16 group-pinned-indicator hover-pin"
+                            @click.stop="toggleTabGroupPinned(tab, true)"
+                            :title="lang('pinTabInGroupTitle')">
+                            <pin-icon outline :color="groupToShow.iconColor"></pin-icon>
+                        </figure>
                         <div class="item-title clip-text icon-text">
-                            <figure v-if="tab.groupPinned"
-                                :class="['icon image is-16x16 group-pinned-indicator', {'is-work-group-pin': !groupToShow.isPinnedGroup}]"
-                                :style="groupToShow.isPinnedGroup ? null : {'--pin-color': groupToShow.iconColor}"
-                                @click.stop="!groupToShow.isPinnedGroup && toggleTabGroupPinned(tab, false)"
-                                :title="lang(groupToShow.isPinnedGroup ? 'pinTabInGroupTitle' : 'unpinTabInGroupTitle')">
-                                <img src="/icons/thumbtack.svg" />
-                            </figure>
                             <figure
                                 v-if="showMuteIconTab(tab)"
                                 @click.stop="toggleMuteTab(tab)"
@@ -1265,6 +1273,7 @@ export default {
         @reload-all-tabs="reloadAllTabsInGroup"
         @settings="openGroupSettings"
         @remove="removeGroup"
+        @toggle-pinned-group="togglePinnedGroup"
         ></context-menu-group>
 
     <context-menu-tab ref="contextMenuTab"
@@ -1569,20 +1578,33 @@ html {
                 gap: var(--gap-indent);
             }
 
-            .group-pinned-indicator {
-                flex: none;
-            }
+        }
 
-            .group-pinned-indicator.is-work-group-pin {
-                background-color: var(--pin-color, currentColor);
-                -webkit-mask: url(/icons/thumbtack.svg) no-repeat center / contain;
-                mask: url(/icons/thumbtack.svg) no-repeat center / contain;
-                cursor: pointer;
-            }
+        .group-pinned-indicator {
+            flex: none;
+        }
 
-            .group-pinned-indicator.is-work-group-pin img {
-                visibility: hidden;
-            }
+        .group-pinned-indicator.is-work-group-pin {
+            cursor: pointer;
+        }
+
+        .group-pinned-indicator.hover-pin {
+            display: none;
+            cursor: pointer;
+        }
+
+        .group-pinned-indicator.is-work-group-pin:hover svg,
+        .group-pinned-indicator.hover-pin:hover svg {
+            transform: scale(1.25);
+        }
+
+        .group-pinned-indicator.hover-pin:hover svg {
+            fill: currentColor;
+            fill-opacity: 0.45;
+        }
+
+        &:hover .group-pinned-indicator.hover-pin {
+            display: flex;
         }
 
         .item-action {

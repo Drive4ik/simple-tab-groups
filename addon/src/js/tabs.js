@@ -26,6 +26,7 @@ import * as ConstantsBrowser from './constants-browser.js';
 import * as Storage from './storage.js';
 import * as BrowserSettings from './browser-settings.js';
 import * as DeltaCapture from './sync/delta/delta-capture.js';
+import {closedTabCapturePlan} from './sync/delta/close-capture.js';
 
 export {on, off} from './broadcast.js?channel=tabs';
 
@@ -166,7 +167,19 @@ async function onCreated(tab) {
     Cache.setTab(tab);
 
     if (isPinned(tab)) {
-        DeltaCapture.pinnedAdded(tab);
+        await Cache.setTabGroup(tab.id, Groups.PINNED_GROUP_ID, tab.windowId)
+            .catch(logger.onCatch("onCreated can't set pinned group", false));
+        await Cache.setTabGroupPinned(tab.id, true)
+            .catch(logger.onCatch("onCreated can't set groupPinned", false));
+
+        Cache.applyTabSession(tab);
+
+        if (!Cache.getTabUid(tab.id)) {
+            await Cache.setTabUid(tab.id)
+                .catch(logger.onCatch("onCreated can't mint uid (pinned)", false));
+        }
+
+        DeltaCapture.tabAdded(tab);
         return;
     }
 
@@ -246,6 +259,12 @@ async function onUpdated(tabId, changeInfo, tab) {
     // if tab was restored along with window, it needs to wait when GrantRestore will add the window to the skipTrackingWindows
     await Utils.wait(50 + 20); // 50ms for tab onCreated + 20ms as a margin
 
+    if (skip.tracking.has(tab.id) || skipTrackingWindows.has(tab.windowId)) {
+        Cache.setTab(tab);
+        logger.log(onUpdated, '🛑 skip tracking tab (after wait):', tab.id);
+        return;
+    }
+
     delete tab.groupId; // TODO tmp
 
     const log = logger.start(onUpdated, tabId, changeInfo);
@@ -298,32 +317,54 @@ async function onUpdated(tabId, changeInfo, tab) {
     }
 
     if (Object.hasOwn(changeInfo, 'pinned') || Object.hasOwn(changeInfo, 'hidden')) {
-        if (Object.hasOwn(changeInfo, 'pinned') && Cache.getTabGroupPinned(tab.id) && Cache.getTabGroup(tab.id)) {
+        const currentGroupId = Cache.getTabGroup(tab.id);
+        const inPinnedGroup = Groups.isPinnedGroupId(currentGroupId);
+
+        if (Object.hasOwn(changeInfo, 'pinned') && Cache.getTabGroupPinned(tab.id) && currentGroupId && !inPinnedGroup) {
             log.stop('🛑 group-pinned tab pin transition, keeping group', tab.id);
             return;
         }
 
         let tabGroupId;
 
-        if (changeInfo.pinned || changeInfo.hidden) {
-            changeInfo.pinned && log.log('remove group for pinned tab', tab.id);
-            changeInfo.hidden && log.log('remove group for hidden tab', tab.id);
-            tabGroupId = Cache.getTabGroup(tab.id);
+        if (changeInfo.pinned) {
+            log.log('absorb pinned tab into pinned group', tab.id);
 
-            if (changeInfo.pinned) {
+            if (!inPinnedGroup) {
                 const uid = Cache.getTabUid(tab.id);
-                if (uid && tabGroupId) {
-                    DeltaCapture.tabRemoved(uid, tabGroupId);
+                if (uid && currentGroupId) {
+                    DeltaCapture.tabRemoved(uid, currentGroupId);
                 }
-                DeltaCapture.pinnedAdded(tab);
+
+                await Cache.setTabGroup(tab.id, Groups.PINNED_GROUP_ID, tab.windowId)
+                    .catch(log.onCatch(["can't set pinned group", tab.id], false));
+                await Cache.setTabGroupPinned(tab.id, true)
+                    .catch(log.onCatch(["can't set groupPinned", tab.id], false));
+
+                if (!Cache.getTabUid(tab.id)) {
+                    await Cache.setTabUid(tab.id).catch(() => {});
+                }
+
+                DeltaCapture.tabAdded(tab);
             }
 
+            tabGroupId = Groups.PINNED_GROUP_ID;
+        } else if (changeInfo.hidden) {
+            log.log('remove group for hidden tab', tab.id);
+            tabGroupId = currentGroupId;
             await Cache.removeTabGroup(tab.id).catch(() => {});
         } else if (changeInfo.pinned === false) {
             log.log('tab is unpinned', tab.id);
 
             const uid = Cache.getTabUid(tab.id);
-            if (uid) {
+            if (inPinnedGroup) {
+                if (uid) {
+                    DeltaCapture.tabRemoved(uid, Groups.PINNED_GROUP_ID);
+                    DeltaCapture.pinnedRemoved(uid);
+                }
+                await Cache.setTabGroupPinned(tab.id, false)
+                    .catch(log.onCatch(["can't clear groupPinned", tab.id], false));
+            } else if (uid) {
                 DeltaCapture.pinnedRemoved(uid);
             }
 
@@ -401,16 +442,22 @@ function onRemoved(tabId, {isWindowClosing, windowId}) {
         });
     } else {
         Cache.removeTab(tabId);
+
+        const capture = closedTabCapturePlan({uid, groupId, wasPinned}, Groups.isPinnedGroupId);
+
+        if (capture.removeFromGroupId) {
+            DeltaCapture.tabRemoved(uid, capture.removeFromGroupId);
+        }
+        if (capture.retirePinnedUid) {
+            DeltaCapture.pinnedRemoved(capture.retirePinnedUid);
+        }
+
         if (groupId) {
             send('removed', {
                 tabId,
                 groupId,
             });
-            DeltaCapture.tabRemoved(uid, groupId);
         } else {
-            if (wasPinned && uid) {
-                DeltaCapture.pinnedRemoved(uid);
-            }
             send('removed.unsync', {
                 tabId,
             });
@@ -435,6 +482,11 @@ async function onMoved(tabId, {windowId, /* fromIndex, */ toIndex}) {
     }
 
     await Utils.wait(50 + 20);
+
+    if (skip.tracking.has(tabId) || skipTrackingWindows.has(windowId)) {
+        logger.log(onMoved, '🛑 skip tracking tab (after wait):', tabId);
+        return;
+    }
 
     const groupId = Cache.getTabGroup(tabId);
 
@@ -564,6 +616,11 @@ export async function create({url, active, pinned, discarded, title, index, wind
     }
 
     tab.active = !!active;
+
+    if (Groups.isPinnedGroupId(groupId)) {
+        pinned = true;
+        groupPinned = true;
+    }
 
     if (pinned) {
         tab.pinned = true;
@@ -1070,7 +1127,7 @@ export async function move(tabIds, groupId, params = {}) {
 
     const groupPinnedResultTabs = [];
     for (const tab of pinnedToGroupPin) {
-        const ok = await Groups.setTabGroupPinned(tab.id, true, groupId)
+        const ok = await Groups.setTabGroupPinned(tab.id, true, groupId, params.newTabIndex)
             .catch(log.onCatch(['cant group-pin tab into group', tab.id, groupId], false));
 
         if (ok) {

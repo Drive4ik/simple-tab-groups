@@ -7,6 +7,7 @@ import editGroup from '../components/edit-group.vue';
 // import contextMenu from '../components/context-menu.vue';
 import contextMenuTab from '../components/context-menu-tab.vue';
 import contextMenuTabNew from '../components/context-menu-tab-new.vue';
+import pinIcon from '../components/pin-icon.vue';
 import contextMenuGroup from '../components/context-menu-group.vue';
 
 import '/js/prefixed-storage.js';
@@ -62,6 +63,7 @@ export default {
         // 'context-menu': contextMenu,
         'context-menu-tab': contextMenuTab,
         'context-menu-tab-new': contextMenuTabNew,
+        'pin-icon': pinIcon,
         'context-menu-group': contextMenuGroup,
     },
     created() {
@@ -570,12 +572,19 @@ export default {
                         </div>
 
                         <div v-if="tab.groupPinned"
-                            :class="['group-pinned-indicator', {'is-work-group-pin': !group.isPinnedGroup}]"
-                            :style="group.isPinnedGroup ? null : {'--pin-color': group.iconColor}"
+                            :class="['group-pinned-indicator', {'is-work-group-pin': !group.isPinnedGroup && !group.isArchive}]"
                             @click.stop="!group.isPinnedGroup && !group.isArchive && toggleTabGroupPinned(tab, false)"
-                            :title="lang(group.isPinnedGroup ? 'pinTabInGroupTitle' : 'unpinTabInGroupTitle')">
+                            :title="group.isPinnedGroup || group.isArchive ? null : lang('unpinTabInGroupTitle')">
                             <figure class="image is-16x16">
-                                <img src="/icons/thumbtack.svg" />
+                                <pin-icon :color="group.isPinnedGroup ? null : group.iconColor"></pin-icon>
+                            </figure>
+                        </div>
+                        <div v-else-if="!group.isPinnedGroup && !group.isArchive"
+                            class="group-pinned-indicator hover-pin"
+                            @click.stop="toggleTabGroupPinned(tab, true)"
+                            :title="lang('pinTabInGroupTitle')">
+                            <figure class="image is-16x16">
+                                <pin-icon outline :color="group.iconColor"></pin-icon>
                             </figure>
                         </div>
 
@@ -732,6 +741,7 @@ export default {
         @archive="toggleArchiveGroup"
         @unarchive="toggleArchiveGroup"
         @reload-all-tabs="reloadAllTabsInGroup"
+        @toggle-pinned-group="togglePinnedGroup"
         ></context-menu-group>
 
     <context-menu-tab ref="contextMenuTab"
@@ -972,18 +982,12 @@ export default {
                 height: var(--tab-icons-size);
             }
 
-            > .group-pinned-indicator.is-work-group-pin {
-                cursor: pointer;
+            > .group-pinned-indicator.hover-pin {
+                display: none;
             }
 
-            > .group-pinned-indicator.is-work-group-pin > figure {
-                background-color: var(--pin-color, currentColor);
-                -webkit-mask: url(/icons/thumbtack.svg) no-repeat center / contain;
-                mask: url(/icons/thumbtack.svg) no-repeat center / contain;
-            }
-
-            > .group-pinned-indicator.is-work-group-pin img {
-                visibility: hidden;
+            &:hover > .group-pinned-indicator.hover-pin {
+                display: flex;
             }
 
             &:not(.has-thumbnail) > .tab-icon {
@@ -1131,6 +1135,14 @@ export default {
                 visibility: visible;
             }
 
+            > .group-pinned-indicator.hover-pin {
+                display: none;
+            }
+
+            &:hover > .group-pinned-indicator.hover-pin {
+                display: flex;
+            }
+
             > .tab-title {
                 flex-grow: 1;
                 white-space: nowrap;
@@ -1171,6 +1183,21 @@ export default {
     .group,
     .group .tab {
         transition: opacity 0.3s;
+    }
+
+    .group-pinned-indicator.is-work-group-pin,
+    .group-pinned-indicator.hover-pin {
+        cursor: pointer;
+    }
+
+    .group-pinned-indicator.is-work-group-pin:hover svg,
+    .group-pinned-indicator.hover-pin:hover svg {
+        transform: scale(1.25);
+    }
+
+    .group-pinned-indicator.hover-pin:hover svg {
+        fill: currentColor;
+        fill-opacity: 0.45;
     }
 
     .drag-tab .tab > *,

@@ -213,7 +213,9 @@ async function onMenusShown(info, tab) {
 
     const groupId = tab && Cache.getTabGroup(tab.id);
 
-    if (groupId) {
+    if (Groups.isPinnedGroupId(groupId)) {
+        await Menus.update(TOGGLE_GROUP_PIN_ID, {visible: false});
+    } else if (groupId) {
         const groupPinned = Cache.getTabGroupPinned(tab.id);
         await Menus.update(TOGGLE_GROUP_PIN_ID, {
             visible: true,

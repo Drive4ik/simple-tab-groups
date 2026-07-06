@@ -1904,6 +1904,8 @@ async function init() {
 
         await initializeGroupWindows(windows, data.groups.map(g => g.id));
 
+        await Groups.absorbNativePinnedTabs();
+
         await Groups.fillHistory(windows);
 
         let tabs = Utils.flatTabs(windows);
