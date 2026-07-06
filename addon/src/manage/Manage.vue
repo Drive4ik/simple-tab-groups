@@ -982,17 +982,12 @@ export default {
                 height: var(--tab-icons-size);
             }
 
-            > .group-pinned-indicator.is-work-group-pin {
-                cursor: pointer;
-            }
-
             > .group-pinned-indicator.hover-pin {
-                visibility: hidden;
-                cursor: pointer;
+                display: none;
             }
 
             &:hover > .group-pinned-indicator.hover-pin {
-                visibility: visible;
+                display: flex;
             }
 
             &:not(.has-thumbnail) > .tab-icon {
@@ -1140,6 +1135,14 @@ export default {
                 visibility: visible;
             }
 
+            > .group-pinned-indicator.hover-pin {
+                display: none;
+            }
+
+            &:hover > .group-pinned-indicator.hover-pin {
+                display: flex;
+            }
+
             > .tab-title {
                 flex-grow: 1;
                 white-space: nowrap;
@@ -1180,6 +1183,21 @@ export default {
     .group,
     .group .tab {
         transition: opacity 0.3s;
+    }
+
+    .group-pinned-indicator.is-work-group-pin,
+    .group-pinned-indicator.hover-pin {
+        cursor: pointer;
+    }
+
+    .group-pinned-indicator.is-work-group-pin:hover svg,
+    .group-pinned-indicator.hover-pin:hover svg {
+        transform: scale(1.25);
+    }
+
+    .group-pinned-indicator.hover-pin:hover svg {
+        fill: currentColor;
+        fill-opacity: 0.45;
     }
 
     .drag-tab .tab > *,

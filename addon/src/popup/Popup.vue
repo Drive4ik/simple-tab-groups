@@ -1590,6 +1590,16 @@ html {
                 display: none;
                 cursor: pointer;
             }
+
+            .group-pinned-indicator.is-work-group-pin:hover svg,
+            .group-pinned-indicator.hover-pin:hover svg {
+                transform: scale(1.25);
+            }
+
+            .group-pinned-indicator.hover-pin:hover svg {
+                fill: currentColor;
+                fill-opacity: 0.45;
+            }
         }
 
         &:hover .group-pinned-indicator.hover-pin {
