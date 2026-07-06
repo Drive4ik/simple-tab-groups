@@ -808,9 +808,10 @@ export function ensurePinnedGroup(groups) {
         return false;
     }
 
-    const group = create(PINNED_GROUP_ID, 'Pinned', {isPinnedGroup: true});
+    const title = Lang('pinnedGroupTitle') || 'Pinned';
+    const group = create(PINNED_GROUP_ID, title, {isPinnedGroup: true});
     group.isPinnedGroup = true;
-    group.title = 'Pinned';
+    group.title = title;
     groups.unshift(group);
 
     return true;
