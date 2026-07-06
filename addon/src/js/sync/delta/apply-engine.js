@@ -469,7 +469,11 @@ export async function applyBrowserOps(browserOps, resolvedSnapshot) {
                 }
             }
 
-            const removeIds = new Set(browserOps.groupsToRemove.map(g => g.id));
+            const removeIds = new Set(
+                browserOps.groupsToRemove
+                    .filter(g => !Groups.isPinnedGroupId(g.id))
+                    .map(g => g.id)
+            );
             for (const id of removeIds) {
                 if (Groups.isLoaded(id)) {
                     await Groups.unload(id).catch(log.onCatch(['cant unload group', id], false));
