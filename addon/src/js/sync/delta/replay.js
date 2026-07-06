@@ -9,10 +9,10 @@ function defaultGroupTitle(groupId) {
     return `Group ${uid}`;
 }
 
-function sanitizeGroupTitle(title, groupId) {
+function sanitizeGroupTitle(title, groupId, resolveGroupTitle) {
     const str = title == null ? '' : String(title);
     if (!str || str === String(groupId) || UUID_RE.test(str)) {
-        return defaultGroupTitle(groupId);
+        return resolveGroupTitle(groupId);
     }
     return str;
 }
@@ -81,10 +81,10 @@ function findTab(groups, uid) {
     return {group: null, tabIndex: -1};
 }
 
-function ensureGroup(groups, groupId) {
+function ensureGroup(groups, groupId, resolveGroupTitle) {
     let group = groups.find(g => g.id === groupId);
     if (!group) {
-        group = {id: groupId, title: defaultGroupTitle(groupId), tabs: []};
+        group = {id: groupId, title: resolveGroupTitle(groupId), tabs: []};
         groups.push(group);
     }
     if (!Array.isArray(group.tabs)) {
@@ -93,7 +93,7 @@ function ensureGroup(groups, groupId) {
     return group;
 }
 
-function applyTabUpsert(groups, event) {
+function applyTabUpsert(groups, event, resolveGroupTitle) {
     const incoming = deepClone(event.tab);
     if (!incoming || incoming.uid == null) {
         return;
@@ -109,11 +109,11 @@ function applyTabUpsert(groups, event) {
         existing.group.tabs.splice(existing.tabIndex, 1);
     }
 
-    const target = ensureGroup(groups, event.groupId);
+    const target = ensureGroup(groups, event.groupId, resolveGroupTitle);
     insertInListAt(target.tabs, incoming, incoming.index);
 }
 
-function applyTabMove(groups, event) {
+function applyTabMove(groups, event, resolveGroupTitle) {
     const found = findTab(groups, event.uid);
     if (!found.group) {
         return;
@@ -121,7 +121,7 @@ function applyTabMove(groups, event) {
 
     const [tab] = found.group.tabs.splice(found.tabIndex, 1);
 
-    const target = ensureGroup(groups, event.groupId);
+    const target = ensureGroup(groups, event.groupId, resolveGroupTitle);
     insertInListAt(target.tabs, tab, event.toIndex);
 }
 
@@ -179,7 +179,7 @@ function applyPinnedRemove(pinnedTabs, event) {
     }
 }
 
-function applyGroupUpsert(groups, event) {
+function applyGroupUpsert(groups, event, resolveGroupTitle) {
     const incoming = deepClone(event.group);
     if (!incoming || incoming.id == null) {
         return;
@@ -189,7 +189,7 @@ function applyGroupUpsert(groups, event) {
     const {tabs: incomingTabs, ...props} = incoming;
 
     if (Object.hasOwn(props, 'title')) {
-        props.title = sanitizeGroupTitle(props.title, incoming.id);
+        props.title = sanitizeGroupTitle(props.title, incoming.id, resolveGroupTitle);
     }
 
     if (existing) {
@@ -231,7 +231,9 @@ function applyGroupRemove(groups, event) {
     }
 }
 
-export function replay(baseSnapshot, deltaLogs = []) {
+export function replay(baseSnapshot, deltaLogs = [], options = {}) {
+    const resolveGroupTitle = options.defaultGroupTitle ?? defaultGroupTitle;
+
     const groups = deepClone(baseSnapshot?.groups || []).map(group => ({
         ...group,
         tabs: Array.isArray(group.tabs) ? group.tabs : [],
@@ -259,17 +261,17 @@ export function replay(baseSnapshot, deltaLogs = []) {
         switch (event.op) {
             case OPS.TAB_ADD:
             case OPS.TAB_MODIFY:
-                applyTabUpsert(groups, event);
+                applyTabUpsert(groups, event, resolveGroupTitle);
                 break;
             case OPS.TAB_MOVE:
-                applyTabMove(groups, event);
+                applyTabMove(groups, event, resolveGroupTitle);
                 break;
             case OPS.TAB_REMOVE:
                 applyTabRemove(groups, event);
                 break;
             case OPS.GROUP_ADD:
             case OPS.GROUP_MODIFY:
-                applyGroupUpsert(groups, event);
+                applyGroupUpsert(groups, event, resolveGroupTitle);
                 break;
             case OPS.GROUP_MOVE:
                 applyGroupMove(groups, event);
