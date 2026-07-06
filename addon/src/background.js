@@ -1401,10 +1401,20 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
     const neededContainers = new Set;
     const defaultGroupProps = clearAddonDataBeforeRestore ? data.defaultGroupProps : options.defaultGroupProps;
 
+    let pinnedGroupClaimed = currentData.groups.some(Groups.isPinnedGroup);
+
     data.groups = data.groups.map(group => {
-        const newGroupId = existGroupIds.has(group.id)
-            ? Groups.createId()
-            : (group.id || Groups.createId());
+        const keepAsPinnedGroup = Groups.isPinnedGroup(group) && !pinnedGroupClaimed;
+
+        let newGroupId;
+        if (keepAsPinnedGroup) {
+            newGroupId = Groups.PINNED_GROUP_ID;
+            pinnedGroupClaimed = true;
+        } else {
+            newGroupId = existGroupIds.has(group.id) || Groups.isPinnedGroupId(group.id)
+                ? Groups.createId()
+                : (group.id || Groups.createId());
+        }
 
         const newGroup = Groups.create(newGroupId, group.title, defaultGroupProps);
 
@@ -1416,6 +1426,10 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
             if (newGroup.hasOwnProperty(key)) {
                 newGroup[key] = group[key];
             }
+        }
+
+        if (!keepAsPinnedGroup) {
+            newGroup.isPinnedGroup = false;
         }
 
         if (!newGroup.isArchive) {
