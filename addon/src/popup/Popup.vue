@@ -1064,7 +1064,7 @@ export default {
                     <figure tabindex="0" @click="openGroupSettings(groupToShow)" @keydown.enter="openGroupSettings(groupToShow)" class="image is-16x16 is-clickable" :title="lang('groupSettings')">
                         <img src="/icons/settings.svg" />
                     </figure>
-                    <figure tabindex="0" @click="removeGroup(groupToShow)" @keydown.enter="removeGroup(groupToShow)" class="image is-16x16 is-clickable" :title="lang('deleteGroup')">
+                    <figure v-if="!groupToShow.isPinnedGroup" tabindex="0" @click="removeGroup(groupToShow)" @keydown.enter="removeGroup(groupToShow)" class="image is-16x16 is-clickable" :title="lang('deleteGroup')">
                         <img src="/icons/group-delete.svg" />
                     </figure>
                 </div>
