@@ -510,7 +510,7 @@ export default {
                             <img src="/icons/settings.svg" />
                         </figure>
                     </div>
-                    <div class="other-icon is-clickable is-unselectable" @click="removeGroup(group)" @keydown.enter.stop.prevent="removeGroup(group)" tabindex="0" :title="lang('deleteGroup')">
+                    <div v-if="!group.isPinnedGroup" class="other-icon is-clickable is-unselectable" @click="removeGroup(group)" @keydown.enter.stop.prevent="removeGroup(group)" tabindex="0" :title="lang('deleteGroup')">
                         <figure class="image is-16x16">
                             <img src="/icons/group-delete.svg" />
                         </figure>
