@@ -1,6 +1,7 @@
 <script>
 import contextMenu from './context-menu.vue';
 import Lang from '/js/lang.js';
+import * as Groups from '/js/groups.js';
 
 export default {
     props: {
@@ -40,9 +41,7 @@ export default {
         isOpened({id}) {
             return this.openedWindows.some(win => win.groupId === id);
         },
-        isPinnedGroupShown(group) {
-            return group.tabs?.some(tab => tab.pinned);
-        },
+        isPinnedGroupShown: Groups.isPinnedGroupShown,
     },
 };
 
