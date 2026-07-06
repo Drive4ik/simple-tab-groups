@@ -152,7 +152,7 @@ export default {
                 return true;
             }
 
-            return !group.isArchive;
+            return !group.isArchive && !group.isPinnedGroup;
         });
 
         this.offChangedContainers = Containers.onChanged(() => this.containers = Containers.query());
@@ -387,11 +387,11 @@ export default {
             <input type="checkbox" v-model="group.discardExcludeAudioTabs" :disabled="!group.discardTabsAfterHide" />
             <span v-text="lang('discardExcludeAudioTabs')"></span>
         </label>
-        <label class="checkbox">
+        <label v-if="!group.isPinnedGroup" class="checkbox">
             <input type="checkbox" v-model="group.muteTabsWhenGroupCloseAndRestoreWhenOpen" />
             <span v-text="lang('muteTabsWhenGroupCloseAndRestoreWhenOpen')"></span>
         </label>
-        <label class="checkbox">
+        <label v-if="!group.isPinnedGroup" class="checkbox">
             <input type="checkbox" v-model="group.prependTitleToWindow" />
             <span v-text="lang('prependTitleToWindow')"></span>
         </label>
@@ -452,7 +452,7 @@ export default {
     <hr>
 
     <div class="block checkboxes as-column">
-        <label class="checkbox">
+        <label v-if="!group.isPinnedGroup" class="checkbox">
             <input type="checkbox" v-model="group.isSticky" />
             <span class="icon-text">
                 <span v-text="lang('isStickyGroupTitle')"></span>
@@ -475,6 +475,7 @@ export default {
         </label>
     </div>
 
+    <template v-if="!group.isPinnedGroup">
     <div class="field">
         <label class="label colon" v-text="lang('catchTabContainers')"></label>
         <div class="checkboxes as-column containers">
@@ -545,6 +546,7 @@ export default {
             </span>
         </div>
     </div>
+    </template>
 
     <popup
         v-if="showMessageCantLoadFile"

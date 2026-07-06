@@ -1139,7 +1139,7 @@ export default {
                         <select v-model="hotkey.groupId">
                             <option :value="null" v-text="lang('selectGroup')"></option>
                             <option v-if="hotkey.groupId && !groupIds.includes(hotkey.groupId)" disabled hidden :value="hotkey.groupId" v-text="lang('unknownGroup')"></option>
-                            <option v-for="group in groups" :key="group.id" :value="group.id" v-text="getGroupTitle(group)"></option>
+                            <option v-for="group in groups.filter(gr => !gr.isArchive && !gr.isPinnedGroup)" :key="group.id" :value="group.id" v-text="getGroupTitle(group)"></option>
                         </select>
                     </div>
                     <span class="icon is-left" v-if="hotkey.groupId">
