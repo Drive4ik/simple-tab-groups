@@ -126,6 +126,10 @@ export default {
                     title: 'setTabIconAsGroupIcon',
                     icon: 'image',
                 },
+                'pin-in-group': {
+                    title: 'pinTabInGroupTitle',
+                    icon: 'thumbtack',
+                },
                 'hr': null,
                 'move-tab-to-group': {
                     title: 'moveTabToGroupTitle',

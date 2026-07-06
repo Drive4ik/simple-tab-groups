@@ -810,8 +810,6 @@ export function ensurePinnedGroup(groups) {
 
     const title = Lang('pinnedGroupTitle') || 'Pinned';
     const group = create(PINNED_GROUP_ID, title, {isPinnedGroup: true});
-    group.isPinnedGroup = true;
-    group.title = title;
     groups.unshift(group);
 
     return true;
@@ -980,7 +978,7 @@ async function removeCore(groupId) {
         return;
     }
 
-    if (group.isPinnedGroup) {
+    if (isPinnedGroup(group)) {
         log.stopError('cannot remove the pinned group', groupId);
         return;
     }
@@ -1339,7 +1337,7 @@ async function archiveToggleCore(groupId) {
         tabsToRemove = [],
         needUpdateTabs = false;
 
-    if (group.isPinnedGroup) {
+    if (isPinnedGroup(group)) {
         await Browser.actionLoading(false);
         log.stopError('cannot archive the pinned group', groupId);
         return;

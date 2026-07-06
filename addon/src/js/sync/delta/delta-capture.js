@@ -344,29 +344,6 @@ function buildPinnedRecord(tab, uid, snapshot = null) {
     return record;
 }
 
-export async function pinnedAdded(tab) {
-    try {
-        if (isApplying()) {
-            return;
-        }
-
-        if (!isUrlSyncable(unwrapStubUrl(tab.url))) {
-            return;
-        }
-
-        const uid = await resolveUid(tab.id);
-        if (!uid) {
-            return;
-        }
-
-        await DeltaLog.append(DeltaLog.OPS.PINNED_ADD, {
-            tab: buildPinnedRecord(tab, uid),
-        });
-    } catch (e) {
-        logger.onCatch('pinnedAdded', false)(e);
-    }
-}
-
 export async function pinnedModified(tab, snapshot = null) {
     try {
         if (isApplying()) {
