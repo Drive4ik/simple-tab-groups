@@ -1591,9 +1591,14 @@ html {
                 cursor: pointer;
             }
 
+            .group-pinned-indicator.is-work-group-pin svg,
+            .group-pinned-indicator.hover-pin svg {
+                transform: scale(0.8);
+            }
+
             .group-pinned-indicator.is-work-group-pin:hover svg,
             .group-pinned-indicator.hover-pin:hover svg {
-                transform: scale(1.25);
+                transform: scale(1);
             }
 
             .group-pinned-indicator.hover-pin:hover svg {
