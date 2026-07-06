@@ -765,6 +765,10 @@
         "message": "Открепить от группы",
         "description": "Remove the group-scoped pin from this tab"
     },
+    "unpinToCurrentGroupTitle": {
+        "message": "Открепить в текущую группу",
+        "description": "Move a pinned-group tab into the window's current group as a normal tab"
+    },
     "showPinnedGroupTitle": {
         "message": "Показать закреплённые вкладки здесь",
         "description": "Show the pinned group's tabs in the current window"

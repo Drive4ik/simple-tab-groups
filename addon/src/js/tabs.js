@@ -393,6 +393,7 @@ async function onUpdated(tabId, changeInfo, tab) {
         }
 
         tabGroupId && updatedBatch.add(tab.id, tabGroupId);
+        currentGroupId && currentGroupId !== tabGroupId && updatedBatch.add(tab.id, currentGroupId);
         updatedBatch.add(tab.id, `unsync:${tab.windowId}`);
 
         log.stop();

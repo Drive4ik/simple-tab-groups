@@ -102,6 +102,14 @@ export default {
                 <span v-text="lang(data.tab.groupPinned ? 'unpinTabInGroupTitle' : 'pinTabInGroupTitle')"></span>
             </li>
             <li
+                v-if="data.group?.isPinnedGroup && data.targetGroup && !data.targetGroup.isPinnedGroup"
+                @click="$emit('pin-in-group', data.tab, false, data.targetGroup.id)">
+                <figure class="image is-16x16">
+                    <img src="/icons/thumbtack.svg" />
+                </figure>
+                <span v-text="lang('unpinToCurrentGroupTitle')"></span>
+            </li>
+            <li
                 v-if="!data.group && data.targetGroup"
                 @click="$emit('pin-in-group', data.tab, true, data.targetGroup.id)">
                 <figure class="image is-16x16">
