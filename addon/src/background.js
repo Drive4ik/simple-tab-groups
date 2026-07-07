@@ -1262,7 +1262,7 @@ async function createBackup(includeTabFavIcons, includeTabThumbnails, isAutoBack
 
     let pinnedTabs = await Tabs.get(null, true, null);
 
-    pinnedTabs = pinnedTabs.filter(tab => Utils.isUrlAllowToCreate(tab.url));
+    pinnedTabs = pinnedTabs.filter(tab => !Cache.getTabGroup(tab.id) && Utils.isUrlAllowToCreate(tab.url));
 
     if (pinnedTabs.length) {
         Extensions.tabsToId(pinnedTabs);
