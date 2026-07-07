@@ -54,6 +54,7 @@ import * as BrowserSettings from '/js/browser-settings.js';
 import * as Cloud from '/js/sync/cloud/cloud.js?can-do-synchronization';
 import {deltaSynchronization, resetSyncState} from '/js/sync/delta/delta-sync.js';
 import * as DeltaCapture from '/js/sync/delta/delta-capture.js';
+import {reconcileClosedTabRecords} from '/js/sync/delta/local-state.js';
 import {invalidateCaptureGate} from '/js/sync/delta/capture-gate-state.js';
 
 const storage = localStorage.create(Constants.MODULES.BACKGROUND);
@@ -1919,6 +1920,9 @@ async function init() {
         await initializeGroupWindows(windows, data.groups.map(g => g.id));
 
         await Groups.absorbNativePinnedTabs();
+
+        await reconcileClosedTabRecords()
+            .catch(log.onCatch('reconcileClosedTabRecords', false));
 
         await Groups.fillHistory(windows);
 

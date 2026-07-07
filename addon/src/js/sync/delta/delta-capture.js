@@ -24,7 +24,7 @@ export function endApply() {
     }
 }
 
-function isApplying() {
+export function isApplying() {
     return applyDepth > 0;
 }
 
