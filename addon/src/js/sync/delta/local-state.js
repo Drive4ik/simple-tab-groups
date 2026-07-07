@@ -6,6 +6,10 @@ import * as Cache from '/js/cache.js';
 import Logger from '/js/logger.js';
 import * as DeltaLog from './delta-log.js';
 import {computeBootstrapEvents} from './plan-sync.js';
+import {planStartupReconcile} from './startup-reconcile.js';
+import {isApplying} from './delta-capture.js';
+import {isCaptureGateOpen} from './capture-gate-state.js';
+import {getDeviceId} from './device-id.js';
 import {syncedOptionKeys} from './option-keys.js';
 import {isUrlSyncable, unwrapStubUrl, sanitizeFavIconUrl} from './url-sync.js';
 import {loadBaseline, lastPushedSeqKey, storage} from './sync-marks.js';
@@ -79,6 +83,57 @@ export async function getLivePinnedTabs() {
                 return tab;
             })
     );
+}
+
+async function collectAliveUids() {
+    const aliveUids = new Set();
+
+    const liveTabs = await Tabs.get(null, null, null).catch(() => []);
+    for (const tab of liveTabs) {
+        const uid = Cache.getTabUid(tab.id);
+        if (uid) {
+            aliveUids.add(uid);
+        }
+    }
+
+    const {archivedGroups} = await Groups.load();
+    for (const group of archivedGroups) {
+        for (const tab of Array.isArray(group.tabs) ? group.tabs : []) {
+            if (tab.uid != null) {
+                aliveUids.add(tab.uid);
+            }
+        }
+    }
+
+    return aliveUids;
+}
+
+export async function reconcileClosedTabRecords() {
+    if (isApplying() || !await isCaptureGateOpen()) {
+        return [];
+    }
+
+    const aliveUids = await collectAliveUids();
+
+    const selfDeviceId = getDeviceId();
+    const lastPushedSeq = Number(storage[lastPushedSeqKey(selfDeviceId)]) || 0;
+    const events = await DeltaLog.getEvents();
+
+    const items = planStartupReconcile({
+        events,
+        lastPushedSeq,
+        aliveUids,
+        isPinnedGroupId: Groups.isPinnedGroupId,
+    });
+
+    const appended = await DeltaLog.appendMany(items);
+    if (appended.length) {
+        logger.info('startup reconcile: captured closures of tabs that died while the background was down', {
+            count: appended.length,
+        });
+    }
+
+    return appended;
 }
 
 export async function gatherLocalPending(selfDeviceId, log) {
