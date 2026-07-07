@@ -790,14 +790,17 @@ async function activatePinnedGroupTab(tabId, windowId) {
         return false;
     }
 
-    if (!getPinnedGroupShownWindowId(group)) {
+    let shownWindowId = getPinnedGroupShownWindowId(group);
+
+    if (!shownWindowId) {
         await showPinnedGroupInWindow(group, windowId);
+        shownWindowId = windowId;
     }
 
     const tab = await Tabs.setActive(tabId);
 
     if (tab) {
-        Windows.setFocus(getPinnedGroupShownWindowId(group));
+        Windows.setFocus(shownWindowId);
     }
 
     return Boolean(tab);
