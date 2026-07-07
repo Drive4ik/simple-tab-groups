@@ -270,6 +270,7 @@ export async function deltaSynchronization() {
             localState,
             priorBaseline,
             defaultGroupTitle: groupId => Groups.createTitle(null, groupId),
+            pinnedGroupId: Groups.PINNED_GROUP_ID,
         });
 
         plan.resolvedSnapshot.containers = {...plan.resolvedSnapshot.containers, ...containerRegistry};

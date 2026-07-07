@@ -604,6 +604,49 @@ function pinnedUids(snapshot) {
 }
 
 // ---------------------------------------------------------------------------
+// pinned group ordering: when options.pinnedGroupId is given, the pinned group is
+// forced to index 0 of the resolved snapshot, regardless of where it sits in the
+// base or where a group.add appended it — so a device that keeps it first locally
+// never sees it reordered by sync.
+// ---------------------------------------------------------------------------
+const PIN = '70696e6e-6564-4000-8000-000000000001';
+{
+    const base = {groups: [
+        {id: 'g1', title: 'G1', tabs: []},
+        {id: PIN, title: 'Pinned', isPinnedGroup: true, tabs: []},
+        {id: 'g2', title: 'G2', tabs: []},
+    ]};
+    const {snapshot} = replay(base, [], {pinnedGroupId: PIN});
+    check('pinned group hoisted to index 0 from mid-base',
+        snapshot.groups[0]?.id === PIN, snapshot.groups.map(g => g.id).join(','));
+    check('non-pinned relative order preserved after hoist',
+        snapshot.groups.map(g => g.id).join(',') === `${PIN},g1,g2`,
+        snapshot.groups.map(g => g.id).join(','));
+}
+{
+    // the real-world break: base has only work groups, the pinned group arrives via a
+    // group.add (which appends) — without the hoist it lands last.
+    const base = {groups: [{id: 'g1', title: 'G1', tabs: []}]};
+    const logs = [{deviceId: 'devA', events: [
+        {seq: 1, ts: 100, op: 'group.add', group: {id: 'g2', title: 'G2', tabs: []}},
+        {seq: 2, ts: 200, op: 'group.add', group: {id: PIN, title: 'Pinned', isPinnedGroup: true, tabs: []}},
+    ]}];
+    const {snapshot} = replay(base, logs, {pinnedGroupId: PIN});
+    check('pinned group added via group.add is hoisted to index 0',
+        snapshot.groups[0]?.id === PIN, snapshot.groups.map(g => g.id).join(','));
+}
+{
+    // without pinnedGroupId the engine stays untouched (pure default behaviour).
+    const base = {groups: [
+        {id: 'g1', title: 'G1', tabs: []},
+        {id: PIN, title: 'Pinned', isPinnedGroup: true, tabs: []},
+    ]};
+    const {snapshot} = replay(base, []);
+    check('no pinnedGroupId option: order left as-is',
+        snapshot.groups[0]?.id === 'g1', snapshot.groups.map(g => g.id).join(','));
+}
+
+// ---------------------------------------------------------------------------
 console.log(`\n${passed} passed, ${failures.length} failed`);
 if (failures.length) {
     console.error('FAILURES:', failures.join(', '));
