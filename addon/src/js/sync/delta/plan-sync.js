@@ -256,10 +256,10 @@ function diffOptionsToApply(resolvedOptions, localOptions) {
     return toApply;
 }
 
-export function planSync({pulledSnapshot, pulledDeltaLogs, localPendingEvents, selfDeviceId, localState, priorBaseline, defaultGroupTitle}) {
+export function planSync({pulledSnapshot, pulledDeltaLogs, localPendingEvents, selfDeviceId, localState, priorBaseline, defaultGroupTitle, pinnedGroupId}) {
     const {fullLogs, selfEvents} = buildFullLogs(pulledDeltaLogs, localPendingEvents, selfDeviceId);
 
-    const {snapshot: resolvedSnapshot, watermark: newWatermark} = replay(pulledSnapshot || {groups: []}, fullLogs, {defaultGroupTitle});
+    const {snapshot: resolvedSnapshot, watermark: newWatermark} = replay(pulledSnapshot || {groups: []}, fullLogs, {defaultGroupTitle, pinnedGroupId});
 
     foldMigratedPinsIntoGroups(resolvedSnapshot);
 

@@ -224,6 +224,16 @@ function applyGroupMove(groups, event) {
     groups.splice(to, 0, group);
 }
 
+function hoistPinnedGroupFirst(groups, pinnedGroupId) {
+    if (pinnedGroupId == null) {
+        return;
+    }
+    const i = groups.findIndex(g => g.id === pinnedGroupId);
+    if (i > 0) {
+        groups.unshift(groups.splice(i, 1)[0]);
+    }
+}
+
 function applyGroupRemove(groups, event) {
     const idx = groups.findIndex(g => g.id === event.groupId);
     if (idx !== -1) {
@@ -233,11 +243,14 @@ function applyGroupRemove(groups, event) {
 
 export function replay(baseSnapshot, deltaLogs = [], options = {}) {
     const resolveGroupTitle = options.defaultGroupTitle ?? defaultGroupTitle;
+    const pinnedGroupId = options.pinnedGroupId ?? null;
 
     const groups = deepClone(baseSnapshot?.groups || []).map(group => ({
         ...group,
         tabs: Array.isArray(group.tabs) ? group.tabs : [],
     }));
+
+    hoistPinnedGroupFirst(groups, pinnedGroupId);
 
     const pinnedTabs = Array.isArray(baseSnapshot?.pinnedTabs) ? deepClone(baseSnapshot.pinnedTabs) : [];
 
@@ -302,6 +315,8 @@ export function replay(baseSnapshot, deltaLogs = [], options = {}) {
             watermark[deviceId] = event.seq;
         }
     }
+
+    hoistPinnedGroupFirst(groups, pinnedGroupId);
 
     for (const group of groups) {
         group.tabs.forEach((tab, position) => {
