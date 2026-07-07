@@ -180,6 +180,18 @@ async function run() {
         check('sync acquire timeout: occupying section still completed', longDone === true);
     }
 
+    // --- ACQUIRE TIMEOUT stops at acquisition: a long apply must finish with its result,
+    //     never be misreported as deferred by the still-ticking acquire timer -------------
+    {
+        __resetForTests();
+        const outcome = await runSyncApply(async () => {
+            await sleep(40);
+            return 'long-apply-result';
+        }, {timeoutMs: 10});
+        check('acquired apply longer than acquire timeout: deferred false', outcome.deferred === false, JSON.stringify(outcome));
+        check('acquired apply longer than acquire timeout: result returned', outcome.result === 'long-apply-result');
+    }
+
     // --- COMPLETION WATCHDOG: a never-settling apply trips the watchdog, RELEASES the lock,
     //     and a subsequent USER mutation acquires it (the post-sync UI-freeze self-recovery) --
     {

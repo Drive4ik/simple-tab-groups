@@ -87,6 +87,10 @@ export async function runSyncApply(fn, {
         }
         acquired = true;
 
+        if (timer) {
+            clearTimeout(timer);
+        }
+
         const startedAt = Date.now();
         let settled = false;
         const {promise: watchdogPromise, resolve: fireWatchdog} = withResolvers();
