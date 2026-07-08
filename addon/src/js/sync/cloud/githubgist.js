@@ -621,16 +621,19 @@ export default class GithubGist {
             return response;
         }
 
-        if (isApi) {
-            const classicScopes = response.headers.get('x-oauth-scopes');
-            if (classicScopes && !classicScopes.includes('gist')) {
-                throw new Error('githubTokenNoAccess');
+        if (!isApi) {
+            let host;
+            try {
+                host = new URL(url).host;
+            } catch {
+                host = 'raw content host';
             }
+            throw new Error(`GitHub ${method} ${host} failed: HTTP ${response.status}`, {cause: response});
+        }
 
-            // const personalScopes = response.headers.get('x-accepted-github-permissions');
-            // if (personalScopes && !personalScopes.includes('gists=write')) {
-            //     throw new Error('githubTokenNoAccess');
-            // }
+        const classicScopes = response.headers.get('x-oauth-scopes');
+        if (classicScopes && !classicScopes.includes('gist')) {
+            throw new Error('githubTokenNoAccess');
         }
 
         if (response.status === 401) {
@@ -657,10 +660,6 @@ export default class GithubGist {
 
         if (response.status === 404) {
             throw new Error('githubNotFound');
-        }
-
-        if (!isApi) {
-            throw new Error(`${response.status}: github raw request failed`, {cause: response});
         }
 
         const result = await response.clone().json();
