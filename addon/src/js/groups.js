@@ -584,13 +584,24 @@ Containers.onChanged(async () => {
     log.stop();
 });
 
+let cachedGroups = null;
+
+async function loadRawGroups() {
+    if (!cachedGroups) {
+        const {groups} = await Storage.get('groups');
+        cachedGroups ??= groups;
+    }
+
+    return structuredClone(cachedGroups);
+}
+
 // if set return {group, groups, groupIndex}
 export async function load(groupId = null, withTabs = false, includeFavIconUrl, includeThumbnail) {
     const log = logger.start('load', groupId, {withTabs, includeFavIconUrl, includeThumbnail});
 
-    let [allTabs, {groups}] = await Promise.all([
+    let [allTabs, groups] = await Promise.all([
         withTabs ? Tabs.get(null, null, null, undefined, includeFavIconUrl, includeThumbnail) : false,
-        Storage.get('groups')
+        loadRawGroups()
     ]);
 
     if (withTabs) {
@@ -636,7 +647,7 @@ export async function save(groups, withMessage = false) {
         log.throwError('groups has invalid type');
     }
 
-    await Storage.set({groups});
+    await saveRaw(groups);
 
     if (isNeedBlockBeforeRequest(groups)) {
         backgroundSelf.addListenerOnBeforeRequest();
@@ -651,6 +662,12 @@ export async function save(groups, withMessage = false) {
     log.stop();
 
     return groups;
+}
+
+export async function saveRaw(groups) {
+    await Storage.set({groups});
+
+    cachedGroups = structuredClone(groups);
 }
 
 export function createId() {
