@@ -827,7 +827,7 @@ export default {
                     </template>
 
                     <template v-else>
-                        <div v-for="(tab, index) in group.filteredTabs" :key="index"
+                        <div v-for="tab in group.filteredTabs" :key="tab.id"
                             @contextmenu="$refs.contextMenuTab.open($event, {tab, group, targetGroup: currentGroup})"
                             @click.stop="clickOnTab($event, tab, group)"
                             @keydown.enter="clickOnTab($event, tab, group)"
@@ -1095,8 +1095,8 @@ export default {
             <template v-else>
                 <div class="tabs-scrollable no-outline">
                     <div
-                        v-for="(tab, tabIndex) in groupToShow.tabs"
-                        :key="tabIndex"
+                        v-for="tab in groupToShow.tabs"
+                        :key="tab.id"
                         :data-tab-id="tab.id"
                         @contextmenu="$refs.contextMenuTab.open($event, {tab, group: groupToShow, targetGroup: currentGroup})"
                         @click.stop="clickOnTab($event, tab, groupToShow)"
