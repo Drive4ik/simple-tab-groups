@@ -1353,6 +1353,9 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
     if (clearAddonDataBeforeRestore) {
         await clearAddon(false);
 
+        const livePinnedTabs = await Tabs.get(null, true, null);
+        await Tabs.remove(livePinnedTabs, true);
+
         // await Utils.wait(1000);
     }
 
