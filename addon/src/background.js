@@ -1485,7 +1485,13 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
 
     const allTabs = await Tabs.get(null, false, null, undefined, true, options.showTabsWithThumbnailsInManageGroups);
 
-    await Tabs.reconcile(data.groups, allTabs);
+    const leftoverTabs = clearAddonDataBeforeRestore ? [] : null;
+
+    await Tabs.reconcile(data.groups, allTabs, leftoverTabs);
+
+    if (leftoverTabs?.length) {
+        await Tabs.remove(leftoverTabs, true);
+    }
 
     if (Array.isArray(data.pinnedTabs)) {
         const currentPinnedTabs = await Tabs.get(null, true, null);

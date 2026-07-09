@@ -1724,7 +1724,7 @@ export async function restoreOldExtensionUrls(parseUrlFunc = null) {
     }));
 }
 
-export async function reconcile(groups, allTabs) {
+export async function reconcile(groups, allTabs, leftoverTabs = null) {
     const log = logger.start(['info', reconcile], 'groups count:', groups.length, 'allTabs count:', allTabs.length);
 
     allTabs = allTabs.slice(); // to prevent bugs...
@@ -1782,6 +1782,10 @@ export async function reconcile(groups, allTabs) {
             log.log('sorting tabs');
             group.tabs = await moveNative(group.tabs, {index: firstTabIndex}, true);
         }
+    }
+
+    if (Array.isArray(leftoverTabs)) {
+        leftoverTabs.push(...allTabs);
     }
 
     log.stop();
