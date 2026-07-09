@@ -16,8 +16,22 @@ export const tabs = {};
 export const lastTabsState = {}; // BUG https://bugzilla.mozilla.org/show_bug.cgi?id=1818392
 export const windows = {};
 
+function hashFavIconUrl(favIconUrl) {
+    if (typeof favIconUrl !== 'string') {
+        return favIconUrl;
+    }
+
+    let hash = 5381;
+
+    for (let i = 0; i < favIconUrl.length; i++) {
+        hash = ((hash << 5) + hash) ^ favIconUrl.charCodeAt(i);
+    }
+
+    return hash >>> 0;
+}
+
 function setLastTabState({id, url, title, status, hidden, pinned, favIconUrl}) {
-    lastTabsState[id] = {id, url, title, status, hidden, pinned, favIconUrl};
+    lastTabsState[id] = {id, url, title, status, hidden, pinned, favIconUrlHash: hashFavIconUrl(favIconUrl)};
 }
 
 // don't forget for pinned tabs events
@@ -26,7 +40,10 @@ export function getRealTabStateChanged(tab) {
 
     if (lastTabsState[tab.id]) {
         for (const key of Constants.ON_UPDATED_TAB_PROPERTIES) {
-            if (tab[key] !== lastTabsState[tab.id][key]) {
+            const lastValue = key === FAVICON_KEY ? lastTabsState[tab.id].favIconUrlHash : lastTabsState[tab.id][key];
+            const currentValue = key === FAVICON_KEY ? hashFavIconUrl(tab[key]) : tab[key];
+
+            if (currentValue !== lastValue) {
                 changeInfo ??= {};
                 changeInfo[key] = tab[key];
             }
