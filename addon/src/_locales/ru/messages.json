@@ -789,6 +789,10 @@
         "message": "Резервное копирование успешно восстановлено!",
         "description": "Backup successfully restored"
     },
+    "backupRestoreInterrupted": {
+        "message": "Восстановление из резервной копии было прервано. Нажмите кнопку на панели инструментов, чтобы перезагрузить дополнение и завершить восстановление.",
+        "description": "Backup restore was interrupted"
+    },
     "loading": {
         "message": "Загрузка, пожалуйста подождите...",
         "description": "Loading, please wait..."
