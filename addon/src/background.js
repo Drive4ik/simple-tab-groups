@@ -1524,7 +1524,10 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
         result = data;
     }
 
-    await Storage.set(result);
+    const {groups, ...resultWithoutGroups} = result;
+
+    await Storage.set(resultWithoutGroups);
+    await Groups.saveRaw(groups);
 
     storage.isBackupRestoring = true;
 
@@ -1890,7 +1893,9 @@ async function init() {
 
         if (dataChanged.has(true)) {
             log.log('data was changed, save data');
-            await Storage.set(data);
+            const {groups, ...dataWithoutGroups} = data;
+            await Storage.set(dataWithoutGroups);
+            await Groups.saveRaw(groups);
         }
 
         let windows = await Windows.load();
