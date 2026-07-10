@@ -1411,7 +1411,7 @@ const tabsActionSchema = new Map([
     ['remove', {sendArray: true, sendOneByOne: true}],
     ['update', {sendOneByOne: true, processGroupId: true}],
     ['reload', {sendOneByOne: true}],
-    ['move', {sendArray: true, sendOneByOne: true, processGroupId: true}],
+    ['move', {sendArray: true, processGroupId: true}],
 ]);
 
 async function tabsAction({action, skipTrackingFlag = false, silentRemove = false}, tabs, ...funcArgs) {
@@ -1449,17 +1449,9 @@ async function tabsAction({action, skipTrackingFlag = false, silentRemove = fals
         skipTracking(tabIds); // TODO
     }
 
-    function argsForIndex(i) {
-        const [moveProperties] = funcArgs;
-        if (action === 'move' && Number.isFinite(moveProperties?.index) && moveProperties.index >= 0) {
-            return [{...moveProperties, index: moveProperties.index + i}];
-        }
-        return funcArgs;
-    }
-
     async function sendOneByOne() {
-        const settled = await Promise.allSettled(tabIds.map((tabId, i) => {
-            return browser.tabs[action](tabId, ...argsForIndex(i));
+        const settled = await Promise.allSettled(tabIds.map(tabId => {
+            return browser.tabs[action](tabId, ...funcArgs);
         }));
 
         for (const [index, {status, value, reason}] of settled.entries()) {
@@ -1471,18 +1463,29 @@ async function tabsAction({action, skipTrackingFlag = false, silentRemove = fals
         }
     }
 
-    if (schema.sendArray) {
-        try {
-            result = await browser.tabs[action](tabIds, ...funcArgs);
-            result ||= tabIds;
-        } catch (e) {
-            if (schema.sendOneByOne) {
-                log.logError(`fail ${action} tabs as array of ids, doing it one by one`, e);
-                await sendOneByOne();
-            } else {
-                log.throwError(`fail ${action} tabs`, e);
+    async function sendArrayWithRetry() {
+        const maxAttempts = 3;
+        for (let attempt = 1; ; attempt++) {
+            try {
+                result = await browser.tabs[action](tabIds, ...funcArgs);
+                result ||= tabIds;
+                return;
+            } catch (e) {
+                if (attempt >= maxAttempts) {
+                    if (schema.sendOneByOne) {
+                        log.logError(`fail ${action} tabs as array of ids, doing it one by one`, e);
+                        await sendOneByOne();
+                        return;
+                    }
+                    log.throwError(`fail ${action} tabs`, e);
+                }
+                await Utils.wait(100);
             }
         }
+    }
+
+    if (schema.sendArray) {
+        await sendArrayWithRetry();
     } else if (schema.sendOneByOne) {
         await sendOneByOne();
     } else {

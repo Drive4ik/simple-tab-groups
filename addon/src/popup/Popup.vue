@@ -222,7 +222,7 @@ export default {
                     const tabIds = this.getTabIdsForMove(from.data.item.id),
                         newTabIndex = to.data.item.index;
 
-                    this.sendMessageModule('Tabs.move', tabIds, to.data.group.id, {
+                    this.dragMoveTabs(tabIds, to.data.group.id, {
                         newTabIndex,
                         showTabAfterMovingItIntoThisGroup: false,
                         showOnlyActiveTabAfterMovingItIntoThisGroup: false,

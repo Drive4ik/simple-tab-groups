@@ -1706,5 +1706,9 @@
     "donateItemHelpTronUsdt": {
         "message": "TRX или любые токены TRC20",
         "description": "Help for Tron"
+    },
+    "moveTabsFailedTryAgain": {
+        "message": "Не удалось переместить вкладки, попробуйте ещё раз.",
+        "description": "Shown when moving tabs by drag and drop fails"
     }
 }

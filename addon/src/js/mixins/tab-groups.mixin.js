@@ -398,6 +398,14 @@ export default {
                 this.loadUnsyncedTabs();
             }
         },
+        async dragMoveTabs(tabIds, groupId, options) {
+            try {
+                await this.sendMessageModule('Tabs.move', tabIds, groupId, options);
+            } catch {
+                this.multipleTabIds = [...tabIds];
+                this.confirm(this.lang('warning'), this.lang('moveTabsFailedTryAgain'), 'ok', 'is-danger');
+            }
+        },
 
         async loadGroupTabs(groupId) {
             const {group: {tabs}} = await this.sendMessageModule('Groups.loadWithArchivedTabs', groupId, true, true, this.includeTabThumbnails);
