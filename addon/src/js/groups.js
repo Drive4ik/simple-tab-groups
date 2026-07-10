@@ -586,6 +586,10 @@ Containers.onChanged(async () => {
 
 let cachedGroups = null;
 
+export function resetCache() {
+    cachedGroups = null;
+}
+
 function slimGroups(groups) {
     return groups.map(group => {
         if (!group.isArchive) {

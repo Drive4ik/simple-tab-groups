@@ -801,6 +801,10 @@
         "message": "Backup successfully restored!",
         "description": "Backup successfully restored"
     },
+    "backupRestoreInterrupted": {
+        "message": "Backup restore was interrupted. Click the toolbar button to reload the add-on and finish restoring.",
+        "description": "Backup restore was interrupted"
+    },
     "loading": {
         "message": "Loading, please wait...",
         "description": "Loading, please wait..."

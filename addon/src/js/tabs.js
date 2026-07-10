@@ -1411,7 +1411,7 @@ const tabsActionSchema = new Map([
     ['remove', {sendArray: true, sendOneByOne: true}],
     ['update', {sendOneByOne: true, processGroupId: true}],
     ['reload', {sendOneByOne: true}],
-    ['move', {sendArray: true, processGroupId: true}],
+    ['move', {sendArray: true, sendOneByOne: true, processGroupId: true}],
 ]);
 
 async function tabsAction({action, skipTrackingFlag = false, silentRemove = false}, tabs, ...funcArgs) {
@@ -1449,9 +1449,17 @@ async function tabsAction({action, skipTrackingFlag = false, silentRemove = fals
         skipTracking(tabIds); // TODO
     }
 
+    function argsForIndex(i) {
+        const [moveProperties] = funcArgs;
+        if (action === 'move' && Number.isFinite(moveProperties?.index) && moveProperties.index >= 0) {
+            return [{...moveProperties, index: moveProperties.index + i}];
+        }
+        return funcArgs;
+    }
+
     async function sendOneByOne() {
-        const settled = await Promise.allSettled(tabIds.map(tabId => {
-            return browser.tabs[action](tabId, ...funcArgs);
+        const settled = await Promise.allSettled(tabIds.map((tabId, i) => {
+            return browser.tabs[action](tabId, ...argsForIndex(i));
         }));
 
         for (const [index, {status, value, reason}] of settled.entries()) {
@@ -1769,19 +1777,15 @@ export async function reconcile(groups, allTabs, leftoverTabs = null) {
             }
         }
 
+        tabs = (await Promise.allSettled(tabs)).map(({status, value}) => status === 'fulfilled' ? value : null);
+
         if (newTabs.length) {
             log.log('new tabs count:', newTabs.length);
             newTabs = await createMultiple(newTabs, true);
             tabs = tabs.map(tab => tab ?? newTabs.shift()).filter(Boolean);
         }
 
-        group.tabs = tabs;
-
-        const firstTabIndex = group.tabs[0]?.index;
-        if (Number.isFinite(firstTabIndex)) {
-            log.log('sorting tabs');
-            group.tabs = await moveNative(group.tabs, {index: firstTabIndex}, true);
-        }
+        group.tabs = tabs.filter(Boolean);
     }
 
     if (Array.isArray(leftoverTabs)) {
