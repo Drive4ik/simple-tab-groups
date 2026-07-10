@@ -129,7 +129,7 @@ export default {
                             groupId = this.isGroup(to.data.item) ? to.data.item.id : to.data.group.id,
                             newTabIndex = this.isGroup(to.data.item) ? undefined : to.data.item.index;
 
-                        this.sendMessageModule('Tabs.move', tabIds, groupId, {
+                        this.dragMoveTabs(tabIds, groupId, {
                             newTabIndex,
                             showTabAfterMovingItIntoThisGroup: false,
                             showOnlyActiveTabAfterMovingItIntoThisGroup: false,
