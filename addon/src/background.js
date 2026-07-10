@@ -1079,12 +1079,22 @@ async function onBackgroundMessage(message, sender) {
                         ? options.showTabsWithThumbnailsInManageGroups
                         : false;
 
+                    const allTabs = await Tabs.get(null, null, null, undefined, true, includeThumbnail);
+
+                    const windowTabs = allTabs
+                        .filter(tab => !tab.pinned)
+                        .map(tab => {
+                            const windowTab = {...tab};
+                            delete windowTab.favIconUrl;
+                            return windowTab;
+                        });
+
                     [
                         result.windows,
                         {groups: result.groups},
                     ] = await Promise.all([
-                        Windows.load(true, true, includeThumbnail),
-                        Groups.loadWithArchivedTabs(null, true, true, includeThumbnail),
+                        Windows.load(true, false, false, windowTabs),
+                        Groups.loadWithArchivedTabs(null, true, true, includeThumbnail, allTabs),
                     ]);
 
                     result.ok = true;
