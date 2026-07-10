@@ -668,6 +668,62 @@ function buildLogGroupRecordIds(events) {
 }
 
 // ---------------------------------------------------------------------------
+// ARCHIVED GROUP INBOUND CREATE — a remote archived group absent locally must be
+// created WITH its snapshot tabs carried on groupsToCreate, and its tabs must NOT
+// be spawned as live tabs (no windowId): they stay OUT of tabsToCreate.
+// ---------------------------------------------------------------------------
+{
+    const pulledSnapshot = {
+        groups: [{
+            id: 'gArch', title: 'Archived', isArchive: true,
+            tabs: [
+                {uid: 'a1', url: 'http://a1', title: 'A1', index: 0, lastModified: 10},
+                {uid: 'a2', url: 'http://a2', title: 'A2', index: 1, lastModified: 20},
+            ],
+        }],
+        watermark: {},
+    };
+    const localState = {groups: []};
+
+    const {browserOps} = planSync({
+        pulledSnapshot, pulledDeltaLogs: [], localPendingEvents: [], selfDeviceId: SELF, localState,
+    });
+
+    const createdGroup = browserOps.groupsToCreate.find(g => g.id === 'gArch');
+    check('archived inbound create: group appears in groupsToCreate with isArchive',
+        !!createdGroup && createdGroup.isArchive === true, JSON.stringify(browserOps.groupsToCreate));
+    check('archived inbound create: groupsToCreate carries the snapshot tabs',
+        Array.isArray(createdGroup?.tabs) && createdGroup.tabs.length === 2
+            && createdGroup.tabs.every(t => ['a1', 'a2'].includes(t.uid)),
+        JSON.stringify(createdGroup?.tabs));
+    check('archived inbound create: archived tabs are NOT spawned as live tabsToCreate',
+        !browserOps.tabsToCreate.some(t => t.uid === 'a1' || t.uid === 'a2'),
+        JSON.stringify(browserOps.tabsToCreate));
+}
+
+// A remote NON-archived group inbound create keeps carrying NO tabs on groupsToCreate
+// (byte-identical to prior behavior) and its tabs DO surface in tabsToCreate.
+{
+    const pulledSnapshot = {
+        groups: [{
+            id: 'gLive', title: 'Live', tabs: [{uid: 'l1', url: 'http://l1', index: 0}],
+        }],
+        watermark: {},
+    };
+    const localState = {groups: []};
+
+    const {browserOps} = planSync({
+        pulledSnapshot, pulledDeltaLogs: [], localPendingEvents: [], selfDeviceId: SELF, localState,
+    });
+
+    const createdGroup = browserOps.groupsToCreate.find(g => g.id === 'gLive');
+    check('live inbound create: groupsToCreate carries NO tabs key',
+        !!createdGroup && !('tabs' in createdGroup), JSON.stringify(createdGroup));
+    check('live inbound create: its tab DOES surface in tabsToCreate',
+        browserOps.tabsToCreate.some(t => t.uid === 'l1'), JSON.stringify(browserOps.tabsToCreate));
+}
+
+// ---------------------------------------------------------------------------
 // purity: planSync must not mutate its inputs.
 // ---------------------------------------------------------------------------
 {

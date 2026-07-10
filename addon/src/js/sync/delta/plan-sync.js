@@ -116,8 +116,11 @@ function diffToBrowserOps(resolvedSnapshot, localState, priorBaseline = {tabUids
         const local = localGroupById.get(group.id);
         if (!local) {
             const {tabs, ...props} = group;
-            void tabs;
-            groupsToCreate.push(deepClone(props));
+            const create = deepClone(props);
+            if (props.isArchive) {
+                create.tabs = deepClone(Array.isArray(tabs) ? tabs : []);
+            }
+            groupsToCreate.push(create);
         } else if (stableStringify(groupProps(group)) !== stableStringify(groupProps(local))) {
             groupsToUpdate.push(deepClone(groupProps(group)));
         }
@@ -131,6 +134,10 @@ function diffToBrowserOps(resolvedSnapshot, localState, priorBaseline = {tabUids
 
     const resolvedTabs = indexTabs(resolvedSnapshot);
     const localTabs = indexTabs({groups: localGroups});
+
+    const archivedResolvedGroupIds = new Set(
+        resolvedGroups.filter(group => group.isArchive).map(group => group.id)
+    );
 
     const indexPinned = list => {
         const byUid = new Map();
@@ -154,6 +161,9 @@ function diffToBrowserOps(resolvedSnapshot, localState, priorBaseline = {tabUids
         const local = localTabs.get(uid);
         if (!local) {
             if (localPinned.has(uid)) {
+                continue;
+            }
+            if (archivedResolvedGroupIds.has(groupId)) {
                 continue;
             }
             tabsToCreate.push({

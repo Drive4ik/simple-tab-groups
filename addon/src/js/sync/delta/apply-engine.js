@@ -77,6 +77,31 @@ export function summarizeOps(browserOps, optionsToApply) {
     };
 }
 
+function toArchivedTabRecords(tabs) {
+    return (Array.isArray(tabs) ? tabs : []).map(tab => {
+        const record = {url: tab.url};
+        if (tab.title) {
+            record.title = tab.title;
+        }
+        if (tab.cookieStoreId) {
+            record.cookieStoreId = tab.cookieStoreId;
+        }
+        if (tab.favIconUrl) {
+            record.favIconUrl = tab.favIconUrl;
+        }
+        if (tab.uid != null) {
+            record.uid = tab.uid;
+        }
+        if (tab.lastModified != null) {
+            record.lastModified = tab.lastModified;
+        }
+        if (tab.pinned === true) {
+            record.groupPinned = true;
+        }
+        return record;
+    });
+}
+
 function reorderGroups(groups, order) {
     const byId = new Map(groups.map(g => [g.id, g]));
     const placed = new Set();
@@ -451,7 +476,8 @@ export async function applyBrowserOps(browserOps, resolvedSnapshot) {
 
             for (const props of browserOps.groupsToCreate) {
                 if (!byId.has(props.id)) {
-                    const created = {...Groups.create(props.id, props.title), ...props, tabs: []};
+                    const created = {...Groups.create(props.id, props.title), ...props};
+                    created.tabs = props.isArchive ? toArchivedTabRecords(props.tabs) : [];
                     groups.push(created);
                     byId.set(created.id, created);
                 }
