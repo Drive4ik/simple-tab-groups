@@ -998,7 +998,7 @@ export async function add(groupId, cookieStoreId, url, title) {
         url,
         title,
         cookieStoreId,
-        index: windowId ? null : group.tabs.pop()?.index + 1,
+        index: windowId ? null : group.tabs?.pop()?.index + 1,
         // windowId, // windowId will get from Cache.getWindowId into create function
         ...Groups.getNewTabParams(group),
     }, true);
@@ -1083,7 +1083,7 @@ export async function move(tabIds, groupId, params = {}) {
     const tabsCantHide = new Set;
     const groupWindowId = Cache.getWindowId(groupId);
     const {group} = await Groups.load(groupId, !groupWindowId);
-    const windowId = groupWindowId || (group.tabs[0]?.windowId) || await Windows.getLastFocusedNormalWindow();
+    const windowId = groupWindowId || (group.tabs?.[0]?.windowId) || await Windows.getLastFocusedNormalWindow();
     const activeTabs = [];
 
     log.log('vars', {groupWindowId, windowId});

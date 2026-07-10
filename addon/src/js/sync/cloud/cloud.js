@@ -212,7 +212,7 @@ async function sync(trust = null, revision = null, progressFunc = null, useBacku
 
     progressFunc?.(40);
 
-    const localData = await Promise.all([Storage.get(), Groups.load(null, true)])
+    const localData = await Promise.all([Storage.get(), Groups.loadWithArchivedTabs(null, true)])
         .then(([data, {groups}]) => {
             data.groups = groups;
             data.containers = Containers.getToExport(data);

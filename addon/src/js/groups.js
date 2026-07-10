@@ -454,7 +454,7 @@ export async function setTabGroupPinned(tabId, groupPinned, targetGroupId, newTa
 
         const windowId = Cache.getWindowId(groupId);
         const {group} = await load(groupId, true);
-        const tab = group?.tabs.find(t => t.id === tabId);
+        const tab = group?.tabs?.find(t => t.id === tabId);
 
         if (tab) {
             tab.groupPinned = groupPinned;
@@ -576,7 +576,7 @@ Containers.onChanged(async () => {
     }
 
     const log = logger.start('Containers.onChanged listener');
-    const {groups} = await load();
+    const {groups} = await loadWithArchivedTabs();
 
     if (normalizeContainersInGroups(groups)) {
         await save(groups);
@@ -586,22 +586,36 @@ Containers.onChanged(async () => {
 
 let cachedGroups = null;
 
-async function loadRawGroups() {
-    if (!cachedGroups) {
-        const {groups} = await Storage.get('groups');
-        cachedGroups ??= groups;
+function slimGroups(groups) {
+    return groups.map(group => {
+        if (!group.isArchive) {
+            return group;
+        }
+
+        const slimGroup = {...group};
+        delete slimGroup.tabs;
+        return slimGroup;
+    });
+}
+
+async function loadRawGroups(withArchivedTabs) {
+    if (cachedGroups && !withArchivedTabs) {
+        return structuredClone(cachedGroups);
     }
 
-    return structuredClone(cachedGroups);
+    const {groups} = await Storage.get('groups');
+    cachedGroups ??= structuredClone(slimGroups(groups));
+
+    return withArchivedTabs ? groups : structuredClone(cachedGroups);
 }
 
 // if set return {group, groups, groupIndex}
-export async function load(groupId = null, withTabs = false, includeFavIconUrl, includeThumbnail) {
-    const log = logger.start('load', groupId, {withTabs, includeFavIconUrl, includeThumbnail});
+export async function load(groupId = null, withTabs = false, includeFavIconUrl, includeThumbnail, withArchivedTabs = false) {
+    const log = logger.start('load', groupId, {withTabs, includeFavIconUrl, includeThumbnail, withArchivedTabs});
 
     let [allTabs, groups] = await Promise.all([
         withTabs ? Tabs.get(null, null, null, undefined, includeFavIconUrl, includeThumbnail) : false,
-        loadRawGroups()
+        loadRawGroups(withArchivedTabs)
     ]);
 
     if (withTabs) {
@@ -640,6 +654,10 @@ export async function load(groupId = null, withTabs = false, includeFavIconUrl, 
     };
 }
 
+export function loadWithArchivedTabs(groupId = null, withTabs = false, includeFavIconUrl, includeThumbnail) {
+    return load(groupId, withTabs, includeFavIconUrl, includeThumbnail, true);
+}
+
 export async function save(groups, withMessage = false) {
     const log = logger.start('save', {withMessage});
 
@@ -665,9 +683,20 @@ export async function save(groups, withMessage = false) {
 }
 
 export async function saveRaw(groups) {
+    const groupsWithElidedTabs = groups.filter(group => group.isArchive && !group.tabs);
+
+    if (groupsWithElidedTabs.length) {
+        const {groups: storedGroups} = await Storage.get('groups');
+        const storedTabsByGroupId = new Map(storedGroups.map(group => [group.id, group.tabs]));
+
+        for (const group of groupsWithElidedTabs) {
+            group.tabs = storedTabsByGroupId.get(group.id) ?? [];
+        }
+    }
+
     await Storage.setGroups(groups);
 
-    cachedGroups = structuredClone(groups);
+    cachedGroups = structuredClone(slimGroups(groups));
 }
 
 export function createId() {
@@ -990,7 +1019,7 @@ async function removeCore(groupId) {
         }
     }
 
-    const {group, groups, groupIndex} = await load(groupId, true);
+    const {group, groups, groupIndex} = await loadWithArchivedTabs(groupId, true);
     const {defaultGroupProps} = await getDefaults();
 
     if (!group) {
@@ -1094,7 +1123,7 @@ async function restoreCore(groupId) {
 
     await browser.storage.session.remove(restoreId);
 
-    const {groups} = await load();
+    const {groups} = await loadWithArchivedTabs();
 
     groups.push(group);
 
@@ -1171,7 +1200,7 @@ async function updateCore(groupId, updateData) {
 
     if (updateDataKeys.has('exportToBookmarks')) {
         if (updateData.exportToBookmarks) {
-            const {group: groupToExport, groupIndex} = await load(group.id, true);
+            const {group: groupToExport, groupIndex} = await loadWithArchivedTabs(group.id, true);
             await Bookmarks.exportGroup(groupToExport, groupIndex).catch(log.onCatch('cant update bookmark', false));
         } else {
             await Bookmarks.removeGroup(group).catch(log.onCatch('cant remove bookmark', false));
@@ -1353,7 +1382,7 @@ async function archiveToggleCore(groupId) {
 
     await Browser.actionLoading();
 
-    let {group, groups} = await load(groupId, true),
+    let {group, groups} = await loadWithArchivedTabs(groupId, true),
         tabsToRemove = [],
         needUpdateTabs = false;
 
@@ -1384,7 +1413,7 @@ async function archiveToggleCore(groupId) {
                 return null;
             }
 
-            ({group, groups} = await load(groupId, true));
+            ({group, groups} = await loadWithArchivedTabs(groupId, true));
         }
 
         Extensions.tabsToId(group.tabs);
