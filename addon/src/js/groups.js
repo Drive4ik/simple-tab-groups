@@ -665,7 +665,7 @@ export async function save(groups, withMessage = false) {
 }
 
 export async function saveRaw(groups) {
-    await Storage.set({groups});
+    await Storage.setGroups(groups);
 
     cachedGroups = structuredClone(groups);
 }
