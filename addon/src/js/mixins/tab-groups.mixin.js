@@ -227,7 +227,7 @@ export default {
             this.openedWindows = windows ?? await this.sendMessageModule('Windows.load');
         },
         async loadGroups({groups} = {}) {
-            groups ??= await this.sendMessageModule('Groups.load', null, true, true, this.includeTabThumbnails)
+            groups ??= await this.sendMessageModule('Groups.loadWithArchivedTabs', null, true, true, this.includeTabThumbnails)
                 .then(({groups}) => groups);
 
             this.groups = groups.map(this.mapGroup, this);
@@ -400,7 +400,7 @@ export default {
         },
 
         async loadGroupTabs(groupId) {
-            const {group: {tabs}} = await this.sendMessageModule('Groups.load', groupId, true, true, this.includeTabThumbnails);
+            const {group: {tabs}} = await this.sendMessageModule('Groups.loadWithArchivedTabs', groupId, true, true, this.includeTabThumbnails);
             const group = this.groups.find(gr => gr.id === groupId);
 
             if (this.isGroupPendingAddition(group)) {

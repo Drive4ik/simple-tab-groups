@@ -96,7 +96,7 @@ async function collectAliveUids() {
         }
     }
 
-    const {archivedGroups} = await Groups.load();
+    const {archivedGroups} = await Groups.loadWithArchivedTabs();
     for (const group of archivedGroups) {
         for (const tab of Array.isArray(group.tabs) ? group.tabs : []) {
             if (tab.uid != null) {
@@ -139,7 +139,7 @@ export async function reconcileClosedTabRecords() {
 export async function gatherLocalPending(selfDeviceId, log) {
     const priorBaseline = loadBaseline(selfDeviceId);
 
-    const {groups: loadedGroups} = await Groups.load(null, true, true);
+    const {groups: loadedGroups} = await Groups.loadWithArchivedTabs(null, true, true);
     const syncedKeys = syncedOptionKeys(Constants.ALL_OPTION_KEYS);
     const allLocalOptions = await Storage.get(syncedKeys);
     const localSyncedOptions = {};

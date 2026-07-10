@@ -394,7 +394,7 @@ export async function createNewGroup(info) {
 export async function exportAllGroups() {
     const log = logger.start(exportAllGroups);
     await Browser.actionLoading();
-    const {groups} = await Groups.load(null, true);
+    const {groups} = await Groups.loadWithArchivedTabs(null, true);
     await Bookmarks.exportGroups(groups);
     await Browser.actionLoading(false);
     // Notification('allGroupsExported'); // ? maybe not needed anymore

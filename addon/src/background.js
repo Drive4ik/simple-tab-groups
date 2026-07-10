@@ -812,7 +812,7 @@ async function onBackgroundMessage(message, sender) {
                     const {
                         group: groupToExport,
                         groupIndex,
-                    } = await Groups.load(data.groupId, true);
+                    } = await Groups.loadWithArchivedTabs(data.groupId, true);
 
                     if (groupToExport) {
                         await Browser.actionLoading();
@@ -1084,7 +1084,7 @@ async function onBackgroundMessage(message, sender) {
                         {groups: result.groups},
                     ] = await Promise.all([
                         Windows.load(true, true, includeThumbnail),
-                        Groups.load(null, true, true, includeThumbnail),
+                        Groups.loadWithArchivedTabs(null, true, true, includeThumbnail),
                     ]);
 
                     result.ok = true;
@@ -1249,7 +1249,7 @@ async function createBackup(includeTabFavIcons, includeTabThumbnails, isAutoBack
     const log = logger.start('createBackup', {includeTabFavIcons, includeTabThumbnails, isAutoBackup, filePathOverride, locationOverride});
 
     const data = await Storage.get();
-    const {groups} = await Groups.load(null, true, includeTabFavIcons, includeTabThumbnails);
+    const {groups} = await Groups.loadWithArchivedTabs(null, true, includeTabFavIcons, includeTabThumbnails);
 
     if (isAutoBackup && (!groups.length || groups.filter(gr => !gr.isArchive).every(gr => !gr.tabs.length))) {
         log.stopWarn('skip create auto backup, groups are empty');
@@ -1382,7 +1382,7 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
             { groups: currentData.groups },
         ] = await Promise.all([
             Storage.get('hotkeys'),
-            Groups.load(null, true, true, options.showTabsWithThumbnailsInManageGroups),
+            Groups.loadWithArchivedTabs(null, true, true, options.showTabsWithThumbnailsInManageGroups),
         ]);
     }
 
