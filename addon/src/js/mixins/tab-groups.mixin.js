@@ -24,7 +24,7 @@ export default {
 
             DEFAULT_COOKIE_STORE_ID: Constants.DEFAULT_COOKIE_STORE_ID,
 
-            defaultAvailableTabKeys: ['id', 'url', 'title', 'favIconUrl', 'status', 'index', 'discarded', 'active', 'cookieStoreId', 'windowId', 'pinned', 'groupPinned'],
+            defaultAvailableTabKeys: ['id', 'url', 'title', 'favIconUrl', 'status', 'index', 'discarded', 'active', 'cookieStoreId', 'windowId', 'pinned', 'groupPinned', 'hidden'],
 
             currentWindow: null,
             openedWindows: [],
@@ -355,8 +355,18 @@ export default {
         toggleTabGroupPinned(tab, groupPinned, targetGroupId) {
             this.sendMessageModule('Groups.setTabGroupPinned', tab.id, groupPinned, targetGroupId);
         },
-        togglePinnedGroup() {
-            this.sendMessageModule('Groups.togglePinnedGroupInWindow', this.currentWindow.id);
+        async togglePinnedGroup() {
+            if (this.someGroupAreLoading) {
+                return;
+            }
+
+            this.someGroupAreLoading = true;
+
+            try {
+                await this.sendMessageModule('Groups.togglePinnedGroupInWindow', this.currentWindow.id);
+            } finally {
+                this.someGroupAreLoading = false;
+            }
         },
         discardGroup(group) {
             this.sendMessageModule('Tabs.discard', group.tabs.map(Tabs.extractId));

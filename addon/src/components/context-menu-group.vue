@@ -45,7 +45,7 @@ export default {
             return this.openedWindows.some(win => win.groupId === id);
         },
         isPinnedGroupShownHere(group) {
-            const shownTab = group.tabs?.find(tab => tab.pinned);
+            const shownTab = group.tabs?.find(tab => !tab.hidden);
             return Boolean(shownTab) && shownTab.windowId === this.currentWindowId;
         },
     },

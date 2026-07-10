@@ -70,12 +70,27 @@ export async function apply(windowId, groupId, activeTabId, applyFromHistory = f
         return false;
     }
 
-    if (isPinnedGroupId(groupId)) {
-        log.stop('pinned group', activeTabId ? 'activate tab' : 'toggle');
-        return activeTabId ? activatePinnedGroupTab(activeTabId, windowId) : togglePinnedGroupInWindow(windowId);
-    }
-
     windowsWithLoadingGroups.add(windowId);
+
+    if (isPinnedGroupId(groupId)) {
+        let pinnedResult = false;
+
+        try {
+            pinnedResult = activeTabId
+                ? await activatePinnedGroupTab(activeTabId, windowId)
+                : await togglePinnedGroupInWindow(windowId);
+        } catch (e) {
+            errorEventHandler.call(log, e);
+        } finally {
+            windowsWithLoadingGroups.delete(windowId);
+        }
+
+        pinnedResult
+            ? log.stop('pinned group', activeTabId ? 'activate tab' : 'toggle')
+            : log.stopError('pinned group', activeTabId ? 'activate tab' : 'toggle');
+
+        return pinnedResult;
+    }
 
     const groupWindowId = Cache.getWindowId(groupId);
 
