@@ -582,7 +582,7 @@ function onStorageChanged(changes) {
 }
 
 // methods
-export async function create({url, active, pinned, discarded, title, index, windowId, openerTabId, cookieStoreId, newTabContainer, ifDifferentContainerReOpen, excludeContainersForReOpen, groupId, favIconUrl, thumbnail, groupPinned}, skipListener = false) {
+export async function create({url, active, pinned, discarded, title, index, windowId, openerTabId, cookieStoreId, newTabContainer, ifDifferentContainerReOpen, excludeContainersForReOpen, groupId, favIconUrl, thumbnail, groupPinned, uid}, skipListener = false) {
     if (!Constants.IS_BACKGROUND_PAGE) {
         throw new Error('is not background');
     }
@@ -686,7 +686,7 @@ export async function create({url, active, pinned, discarded, title, index, wind
         self.setTimeout(() => delete longUrls[newTab.id], 30_000);
     }
 
-    await Cache.setTabSession(newTab, {groupId, favIconUrl, thumbnail, groupPinned});
+    await Cache.setTabSession(newTab, {groupId, favIconUrl, thumbnail, groupPinned, uid});
 
     if (skipListener) {
         logger.log('created', newTab.id);
