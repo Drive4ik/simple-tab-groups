@@ -687,7 +687,7 @@ export async function save(groups, withMessage = false) {
 }
 
 export async function saveRaw(groups) {
-    const groupsWithElidedTabs = groups.filter(group => group.isArchive && !group.tabs);
+    const groupsWithElidedTabs = groups.filter(group => group.isArchive && !group.tabs?.length);
 
     if (groupsWithElidedTabs.length) {
         const {groups: storedGroups} = await Storage.get('groups');
