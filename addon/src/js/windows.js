@@ -500,11 +500,11 @@ function onStorageChanged(changes) {
 
 
 // methods
-export async function load(withTabs = false, includeFavIconUrl, includeThumbnail) {
-    const log = logger.start(load, {withTabs, includeFavIconUrl, includeThumbnail});
+export async function load(withTabs = false, includeFavIconUrl, includeThumbnail, prefetchedTabs = null) {
+    const log = logger.start(load, {withTabs, includeFavIconUrl, includeThumbnail, prefetchedTabsCount: prefetchedTabs?.length});
 
     let [tabs, windows] = await Promise.all([
-        withTabs ? Tabs.get(null, false, null, undefined, includeFavIconUrl, includeThumbnail) : false,
+        withTabs ? (prefetchedTabs ?? Tabs.get(null, false, null, undefined, includeFavIconUrl, includeThumbnail)) : false,
         browser.windows.getAll({
             windowTypes: [browser.windows.WindowType.NORMAL],
         }).catch(() => []),

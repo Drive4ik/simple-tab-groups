@@ -610,11 +610,11 @@ async function loadRawGroups(withArchivedTabs) {
 }
 
 // if set return {group, groups, groupIndex}
-export async function load(groupId = null, withTabs = false, includeFavIconUrl, includeThumbnail, withArchivedTabs = false) {
-    const log = logger.start('load', groupId, {withTabs, includeFavIconUrl, includeThumbnail, withArchivedTabs});
+export async function load(groupId = null, withTabs = false, includeFavIconUrl, includeThumbnail, withArchivedTabs = false, prefetchedTabs = null) {
+    const log = logger.start('load', groupId, {withTabs, includeFavIconUrl, includeThumbnail, withArchivedTabs, prefetchedTabsCount: prefetchedTabs?.length});
 
     let [allTabs, groups] = await Promise.all([
-        withTabs ? Tabs.get(null, null, null, undefined, includeFavIconUrl, includeThumbnail) : false,
+        withTabs ? (prefetchedTabs ?? Tabs.get(null, null, null, undefined, includeFavIconUrl, includeThumbnail)) : false,
         loadRawGroups(withArchivedTabs)
     ]);
 
@@ -654,8 +654,8 @@ export async function load(groupId = null, withTabs = false, includeFavIconUrl, 
     };
 }
 
-export function loadWithArchivedTabs(groupId = null, withTabs = false, includeFavIconUrl, includeThumbnail) {
-    return load(groupId, withTabs, includeFavIconUrl, includeThumbnail, true);
+export function loadWithArchivedTabs(groupId = null, withTabs = false, includeFavIconUrl, includeThumbnail, prefetchedTabs = null) {
+    return load(groupId, withTabs, includeFavIconUrl, includeThumbnail, true, prefetchedTabs);
 }
 
 export async function save(groups, withMessage = false) {
