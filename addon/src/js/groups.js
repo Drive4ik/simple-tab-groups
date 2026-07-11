@@ -346,6 +346,17 @@ function isGroupPinned(tab) {
     return Cache.getTabGroupPinned(id);
 }
 
+function pinTier(tab) {
+    const id = Tabs.extractId(tab);
+    if ((tab.groupId ?? Cache.getTabGroup(id)) === PINNED_GROUP_ID) {
+        return 1;
+    }
+    if (isGroupPinned(tab)) {
+        return 2;
+    }
+    return 0;
+}
+
 async function pinGroupTabs(tabs = [], windowId) {
     const pinnedGroupTabs = tabs.filter(isGroupPinned);
 
@@ -364,8 +375,10 @@ async function pinGroupTabs(tabs = [], windowId) {
                 .catch(log.onCatch(['cant pin group tab', tab.id], false))
         ));
 
+        const movedIds = new Set(ids);
+        const tier = pinTier(pinnedGroupTabs[0]);
         const globalPinned = await Tabs.get(windowId, true, null).catch(() => []);
-        const globalPinnedCount = globalPinned.filter(tab => !Cache.getTabGroup(tab.id)).length;
+        const globalPinnedCount = globalPinned.filter(tab => !movedIds.has(tab.id) && pinTier(tab) < tier).length;
 
         await Tabs.moveNative(pinnedGroupTabs, {
             index: globalPinnedCount,
