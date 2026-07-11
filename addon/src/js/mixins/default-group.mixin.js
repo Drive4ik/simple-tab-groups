@@ -1,5 +1,5 @@
 
-import * as Groups from '/js/groups.js';
+import * as Groups from '/js/groups-helpers.js';
 
 export default {
     data() {

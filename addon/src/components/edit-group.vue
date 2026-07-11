@@ -16,7 +16,7 @@ import Lang from '/js/lang.js';
 import * as File from '/js/file.js';
 import * as Bookmarks from '/js/bookmarks.js';
 // import * as Tabs from '/js/tabs.js';
-import * as Groups from '/js/groups.js';
+import * as Groups from '/js/groups-helpers.js';
 import * as Utils from '/js/utils.js';
 import JSON from '/js/json.js';
 

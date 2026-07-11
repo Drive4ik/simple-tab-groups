@@ -16,10 +16,10 @@ import * as Constants from '/js/constants.js';
 import Logger, {errorEventHandler} from '/js/logger.js';
 import Lang from '/js/lang.js';
 import * as Containers from '/js/containers.js';
-import * as Groups from '/js/groups.js';
-import * as Tabs from '/js/tabs.js';
+import * as Groups from '/js/groups-helpers.js';
+import * as Tabs from '/js/tabs-helpers.js';
 import * as Utils from '/js/utils.js';
-import * as Cloud from '/js/sync/cloud/cloud.js';
+import * as Cloud from '/js/sync/cloud/cloud-helpers.js';
 
 import defaultGroupMixin from '/js/mixins/default-group.mixin.js';
 import globalMixin from '/js/mixins/global.mixin.js';
@@ -340,7 +340,7 @@ export default {
         },
 
         toggleMuteTab(tab) {
-            Tabs.setMute([tab.id], tab.audible);
+            this.sendMessageModule('Tabs.setMute', [tab.id], tab.audible);
         },
 
         toggleMuteGroup(group) {
