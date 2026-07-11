@@ -19,6 +19,9 @@ import * as MenusMain from '/js/menus-main.js';
 import * as Storage from './storage.js';
 
 export {on, off} from './broadcast.js?channel=windows';
+export * from './windows-helpers.js';
+
+import {get} from './windows-helpers.js';
 
 const logger = new Logger('Windows');
 const mainStorage = localStorage.create(Constants.MODULES.BACKGROUND);
@@ -519,18 +522,6 @@ export async function load(withTabs = false, includeFavIconUrl, includeThumbnail
 
     log.stop();
     return windows.sort(Utils.sortBy('id'));
-}
-
-export async function get(windowId = browser.windows.WINDOW_ID_CURRENT) {
-    const log = logger.start(get, {windowId});
-
-    const win = await browser.windows.get(windowId)
-        .then(Cache.loadWindowSession)
-        .catch(log.onCatch(['get', windowId]));
-
-    log.assert(win, 'windowId', windowId, 'not found');
-    log.stop(win);
-    return win;
 }
 
 export async function create(groupId, activeTabId) {

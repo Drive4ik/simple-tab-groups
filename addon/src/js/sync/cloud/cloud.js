@@ -10,7 +10,7 @@ import Lang from '/js/lang.js';
 import JSON from '/js/json.js';
 import Logger, {nativeErrorToObject, objectToNativeError} from '/js/logger.js';
 import {createCloudProvider} from './provider.js';
-import * as CloudBroadcast from '/js/broadcast.js?channel=cloud';
+import {send, on as onCloudMessage} from './cloud-helpers.js';
 import * as SyncStorage from '../sync-storage.js';
 import {isReservedFileName} from '../delta/layout.js';
 import * as Storage from '/js/storage.js';
@@ -20,7 +20,7 @@ import backgroundSelf from '/js/background.js';
 //     default as GithubGist,
 // } from './githubgist.js';
 
-export {on, off} from '/js/broadcast.js?channel=cloud';
+export {on, off, send, onSyncUiRequestListener} from './cloud-helpers.js';
 
 const logger = new Logger(Constants.MODULES.CLOUD);
 
@@ -71,10 +71,6 @@ export class CloudError extends Error {
         this.langId = langId === message ? null : langId;
         this.name = 'CloudError';
     }
-}
-
-export function send(action, data = {}) {
-    CloudBroadcast.send({action, ...data});
 }
 
 export async function synchronization(trust = null, revision = null, {useBackupFile = false} = {}) {
@@ -1053,10 +1049,6 @@ function isRetryableSyncError(syncResult) {
         || getRateLimitResetMs(syncResult) !== null;
 }
 
-export function onSyncUiRequestListener() {
-    return CloudBroadcast.on('sync-ui-request', () => send('sync-ui-response'));
-}
-
 export async function shouldShowSyncErrorNotification(syncResult, trigger) {
     if (syncResult.ok) {
         return false;
@@ -1069,7 +1061,7 @@ export async function shouldShowSyncErrorNotification(syncResult, trigger) {
     if (trigger === TRIGGER_MANUAL) {
         const {promise, resolve} = Promise.withResolvers();
 
-        const off = CloudBroadcast.on('sync-ui-response', () => resolve(false));
+        const off = onCloudMessage('sync-ui-response', () => resolve(false));
         setTimeout(() => resolve(true), 1000);
 
         send('sync-ui-request');
