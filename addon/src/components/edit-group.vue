@@ -2,7 +2,6 @@
 // import Vue from 'vue';
 
 import popup from './popup.vue';
-import swatches from 'vue-swatches';
 import contextMenu from '../components/context-menu.vue';
 import 'vue-swatches/dist/vue-swatches.css';
 
@@ -42,7 +41,7 @@ export default {
     },
     components: {
         popup: popup,
-        swatches: swatches,
+        swatches: () => import('vue-swatches'),
         'context-menu': contextMenu,
     },
     data() {
