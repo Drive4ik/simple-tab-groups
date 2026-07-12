@@ -69,7 +69,7 @@ function favIconFileToWrite(selfDeviceId, favIconMap) {
     if (serialized === stored) {
         return null;
     }
-    if (!Object.keys(favIconMap).length && stored == null) {
+    if (!Object.keys(favIconMap.tabs || {}).length && stored == null) {
         return null;
     }
 
@@ -167,7 +167,7 @@ async function pushLocalPendingOnly(Cloud, selfDeviceId, localPendingEvents, las
 
     log.info('conditional fast path: pushed local pending without pull/apply', {
         events: localPendingEvents.length,
-        favicons: favIconWrite ? Object.keys(favIconMap).length : 'unchanged',
+        favicons: favIconWrite ? Object.keys(favIconMap.tabs).length : 'unchanged',
     });
 
     return {pushed: localPendingEvents.length > 0, faviconPushed: !!favIconWrite};
