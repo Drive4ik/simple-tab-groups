@@ -1,10 +1,17 @@
 import path from 'path';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 import CopyWebpackPlugin from 'copy-webpack-plugin';
+import TerserPlugin from 'minimizer-webpack-plugin';
 import { VueLoaderPlugin } from 'vue-loader';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+const TERSER_OPTIONS = {
+    module: true,
+    keep_fnames: true,
+    keep_classnames: true,
+};
 
 function setPath(folderName) {
     return path.resolve(__dirname, folderName);
@@ -72,7 +79,12 @@ export default {
     },
     devtool: false,
     optimization: {
-        minimize: false,
+        minimize: true,
+        minimizer: [
+            new TerserPlugin({
+                terserOptions: TERSER_OPTIONS,
+            }),
+        ],
     },
     performance: {
         maxEntrypointSize: 1024000,
