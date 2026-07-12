@@ -19,8 +19,8 @@
  * await ONE read + migration. This test drives two operations that BOTH start before the
  * hydration's read resolves, then asserts: no event lost, seq strictly monotonic (no
  * collision), and exactly one underlying read was issued (proof of memoization). It also
- * checks the reset path (clear() lets a later hydration re-run), the favicon migration, and
- * the one-time storage.local -> IndexedDB migration.
+ * checks the reset path (clear() lets a later hydration re-run), the thumbnail/oversized-icon
+ * bloat migration, and the one-time storage.local -> IndexedDB migration.
  *
  * Intentionally NOT matched by eslint (config targets addon/**\/*.js, not .mjs); it uses
  * node globals (process, console, module.register) the browser config bans.
@@ -264,11 +264,13 @@ const TEST_META = {v: 1, deviceId: 'test-device'};
         `putEvents=${idb.putEventsCallCount} replaceEvents=${idb.replaceEventsCallCount}`);
 }
 
-// --- 4. favicon migration still runs exactly once on hydrate (from IDB) ------------
+// --- 4. bloat migration still runs exactly once on hydrate (from IDB) --------------
 {
     const seeded = [
-        {seq: 1, ts: 1, op: 'tab.add', groupId: 1, tab: {uid: 't1', url: 'https://a', title: 'A', favIconUrl: 'data:image/png;base64,AAAA'}},
-        {seq: 2, ts: 2, op: 'tab.modify', groupId: 1, tab: {uid: 't1', url: 'https://a', title: 'B', favIconUrl: 'https://a/favicon.ico'}},
+        {seq: 1, ts: 1, op: 'group.modify', group: {id: 'g1', title: 'G1', tabs: [
+            {uid: 't1', url: 'https://a', title: 'A', thumbnail: 'data:image/jpeg;base64,BBBB'},
+        ]}},
+        {seq: 2, ts: 2, op: 'tab.modify', groupId: 'g1', tab: {uid: 't1', url: 'https://a', title: 'B'}},
     ];
     const {idb, mod} = await freshLog({meta: TEST_META, events: seeded});
 
@@ -280,14 +282,14 @@ const TEST_META = {v: 1, deviceId: 'test-device'};
     idb.releaseLoads();
     const [a] = await Promise.all([p1, p2]);
 
-    check('migration strips favicons from all stored events', a.every(e => !Object.hasOwn(e.tab ?? {}, 'favIconUrl')),
-        JSON.stringify(a));
+    check('migration strips thumbnails from all stored group events',
+        (a[0].group?.tabs ?? []).every(t => !Object.hasOwn(t, 'thumbnail')), JSON.stringify(a));
     // migration rewrites the events exactly once. A second get-touch must not re-run the
     // body, so no extra write beyond the single migration rewrite.
-    check('favicon migration rewrites the log exactly once (single write)', idb.putEventsCallCount === 1,
+    check('bloat migration rewrites the log exactly once (single write)', idb.putEventsCallCount === 1,
         `putEventsCallCount=${idb.putEventsCallCount}`);
-    check('favicon migration strips the persisted events too',
-        idb.storedEvents().every(e => !Object.hasOwn(e.tab ?? {}, 'favIconUrl')),
+    check('bloat migration strips the persisted events too',
+        (idb.storedEvents()[0].group?.tabs ?? []).every(t => !Object.hasOwn(t, 'thumbnail')),
         JSON.stringify(idb.storedEvents()));
     check('a single load serves both concurrent first-touch reads', idb.loadCallCount === 1,
         `loadCallCount=${idb.loadCallCount}`);
@@ -461,8 +463,8 @@ const TEST_META = {v: 1, deviceId: 'test-device'};
     check('migration persisted the adopted log into the IDB store',
         idb.storedEvents().length === 2 && idb.meta?.deviceId === 'test-device',
         JSON.stringify({meta: idb.meta, events: idb.storedEvents()}));
-    check('favicon strip still runs during the storage.local migration',
-        events.every(e => !Object.hasOwn(e.tab ?? {}, 'favIconUrl')), JSON.stringify(events));
+    check('storage.local migration preserves tab favicons (favicons never entered events)',
+        events[1].tab.favIconUrl === 'data:image/png;base64,AAAA', JSON.stringify(events));
 
     // a second hydration reads from IDB and does NOT re-read or re-remove storage.local.
     const {idb: idb2, storage: storage2, mod: mod2} = await freshLog({meta: idb.meta, events: idb.storedEvents()});
@@ -499,8 +501,8 @@ const TEST_META = {v: 1, deviceId: 'test-device'};
     const events = await p;
 
     const migrated = events[0].group;
-    check('migration strips group-event tab favicons', migrated.tabs.every(t => !Object.hasOwn(t, 'favIconUrl')),
-        JSON.stringify(migrated.tabs));
+    check('migration preserves group-event tab favicons (favicons never entered events)',
+        migrated.tabs[0].favIconUrl === 'data:image/png;base64,AAAA', JSON.stringify(migrated.tabs));
     check('migration strips group-event tab thumbnails', migrated.tabs.every(t => !Object.hasOwn(t, 'thumbnail')),
         JSON.stringify(migrated.tabs));
     check('migration drops an oversized group iconUrl', !Object.hasOwn(migrated, 'iconUrl'),
@@ -509,8 +511,8 @@ const TEST_META = {v: 1, deviceId: 'test-device'};
     check('migration keeps group identity fields', migrated.id === 'g1' && migrated.title === 'G1' && migrated.tabs[0].url === 'https://a');
     check('group-event migration rewrites the log exactly once', idb.putEventsCallCount === 1,
         `putEventsCallCount=${idb.putEventsCallCount}`);
-    check('group-event migration strips the persisted events too',
-        idb.storedEvents()[0].group.tabs.every(t => !Object.hasOwn(t, 'favIconUrl') && !Object.hasOwn(t, 'thumbnail')),
+    check('group-event migration strips the persisted thumbnails too',
+        idb.storedEvents()[0].group.tabs.every(t => !Object.hasOwn(t, 'thumbnail')),
         JSON.stringify(idb.storedEvents()[0].group.tabs));
 
     const {idb: idb2, mod: mod2} = await freshLog({meta: idb.meta, events: idb.storedEvents()});
