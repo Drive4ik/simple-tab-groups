@@ -6,6 +6,7 @@ const LAST_PUSHED_SEQ_PREFIX = 'deltaLastPushedSeq:';
 const RESET_PENDING_PREFIX = 'deltaResetPending:';
 const PENDING_TRUNCATE_PREFIX = 'deltaPendingTruncateSeq:';
 const BASELINE_PREFIX = 'deltaBaseline:';
+const FAVICON_MAP_PREFIX = 'deltaFavIconMap:';
 
 export const PRE_APPLY_BACKUP_SLOTS = 5;
 export const PRE_APPLY_BACKUP_SLOT_KEY = 'deltaPreApplyBackupSlot';
@@ -28,6 +29,10 @@ export function resetPendingKey(deviceId) {
 
 export function pendingTruncateKey(deviceId) {
     return PENDING_TRUNCATE_PREFIX + deviceId;
+}
+
+export function favIconMapKey(deviceId) {
+    return FAVICON_MAP_PREFIX + deviceId;
 }
 
 export function maxSeq(events, seed) {

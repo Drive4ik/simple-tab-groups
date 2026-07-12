@@ -11,7 +11,8 @@ import {isApplying} from './delta-capture.js';
 import {isCaptureGateOpen} from './capture-gate-state.js';
 import {getDeviceId} from './device-id.js';
 import {syncedOptionKeys} from './option-keys.js';
-import {isUrlSyncable, unwrapStubUrl, sanitizeFavIconUrl} from './url-sync.js';
+import {isUrlSyncable, unwrapStubUrl} from './url-sync.js';
+import {buildFavIconMap} from './favicon-map.js';
 import {loadBaseline, lastPushedSeqKey, storage} from './sync-marks.js';
 
 const logger = new Logger('DeltaSyncLocalState');
@@ -29,7 +30,6 @@ export function buildLocalState(loadedGroups, syncedOptions = {}, livePinnedTabs
                 cookieStoreId: tab.cookieStoreId,
                 index,
                 lastModified: tab.lastModified,
-                favIconUrl: sanitizeFavIconUrl(tab.favIconUrl),
                 ...(tab.groupPinned ? {pinned: true} : {}),
                 ...(tab.discarded === false ? {loaded: true} : {}),
                 id: tab.id,
@@ -57,7 +57,6 @@ export function buildLocalState(loadedGroups, syncedOptions = {}, livePinnedTabs
             cookieStoreId: tab.cookieStoreId,
             index: Number.isFinite(tab.index) ? tab.index : index,
             lastModified: tab.lastModified,
-            favIconUrl: sanitizeFavIconUrl(tab.favIconUrl),
             ...(tab.discarded === false ? {loaded: true} : {}),
             id: tab.id,
         }));
@@ -148,6 +147,7 @@ export async function gatherLocalPending(selfDeviceId, log) {
     }
     const livePinnedTabs = await getLivePinnedTabs();
     const localState = buildLocalState(loadedGroups, localSyncedOptions, livePinnedTabs);
+    const favIconMap = buildFavIconMap(loadedGroups, livePinnedTabs);
 
     const localLogEvents = await DeltaLog.getEvents();
     const logUids = new Set();
@@ -176,5 +176,5 @@ export async function gatherLocalPending(selfDeviceId, log) {
 
     const lastPushedSeq = Number(storage[lastPushedSeqKey(selfDeviceId)]) || 0;
 
-    return {localState, priorBaseline, lastPushedSeq};
+    return {localState, priorBaseline, lastPushedSeq, favIconMap};
 }

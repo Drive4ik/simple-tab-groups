@@ -18,13 +18,23 @@ import {
     resolveDeferredTruncation,
 } from './compaction.js';
 import {mapStateContainers, mapEventContainers} from './container-map.js';
-import {SNAPSHOT_FILE_NAME, DELTA_FILE_PREFIX, deltaFileName, deviceIdFromDeltaFileName} from './layout.js';
+import {
+    SNAPSHOT_FILE_NAME,
+    DELTA_FILE_PREFIX,
+    FAVICON_FILE_PREFIX,
+    deltaFileName,
+    deviceIdFromDeltaFileName,
+    favIconFileName,
+} from './layout.js';
+import {serializeFavIconMap, mergeFavIconMaps} from './favicon-map.js';
+import {applyFavIconMap} from './favicon-file.js';
 import {
     storage,
     lastPushedSeqKey,
     baselineKey,
     resetPendingKey,
     pendingTruncateKey,
+    favIconMapKey,
     maxSeq,
     saveBaseline,
 } from './sync-marks.js';
@@ -48,8 +58,23 @@ DeltaLog.onOverflow(() => {
     delete storage[baselineKey(selfDeviceId)];
     delete storage[lastPushedSeqKey(selfDeviceId)];
     delete storage[pendingTruncateKey(selfDeviceId)];
+    delete storage[favIconMapKey(selfDeviceId)];
     storage[resetPendingKey(selfDeviceId)] = '1';
 });
+
+function favIconFileToWrite(selfDeviceId, favIconMap) {
+    const serialized = serializeFavIconMap(favIconMap);
+    const stored = storage[favIconMapKey(selfDeviceId)];
+
+    if (serialized === stored) {
+        return null;
+    }
+    if (!Object.keys(favIconMap).length && stored == null) {
+        return null;
+    }
+
+    return {name: favIconFileName(selfDeviceId), content: favIconMap, serialized};
+}
 
 async function resolveBaseSnapshot(Cloud, cycle) {
     const snapshot = await Cloud.readFile(SNAPSHOT_FILE_NAME, null, cycle);
@@ -67,6 +92,11 @@ async function resolvePulledDeltaLogs(Cloud, cycle) {
         deviceId: content?.deviceId ?? deviceIdFromDeltaFileName(name),
         events: Array.isArray(content?.events) ? content.events : [],
     }));
+}
+
+async function resolvePulledFavIconFiles(Cloud, cycle) {
+    const files = await Cloud.readAllMatching(FAVICON_FILE_PREFIX, null, cycle);
+    return mergeFavIconMaps(files);
 }
 
 let inProgress = false;
@@ -88,6 +118,7 @@ export async function resetSyncState() {
         delete storage[baselineKey(selfDeviceId)];
         delete storage[lastPushedSeqKey(selfDeviceId)];
         delete storage[pendingTruncateKey(selfDeviceId)];
+        delete storage[favIconMapKey(selfDeviceId)];
 
         await DeltaLog.clear();
 
@@ -99,32 +130,47 @@ export async function resetSyncState() {
     }
 }
 
-async function pushLocalPendingOnly(Cloud, selfDeviceId, localPendingEvents, lastPushedSeq, cycle, log) {
-    if (!localPendingEvents.length) {
-        return {pushed: false};
-    }
+async function pushLocalPendingOnly(Cloud, selfDeviceId, localPendingEvents, lastPushedSeq, favIconMap, cycle, log) {
+    const filesToWrite = {};
 
-    const {mapToPortable} = buildOutboundContainerMapping(null);
-    const allEvents = await DeltaLog.getEvents();
-    for (const event of allEvents) {
-        mapEventContainers(event, mapToPortable);
-    }
+    if (localPendingEvents.length) {
+        const {mapToPortable} = buildOutboundContainerMapping(null);
+        const allEvents = await DeltaLog.getEvents();
+        for (const event of allEvents) {
+            mapEventContainers(event, mapToPortable);
+        }
 
-    await Cloud.writeFiles({
-        [deltaFileName(selfDeviceId)]: {
+        filesToWrite[deltaFileName(selfDeviceId)] = {
             v: DeltaLog.SCHEMA_VERSION,
             deviceId: selfDeviceId,
             events: allEvents,
-        },
-    }, null, cycle);
+        };
+    }
 
-    storage[lastPushedSeqKey(selfDeviceId)] = maxSeq(localPendingEvents, lastPushedSeq);
+    const favIconWrite = favIconFileToWrite(selfDeviceId, favIconMap);
+    if (favIconWrite) {
+        filesToWrite[favIconWrite.name] = favIconWrite.content;
+    }
+
+    if (!Object.keys(filesToWrite).length) {
+        return {pushed: false, faviconPushed: false};
+    }
+
+    await Cloud.writeFiles(filesToWrite, null, cycle);
+
+    if (localPendingEvents.length) {
+        storage[lastPushedSeqKey(selfDeviceId)] = maxSeq(localPendingEvents, lastPushedSeq);
+    }
+    if (favIconWrite) {
+        storage[favIconMapKey(selfDeviceId)] = favIconWrite.serialized;
+    }
 
     log.info('conditional fast path: pushed local pending without pull/apply', {
         events: localPendingEvents.length,
+        favicons: favIconWrite ? Object.keys(favIconMap).length : 'unchanged',
     });
 
-    return {pushed: true};
+    return {pushed: localPendingEvents.length > 0, faviconPushed: !!favIconWrite};
 }
 
 export async function deltaSynchronization() {
@@ -177,7 +223,7 @@ export async function deltaSynchronization() {
 
         progress(10);
 
-        const {localState, priorBaseline, lastPushedSeq} =
+        const {localState, priorBaseline, lastPushedSeq, favIconMap} =
             await gatherLocalPending(selfDeviceId, log);
         let localPendingEvents = await DeltaLog.getEventsSince(lastPushedSeq);
 
@@ -186,8 +232,8 @@ export async function deltaSynchronization() {
         const cycle = Cloud.beginSyncCycle ? await Cloud.beginSyncCycle() : null;
         const remoteUnchanged = !resetPending && !!cycle?.unchanged;
         if (remoteUnchanged) {
-            const {pushed} = await pushLocalPendingOnly(
-                Cloud, selfDeviceId, localPendingEvents, lastPushedSeq, cycle, log,
+            const {pushed, faviconPushed} = await pushLocalPendingOnly(
+                Cloud, selfDeviceId, localPendingEvents, lastPushedSeq, favIconMap, cycle, log,
             );
 
             Cloud.commitSyncCycle?.(cycle);
@@ -196,7 +242,7 @@ export async function deltaSynchronization() {
             syncResult.ok = true;
             syncResult.progress = 100;
             syncResult.skippedPull = true;
-            syncResult.changes = {local: false, cloud: pushed};
+            syncResult.changes = {local: false, cloud: pushed || faviconPushed};
 
             send('sync-end', syncResult);
             log.stop('remote unchanged: skipped pull/apply', {pushedLocalPending: pushed});
@@ -224,6 +270,7 @@ export async function deltaSynchronization() {
         const {snapshot: pulledSnapshot, snapshotExists} = await resolveBaseSnapshot(Cloud, cycle);
         progress(30);
         const pulledDeltaLogs = await resolvePulledDeltaLogs(Cloud, cycle);
+        const pulledFavIcons = await resolvePulledFavIconFiles(Cloud, cycle);
         progress(45);
 
         if (resetPending) {
@@ -356,6 +403,8 @@ export async function deltaSynchronization() {
             return syncResult;
         }
 
+        await applyFavIconMap(pulledFavIcons);
+
         progress(85);
 
         const writeSnapshot = shouldCompact || !snapshotExists;
@@ -377,12 +426,21 @@ export async function deltaSynchronization() {
             };
         }
 
+        const favIconWrite = favIconFileToWrite(selfDeviceId, favIconMap);
+        if (favIconWrite) {
+            filesToWrite[favIconWrite.name] = favIconWrite.content;
+        }
+
         if (Object.keys(filesToWrite).length) {
             await Cloud.writeFiles(filesToWrite, null, cycle);
         }
 
         if (plan.deltaFileToWrite) {
             storage[lastPushedSeqKey(selfDeviceId)] = maxSeq(plan.deltaFileToWrite.events, lastPushedSeq);
+        }
+
+        if (favIconWrite) {
+            storage[favIconMapKey(selfDeviceId)] = favIconWrite.serialized;
         }
 
         if (deferredTruncateConfirmed && confirmedTruncateSeq > 0) {
@@ -425,7 +483,7 @@ export async function deltaSynchronization() {
 
         syncResult.changes = {
             local: summarizeOps(plan.browserOps, plan.optionsToApply).mutatesBrowser,
-            cloud: !!plan.deltaFileToWrite,
+            cloud: !!plan.deltaFileToWrite || !!favIconWrite,
         };
 
         send('sync-end', syncResult);
