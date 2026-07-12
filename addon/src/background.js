@@ -1084,6 +1084,10 @@ async function onBackgroundMessage(message, sender) {
                     const windowTabs = allTabs
                         .filter(tab => !tab.pinned)
                         .map(tab => {
+                            if (!tab.groupId) {
+                                return tab;
+                            }
+
                             const windowTab = {...tab};
                             delete windowTab.favIconUrl;
                             return windowTab;
