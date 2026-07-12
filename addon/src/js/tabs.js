@@ -174,10 +174,8 @@ async function onCreated(tab) {
 
         Cache.applyTabSession(tab);
 
-        if (!Cache.getTabUid(tab.id)) {
-            await Cache.setTabUid(tab.id)
-                .catch(logger.onCatch("onCreated can't mint uid (pinned)", false));
-        }
+        await Cache.ensureTabUid(tab.id)
+            .catch(logger.onCatch("onCreated can't mint uid (pinned)", false));
 
         DeltaCapture.tabAdded(tab);
         return;
@@ -188,8 +186,8 @@ async function onCreated(tab) {
 
     Cache.applyTabSession(tab);
 
-    if (Cache.getTabGroup(tab.id) && !Cache.getTabUid(tab.id)) {
-        await Cache.setTabUid(tab.id)
+    if (Cache.getTabGroup(tab.id)) {
+        await Cache.ensureTabUid(tab.id)
             .catch(logger.onCatch("onCreated can't mint uid", false));
     }
 
@@ -341,9 +339,7 @@ async function onUpdated(tabId, changeInfo, tab) {
                 await Cache.setTabGroupPinned(tab.id, true)
                     .catch(log.onCatch(["can't set groupPinned", tab.id], false));
 
-                if (!Cache.getTabUid(tab.id)) {
-                    await Cache.setTabUid(tab.id).catch(() => {});
-                }
+                await Cache.ensureTabUid(tab.id).catch(() => {});
 
                 DeltaCapture.tabAdded(tab);
             }
@@ -445,6 +441,7 @@ function onRemoved(tabId, {isWindowClosing, windowId}) {
         });
     } else {
         Cache.removeTab(tabId);
+        Cache.removeTabUidBackup(tabId).catch(() => {});
 
         const capture = closedTabCapturePlan({uid, groupId, wasPinned}, Groups.isPinnedGroupId);
 
@@ -562,8 +559,8 @@ async function onAttached(tabId, {newWindowId}) { // called when tabs.move()
 
     log.log('groupId', groupId);
 
-    if (groupId && !Cache.getTabUid(tabId)) {
-        await Cache.setTabUid(tabId)
+    if (groupId) {
+        await Cache.ensureTabUid(tabId)
             .catch(log.onCatch("can't mint uid", false));
     }
 

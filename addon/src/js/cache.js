@@ -12,6 +12,8 @@ export const LAST_MODIFIED_KEY = 'lastModified';
 export const GROUP_PINNED_KEY = 'groupPinned';
 export const KEYS = [GROUP_KEY, FAVICON_KEY, THUMBNAIL_KEY, UID_KEY, LAST_MODIFIED_KEY, GROUP_PINNED_KEY];
 
+const TAB_UID_BACKUP_KEY = 'tabUidBackup';
+
 export const tabs = {};
 export const lastTabsState = {}; // BUG https://bugzilla.mozilla.org/show_bug.cgi?id=1818392
 export const windows = {};
@@ -213,7 +215,7 @@ export async function removeTabThumbnail(id) {
     delete tabs[id]?.thumbnail;
 }
 
-async function loadTabUid(id) {
+export async function loadTabUid(id) {
     if (tabs[id]) {
         await waitPromises(tabs[id]);
 
@@ -227,8 +229,18 @@ async function loadTabUid(id) {
             return tabs[id].uid = uid;
         }
 
-        return setTabUid(id);
+        const backupUid = (await loadTabUidBackup())[id];
+
+        if (backupUid) {
+            await addPromise(tabs[id], browser.sessions.setTabValue(id, UID_KEY, backupUid));
+            return tabs[id].uid = backupUid;
+        }
     }
+}
+
+export async function ensureTabUid(id) {
+    await loadTabUid(id);
+    return getTabUid(id) || await setTabUid(id);
 }
 
 export async function setTabUid(id, uid = null) {
@@ -240,11 +252,61 @@ export async function setTabUid(id, uid = null) {
 
     await addPromise(tabs[id], browser.sessions.setTabValue(id, UID_KEY, uid));
 
-    return tabs[id].uid = uid;
+    tabs[id].uid = uid;
+
+    await backupTabUid(id, uid);
+
+    return uid;
 }
 
 export function getTabUid(id) {
     return tabs[id]?.uid;
+}
+
+let tabUidBackup = null;
+
+async function loadTabUidBackup() {
+    if (!tabUidBackup) {
+        const stored = await browser.storage.local.get(TAB_UID_BACKUP_KEY);
+        tabUidBackup = stored?.[TAB_UID_BACKUP_KEY] || {};
+    }
+
+    return tabUidBackup;
+}
+
+async function backupTabUid(id, uid) {
+    const backup = await loadTabUidBackup();
+
+    if (backup[id] !== uid) {
+        backup[id] = uid;
+        await browser.storage.local.set({[TAB_UID_BACKUP_KEY]: backup});
+    }
+}
+
+export async function removeTabUidBackup(id) {
+    const backup = await loadTabUidBackup();
+
+    if (id in backup) {
+        delete backup[id];
+        await browser.storage.local.set({[TAB_UID_BACKUP_KEY]: backup});
+    }
+}
+
+export async function pruneTabUidBackup(liveTabIds) {
+    const backup = await loadTabUidBackup();
+    const live = new Set(liveTabIds.map(String));
+    let changed = false;
+
+    for (const id in backup) {
+        if (!live.has(id)) {
+            delete backup[id];
+            changed = true;
+        }
+    }
+
+    if (changed) {
+        await browser.storage.local.set({[TAB_UID_BACKUP_KEY]: backup});
+    }
 }
 
 async function loadTabLastModified(id) {
