@@ -3,7 +3,7 @@ import '/js/prefixed-storage.js';
 import {objectToNativeError} from '/js/logger.js';
 import * as Constants from '/js/constants.js';
 import * as Utils from '/js/utils.js';
-import * as Cloud from '/js/sync/cloud/cloud.js';
+import * as Cloud from '/js/sync/cloud/cloud-helpers.js';
 
 // const MODULE_NAME = 'sync-cloud.mixin';
 // const logger = new Logger(MODULE_NAME, [Utils.getNameFromPath(location.href)]);

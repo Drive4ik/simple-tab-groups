@@ -1,6 +1,6 @@
 <script>
 import contextMenu from './context-menu.vue';
-import * as Groups from '/js/groups.js';
+import * as Groups from '/js/groups-helpers.js';
 import Lang from '/js/lang.js';
 
 export default {

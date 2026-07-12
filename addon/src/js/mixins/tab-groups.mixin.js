@@ -4,12 +4,17 @@ import Vue from '/js/vue.runtime.esm.js';
 import '/js/prefixed-storage.js';
 import * as Constants from '/js/constants.js';
 import * as Containers from '/js/containers.js';
-import * as Tabs from '/js/tabs.js';
-import * as Groups from '/js/groups.js';
+import * as Tabs from '/js/tabs-helpers.js';
+import * as Groups from '/js/groups-helpers.js';
 import * as Utils from '/js/utils.js';
-import * as Windows from '/js/windows.js';
-import * as Cloud from '/js/sync/cloud/cloud.js';
+import {get as getCurrentWindow} from '/js/windows-helpers.js';
+import * as Cloud from '/js/sync/cloud/cloud-helpers.js';
+import {channel} from '/js/broadcast.js';
 import {isPinnedNeedingGroupPin} from '/js/tab-move-split.js';
+
+const GroupsChannel = channel('groups');
+const TabsChannel = channel('tabs');
+const WindowsChannel = channel('windows');
 
 const mainStorage = localStorage.create(Constants.MODULES.BACKGROUND);
 const isManage = location.href.startsWith(Constants.PAGES.MANAGE);
@@ -130,19 +135,19 @@ export default {
 
             list.add(Containers.onChanged(this.runBroadcastHandlerLoggingRejection('onChangedContainers', () => this.onChangedContainers())));
 
-            list.add(Windows.on(['opened', 'closed'], this.runBroadcastHandlerLoggingRejection('loadWindows', () => this.loadWindows())));
+            list.add(WindowsChannel.on(['opened', 'closed'], this.runBroadcastHandlerLoggingRejection('loadWindows', () => this.loadWindows())));
 
-            list.add(Tabs.on('updated', this.runBroadcastHandlerLoggingRejection('Tabs.updated', ({tabId, changeInfo}) => {
+            list.add(TabsChannel.on('updated', this.runBroadcastHandlerLoggingRejection('Tabs.updated', ({tabId, changeInfo}) => {
                 const tab = this.allTabs[tabId] ?? this.unSyncTabs.find(tab => tab.id === tabId);
                 tab && Object.assign(tab, changeInfo);
             })));
-            list.add(Tabs.on('updated.group', this.runBroadcastHandlerLoggingRejection('Tabs.updated.group', ({groupId}) => {
+            list.add(TabsChannel.on('updated.group', this.runBroadcastHandlerLoggingRejection('Tabs.updated.group', ({groupId}) => {
                 this.loadGroupTabs(groupId);
             })));
-            list.add(Tabs.on('updated.unsync', this.runBroadcastHandlerLoggingRejection('Tabs.updated.unsync', ({windowId}) => {
+            list.add(TabsChannel.on('updated.unsync', this.runBroadcastHandlerLoggingRejection('Tabs.updated.unsync', ({windowId}) => {
                 this.loadUnsyncedTabs({windowId});
             })));
-            list.add(Tabs.on('removed', this.runBroadcastHandlerLoggingRejection('Tabs.removed', ({tabId, groupId}) => {
+            list.add(TabsChannel.on('removed', this.runBroadcastHandlerLoggingRejection('Tabs.removed', ({tabId, groupId}) => {
                 const group = this.groups.find(group => group.id === groupId);
 
                 if (this.isGroupPendingAddition(group)) {
@@ -155,7 +160,7 @@ export default {
                     group.tabs.splice(tabIndex, 1);
                 }
             })));
-            list.add(Tabs.on('removed.unsync', this.runBroadcastHandlerLoggingRejection('Tabs.removed.unsync', ({tabId}) => {
+            list.add(TabsChannel.on('removed.unsync', this.runBroadcastHandlerLoggingRejection('Tabs.removed.unsync', ({tabId}) => {
                 const tabIndex = this.unSyncTabs.findIndex(tab => tab.id === tabId);
 
                 if (tabIndex !== -1) {
@@ -163,28 +168,28 @@ export default {
                 }
             })));
 
-            list.add(Groups.on('added', this.runBroadcastHandlerLoggingRejection('Groups.added', request => {
+            list.add(GroupsChannel.on('added', this.runBroadcastHandlerLoggingRejection('Groups.added', request => {
                 this.groups.push(this.mapGroup(request.group));
                 this.onGroupAdded?.(request);
             })));
-            list.add(Groups.on('updated', this.runBroadcastHandlerLoggingRejection('Groups.updated', request => {
+            list.add(GroupsChannel.on('updated', this.runBroadcastHandlerLoggingRejection('Groups.updated', request => {
                 const group = this.groups.find(group => group.id === request.group.id);
                 Object.assign(group, request.group);
                 this.onGroupUpdated?.(request);
             })));
-            list.add(Groups.on('removed', this.runBroadcastHandlerLoggingRejection('Groups.removed', request => {
+            list.add(GroupsChannel.on('removed', this.runBroadcastHandlerLoggingRejection('Groups.removed', request => {
                 this.groups = this.groups.filter(group => group.id !== request.groupId);
                 this.onGroupRemoved?.(request);
             })));
-            list.add(Groups.on('loaded', this.runBroadcastHandlerLoggingRejection('Groups.loaded', async request => {
+            list.add(GroupsChannel.on('loaded', this.runBroadcastHandlerLoggingRejection('Groups.loaded', async request => {
                 await this.loadWindowsAndGroups();
                 await this.onGroupLoadedReady?.(request);
             })));
-            list.add(Groups.on('unloaded', this.runBroadcastHandlerLoggingRejection('Groups.unloaded', async request => {
+            list.add(GroupsChannel.on('unloaded', this.runBroadcastHandlerLoggingRejection('Groups.unloaded', async request => {
                 await this.tabGroupsLoad();
                 this.onGroupUnloaded?.(request);
             })));
-            list.add(Groups.on('updated.all', this.runBroadcastHandlerLoggingRejection('Groups.updated.all', async request => {
+            list.add(GroupsChannel.on('updated.all', this.runBroadcastHandlerLoggingRejection('Groups.updated.all', async request => {
                 await this.tabGroupsLoad();
                 this.onGroupsUpdatedAll?.(request);
             })));
@@ -223,7 +228,7 @@ export default {
         },
 
         async loadWindows({windows} = {}) {
-            this.currentWindow = await Windows.get();
+            this.currentWindow = await getCurrentWindow();
             this.openedWindows = windows ?? await this.sendMessageModule('Windows.load');
         },
         async loadGroups({groups} = {}) {

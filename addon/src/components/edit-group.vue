@@ -2,7 +2,6 @@
 // import Vue from 'vue';
 
 import popup from './popup.vue';
-import swatches from 'vue-swatches';
 import contextMenu from '../components/context-menu.vue';
 import 'vue-swatches/dist/vue-swatches.css';
 
@@ -16,7 +15,7 @@ import Lang from '/js/lang.js';
 import * as File from '/js/file.js';
 import * as Bookmarks from '/js/bookmarks.js';
 // import * as Tabs from '/js/tabs.js';
-import * as Groups from '/js/groups.js';
+import * as Groups from '/js/groups-helpers.js';
 import * as Utils from '/js/utils.js';
 import JSON from '/js/json.js';
 
@@ -42,7 +41,7 @@ export default {
     },
     components: {
         popup: popup,
-        swatches: swatches,
+        swatches: () => import('vue-swatches'),
         'context-menu': contextMenu,
     },
     data() {

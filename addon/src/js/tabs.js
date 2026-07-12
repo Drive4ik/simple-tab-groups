@@ -9,7 +9,6 @@ import Listeners from '/js/listeners.js\
 &tabs.onAttached\
 &storage.local.onChanged\
 ';
-import './prefixed-storage.js';
 import Logger from './logger.js';
 import Notification from './notification.js';
 import BatchProcessor from './batch-processor.js';
@@ -22,16 +21,17 @@ import * as Containers from './containers.js';
 import * as Extensions from './extensions.js';
 import * as Groups from './groups.js';
 import * as Windows from './windows.js';
-import * as ConstantsBrowser from './constants-browser.js';
 import * as Storage from './storage.js';
 import * as BrowserSettings from './browser-settings.js';
 import * as DeltaCapture from './sync/delta/delta-capture.js';
 import {closedTabCapturePlan} from './sync/delta/close-capture.js';
 
 export {on, off} from './broadcast.js?channel=tabs';
+export * from './tabs-helpers.js';
+
+import {extractId, getTitle, normalizeFavIcon} from './tabs-helpers.js';
 
 const logger = new Logger('Tabs');
-const mainStorage = localStorage.create(Constants.MODULES.BACKGROUND);
 const settings = await Storage.get(['showTabsWithThumbnailsInManageGroups', 'colorScheme']);
 const skipTrackingWindows = new Set();
 const skip = {
@@ -1624,32 +1624,6 @@ export function getNewTabContainer(
     return Containers.isDefault(cookieStoreId) ? newTabContainer : cookieStoreId;
 }
 
-export function getTitle({id, index, title, url, discarded, windowId, lastAccessed}, withUrl = false, sliceLength = 0, withActiveTab = false) {
-    title = title || url || 'about:blank';
-
-    if (withUrl && url && title !== url) {
-        title += '\n' + url;
-    }
-
-    if (withActiveTab && id) {
-        title = (discarded ? Constants.DISCARDED_SYMBOL : Constants.ACTIVE_SYMBOL) + ' ' + title;
-    }
-
-    if (mainStorage.enableDebug && id) {
-        let lastDate = new Date(lastAccessed);
-
-        if (lastDate.getTime()) {
-            lastDate = `(${lastDate.getMinutes()}:${lastDate.getSeconds()}.${lastDate.getMilliseconds()})`;
-        } else {
-            lastDate = '';
-        }
-
-        title = `@${windowId}:#${id}:i${index} ${lastDate} ${title}`;
-    }
-
-    return sliceLength ? Utils.sliceText(title, sliceLength) : title;
-}
-
 // const restrictedDomainsRegExp = /^https?:\/\/(.+\.)?(mozilla\.(net|org|com)|firefox\.com)\//;
 const restrictedDomains = new Set('accounts-static.cdn.mozilla.net,accounts.firefox.com,addons.cdn.mozilla.net,addons.mozilla.org,api.accounts.firefox.com,content.cdn.mozilla.net,discovery.addons.mozilla.org,oauth.accounts.firefox.com,profile.accounts.firefox.com,support.mozilla.org,sync.services.mozilla.com'.split(','));
 
@@ -1673,10 +1647,6 @@ export function isCanSendMessage({url}) {
     }
 }
 
-export function extractId(tab) {
-    return tab.id || tab;
-}
-
 export function isPinned(tab) {
     return tab.pinned === true;
 }
@@ -1693,20 +1663,8 @@ export function isLoaded(tab) {
     return tab.status === browser.tabs.TabStatus.COMPLETE;
 }
 
-export function isLoading(tab) {
-    return tab.status === browser.tabs.TabStatus.LOADING;
-}
-
 export function normalizeUrl(tab) {
     tab.url = Utils.normalizeUrl(tab.url);
-    return tab;
-}
-
-export function normalizeFavIcon(tab) {
-    if (!Utils.isAvailableFavIconUrl(tab.favIconUrl)) {
-        tab.favIconUrl = ConstantsBrowser.DEFAULT_FAVICON;
-    }
-
     return tab;
 }
 
