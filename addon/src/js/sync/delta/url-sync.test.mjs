@@ -18,7 +18,6 @@ import {
     isUrlSyncable,
     unwrapStubUrl,
     sanitizeFavIconUrlForFile,
-    MAX_FILE_FAVICON_LENGTH,
     liveUrlMatchesSource,
     shouldNavigateLiveTabUrl,
 } from './url-sync.js';
@@ -99,21 +98,19 @@ const STUB = 'moz-extension://abcd-1234-uuid/help/stg-unsupported-url.html';
     check('null passes through', unwrapStubUrl(null) === null);
 }
 
-// --- sanitizeFavIconUrlForFile: ADMIT http(s)/moz-extension AND data: favicons, size-capped ---
+// --- sanitizeFavIconUrlForFile: ADMIT http(s)/moz-extension AND data: favicons by scheme ---
 {
     // The favicon file (never the delta log) is the only favicon channel; it carries the live
     // tab.favIconUrl verbatim — almost always an http(s) URL, occasionally a data: blob.
+    // Size no longer gates here: sanitize validates the scheme only; the per-favicon and
+    // per-file size caps live in buildFavIconMap (favicon-map.js) where drops are reported.
     const normalDataPng = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUg' + 'A'.repeat(2000);
     check('normal data:image/png favicon kept for file', sanitizeFavIconUrlForFile(normalDataPng) === normalDataPng);
     check('short data: favicon kept for file', sanitizeFavIconUrlForFile('data:image/x,abc') === 'data:image/x,abc');
 
-    // an oversized data: blob (over the per-favicon cap) is dropped so one page can't blow the budget.
-    const hugeData = 'data:image/png;base64,' + 'A'.repeat(MAX_FILE_FAVICON_LENGTH + 1);
-    check('oversized data: favicon (> cap) dropped', sanitizeFavIconUrlForFile(hugeData) === undefined);
-
-    // a data: favicon EXACTLY at the cap is still kept (boundary: only > cap is dropped).
-    const atCap = 'data:' + 'x'.repeat(MAX_FILE_FAVICON_LENGTH - 5);
-    check('data: favicon at exactly the cap KEPT', sanitizeFavIconUrlForFile(atCap) === atCap);
+    // a large embedded data: favicon is NOT dropped by scheme sanitize (it round-trips through the map).
+    const largeData = 'data:image/png;base64,' + 'A'.repeat(40_000);
+    check('large data: favicon passes scheme sanitize', sanitizeFavIconUrlForFile(largeData) === largeData);
 
     // remote favicon urls ARE stored now (live tabs carry http favIconUrls; the receiver renders
     // the stored string as an <img src>, so unloaded/discarded tabs still show the icon).

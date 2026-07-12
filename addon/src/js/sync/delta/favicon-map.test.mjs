@@ -13,7 +13,7 @@
  * Intentionally NOT matched by eslint (config targets addon/**\/*.js, not .mjs).
  */
 
-import {buildFavIconMap, serializeFavIconMap, mergeFavIconMaps} from './favicon-map.js';
+import {buildFavIconMap, serializeFavIconMap, mergeFavIconMaps, MAX_FAVICON_ENTRY_BYTES} from './favicon-map.js';
 
 let passed = 0;
 const failures = [];
@@ -33,6 +33,15 @@ const FAV_B = 'data:image/png;base64,' + 'B'.repeat(64);
 const FAV_C = 'data:image/png;base64,' + 'C'.repeat(64);
 const HTTP_A = 'https://a.example/favicon.ico';
 const HTTP_B = 'https://b.example/static/icon.png';
+
+// resolve the built {tabs, blobs} file back to a flat {uid: favIconUrl} view for assertions.
+function resolve(map) {
+    const flat = {};
+    for (const [uid, hash] of Object.entries(map.tabs)) {
+        flat[uid] = map.blobs[hash];
+    }
+    return flat;
+}
 
 // mirror of favicon-file.js applyArchivedFavIcons (pure): assign favicons by uid into records.
 function applyToRecords(groups, mergedMap) {
@@ -55,11 +64,12 @@ function applyToRecords(groups, mergedMap) {
     const pinned = [{uid: 'pin1', url: 'https://c', favIconUrl: FAV_C}];
 
     const map = buildFavIconMap([liveGroup, archivedGroup], pinned);
+    const flat = resolve(map);
 
-    check('build: live group tab favicon captured', map.live1 === FAV_A);
-    check('build: ARCHIVED group tab favicon captured', map.arch1 === FAV_B);
-    check('build: pinned tab favicon captured', map.pin1 === FAV_C);
-    check('build: exactly the three data: favicons', Object.keys(map).length === 3);
+    check('build: live group tab favicon captured', flat.live1 === FAV_A);
+    check('build: ARCHIVED group tab favicon captured', flat.arch1 === FAV_B);
+    check('build: pinned tab favicon captured', flat.pin1 === FAV_C);
+    check('build: exactly the three data: favicons', Object.keys(map.tabs).length === 3);
 }
 
 // --- 2. map build admits http(s) favicons, skips favicon-less and uid-less tabs ----
@@ -70,8 +80,8 @@ function applyToRecords(groups, mergedMap) {
         {url: 'https://c', favIconUrl: FAV_A},               // no uid ⇒ skip
         {uid: 'u4', url: 'ftp://d', favIconUrl: 'ftp://d/i'}, // unsupported scheme ⇒ skip
     ]}], []);
-    check('build: http favicon stored under its uid', map.u1 === HTTP_A);
-    check('build: only the uid-bearing supported favicon is stored', Object.keys(map).length === 1);
+    check('build: http favicon stored under its uid', resolve(map).u1 === HTTP_A);
+    check('build: only the uid-bearing supported favicon is stored', Object.keys(map.tabs).length === 1);
 }
 
 // --- 3. overwrite-on-change write gating (serialize compare) ------------------
@@ -82,7 +92,7 @@ function applyToRecords(groups, mergedMap) {
         if (serialized === marker) {
             return {write: false};
         }
-        if (!Object.keys(map).length && marker == null) {
+        if (!Object.keys(map.tabs).length && marker == null) {
             return {write: false};
         }
         return {write: true, serialized};
@@ -102,8 +112,8 @@ function applyToRecords(groups, mergedMap) {
     marker = third.serialized;
 
     // serialization is key-order independent (stable compare).
-    const a = serializeFavIconMap({u2: FAV_B, u1: FAV_A});
-    const b = serializeFavIconMap({u1: FAV_A, u2: FAV_B});
+    const a = serializeFavIconMap({tabs: {u2: 'h2', u1: 'h1'}, blobs: {h2: FAV_B, h1: FAV_A}});
+    const b = serializeFavIconMap({tabs: {u1: 'h1', u2: 'h2'}, blobs: {h1: FAV_A, h2: FAV_B}});
     check('gate: serialization is deterministic regardless of key order', a === b);
 }
 
@@ -136,8 +146,9 @@ function applyToRecords(groups, mergedMap) {
 
     // Device 1 push: build the favicon file from the full model (archived group included).
     const device1Map = buildFavIconMap([restoredArchivedGroup], []);
+    const device1Flat = resolve(device1Map);
     check('acceptance: device1 favicon file has both archived-tab favicons',
-        device1Map['arch-uid-1'] === FAV_A && device1Map['arch-uid-2'] === FAV_B);
+        device1Flat['arch-uid-1'] === FAV_A && device1Flat['arch-uid-2'] === FAV_B);
 
     // Device 2 has the same archived group by uid (from delta-synced group/tab events) but
     // WITHOUT favicons — favicons never ride the delta log.
@@ -179,8 +190,9 @@ function applyToRecords(groups, mergedMap) {
     };
 
     const device1Map = buildFavIconMap([archivedGroup], []);
+    const device1Flat = resolve(device1Map);
     check('http round-trip: device1 file carries both archived http favicons',
-        device1Map['http-uid-1'] === HTTP_A && device1Map['http-uid-2'] === HTTP_B);
+        device1Flat['http-uid-1'] === HTTP_A && device1Flat['http-uid-2'] === HTTP_B);
 
     const device2Groups = [{
         id: 'g-http',
@@ -201,12 +213,13 @@ function applyToRecords(groups, mergedMap) {
     check('http round-trip: re-apply is idempotent', applyToRecords(device2Groups, merged) === false);
 }
 
-// --- 7. overflow policy: cheap http URLs are kept, huge data: blobs evicted first, warns ----
+// --- 7. overflow policy: cheap http URLs are kept, huge distinct data: blobs evicted first, warns ----
 {
-    const bigBlob = 'data:image/png;base64,' + 'A'.repeat(20_000);
+    // distinct near-cap blobs whose total blows the per-file budget; http URLs stay cheap.
+    const bigBlob = i => 'data:image/png;base64,' + String.fromCharCode(65 + (i % 26)) + 'A'.repeat(MAX_FAVICON_ENTRY_BYTES - 200);
     const tabs = [];
     for (let i = 0; i < 40; i++) {
-        tabs.push({uid: `blob${String(i).padStart(3, '0')}`, url: `https://x/${i}`, favIconUrl: bigBlob});
+        tabs.push({uid: `blob${String(i).padStart(3, '0')}`, url: `https://x/${i}`, favIconUrl: bigBlob(i)});
     }
     for (let i = 0; i < 40; i++) {
         tabs.push({uid: `http${String(i).padStart(3, '0')}`, url: `https://y/${i}`, favIconUrl: `https://y.example/${i}/favicon.ico`});
@@ -215,12 +228,55 @@ function applyToRecords(groups, mergedMap) {
     let overflow = null;
     const map = buildFavIconMap([{id: 'g', title: 'G', tabs}], [], info => { overflow = info; });
 
-    const keptHttp = Object.keys(map).filter(k => k.startsWith('http')).length;
-    const keptBlob = Object.keys(map).filter(k => k.startsWith('blob')).length;
+    const keptTabs = Object.keys(map.tabs);
+    const keptHttp = keptTabs.filter(k => k.startsWith('http')).length;
+    const keptBlob = keptTabs.filter(k => k.startsWith('blob')).length;
     check('overflow: every cheap http favicon is kept', keptHttp === 40);
     check('overflow: huge data: blobs are the ones evicted', keptBlob < 40);
     check('overflow: an overflow warning is emitted', overflow !== null && overflow.dropped > 0);
-    check('overflow: no silent truncation (dropped count reported)', overflow.dropped === 80 - Object.keys(map).length);
+    check('overflow: no silent truncation (dropped count reported)', overflow.dropped === 80 - keptTabs.length);
+    check('overflow: reported drops are budget evictions, not per-favicon oversize', overflow.budgetDropped === overflow.dropped && overflow.oversized === 0);
+}
+
+// --- 8. LARGE data: favicon round-trips into the map and applies on the receiver ----
+// Regression: a real 40KB data: PNG favicon used to be silently dropped by the 30000-char
+// per-favicon cap. It must now survive build → merge → apply.
+{
+    const bigDataFavicon = 'data:image/png;base64,iVBORw0KGgoAAAANSU' + 'Z'.repeat(40_000);
+    check('large-favicon: test blob is bigger than the old 30000 cap', bigDataFavicon.length > 30_000);
+
+    const device1Map = buildFavIconMap([{id: 'g', title: 'G', tabs: [
+        {uid: 'big-uid', url: 'https://a', favIconUrl: bigDataFavicon},
+    ]}], []);
+    check('large-favicon: 40KB data: favicon is stored (not dropped)', resolve(device1Map)['big-uid'] === bigDataFavicon);
+
+    const merged = mergeFavIconMaps([{name: 'STG-sync-favicons-D1.json', content: device1Map}]);
+    const receiver = [{id: 'g', title: 'G', isArchive: true, tabs: [{uid: 'big-uid', url: 'https://a', title: 'A'}]}];
+    const changed = applyToRecords(receiver, merged);
+    check('large-favicon: applies onto the receiver record', changed === true && receiver[0].tabs[0].favIconUrl === bigDataFavicon);
+}
+
+// --- 9. content-hash dedup: many tabs sharing one favicon store the blob ONCE ----
+{
+    const shared = 'data:image/png;base64,' + 'Q'.repeat(5_000);
+    const tabs = [];
+    for (let i = 0; i < 25; i++) {
+        tabs.push({uid: `dup${String(i).padStart(3, '0')}`, url: `https://x/${i}`, favIconUrl: shared});
+    }
+    tabs.push({uid: 'other', url: 'https://z', favIconUrl: FAV_A});
+
+    const map = buildFavIconMap([{id: 'g', title: 'G', tabs}], []);
+    check('dedup: every tab still has an entry', Object.keys(map.tabs).length === 26);
+    check('dedup: the shared favicon is stored exactly once', Object.values(map.blobs).filter(v => v === shared).length === 1);
+    check('dedup: distinct favicon adds a second blob', Object.keys(map.blobs).length === 2);
+
+    const flat = resolve(map);
+    check('dedup: all 25 shared-favicon tabs resolve to the blob', Array.from({length: 25}, (_, i) => flat[`dup${String(i).padStart(3, '0')}`]).every(v => v === shared));
+    check('dedup: the distinct tab resolves to its own favicon', flat.other === FAV_A);
+
+    // the deduped file is far smaller than storing the blob per tab.
+    const dedupedSize = serializeFavIconMap(map).length;
+    check('dedup: file is much smaller than 25 copies of the blob', dedupedSize < shared.length * 3);
 }
 
 // ---------------------------------------------------------------------------

@@ -1,5 +1,7 @@
 export const RESERVED_FILE_PREFIX = 'STG-sync-';
 
+export const GIST_FILE_MAX_BYTES = 10 * 1024 * 1024;
+
 export const SNAPSHOT_FILE_NAME = 'STG-sync-snapshot.json';
 
 export const DELTA_FILE_PREFIX = 'STG-sync-delta-';

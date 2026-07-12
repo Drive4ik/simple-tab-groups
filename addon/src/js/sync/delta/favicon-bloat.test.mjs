@@ -15,8 +15,17 @@
  * Intentionally NOT matched by eslint (config targets addon/**\/*.js, not .mjs).
  */
 
-import {sanitizeFavIconUrlForFile, MAX_FILE_FAVICON_LENGTH, sanitizeGroupIconUrl, sanitizeGroupRecordForSync} from './url-sync.js';
-import {buildFavIconMap, MAX_FAVICON_FILE_BYTES} from './favicon-map.js';
+import {sanitizeFavIconUrlForFile, sanitizeGroupIconUrl, sanitizeGroupRecordForSync} from './url-sync.js';
+import {buildFavIconMap, serializeFavIconMap, MAX_FAVICON_FILE_BYTES, MAX_FAVICON_ENTRY_BYTES} from './favicon-map.js';
+
+// resolve the built {tabs, blobs} file back to a flat {uid: favIconUrl} view for assertions.
+function resolve(map) {
+    const flat = {};
+    for (const [uid, hash] of Object.entries(map.tabs)) {
+        flat[uid] = map.blobs[hash];
+    }
+    return flat;
+}
 
 let passed = 0;
 const failures = [];
@@ -99,29 +108,43 @@ const NORMAL_DATA_FAVICON = 'data:image/png;base64,iVBORw0KGgoAAAANSU' + 'A'.rep
         ]}],
         [],
     );
-    check('favicon file: data: favicon stored under uid', map.u1 === NORMAL_DATA_FAVICON);
-    check('favicon file: http favicon stored under uid', map.u2 === 'https://b/favicon.ico');
-    check('favicon file: favicon-less tab has no entry', !('u3' in map));
-    check('favicon file: exactly one entry per favicon-bearing tab', Object.keys(map).length === 2);
+    const flat = resolve(map);
+    check('favicon file: data: favicon stored under uid', flat.u1 === NORMAL_DATA_FAVICON);
+    check('favicon file: http favicon stored under uid', flat.u2 === 'https://b/favicon.ico');
+    check('favicon file: favicon-less tab has no entry', !('u3' in map.tabs));
+    check('favicon file: exactly one entry per favicon-bearing tab', Object.keys(map.tabs).length === 2);
 }
 
-// --- 5. per-favicon cap + per-file budget guard the file size ----------------
+// --- 5. per-favicon cap + per-file budget guard the file size (caps tied to gist limit) ----
 {
-    const huge = 'data:image/png;base64,' + 'A'.repeat(MAX_FILE_FAVICON_LENGTH + 1);
-    check('sanitizeFavIconUrlForFile drops an oversized data: favicon', sanitizeFavIconUrlForFile(huge) === undefined);
+    // an ordinary embedded data: favicon (well under the per-favicon cap) is KEPT, not dropped.
+    const normalBlob = 'data:image/png;base64,' + 'A'.repeat(40_000);
+    check('normal 40KB data: favicon is under the per-favicon cap', normalBlob.length < MAX_FAVICON_ENTRY_BYTES);
+    const kept = buildFavIconMap([{id: 'g', title: 'G', tabs: [{uid: 'k', url: 'https://x', favIconUrl: normalBlob}]}], []);
+    check('favicon file: a normal data: favicon is stored (not silently dropped)', resolve(kept).k === normalBlob);
 
-    const nearCap = 'data:image/png;base64,' + 'A'.repeat(MAX_FILE_FAVICON_LENGTH - 100);
+    // a genuinely pathological favicon (over the per-favicon cap) is dropped LOUDLY, never silently.
+    const pathological = 'data:image/png;base64,' + 'A'.repeat(MAX_FAVICON_ENTRY_BYTES + 1);
+    let entryOverflow = null;
+    const capped = buildFavIconMap(
+        [{id: 'g', title: 'G', tabs: [{uid: 'big', url: 'https://x', favIconUrl: pathological}]}],
+        [],
+        info => { entryOverflow = info; },
+    );
+    check('favicon file: pathological favicon dropped', !('big' in capped.tabs));
+    check('favicon file: per-favicon drop is reported (not silent)', entryOverflow !== null && entryOverflow.oversized === 1);
+
+    // per-file budget: distinct near-cap blobs are evicted (largest first) to stay within budget.
+    const nearCap = 'data:image/png;base64,' + 'A'.repeat(MAX_FAVICON_ENTRY_BYTES - 100);
     const many = [];
-    for (let i = 0; i < 100; i++) {
-        many.push({uid: `k${String(i).padStart(3, '0')}`, url: `https://x/${i}`, favIconUrl: nearCap});
+    for (let i = 0; i < 200; i++) {
+        many.push({uid: `k${String(i).padStart(3, '0')}`, url: `https://x/${i}`, favIconUrl: nearCap + i});
     }
-    const budgeted = buildFavIconMap([{id: 'g', title: 'G', tabs: many}], []);
-    let bytes = 0;
-    for (const [uid, fav] of Object.entries(budgeted)) {
-        bytes += uid.length + fav.length + 8;
-    }
-    check('favicon file: total stays within the per-file budget', bytes + 2 <= MAX_FAVICON_FILE_BYTES);
-    check('favicon file: budget drops the overflow entries', Object.keys(budgeted).length < many.length);
+    let budgetOverflow = null;
+    const budgeted = buildFavIconMap([{id: 'g', title: 'G', tabs: many}], [], info => { budgetOverflow = info; });
+    check('favicon file: total serialized stays within the per-file budget', serializeFavIconMap(budgeted).length <= MAX_FAVICON_FILE_BYTES);
+    check('favicon file: budget drops the overflow entries', Object.keys(budgeted.tabs).length < many.length);
+    check('favicon file: budget drop is reported (not silent)', budgetOverflow !== null && budgetOverflow.budgetDropped > 0);
 }
 
 // --- group icon sanitizer (unchanged) ---------------------------------------
