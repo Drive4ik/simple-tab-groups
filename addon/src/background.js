@@ -1986,6 +1986,9 @@ async function init() {
 
         let tabs = Utils.flatTabs(windows);
 
+        await Cache.pruneTabUidBackup(tabs.map(tab => tab.id))
+            .catch(log.onCatch('pruneTabUidBackup', false));
+
         await Containers.removeUnusedTemporaryContainers(tabs);
         log.log('Containers.removeUnusedTemporaryContainers finish');
 
