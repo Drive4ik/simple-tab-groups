@@ -15,7 +15,6 @@
  */
 
 import {planSync} from './plan-sync.js';
-import {sanitizeFavIconUrl} from './url-sync.js';
 
 let passed = 0;
 const failures = [];
@@ -47,8 +46,8 @@ function buildLocalState(loadedGroups, syncedOptions = {}, livePinnedTabs = []) 
                 // (browser-window-absolute), which would shuffle order across machines.
                 index,
                 lastModified: tab.lastModified,
-                // sanitizeFavIconUrl drops inline data: favicons and oversized URLs.
-                favIconUrl: sanitizeFavIconUrl(tab.favIconUrl),
+                // favicons never enter events/snapshot: they sync via the per-device
+                // favicon file (keyed by uid), never the delta log.
                 id: tab.id,
             }));
 
@@ -64,8 +63,7 @@ function buildLocalState(loadedGroups, syncedOptions = {}, livePinnedTabs = []) 
             cookieStoreId: tab.cookieStoreId,
             index: Number.isFinite(tab.index) ? tab.index : index,
             lastModified: tab.lastModified,
-            // KEEP the current favicon (incl. small data:); only a >~50 KB blob is dropped.
-            favIconUrl: sanitizeFavIconUrl(tab.favIconUrl),
+            // favicons never enter events/snapshot (favicon file carries them, keyed by uid).
             id: tab.id,
         }));
 
@@ -259,24 +257,21 @@ async function getLivePinnedTabs(rawPinnedTabs, {cache, isSyncable, unwrap}) {
     check('pinned un-uided tab dropped', !localState.pinnedTabs.some(t => t.id === 92));
     check('pinned live id kept', localState.pinnedTabs[0].id === 91);
 
-    // an inline data: favicon on a pinned tab is DROPPED from the snapshot (it caused the
-    // multi-GB bloat); a small URL reference is kept and an oversized URL is dropped.
+    // favicons NEVER enter the snapshot/events — regardless of data: blob or URL reference.
+    // They travel through the per-device favicon file (keyed by uid) instead.
     const dataFavicon = 'data:image/png;base64,' + 'A'.repeat(2000);
-    const hugeFavicon = 'https://h/favicon.ico?' + 'A'.repeat(60000);
     const stWithFavicon = buildLocalState([], {}, [
         {id: 93, uid: 'pinFav', url: 'https://f', title: 'F', index: 0, favIconUrl: dataFavicon},
         {id: 94, uid: 'pinHttp', url: 'https://g', title: 'G', index: 1, favIconUrl: 'https://g/favicon.ico'},
-        {id: 95, uid: 'pinHuge', url: 'https://h', title: 'H', index: 2, favIconUrl: hugeFavicon},
     ]);
-    check('pinned data: favicon dropped from snapshot', stWithFavicon.pinnedTabs[0].favIconUrl === undefined);
-    check('pinned normal favicon preserved', stWithFavicon.pinnedTabs[1].favIconUrl === 'https://g/favicon.ico');
-    check('pinned pathological favicon dropped from snapshot', stWithFavicon.pinnedTabs[2].favIconUrl === undefined);
+    check('pinned data: favicon absent from snapshot', !('favIconUrl' in stWithFavicon.pinnedTabs[0]));
+    check('pinned url favicon absent from snapshot', !('favIconUrl' in stWithFavicon.pinnedTabs[1]));
 
-    // grouped tabs also carry their current favicon URL reference in the snapshot (read live).
+    // grouped tabs carry NO favicon in the snapshot either.
     const stGrouped = buildLocalState([
         {id: 'gf', title: 'GF', tabs: [{id: 50, uid: 'gtab', url: 'https://x', title: 'X', index: 0, favIconUrl: 'https://x/favicon.ico'}]},
     ]);
-    check('grouped tab favicon kept in snapshot', stGrouped.groups[0].tabs[0].favIconUrl === 'https://x/favicon.ico');
+    check('grouped tab favicon absent from snapshot', !('favIconUrl' in stGrouped.groups[0].tabs[0]));
 
     const pulledSnapshot = {groups: [], pinnedTabs: [], watermark: {}};
     const plan = planSync({
