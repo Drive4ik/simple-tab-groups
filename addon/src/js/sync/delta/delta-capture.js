@@ -74,7 +74,7 @@ async function resolveUid(tabId) {
         return uid;
     }
     try {
-        return await Cache.setTabUid(tabId);
+        return await Cache.ensureTabUid(tabId);
     } catch {
         return null;
     }

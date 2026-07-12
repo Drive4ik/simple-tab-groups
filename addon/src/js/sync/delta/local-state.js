@@ -77,7 +77,7 @@ export async function getLivePinnedTabs() {
             })
             .filter(tab => isUrlSyncable(tab.url))
             .map(async tab => {
-                const uid = Cache.getTabUid(tab.id) || await Cache.setTabUid(tab.id).catch(() => null);
+                const uid = Cache.getTabUid(tab.id) || await Cache.ensureTabUid(tab.id).catch(() => null);
                 tab.uid = uid;
                 tab.lastModified = Cache.getTabLastModified(tab.id);
                 return tab;

@@ -808,9 +808,7 @@ export async function absorbNativePinnedTabs() {
         await Cache.setTabGroupPinned(tab.id, true)
             .catch(log.onCatch(['cant set groupPinned', tab.id], false));
 
-        if (!Cache.getTabUid(tab.id)) {
-            await Cache.setTabUid(tab.id).catch(() => {});
-        }
+        await Cache.ensureTabUid(tab.id).catch(() => {});
 
         absorbed++;
     }
