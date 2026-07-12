@@ -6,6 +6,17 @@ import {getLivePinnedTabs} from './local-state.js';
 
 const logger = new Logger('DeltaSyncFavIcons');
 
+async function applyLiveFavIcon(tab, mergedMap) {
+    if (tab.uid == null || tab.id == null || !Object.hasOwn(mergedMap, tab.uid)) {
+        return;
+    }
+    const target = mergedMap[tab.uid];
+    if (Cache.getTabFavIcon(tab.id) === target) {
+        return;
+    }
+    await Cache.setSyncedTabFavIcon(tab.id, target).catch(() => {});
+}
+
 async function applyLiveFavIcons(mergedMap) {
     const {groups} = await Groups.load(null, true);
     for (const group of groups) {
@@ -13,17 +24,13 @@ async function applyLiveFavIcons(mergedMap) {
             continue;
         }
         for (const tab of group.tabs) {
-            if (tab.uid != null && tab.id != null && Object.hasOwn(mergedMap, tab.uid)) {
-                await Cache.setTabFavIcon(tab.id, mergedMap[tab.uid]).catch(() => {});
-            }
+            await applyLiveFavIcon(tab, mergedMap);
         }
     }
 
     const pinnedTabs = await getLivePinnedTabs().catch(() => []);
     for (const tab of pinnedTabs) {
-        if (tab.uid != null && tab.id != null && Object.hasOwn(mergedMap, tab.uid)) {
-            await Cache.setTabFavIcon(tab.id, mergedMap[tab.uid]).catch(() => {});
-        }
+        await applyLiveFavIcon(tab, mergedMap);
     }
 }
 

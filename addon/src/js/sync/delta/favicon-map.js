@@ -28,22 +28,38 @@ function collectFavIconEntries(loadedGroups, livePinnedTabs) {
     return entries;
 }
 
-export function buildFavIconMap(loadedGroups, livePinnedTabs) {
+function entryCost(uid, favIconUrl) {
+    return uid.length + favIconUrl.length + 8;
+}
+
+export function buildFavIconMap(loadedGroups, livePinnedTabs, onOverflow) {
     const entries = collectFavIconEntries(loadedGroups, livePinnedTabs);
-    entries.sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0));
+    entries.sort((a, b) => {
+        const costDiff = entryCost(a[0], a[1]) - entryCost(b[0], b[1]);
+        if (costDiff !== 0) {
+            return costDiff;
+        }
+        return a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0;
+    });
 
     const map = {};
     let bytes = 2;
+    let dropped = 0;
     for (const [uid, favIconUrl] of entries) {
         if (Object.hasOwn(map, uid)) {
             continue;
         }
-        const cost = uid.length + favIconUrl.length + 8;
+        const cost = entryCost(uid, favIconUrl);
         if (bytes + cost > MAX_FAVICON_FILE_BYTES) {
+            dropped++;
             continue;
         }
         map[uid] = favIconUrl;
         bytes += cost;
+    }
+
+    if (dropped > 0) {
+        onOverflow?.({dropped, kept: Object.keys(map).length, bytes, cap: MAX_FAVICON_FILE_BYTES});
     }
 
     return map;

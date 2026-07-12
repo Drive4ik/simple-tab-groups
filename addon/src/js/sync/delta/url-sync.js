@@ -56,7 +56,10 @@ export const MAX_SYNCABLE_FAVICON_LENGTH = 50000;
 export const MAX_FILE_FAVICON_LENGTH = 30000;
 
 export function sanitizeFavIconUrlForFile(favIconUrl) {
-    if (typeof favIconUrl !== 'string' || !favIconUrl.startsWith('data:')) {
+    if (typeof favIconUrl !== 'string' || !favIconUrl) {
+        return undefined;
+    }
+    if (!favIconUrl.startsWith('data:') && !/^(https?|moz-extension):/.test(favIconUrl)) {
         return undefined;
     }
     if (favIconUrl.length > MAX_FILE_FAVICON_LENGTH) {

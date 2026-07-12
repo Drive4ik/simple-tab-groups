@@ -87,20 +87,22 @@ const NORMAL_DATA_FAVICON = 'data:image/png;base64,iVBORw0KGgoAAAANSU' + 'A'.rep
         Object.hasOwn(archivedGroup.tabs[0], 'thumbnail') && archivedGroup.tabs[0].favIconUrl === NORMAL_DATA_FAVICON);
 }
 
-// --- 4. the favicon file keeps data: favicons keyed by uid (one entry per tab) ----
+// --- 4. the favicon file keeps favicons (data: AND http) keyed by uid (one entry per tab) ----
+// Favicons never ride the delta log/snapshot; they travel ONLY in this per-device file, so a
+// single favicon exists once per tab regardless of how many events touch it (no O(events) bloat).
 {
     const map = buildFavIconMap(
         [{id: 'g1', title: 'G', tabs: [
             {uid: 'u1', url: 'https://a', favIconUrl: NORMAL_DATA_FAVICON},
-            {uid: 'u2', url: 'https://b', favIconUrl: 'https://b/favicon.ico'}, // url ⇒ not stored
+            {uid: 'u2', url: 'https://b', favIconUrl: 'https://b/favicon.ico'}, // http ⇒ stored
             {uid: 'u3', url: 'https://c'},                                       // no favicon
         ]}],
         [],
     );
     check('favicon file: data: favicon stored under uid', map.u1 === NORMAL_DATA_FAVICON);
-    check('favicon file: url favicon NOT stored (browser refetches)', !('u2' in map));
+    check('favicon file: http favicon stored under uid', map.u2 === 'https://b/favicon.ico');
     check('favicon file: favicon-less tab has no entry', !('u3' in map));
-    check('favicon file: exactly one entry per data: favicon', Object.keys(map).length === 1);
+    check('favicon file: exactly one entry per favicon-bearing tab', Object.keys(map).length === 2);
 }
 
 // --- 5. per-favicon cap + per-file budget guard the file size ----------------

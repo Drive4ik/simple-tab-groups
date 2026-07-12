@@ -31,6 +31,8 @@ function check(name, cond, detail) {
 const FAV_A = 'data:image/png;base64,' + 'A'.repeat(64);
 const FAV_B = 'data:image/png;base64,' + 'B'.repeat(64);
 const FAV_C = 'data:image/png;base64,' + 'C'.repeat(64);
+const HTTP_A = 'https://a.example/favicon.ico';
+const HTTP_B = 'https://b.example/static/icon.png';
 
 // mirror of favicon-file.js applyArchivedFavIcons (pure): assign favicons by uid into records.
 function applyToRecords(groups, mergedMap) {
@@ -60,14 +62,16 @@ function applyToRecords(groups, mergedMap) {
     check('build: exactly the three data: favicons', Object.keys(map).length === 3);
 }
 
-// --- 2. map build ignores url favicons, favicon-less and uid-less tabs --------
+// --- 2. map build admits http(s) favicons, skips favicon-less and uid-less tabs ----
 {
     const map = buildFavIconMap([{id: 'g', title: 'G', tabs: [
-        {uid: 'u1', url: 'https://a', favIconUrl: 'https://a/favicon.ico'}, // url ⇒ skip
-        {uid: 'u2', url: 'https://b'},                                       // none ⇒ skip
-        {url: 'https://c', favIconUrl: FAV_A},                              // no uid ⇒ skip
+        {uid: 'u1', url: 'https://a', favIconUrl: HTTP_A},   // http ⇒ stored (the common case)
+        {uid: 'u2', url: 'https://b'},                        // none ⇒ skip
+        {url: 'https://c', favIconUrl: FAV_A},               // no uid ⇒ skip
+        {uid: 'u4', url: 'ftp://d', favIconUrl: 'ftp://d/i'}, // unsupported scheme ⇒ skip
     ]}], []);
-    check('build: only data: favicons with a uid are stored', Object.keys(map).length === 0);
+    check('build: http favicon stored under its uid', map.u1 === HTTP_A);
+    check('build: only the uid-bearing supported favicon is stored', Object.keys(map).length === 1);
 }
 
 // --- 3. overwrite-on-change write gating (serialize compare) ------------------
@@ -159,6 +163,64 @@ function applyToRecords(groups, mergedMap) {
 
     // idempotent: a second apply with the same map changes nothing.
     check('acceptance: re-apply is idempotent', applyToRecords(device2Groups, merged) === false);
+}
+
+// --- 6. HTTP round-trip: an archived tab's http favicon reaches the receiver -----
+// Regression guard: http(s) favicons (nearly every live tab) must propagate, not be dropped.
+{
+    const archivedGroup = {
+        id: 'g-http',
+        title: 'Archived',
+        isArchive: true,
+        tabs: [
+            {uid: 'http-uid-1', url: 'https://a', title: 'A', favIconUrl: HTTP_A},
+            {uid: 'http-uid-2', url: 'https://b', title: 'B', favIconUrl: HTTP_B},
+        ],
+    };
+
+    const device1Map = buildFavIconMap([archivedGroup], []);
+    check('http round-trip: device1 file carries both archived http favicons',
+        device1Map['http-uid-1'] === HTTP_A && device1Map['http-uid-2'] === HTTP_B);
+
+    const device2Groups = [{
+        id: 'g-http',
+        title: 'Archived',
+        isArchive: true,
+        tabs: [
+            {uid: 'http-uid-1', url: 'https://a', title: 'A'},
+            {uid: 'http-uid-2', url: 'https://b', title: 'B'},
+        ],
+    }];
+
+    const merged = mergeFavIconMaps([{name: 'STG-sync-favicons-D1.json', content: device1Map}]);
+    const changed = applyToRecords(device2Groups, merged);
+
+    check('http round-trip: applying http favicons mutated the archived records', changed === true);
+    check('http round-trip: device2 archived tab 1 http favicon resolved by uid', device2Groups[0].tabs[0].favIconUrl === HTTP_A);
+    check('http round-trip: device2 archived tab 2 http favicon resolved by uid', device2Groups[0].tabs[1].favIconUrl === HTTP_B);
+    check('http round-trip: re-apply is idempotent', applyToRecords(device2Groups, merged) === false);
+}
+
+// --- 7. overflow policy: cheap http URLs are kept, huge data: blobs evicted first, warns ----
+{
+    const bigBlob = 'data:image/png;base64,' + 'A'.repeat(20_000);
+    const tabs = [];
+    for (let i = 0; i < 40; i++) {
+        tabs.push({uid: `blob${String(i).padStart(3, '0')}`, url: `https://x/${i}`, favIconUrl: bigBlob});
+    }
+    for (let i = 0; i < 40; i++) {
+        tabs.push({uid: `http${String(i).padStart(3, '0')}`, url: `https://y/${i}`, favIconUrl: `https://y.example/${i}/favicon.ico`});
+    }
+
+    let overflow = null;
+    const map = buildFavIconMap([{id: 'g', title: 'G', tabs}], [], info => { overflow = info; });
+
+    const keptHttp = Object.keys(map).filter(k => k.startsWith('http')).length;
+    const keptBlob = Object.keys(map).filter(k => k.startsWith('blob')).length;
+    check('overflow: every cheap http favicon is kept', keptHttp === 40);
+    check('overflow: huge data: blobs are the ones evicted', keptBlob < 40);
+    check('overflow: an overflow warning is emitted', overflow !== null && overflow.dropped > 0);
+    check('overflow: no silent truncation (dropped count reported)', overflow.dropped === 80 - Object.keys(map).length);
 }
 
 // ---------------------------------------------------------------------------
