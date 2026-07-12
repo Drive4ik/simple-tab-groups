@@ -1550,6 +1550,10 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
 
         storage.backupRestoreCompleted = true;
 
+        if (clearAddonDataBeforeRestore) {
+            await resetSyncState();
+        }
+
         await Utils.wait(200);
 
         browser.runtime.reload(); // reload addon
