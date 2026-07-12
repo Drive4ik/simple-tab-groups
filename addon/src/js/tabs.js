@@ -1574,7 +1574,7 @@ export function prepareForSaveTab(
         tab.groupId = groupId;
     }
 
-    if (includeFavIconUrl && favIconUrl?.startsWith('data:')) {
+    if (includeFavIconUrl && favIconUrl) {
         tab.favIconUrl = favIconUrl;
     }
 

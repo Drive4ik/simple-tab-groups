@@ -99,9 +99,10 @@ const STUB = 'moz-extension://abcd-1234-uuid/help/stg-unsupported-url.html';
     check('null passes through', unwrapStubUrl(null) === null);
 }
 
-// --- sanitizeFavIconUrlForFile: KEEP data: favicons (favicon-file path), within a size cap ---
+// --- sanitizeFavIconUrlForFile: ADMIT http(s)/moz-extension AND data: favicons, size-capped ---
 {
-    // The favicon file (never the delta log) carries data: blobs; the log/snapshot carry none.
+    // The favicon file (never the delta log) is the only favicon channel; it carries the live
+    // tab.favIconUrl verbatim — almost always an http(s) URL, occasionally a data: blob.
     const normalDataPng = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUg' + 'A'.repeat(2000);
     check('normal data:image/png favicon kept for file', sanitizeFavIconUrlForFile(normalDataPng) === normalDataPng);
     check('short data: favicon kept for file', sanitizeFavIconUrlForFile('data:image/x,abc') === 'data:image/x,abc');
@@ -114,18 +115,27 @@ const STUB = 'moz-extension://abcd-1234-uuid/help/stg-unsupported-url.html';
     const atCap = 'data:' + 'x'.repeat(MAX_FILE_FAVICON_LENGTH - 5);
     check('data: favicon at exactly the cap KEPT', sanitizeFavIconUrlForFile(atCap) === atCap);
 
-    // remote favicon urls are NOT stored in the file (the live page refetches them).
-    check('http favicon not stored in file', sanitizeFavIconUrlForFile('http://e/favicon.ico') === undefined);
-    check('https favicon not stored in file', sanitizeFavIconUrlForFile('https://e.com/static/icon.png') === undefined);
+    // remote favicon urls ARE stored now (live tabs carry http favIconUrls; the receiver renders
+    // the stored string as an <img src>, so unloaded/discarded tabs still show the icon).
+    check('http favicon stored in file', sanitizeFavIconUrlForFile('http://e/favicon.ico') === 'http://e/favicon.ico');
+    check('https favicon stored in file', sanitizeFavIconUrlForFile('https://e.com/static/icon.png') === 'https://e.com/static/icon.png');
+    check('moz-extension favicon stored in file',
+        sanitizeFavIconUrlForFile('moz-extension://uuid/icon.png') === 'moz-extension://uuid/icon.png');
+
+    // unsupported schemes are still rejected (only http(s)/moz-extension/data: are admitted).
+    check('ftp favicon dropped', sanitizeFavIconUrlForFile('ftp://e/favicon.ico') === undefined);
+    check('chrome favicon dropped', sanitizeFavIconUrlForFile('chrome://favicon') === undefined);
 
     // empty / missing favicon → undefined (omitted).
     check('empty favicon dropped', sanitizeFavIconUrlForFile('') === undefined);
     check('null favicon dropped', sanitizeFavIconUrlForFile(null) === undefined);
     check('undefined favicon dropped', sanitizeFavIconUrlForFile(undefined) === undefined);
 
-    // idempotent: a kept data: favicon stays kept.
+    // idempotent: a kept favicon stays kept.
     check('sanitize idempotent on kept data: favicon',
         sanitizeFavIconUrlForFile(sanitizeFavIconUrlForFile(normalDataPng)) === normalDataPng);
+    check('sanitize idempotent on kept http favicon',
+        sanitizeFavIconUrlForFile(sanitizeFavIconUrlForFile('https://e.com/i.png')) === 'https://e.com/i.png');
 }
 
 // ---------------------------------------------------------------------------

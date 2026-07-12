@@ -162,6 +162,20 @@ export async function setTabFavIcon(id, favIconUrl) {
     }
 }
 
+export async function setSyncedTabFavIcon(id, favIconUrl) {
+    if (typeof favIconUrl !== 'string' || !favIconUrl) {
+        return;
+    }
+
+    tabs[id] ??= {id};
+
+    await waitPromises(tabs[id]);
+
+    await addPromise(tabs[id], browser.sessions.setTabValue(id, FAVICON_KEY, favIconUrl));
+
+    tabs[id].favIconUrl = favIconUrl;
+}
+
 export function getTabFavIcon(id) {
     return tabs[id]?.favIconUrl;
 }
