@@ -109,14 +109,6 @@ function persistAppended(newEvents) {
     return write;
 }
 
-function stripHistoricalTabFavicon(tabRecord) {
-    if (tabRecord && typeof tabRecord === 'object' && Object.hasOwn(tabRecord, 'favIconUrl')) {
-        delete tabRecord.favIconUrl;
-        return true;
-    }
-    return false;
-}
-
 function stripHistoricalGroupBloat(group) {
     if (!group || typeof group !== 'object') {
         return false;
@@ -130,9 +122,6 @@ function stripHistoricalGroupBloat(group) {
     }
 
     for (const groupTab of Array.isArray(group.tabs) ? group.tabs : []) {
-        if (stripHistoricalTabFavicon(groupTab)) {
-            changed = true;
-        }
         if (groupTab && typeof groupTab === 'object' && Object.hasOwn(groupTab, 'thumbnail')) {
             delete groupTab.thumbnail;
             changed = true;
@@ -143,9 +132,7 @@ function stripHistoricalGroupBloat(group) {
 }
 
 function stripEventBloat(event) {
-    const tabChanged = stripHistoricalTabFavicon(event?.tab);
-    const groupChanged = stripHistoricalGroupBloat(event?.group);
-    return tabChanged || groupChanged;
+    return stripHistoricalGroupBloat(event?.group);
 }
 
 function ensureLoaded() {
@@ -183,7 +170,7 @@ function ensureLoaded() {
             await browser.storage.local.remove(STORAGE_KEY);
         } else if (changed || droppedThroughSeq) {
             if (changed) {
-                logger.info('migrated stored delta log: stripped historical favicons/thumbnails/icons', {events: events.length});
+                logger.info('migrated stored delta log: stripped historical thumbnails/icons', {events: events.length});
             }
             await enqueueWrite(async () => {
                 if (droppedThroughSeq) {

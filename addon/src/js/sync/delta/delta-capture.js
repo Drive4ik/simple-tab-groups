@@ -3,7 +3,7 @@ import * as Cache from '/js/cache.js';
 import * as Constants from '/js/constants.js';
 import * as DeltaLog from './delta-log.js';
 import {syncedOptionKeys} from './option-keys.js';
-import {isUrlSyncable, unwrapStubUrl, sanitizeFavIconUrl, sanitizeGroupRecordForSync} from './url-sync.js';
+import {isUrlSyncable, unwrapStubUrl, sanitizeGroupRecordForSync} from './url-sync.js';
 import {computeGroupRelativeIndex} from './group-relative-index.js';
 import {isAppliedNavigationEcho} from './applied-nav-echo.js';
 
@@ -100,7 +100,6 @@ function buildBaseTabRecord(tab, uid, snapshot) {
         url: unwrapStubUrl(tab.url),
         title: tab.title,
         cookieStoreId: tab.cookieStoreId,
-        favIconUrl: sanitizeFavIconUrl(tab.favIconUrl ?? snapshot?.favIconUrl),
         lastModified: snapshot?.lastModified ?? Cache.getTabLastModified(tab.id),
     };
 }

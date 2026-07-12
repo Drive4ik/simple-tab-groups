@@ -53,14 +53,13 @@ export function shouldNavigateLiveTabUrl(liveUrl, targetUrl) {
 
 export const MAX_SYNCABLE_FAVICON_LENGTH = 50000;
 
-export function sanitizeFavIconUrl(favIconUrl) {
-    if (typeof favIconUrl !== 'string' || !favIconUrl) {
+export const MAX_FILE_FAVICON_LENGTH = 30000;
+
+export function sanitizeFavIconUrlForFile(favIconUrl) {
+    if (typeof favIconUrl !== 'string' || !favIconUrl.startsWith('data:')) {
         return undefined;
     }
-    if (favIconUrl.startsWith('data:')) {
-        return undefined;
-    }
-    if (favIconUrl.length > MAX_SYNCABLE_FAVICON_LENGTH) {
+    if (favIconUrl.length > MAX_FILE_FAVICON_LENGTH) {
         return undefined;
     }
     return favIconUrl;
@@ -92,14 +91,7 @@ export function sanitizeGroupRecordForSync(group) {
             continue;
         }
         delete tab.thumbnail;
-        if (Object.hasOwn(tab, 'favIconUrl')) {
-            const favIconUrl = sanitizeFavIconUrl(tab.favIconUrl);
-            if (favIconUrl === undefined) {
-                delete tab.favIconUrl;
-            } else {
-                tab.favIconUrl = favIconUrl;
-            }
-        }
+        delete tab.favIconUrl;
     }
 
     return sanitized;

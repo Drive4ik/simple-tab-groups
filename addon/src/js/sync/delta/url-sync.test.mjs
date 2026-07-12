@@ -17,8 +17,8 @@
 import {
     isUrlSyncable,
     unwrapStubUrl,
-    sanitizeFavIconUrl,
-    MAX_SYNCABLE_FAVICON_LENGTH,
+    sanitizeFavIconUrlForFile,
+    MAX_FILE_FAVICON_LENGTH,
     liveUrlMatchesSource,
     shouldNavigateLiveTabUrl,
 } from './url-sync.js';
@@ -99,36 +99,33 @@ const STUB = 'moz-extension://abcd-1234-uuid/help/stg-unsupported-url.html';
     check('null passes through', unwrapStubUrl(null) === null);
 }
 
-// --- sanitizeFavIconUrl: DROP inline data: favicons, keep small URL refs, drop oversized ----
+// --- sanitizeFavIconUrlForFile: KEEP data: favicons (favicon-file path), within a size cap ---
 {
-    // Inline data: favicons are DROPPED (they caused the multi-GB syncDeltaLog bloat); the
-    // live page re-fetches the icon on load.
+    // The favicon file (never the delta log) carries data: blobs; the log/snapshot carry none.
     const normalDataPng = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUg' + 'A'.repeat(2000);
-    check('normal data:image/png favicon dropped', sanitizeFavIconUrl(normalDataPng) === undefined);
-    check('short data: favicon dropped', sanitizeFavIconUrl('data:image/x,abc') === undefined);
+    check('normal data:image/png favicon kept for file', sanitizeFavIconUrlForFile(normalDataPng) === normalDataPng);
+    check('short data: favicon kept for file', sanitizeFavIconUrlForFile('data:image/x,abc') === 'data:image/x,abc');
 
-    // an oversized URL reference (over the cap) is also dropped.
-    const longUrl = 'https://example.com/' + 'x'.repeat(MAX_SYNCABLE_FAVICON_LENGTH);
-    check('oversized favicon url (> cap) dropped', sanitizeFavIconUrl(longUrl) === undefined);
+    // an oversized data: blob (over the per-favicon cap) is dropped so one page can't blow the budget.
+    const hugeData = 'data:image/png;base64,' + 'A'.repeat(MAX_FILE_FAVICON_LENGTH + 1);
+    check('oversized data: favicon (> cap) dropped', sanitizeFavIconUrlForFile(hugeData) === undefined);
 
-    // a URL favicon EXACTLY at the cap is still kept (boundary: only > cap is dropped).
-    const atCap = 'x'.repeat(MAX_SYNCABLE_FAVICON_LENGTH);
-    check('favicon at exactly the cap KEPT', sanitizeFavIconUrl(atCap) === atCap);
+    // a data: favicon EXACTLY at the cap is still kept (boundary: only > cap is dropped).
+    const atCap = 'data:' + 'x'.repeat(MAX_FILE_FAVICON_LENGTH - 5);
+    check('data: favicon at exactly the cap KEPT', sanitizeFavIconUrlForFile(atCap) === atCap);
 
-    // normal remote favicon urls pass through unchanged.
-    check('http favicon preserved', sanitizeFavIconUrl('http://e/favicon.ico') === 'http://e/favicon.ico');
-    check('https favicon preserved', sanitizeFavIconUrl('https://e.com/static/icon.png') === 'https://e.com/static/icon.png');
+    // remote favicon urls are NOT stored in the file (the live page refetches them).
+    check('http favicon not stored in file', sanitizeFavIconUrlForFile('http://e/favicon.ico') === undefined);
+    check('https favicon not stored in file', sanitizeFavIconUrlForFile('https://e.com/static/icon.png') === undefined);
 
     // empty / missing favicon → undefined (omitted).
-    check('empty favicon dropped', sanitizeFavIconUrl('') === undefined);
-    check('null favicon dropped', sanitizeFavIconUrl(null) === undefined);
-    check('undefined favicon dropped', sanitizeFavIconUrl(undefined) === undefined);
+    check('empty favicon dropped', sanitizeFavIconUrlForFile('') === undefined);
+    check('null favicon dropped', sanitizeFavIconUrlForFile(null) === undefined);
+    check('undefined favicon dropped', sanitizeFavIconUrlForFile(undefined) === undefined);
 
-    // idempotent: a kept URL stays kept; a dropped data: favicon stays dropped.
-    check('sanitize idempotent on clean url',
-        sanitizeFavIconUrl(sanitizeFavIconUrl('https://e/i.ico')) === 'https://e/i.ico');
-    check('sanitize idempotent on dropped data: favicon',
-        sanitizeFavIconUrl(sanitizeFavIconUrl(normalDataPng)) === undefined);
+    // idempotent: a kept data: favicon stays kept.
+    check('sanitize idempotent on kept data: favicon',
+        sanitizeFavIconUrlForFile(sanitizeFavIconUrlForFile(normalDataPng)) === normalDataPng);
 }
 
 // ---------------------------------------------------------------------------
