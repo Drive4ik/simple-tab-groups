@@ -147,7 +147,9 @@ export async function gatherLocalPending(selfDeviceId, log) {
     }
     const livePinnedTabs = await getLivePinnedTabs();
     const localState = buildLocalState(loadedGroups, localSyncedOptions, livePinnedTabs);
-    const favIconMap = buildFavIconMap(loadedGroups, livePinnedTabs);
+    const favIconMap = buildFavIconMap(loadedGroups, livePinnedTabs, overflow => {
+        logger.warn('favicon file cap exceeded: dropped largest favicons', overflow);
+    });
 
     const localLogEvents = await DeltaLog.getEvents();
     const logUids = new Set();
