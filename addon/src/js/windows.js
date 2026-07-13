@@ -19,6 +19,9 @@ import * as MenusMain from '/js/menus-main.js';
 import * as Storage from './storage.js';
 
 export {on, off} from './broadcast.js?channel=windows';
+export * from './windows-helpers.js';
+
+import {get} from './windows-helpers.js';
 
 const logger = new Logger('Windows');
 const mainStorage = localStorage.create(Constants.MODULES.BACKGROUND);
@@ -186,6 +189,16 @@ async function runGrandRestore(restoredWindowIds) {
 
             glog.log('sameGroupsAllWindows:', Array.from(sameGroupsAllWindows.keys()));
 
+            const isLiveInUnrestoredWindow = Array.from(sameGroupsAllWindows.values()).some(group => {
+                return group.isLoaded && !restoredWindowIds.has(group.window.id);
+            });
+
+            if (isLiveInUnrestoredWindow) {
+                deleteTabsToRestoreByGroup(groupToKeep);
+                glog.stop('🛑 group is loaded in a window outside this restore, leave both windows intact');
+                continue;
+            }
+
             // если группа из всех окон одна
             if (sameGroupsAllWindows.size === 1) {
                 const [onlyGroup] = sameGroupsAllWindows.values();
@@ -222,21 +235,6 @@ async function runGrandRestore(restoredWindowIds) {
                 glog.log('processing other same group in window', otherSameGroup.window.id);
 
                 for (const [index, oTab] of otherSameGroup.tabs.entries()) {
-                    // удаляем другую вкладку если обе группы загружены, так как юзер мог менять вкладки в другом окне
-                    // если вкладка в востанавливаемом окне, удаляем её при условии, если восстановленные окна -
-                    // не все окна браузера, юзер мог менять вкладки в окне что осталось
-                    if (
-                        (groupToKeep.isLoaded && otherSameGroup.isLoaded) ||
-                        (
-                            restoredWindowIds.has(otherSameGroup.window.id) &&
-                            restoredWindowIds.size !== allWindowsMap.size
-                        )
-                    ) {
-                        glog.log('mark to delete', oTab.id);
-                        tabsToDelete.set(oTab.id, oTab);
-                        continue;
-                    }
-
                     const found = groupToKeep.tabs.some(tab => Tabs.isSame(oTab, tab, sameTabKeys));
 
                     if (found) {
@@ -247,27 +245,6 @@ async function runGrandRestore(restoredWindowIds) {
                         // insert tab into the same position as in the same group
                         groupToKeep.tabs.splice(index, 0, oTab);
                         tabsToMoving.set(oTab.id, oTab);
-                    }
-                }
-            }
-
-            // удаляем вкладки востановленной группы которых нет в других группах
-            if (otherSameGroupsAllWindows.size) {
-                const allOtherTabs = Utils.flatTabs(Array.from(otherSameGroupsAllWindows.values()));
-
-                for (const tab of groupToKeep.tabs) {
-                    // если вкладка из другого окна - пропускаем
-                    if (tabsToMoving.has(tab.id)) {
-                        glog.log('🛑 skip tab', tab.id, 'it will be moved to the keep group');
-                        continue;
-                    }
-
-                    const found = allOtherTabs.some(oTab => Tabs.isSame(oTab, tab, sameTabKeys));
-
-                    glog.log('tab', tab.id, 'find result in otherSameGroupsAllWindows:', found);
-
-                    if (!found) {
-                        tabsToDelete.set(tab.id, tab);
                     }
                 }
             }
@@ -289,7 +266,11 @@ async function runGrandRestore(restoredWindowIds) {
     // делаем активной другую вкладку и удаляем привязку окна к группе
     await Promise.all(activeTabs.map(async activeTab => {
         const win = allWindowsMap.get(activeTab.windowId);
-        const groupToKeep = groupsAlreadyRestored.get(win.groupId);
+        const groupToKeep = win && groupsAlreadyRestored.get(win.groupId);
+
+        if (!groupToKeep) {
+            return;
+        }
 
         log.log('processing active tab', activeTab.id, 'in window', activeTab.windowId, 'groupToKeep', groupToKeep.id, 'lastAccessed', groupToKeep.lastAccessed);
 
@@ -522,11 +503,11 @@ function onStorageChanged(changes) {
 
 
 // methods
-export async function load(withTabs = false, includeFavIconUrl, includeThumbnail) {
-    const log = logger.start(load, {withTabs, includeFavIconUrl, includeThumbnail});
+export async function load(withTabs = false, includeFavIconUrl, includeThumbnail, prefetchedTabs = null) {
+    const log = logger.start(load, {withTabs, includeFavIconUrl, includeThumbnail, prefetchedTabsCount: prefetchedTabs?.length});
 
     let [tabs, windows] = await Promise.all([
-        withTabs ? Tabs.get(null, false, null, undefined, includeFavIconUrl, includeThumbnail) : false,
+        withTabs ? (prefetchedTabs ?? Tabs.get(null, false, null, undefined, includeFavIconUrl, includeThumbnail)) : false,
         browser.windows.getAll({
             windowTypes: [browser.windows.WindowType.NORMAL],
         }).catch(() => []),
@@ -543,23 +524,16 @@ export async function load(withTabs = false, includeFavIconUrl, includeThumbnail
     return windows.sort(Utils.sortBy('id'));
 }
 
-export async function get(windowId = browser.windows.WINDOW_ID_CURRENT) {
-    const log = logger.start(get, {windowId});
-
-    const win = await browser.windows.get(windowId)
-        .then(Cache.loadWindowSession)
-        .catch(log.onCatch(['get', windowId]));
-
-    log.assert(win, 'windowId', windowId, 'not found');
-    log.stop(win);
-    return win;
-}
-
 export async function create(groupId, activeTabId) {
     const log = logger.start(create, {groupId, activeTabId});
 
     if (!groupId) {
         log.throwError('No group id');
+    }
+
+    if (Groups.isPinnedGroupId(groupId)) {
+        log.stopWarn('pinned group cannot be opened in a new window');
+        return;
     }
 
     const groupWindowId = Cache.getWindowId(groupId);
@@ -708,7 +682,7 @@ export async function tryRestoreMissedTabs(actionLoading = true) {
         await Browser.actionLoading();
     }
 
-    const allTabs = await Tabs.get(null, false, null).then(normalizeTabs);
+    const allTabs = await Tabs.get(null, null, null).then(normalizeTabs);
 
     // normalize blank tab urls
     for (const tab of allTabs) {

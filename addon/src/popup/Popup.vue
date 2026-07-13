@@ -8,6 +8,7 @@ import editGroup from '../components/edit-group.vue';
 import contextMenu from '../components/context-menu.vue';
 import contextMenuTab from '../components/context-menu-tab.vue';
 import contextMenuTabNew from '../components/context-menu-tab-new.vue';
+import pinIcon from '../components/pin-icon.vue';
 import contextMenuGroup from '../components/context-menu-group.vue';
 
 import '/js/prefixed-storage.js';
@@ -15,10 +16,10 @@ import * as Constants from '/js/constants.js';
 import Logger, {errorEventHandler} from '/js/logger.js';
 import Lang from '/js/lang.js';
 import * as Containers from '/js/containers.js';
-import * as Groups from '/js/groups.js';
-import * as Tabs from '/js/tabs.js';
+import * as Groups from '/js/groups-helpers.js';
+import * as Tabs from '/js/tabs-helpers.js';
 import * as Utils from '/js/utils.js';
-import * as Cloud from '/js/sync/cloud/cloud.js';
+import * as Cloud from '/js/sync/cloud/cloud-helpers.js';
 
 import defaultGroupMixin from '/js/mixins/default-group.mixin.js';
 import globalMixin from '/js/mixins/global.mixin.js';
@@ -83,6 +84,7 @@ export default {
         'context-menu': contextMenu,
         'context-menu-tab': contextMenuTab,
         'context-menu-tab-new': contextMenuTabNew,
+        'pin-icon': pinIcon,
         'context-menu-group': contextMenuGroup,
     },
     created() {
@@ -220,7 +222,7 @@ export default {
                     const tabIds = this.getTabIdsForMove(from.data.item.id),
                         newTabIndex = to.data.item.index;
 
-                    this.sendMessageModule('Tabs.move', tabIds, to.data.group.id, {
+                    this.dragMoveTabs(tabIds, to.data.group.id, {
                         newTabIndex,
                         showTabAfterMovingItIntoThisGroup: false,
                         showOnlyActiveTabAfterMovingItIntoThisGroup: false,
@@ -338,7 +340,7 @@ export default {
         },
 
         toggleMuteTab(tab) {
-            Tabs.setMute([tab.id], tab.audible);
+            this.sendMessageModule('Tabs.setMute', [tab.id], tab.audible);
         },
 
         toggleMuteGroup(group) {
@@ -814,6 +816,10 @@ export default {
                                 </figure>
                             </div>
                             <div class="item-title clip-text icon-text">
+                                <figure v-if="tab.groupPinned"
+                                    class="icon image is-16x16 group-pinned-indicator">
+                                    <pin-icon :color="group.iconColor"></pin-icon>
+                                </figure>
                                 <figure v-if="tab.container" :title="tab.container?.name" :class="`icon image is-16x16 userContext-icon identity-icon-${tab.container?.icon} identity-color-${tab.container?.color}`"></figure>
                                 <span class="discarded-color" v-text="getTabTitle(tab)"></span>
                             </div>
@@ -821,8 +827,8 @@ export default {
                     </template>
 
                     <template v-else>
-                        <div v-for="(tab, index) in group.filteredTabs" :key="index"
-                            @contextmenu="$refs.contextMenuTab.open($event, {tab, group})"
+                        <div v-for="tab in group.filteredTabs" :key="tab.id"
+                            @contextmenu="$refs.contextMenuTab.open($event, {tab, group, targetGroup: currentGroup})"
                             @click.stop="clickOnTab($event, tab, group)"
                             @keydown.enter="clickOnTab($event, tab, group)"
                             @keydown.delete="removeTab(tab)"
@@ -843,6 +849,18 @@ export default {
                             <figure class="item-icon image is-16x16">
                                 <img v-if="isTabLoading(tab)" src="/icons/tab-loading.svg" />
                                 <img v-else :src="tab.favIconUrl" loading="lazy" decoding="async" />
+                            </figure>
+                            <figure v-if="tab.groupPinned"
+                                :class="['icon image is-16x16 group-pinned-indicator', {'is-work-group-pin': !group.isPinnedGroup}]"
+                                @click.stop="!group.isPinnedGroup && toggleTabGroupPinned(tab, false)"
+                                :title="group.isPinnedGroup ? null : lang('unpinTabInGroupTitle')">
+                                <pin-icon :color="group.isPinnedGroup ? null : group.iconColor"></pin-icon>
+                            </figure>
+                            <figure v-else-if="!group.isPinnedGroup && !group.isArchive"
+                                class="icon image is-16x16 group-pinned-indicator hover-pin"
+                                @click.stop="toggleTabGroupPinned(tab, true)"
+                                :title="lang('pinTabInGroupTitle')">
+                                <pin-icon outline :color="group.iconColor"></pin-icon>
                             </figure>
                             <div class="item-title clip-text icon-text">
                                 <figure v-if="showMuteIconTab(tab)" class="icon image is-16x16" @click.stop="toggleMuteTab(tab)" :title="tab.audible ? lang('muteTab') : lang('unMuteTab')">
@@ -982,7 +1000,7 @@ export default {
                 </p>
                 <div>
                     <div v-for="tab in unSyncTabs" :key="tab.id"
-                        @contextmenu="$refs.contextMenuTab.open($event, {tab})"
+                        @contextmenu="$refs.contextMenuTab.open($event, {tab, targetGroup: tab.windowId === currentWindow?.id ? currentGroup : undefined})"
                         @click.stop="($event.ctrlKey || $event.metaKey || $event.shiftKey) ? clickOnTab($event, tab) : unsyncHiddenTabsShowTabIntoCurrentWindow(tab)"
                         @keydown.enter="($event.ctrlKey || $event.metaKey || $event.shiftKey) ? clickOnTab($event, tab) : unsyncHiddenTabsShowTabIntoCurrentWindow(tab)"
                         @keydown.delete="removeTab(tab)"
@@ -1046,7 +1064,7 @@ export default {
                     <figure tabindex="0" @click="openGroupSettings(groupToShow)" @keydown.enter="openGroupSettings(groupToShow)" class="image is-16x16 is-clickable" :title="lang('groupSettings')">
                         <img src="/icons/settings.svg" />
                     </figure>
-                    <figure tabindex="0" @click="removeGroup(groupToShow)" @keydown.enter="removeGroup(groupToShow)" class="image is-16x16 is-clickable" :title="lang('deleteGroup')">
+                    <figure v-if="!groupToShow.isPinnedGroup" tabindex="0" @click="removeGroup(groupToShow)" @keydown.enter="removeGroup(groupToShow)" class="image is-16x16 is-clickable" :title="lang('deleteGroup')">
                         <img src="/icons/group-delete.svg" />
                     </figure>
                 </div>
@@ -1064,6 +1082,10 @@ export default {
                         <img :src="tab.favIconUrl" loading="lazy" decoding="async" />
                     </figure>
                     <div class="item-title clip-text icon-text">
+                        <figure v-if="tab.groupPinned"
+                            class="icon image is-16x16 group-pinned-indicator">
+                            <pin-icon :color="groupToShow.iconColor"></pin-icon>
+                        </figure>
                         <figure v-if="tab.container" :title="tab.container?.name" :class="`icon image is-16x16 userContext-icon identity-icon-${tab.container?.icon} identity-color-${tab.container?.color}`"></figure>
                         <span class="discarded-color" v-text="getTabTitle(tab)"></span>
                     </div>
@@ -1073,10 +1095,10 @@ export default {
             <template v-else>
                 <div class="tabs-scrollable no-outline">
                     <div
-                        v-for="(tab, tabIndex) in groupToShow.tabs"
-                        :key="tabIndex"
+                        v-for="tab in groupToShow.tabs"
+                        :key="tab.id"
                         :data-tab-id="tab.id"
-                        @contextmenu="$refs.contextMenuTab.open($event, {tab, group: groupToShow})"
+                        @contextmenu="$refs.contextMenuTab.open($event, {tab, group: groupToShow, targetGroup: currentGroup})"
                         @click.stop="clickOnTab($event, tab, groupToShow)"
                         @keydown.enter="clickOnTab($event, tab, groupToShow)"
                         @keydown.left="showSectionDefault"
@@ -1107,6 +1129,18 @@ export default {
                         <figure class="item-icon image is-16x16">
                             <img v-if="isTabLoading(tab)" src="/icons/tab-loading.svg" />
                             <img v-else :src="tab.favIconUrl" loading="lazy" decoding="async" />
+                        </figure>
+                        <figure v-if="tab.groupPinned"
+                            :class="['icon image is-16x16 group-pinned-indicator', {'is-work-group-pin': !groupToShow.isPinnedGroup}]"
+                            @click.stop="!groupToShow.isPinnedGroup && toggleTabGroupPinned(tab, false)"
+                            :title="groupToShow.isPinnedGroup ? null : lang('unpinTabInGroupTitle')">
+                            <pin-icon :color="groupToShow.isPinnedGroup ? null : groupToShow.iconColor"></pin-icon>
+                        </figure>
+                        <figure v-else-if="!groupToShow.isPinnedGroup && !groupToShow.isArchive"
+                            class="icon image is-16x16 group-pinned-indicator hover-pin"
+                            @click.stop="toggleTabGroupPinned(tab, true)"
+                            :title="lang('pinTabInGroupTitle')">
+                            <pin-icon outline :color="groupToShow.iconColor"></pin-icon>
                         </figure>
                         <div class="item-title clip-text icon-text">
                             <figure
@@ -1239,6 +1273,8 @@ export default {
         @reload-all-tabs="reloadAllTabsInGroup"
         @settings="openGroupSettings"
         @remove="removeGroup"
+        @toggle-pinned-group="togglePinnedGroup"
+        :current-window-id="currentWindow?.id"
         ></context-menu-group>
 
     <context-menu-tab ref="contextMenuTab"
@@ -1250,6 +1286,7 @@ export default {
         @discard="discardTab"
         @remove="removeTab"
         @set-group-icon="setTabIconAsGroupIcon"
+        @pin-in-group="toggleTabGroupPinned"
         @move-tab="moveTabs"
         @move-tab-new-group="moveTabToNewGroup"
         ></context-menu-tab>
@@ -1541,6 +1578,34 @@ html {
                 color: var(--discarded-text-color);
                 gap: var(--gap-indent);
             }
+
+        }
+
+        .group-pinned-indicator {
+            flex: none;
+        }
+
+        .group-pinned-indicator.is-work-group-pin {
+            cursor: pointer;
+        }
+
+        .group-pinned-indicator.hover-pin {
+            display: none;
+            cursor: pointer;
+        }
+
+        .group-pinned-indicator.is-work-group-pin:hover svg,
+        .group-pinned-indicator.hover-pin:hover svg {
+            transform: scale(1.25);
+        }
+
+        .group-pinned-indicator.hover-pin:hover svg {
+            fill: currentColor;
+            fill-opacity: 0.45;
+        }
+
+        &:hover .group-pinned-indicator.hover-pin {
+            display: flex;
         }
 
         .item-action {

@@ -1,6 +1,5 @@
 <script>
 
-import * as Constants from '/js/constants.js';
 import Lang from '/js/lang.js';
 import {CloudError} from '/js/sync/cloud/cloud.js';
 import GithubGist from '/js/sync/cloud/githubgist.js';
@@ -11,7 +10,7 @@ export default {
             type: String,
             required: true,
         },
-        fileName: {
+        gistName: {
             type: String,
             required: true,
         },
@@ -21,8 +20,6 @@ export default {
         },
     },
     data() {
-        this.FILE_NAME_PARTS = Constants.GIT_GIST_FILE_NAME_PARTS;
-
         return {
             tokenLoading: false,
             tokenCheched: null,
@@ -43,16 +40,16 @@ export default {
                 this.$emit('update:token', value);
             },
         },
-        internalFileName: {
+        internalGistName: {
             get() {
-                return this.fileName.slice(this.FILE_NAME_PARTS.start.length, - this.FILE_NAME_PARTS.end.length);
+                return this.gistName || '';
             },
             set(value) {
-                this.$emit('update:fileName', this.FILE_NAME_PARTS.start + value + this.FILE_NAME_PARTS.end);
+                this.$emit('update:gistName', value);
             },
         },
-        isValidFileName() {
-            return this.internalFileName.length > 0 && !this.fileName.includes('/');
+        isValidGistName() {
+            return this.internalGistName.length > 0;
         },
     },
     methods: {
@@ -126,35 +123,24 @@ export default {
     </div>
     <div class="field is-horizontal">
         <div class="field-label is-normal">
-            <label class="label colon" v-text="lang('fileNameTitle')"></label>
+            <label class="label colon" v-text="lang('githubGistNameTitle')"></label>
         </div>
         <div class="field-body">
-            <div class="field has-addons">
-                <div class="control">
-                    <a class="button is-static" v-text="FILE_NAME_PARTS.start"></a>
-                </div>
-                <div class="control is-expanded" :class="{'has-icons-right': !isValidFileName}">
-                    <input required type="text" v-model.trim="internalFileName" maxlength="100" class="input" />
-                    <span v-if="!isValidFileName" class="icon is-right">
+            <div class="field">
+                <div class="control" :class="{'has-icons-right': !isValidGistName}">
+                    <input required type="text" v-model.trim="internalGistName" maxlength="100" class="input" />
+                    <span v-if="!isValidGistName" class="icon is-right">
                         <figure class="image is-16x16">
                             <img src="/icons/close.svg" />
                         </figure>
                     </span>
                 </div>
-                <div class="control">
-                    <a class="button is-static" v-text="FILE_NAME_PARTS.end"></a>
-                </div>
+                <p class="help" v-text="lang('githubGistNameHelp')"></p>
             </div>
         </div>
     </div>
-    <div class="field error-message">
+    <div v-if="errorMessage" class="field error-message">
         <p class="has-text-danger has-text-right white-space-pre-line" v-text="errorMessage"></p>
     </div>
 </div>
 </template>
-
-<style scoped>
-.error-message {
-    min-height: 1.5em;
-}
-</style>

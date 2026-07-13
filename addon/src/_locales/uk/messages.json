@@ -442,8 +442,14 @@
         "description": "Exclude tabs with sound"
     },
     "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
-        "message": "Неможливо змінити групу, тому що на одній з вкладок використовується мікрофон або камера",
-        "description": "It is not possible to change the group because one of the opened tabs share microphone or camera"
+        "message": "Ці вкладки використовують мікрофон, камеру або доступ до екрана і продовжать це робити: «$titles$». Натисніть тут, щоб переключитися все одно.",
+        "description": "Warning shown when switching a group would hide tabs that share microphone, camera or screen. Lists the tabs and lets the user switch anyway by clicking.",
+        "placeholders": {
+            "titles": {
+                "content": "$1",
+                "example": "some titles"
+            }
+        }
     },
     "foundHiddenUnSyncTabsDescription": {
         "message": "Знайдено приховані не синхронізовані вкладки. Натисніть на вкладку, щоб відобразити її в поточній групі/вікні або: ",
@@ -747,6 +753,34 @@
         "message": "Вивантажити вкладку з пам'яті",
         "description": "Discard tab"
     },
+    "pinTabInGroupTitle": {
+        "message": "Закріпити в групі",
+        "description": "Pin this tab within its group (pinned only while the group is active)"
+    },
+    "pinTabInCurrentGroupTitle": {
+        "message": "Закріпити в поточній групі",
+        "description": "Pin a tab that is not yet in a group into the window's active group (pinned only while that group is active)"
+    },
+    "unpinTabInGroupTitle": {
+        "message": "Відкріпити від групи",
+        "description": "Remove the group-scoped pin from this tab"
+    },
+    "pinnedGroupTitle": {
+        "message": "Закріплені",
+        "description": "Default title of the pinned group at first creation"
+    },
+    "unpinToCurrentGroupTitle": {
+        "message": "Відкріпити в поточну групу",
+        "description": "Move a pinned-group tab into the window's current group as a normal tab"
+    },
+    "showPinnedGroupTitle": {
+        "message": "Показати закріплені вкладки тут",
+        "description": "Show the pinned group's tabs in the current window"
+    },
+    "hidePinnedGroupTitle": {
+        "message": "Сховати закріплені вкладки",
+        "description": "Hide the pinned group's tabs"
+    },
     "folderNameTitle": {
         "message": "Ім'я теки",
         "description": "Folder name title"
@@ -754,6 +788,10 @@
     "backupSuccessfullyRestored": {
         "message": "Відновлення з резервної копії успішно!",
         "description": "Backup successfully restored"
+    },
+    "backupRestoreInterrupted": {
+        "message": "Відновлення з резервної копії було перервано. Натисніть кнопку на панелі інструментів, щоб перезавантажити доповнення та завершити відновлення.",
+        "description": "Backup restore was interrupted"
     },
     "loading": {
         "message": "Завантаження, будь ласка, почекайте...",
@@ -1369,21 +1407,89 @@
         "message": "Синхронізувати",
         "description": "Start synchronization"
     },
-    "syncStartTrustLocal": {
-        "message": "Синхронізувати та довіряти локальним даним",
-        "description": "Start synchronization and trust local data"
+    "cloudSettingsTitle": {
+        "message": "Хмара",
+        "description": "Title of the section grouping the cloud access, sync and backup settings blocks"
     },
-    "syncStartTrustCloud": {
-        "message": "Синхронізувати та довіряти хмарним даним",
-        "description": "Start synchronization and trust cloud data"
+    "githubGistAccessTitle": {
+        "message": "Доступ до GitHub Gist",
+        "description": "Title of the GitHub Gist access settings block (token, file, storage location)"
     },
-    "syncDataInCloudCanBeDifferent": {
-        "message": "Дані в хмарі можуть сильно відрізнятися від поточного стану.",
-        "description": "The data in the cloud can be very different from the current state."
+    "githubGistAccessLocation": {
+        "message": "Зберігати налаштування хмари в",
+        "description": "Label for the selector choosing where the roaming sync option bag is stored (Firefox Sync or local profile)"
+    },
+    "githubGistNameTitle": {
+        "message": "Ім'я Gist",
+        "description": "Label for the gist name (the gist description) used to find or create the cloud gist"
+    },
+    "githubGistNameHelp": {
+        "message": "Задає Gist, що використовується для синхронізації. Те саме ім'я на іншому пристрої під'єднується до того самого Gist.",
+        "description": "Help text under the gist name field in the GitHub Gist access block"
+    },
+    "githubGistNameChangeWarning": {
+        "message": "Зміна імені Gist призведе до того, що __MSG_extensionName__ забуде поточний Gist: він залишиться на GitHub, але більше не синхронізуватиметься. Синхронізація почнеться заново з поточного стану цього пристрою.",
+        "description": "Warning shown when the user changes the gist name to a different value"
+    },
+    "githubGistBackupFileNameTitle": {
+        "message": "Ім'я файлу резервної копії",
+        "description": "Label for the cloud backup file name field"
+    },
+    "githubGistBackupFileNameChangeWarning": {
+        "message": "Зміна імені файлу резервної копії призведе до того, що __MSG_extensionName__ забуде попередні резервні копії: вони залишаться на GitHub, але більше не відображатимуться й не відновлюватимуться.",
+        "description": "Warning shown when the user changes the cloud backup file name"
+    },
+    "githubGistSyncTitle": {
+        "message": "Хмарна синхронізація",
+        "description": "Title of the cloud sync settings block"
+    },
+    "githubGistBackupTitle": {
+        "message": "Хмарна резервна копія",
+        "description": "Title of the cloud backup settings block"
+    },
+    "createBackupButton": {
+        "message": "Створити резервну копію",
+        "description": "Button that pushes the current full state to the cloud as a new gist revision"
+    },
+    "backupChangesLabel": {
+        "message": "змін",
+        "description": "Label prefixing the change count of a cloud backup revision"
+    },
+    "resetSyncStateButton": {
+        "message": "Скинути стан синхронізації",
+        "description": "Reset this device's local sync state (recovery action)"
+    },
+    "resetSyncStateConfirm": {
+        "message": "Це очистить локальний стан синхронізації лише на цьому пристрої (базовий стан та журнал змін). Дані в хмарі НЕ зачіпаються. Наступна синхронізація пройде як перша: нічого не буде видалено, а поточні вкладки будуть повторно надіслані в хмару.",
+        "description": "Confirmation text for the reset sync state action"
     },
     "syncEnableTitle": {
-        "message": "Увімкнути автоматичне резервне копіювання в хмару",
-        "description": "Enable auto backup to the cloud"
+        "message": "Увімкнути синхронізацію з хмарою",
+        "description": "Enable sync to the cloud"
+    },
+    "autoSyncEnableTitle": {
+        "message": "Увімкнути автоматичну синхронізацію з хмарою",
+        "description": "Enable auto sync to the cloud"
+    },
+    "cloudSyncEveryTitle": {
+        "message": "Синхронізувати з хмарою кожні",
+        "description": "Cloud sync every"
+    },
+    "syncBackupBeforeApply": {
+        "message": "Створювати резервну копію перед застосуванням змін синхронізації (рекомендовано)",
+        "description": "Toggle: take a local STG backup before delta-sync applies any change, so a bad sync can be rolled back"
+    },
+    "syncSleepNewTabs": {
+        "message": "Створювати нові синхронізовані вкладки сплячими (рекомендовано)",
+        "description": "Toggle: tabs created by sync show title+favicon and only load when activated"
+    },
+    "syncSleepPinnedTabs": {
+        "message": "Присипляти синхронізовані закріплені вкладки (Firefox за замовчуванням завантажує закріплені вкладки)",
+        "description": "Toggle: also create synced pinned tabs asleep via create-then-discard; off by default since pinned tabs normally load"
+    },
+    "syncActivatePreviouslyActiveTabs": {
+        "message": "Активувати вкладки, які були активними на іншому пристрої",
+        "description": "Sub-toggle: load a synced tab if it was active (loaded) on the source machine"
     },
     "syncSettingsLocation": {
         "message": "Розташування налаштувань синхронізації",
@@ -1422,6 +1528,18 @@
     "githubInvalidGistContent": {
         "message": "Резервна копія GitHub Gist містить некоректні дані",
         "description": "GitHub Gist backup has incorrect data"
+    },
+    "githubGistFileNotInRevision": {
+        "message": "У цій ревізії немає файлу резервної копії.",
+        "description": "The selected gist revision does not contain the cloud backup file"
+    },
+    "githubGistBackupFileNameInvalid": {
+        "message": "Вкажіть ім'я файлу, що закінчується на .json і не починається з «STG-sync-» (цей префікс зарезервовано для хмарної синхронізації).",
+        "description": "Cloud backup file name is empty, not .json, or uses the reserved STG-sync- prefix"
+    },
+    "githubBackupFileNameReserved": {
+        "message": "Ім'я файлу хмарної резервної копії не повинно починатися з «STG-sync-»; цей префікс зарезервовано для файлів хмарної синхронізації.",
+        "description": "Backup push refused because the file name collides with the reserved sync namespace"
     },
     "githubInvalidToken": {
         "message": "Ваш токен GitHub недійсний",
@@ -1588,5 +1706,9 @@
     "donateItemHelpTronUsdt": {
         "message": "TRX або будь-які токени TRC20",
         "description": "Help for Tron"
+    },
+    "moveTabsFailedTryAgain": {
+        "message": "Не вдалося перемістити вкладки, спробуйте ще раз.",
+        "description": "Shown when moving tabs by drag and drop fails"
     }
 }

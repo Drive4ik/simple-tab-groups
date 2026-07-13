@@ -20,8 +20,13 @@ import * as Tabs from './tabs.js';
 import * as Windows from './windows.js';
 import * as Utils from './utils.js';
 import GroupsHistory from './groups-history.js';
+import * as DeltaCapture from './sync/delta/delta-capture.js';
+import {runUserMutation} from './sync/delta/user-priority-lock.js';
 
 export {on, off} from './broadcast.js?channel=groups';
+export * from './groups-helpers.js';
+
+import {create, createTitle, getDefaults, getIconUrl, getTitle} from './groups-helpers.js';
 
 const logger = new Logger(Constants.MODULES.GROUPS);
 const mainStorage = localStorage.create(Constants.MODULES.BACKGROUND);
@@ -33,6 +38,8 @@ export function fillHistory(windows) {
 }
 
 export async function applyByPosition(direction, windowId, groups, currentGroupId) {
+    groups = groups.filter(group => !isPinnedGroup(group));
+
     if (!groups.length) {
         return false;
     }
@@ -53,7 +60,7 @@ export async function applyByHistory(direction, windowId, groups) {
     return apply(windowId, nextGroupId, undefined, true);
 }
 
-export async function apply(windowId, groupId, activeTabId, applyFromHistory = false) {
+export async function apply(windowId, groupId, activeTabId, applyFromHistory = false, ignoreSharing = false) {
     const log = logger.start(apply, 'groupId:', groupId, 'windowId:', windowId, 'activeTabId:', activeTabId);
 
     windowId ||= await Windows.getLastFocusedNormalWindow();
@@ -68,9 +75,31 @@ export async function apply(windowId, groupId, activeTabId, applyFromHistory = f
 
     windowsWithLoadingGroups.add(windowId);
 
+    if (isPinnedGroupId(groupId)) {
+        let pinnedResult = false;
+
+        try {
+            pinnedResult = activeTabId
+                ? await activatePinnedGroupTab(activeTabId, windowId)
+                : await togglePinnedGroupInWindow(windowId);
+        } catch (e) {
+            errorEventHandler.call(log, e);
+        } finally {
+            windowsWithLoadingGroups.delete(windowId);
+        }
+
+        pinnedResult
+            ? log.stop('pinned group', activeTabId ? 'activate tab' : 'toggle')
+            : log.stopError('pinned group', activeTabId ? 'activate tab' : 'toggle');
+
+        return pinnedResult;
+    }
+
     const groupWindowId = Cache.getWindowId(groupId);
 
     let result = null;
+
+    const skippedTrackingTabIds = new Set();
 
     try {
         const addTabs = [];
@@ -89,6 +118,15 @@ export async function apply(windowId, groupId, activeTabId, applyFromHistory = f
                 groupToHide = groups.find(gr => gr.id === oldGroupId),
                 tabsIdsToRemove = new Set;
 
+            for (const tab of groupToShow?.tabs || []) {
+                const id = Tabs.extractId(tab);
+                id != null && skippedTrackingTabIds.add(id);
+            }
+            for (const tab of groupToHide?.tabs || []) {
+                const id = Tabs.extractId(tab);
+                id != null && skippedTrackingTabIds.add(id);
+            }
+
             if (!groupToShow) {
                 log.throwError('groupToShow not found');
             }
@@ -98,8 +136,14 @@ export async function apply(windowId, groupId, activeTabId, applyFromHistory = f
                 throw '';
             }
 
-            if (groupToHide?.tabs.some(Tabs.isCanNotBeHidden)) {
-                Notification('notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera');
+            const sharingTabs = groupToHide?.tabs.filter(tab => !isGroupPinned(tab) && Tabs.isCanNotBeHidden(tab)) || [];
+
+            if (sharingTabs.length && !ignoreSharing) {
+                const titles = sharingTabs.map(tab => Tabs.getTitle(tab, false, 20)).join(', ');
+                Notification(['notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera', titles], {
+                    module: ['groups', 'apply', windowId, groupId, activeTabId, applyFromHistory, true],
+                    expires: Notification.MAX_EXPIRES,
+                });
                 throw '';
             }
 
@@ -119,10 +163,14 @@ export async function apply(windowId, groupId, activeTabId, applyFromHistory = f
                 if (groupToShow.muteTabsWhenGroupCloseAndRestoreWhenOpen) {
                     await Tabs.setMute(groupToShow.tabs, false);
                 }
+
+                await pinGroupTabs(groupToShow.tabs, windowId);
             }
 
             // link group with window
             await Cache.setWindowGroup(windowId, groupToShow.id);
+
+            await unpinGroupTabs(groupToHide?.tabs);
 
             // hide tabs
             await hideTabs(groupToHide?.tabs);
@@ -275,7 +323,7 @@ export async function apply(windowId, groupId, activeTabId, applyFromHistory = f
             await Browser.actionGroup(null, windowId);
 
             if (!groupWindowId) {
-                Tabs.clearSkipTracking();
+                Tabs.continueTracking(skippedTrackingTabIds);
             }
         }
     } finally {
@@ -285,6 +333,230 @@ export async function apply(windowId, groupId, activeTabId, applyFromHistory = f
     result ? log.stop() : log.stopError();
 
     return result;
+}
+
+function isGroupPinned(tab) {
+    if (!tab) {
+        return false;
+    }
+    if (tab.groupPinned === true) {
+        return true;
+    }
+    const id = Tabs.extractId(tab);
+    if ((tab.groupId ?? Cache.getTabGroup(id)) === PINNED_GROUP_ID) {
+        return true;
+    }
+    return Cache.getTabGroupPinned(id);
+}
+
+function pinTier(tab) {
+    const id = Tabs.extractId(tab);
+    if ((tab.groupId ?? Cache.getTabGroup(id)) === PINNED_GROUP_ID) {
+        return 1;
+    }
+    if (isGroupPinned(tab)) {
+        return 2;
+    }
+    return 0;
+}
+
+async function pinGroupTabs(tabs = [], windowId) {
+    const pinnedGroupTabs = tabs.filter(isGroupPinned);
+
+    if (!pinnedGroupTabs.length) {
+        return;
+    }
+
+    const log = logger.start('pinGroupTabs', 'count:', pinnedGroupTabs.length, 'windowId:', windowId);
+
+    const ids = pinnedGroupTabs.map(Tabs.extractId);
+    const skipped = Tabs.skipTracking(ids);
+
+    try {
+        await Promise.allSettled(pinnedGroupTabs.map(tab =>
+            browser.tabs.update(tab.id, {pinned: true})
+                .catch(log.onCatch(['cant pin group tab', tab.id], false))
+        ));
+
+        const movedIds = new Set(ids);
+        const tier = pinTier(pinnedGroupTabs[0]);
+        const globalPinned = await Tabs.get(windowId, true, null).catch(() => []);
+        const globalPinnedCount = globalPinned.filter(tab => !movedIds.has(tab.id) && pinTier(tab) < tier).length;
+
+        await Tabs.moveNative(pinnedGroupTabs, {
+            index: globalPinnedCount,
+            windowId,
+        }, true);
+    } catch (e) {
+        log.logError('cant order group-pinned tabs', e);
+    } finally {
+        Tabs.continueTracking(skipped);
+    }
+
+    log.stop();
+}
+
+async function unpinGroupTabs(tabs = [], shouldUnpin = isGroupPinned) {
+    const pinnedGroupTabs = tabs.filter(shouldUnpin);
+
+    if (!pinnedGroupTabs.length) {
+        return;
+    }
+
+    const log = logger.start('unpinGroupTabs', 'count:', pinnedGroupTabs.length);
+
+    const ids = pinnedGroupTabs.map(Tabs.extractId);
+    const skipped = Tabs.skipTracking(ids);
+
+    try {
+        await Promise.allSettled(pinnedGroupTabs.map(tab =>
+            browser.tabs.update(tab.id, {pinned: false})
+                .catch(log.onCatch(['cant unpin group tab', tab.id], false))
+        ));
+
+        pinnedGroupTabs.forEach(tab => tab.pinned = false);
+    } catch (e) {
+        log.logError('cant unpin group tabs', e);
+    } finally {
+        Tabs.continueTracking(skipped);
+    }
+
+    log.stop();
+}
+
+export async function setTabGroupPinned(tabId, groupPinned, targetGroupId, newTabIndex) {
+    const log = logger.start('setTabGroupPinned', {tabId, groupPinned, targetGroupId, newTabIndex});
+
+    let groupId = Cache.getTabGroup(tabId);
+
+    if (isPinnedGroupId(groupId) && !targetGroupId) {
+        if (groupPinned !== true) {
+            log.stopWarn('cannot unpin inside the pinned group, drag it into a group instead', tabId);
+            return false;
+        }
+
+        await Cache.setTabGroupPinned(tabId, true)
+            .catch(log.onCatch(['cant set groupPinned', tabId], false));
+        await refreshPinnedGroupIfShown();
+        await Cache.setTabLastModified(tabId).catch(log.onCatch(['cant bump lastModified (group-pin)', tabId], false));
+
+        const pinnedGroupTab = await Tabs.getOne(tabId);
+        if (pinnedGroupTab) {
+            await DeltaCapture.tabModified(pinnedGroupTab);
+        }
+
+        sendUpdatedAll();
+        Tabs.sendUpdatedGroup(groupId);
+
+        log.stop('flagged pinned-group member', tabId);
+        return true;
+    }
+
+    let newlyEnteredGroup = false;
+
+    const isConversionMove = Boolean(targetGroupId && groupId !== targetGroupId);
+
+    if (isConversionMove) {
+        Tabs.skipTracking([tabId]);
+    }
+
+    try {
+        if (isConversionMove) {
+            await browser.tabs.update(tabId, {pinned: false}).catch(log.onCatch(['cant unpin for move', tabId], false));
+            await Tabs.move([tabId], targetGroupId, {showNotificationAfterMovingTabIntoThisGroup: false, _pinnedAlreadyHandled: true, newTabIndex})
+                .catch(log.onCatch(['cant move tab into group', tabId, targetGroupId], false));
+
+            Tabs.skipTracking([tabId]);
+
+            groupId = Cache.getTabGroup(tabId);
+            groupPinned ??= true;
+            newlyEnteredGroup = true;
+        }
+
+        if (!groupId) {
+            log.stopWarn('tab has no group, ignoring group-pin toggle', tabId);
+            return false;
+        }
+
+        groupPinned ??= !Cache.getTabGroupPinned(tabId);
+
+        await Cache.setTabGroupPinned(tabId, groupPinned)
+            .catch(log.onCatch(['cant set groupPinned', tabId], false));
+
+        const windowId = Cache.getWindowId(groupId);
+        const {group} = await load(groupId, true);
+        const tab = group?.tabs?.find(t => t.id === tabId);
+
+        if (tab) {
+            tab.groupPinned = groupPinned;
+
+            const destinationGroupIsShownInTabWindow = windowId && Cache.getWindowGroup(tab.windowId) === groupId;
+
+            if (!destinationGroupIsShownInTabWindow) {
+                await unpinGroupTabs([tab], t => t.pinned);
+                await Tabs.hide([tab], true);
+
+                if (groupPinned && newlyEnteredGroup && newTabIndex == null) {
+                    await placeTabAfterGroupPins(group, tab);
+                }
+            } else if (groupPinned) {
+                await pinGroupTabs(group.tabs.filter(isGroupPinned), windowId);
+            } else {
+                await unpinGroupTabs([tab], t => t.pinned);
+                await pinGroupTabs(group.tabs.filter(isGroupPinned), windowId);
+            }
+        }
+    } finally {
+        if (isConversionMove) {
+            Tabs.continueTracking([tabId]);
+        }
+    }
+
+    await Cache.setTabLastModified(tabId).catch(log.onCatch(['cant bump lastModified (group-pin)', tabId], false));
+    const liveTab = await Tabs.getOne(tabId);
+    if (liveTab) {
+        if (newlyEnteredGroup) {
+            await DeltaCapture.tabAdded(liveTab);
+        } else {
+            await DeltaCapture.tabModified(liveTab);
+        }
+    }
+
+    sendUpdatedAll();
+    Tabs.sendUpdatedGroup(groupId);
+
+    log.stop();
+    return true;
+}
+
+async function placeTabAfterGroupPins(group, tab) {
+    const others = group.tabs
+        .filter(t => t.id !== tab.id)
+        .sort(Utils.sortBy('index'));
+
+    const pins = others.filter(isGroupPinned);
+    const anchor = pins.length ? pins[pins.length - 1].index + 1 : others[0]?.index;
+
+    if (anchor != null && tab.index !== anchor) {
+        await Tabs.moveNative([tab], {
+            index: anchor,
+            windowId: others[0]?.windowId ?? tab.windowId,
+        }, true);
+    }
+}
+
+export async function applyGroupPinnedOrder(groupId) {
+    const windowId = Cache.getWindowId(groupId);
+
+    if (!windowId) {
+        return;
+    }
+
+    const {group} = await load(groupId, true);
+
+    if (group?.tabs.some(isGroupPinned)) {
+        await pinGroupTabs(group.tabs, windowId);
+    }
 }
 
 const KEYS_RESPONSIBLE_VIEW = new Set([
@@ -304,14 +576,17 @@ function send(action, data = {}) {
 
 export function sendAdded(group, windowId) {
     send('added', {group, windowId});
+    DeltaCapture.groupAdded(group);
 }
 
 export function sendUpdated(group, fullGroup) {
     send('updated', {group, fullGroup});
+    DeltaCapture.groupModified(fullGroup);
 }
 
 export function sendRemoved(groupId, windowId) {
     send('removed', {groupId, windowId});
+    DeltaCapture.groupRemoved(groupId);
 }
 
 export function sendLoaded(groupId, windowId, addTabs = []) {
@@ -332,7 +607,7 @@ Containers.onChanged(async () => {
     }
 
     const log = logger.start('Containers.onChanged listener');
-    const {groups} = await load();
+    const {groups} = await loadWithArchivedTabs();
 
     if (normalizeContainersInGroups(groups)) {
         await save(groups);
@@ -340,13 +615,42 @@ Containers.onChanged(async () => {
     log.stop();
 });
 
-// if set return {group, groups, groupIndex}
-export async function load(groupId = null, withTabs = false, includeFavIconUrl, includeThumbnail) {
-    const log = logger.start('load', groupId, {withTabs, includeFavIconUrl, includeThumbnail});
+let cachedGroups = null;
 
-    let [allTabs, {groups}] = await Promise.all([
-        withTabs ? Tabs.get(null, false, null, undefined, includeFavIconUrl, includeThumbnail) : false,
-        Storage.get('groups')
+export function resetCache() {
+    cachedGroups = null;
+}
+
+function slimGroups(groups) {
+    return groups.map(group => {
+        if (!group.isArchive) {
+            return group;
+        }
+
+        const slimGroup = {...group};
+        delete slimGroup.tabs;
+        return slimGroup;
+    });
+}
+
+async function loadRawGroups(withArchivedTabs) {
+    if (cachedGroups && !withArchivedTabs) {
+        return structuredClone(cachedGroups);
+    }
+
+    const {groups} = await Storage.get('groups');
+    cachedGroups ??= structuredClone(slimGroups(groups));
+
+    return withArchivedTabs ? groups : structuredClone(cachedGroups);
+}
+
+// if set return {group, groups, groupIndex}
+export async function load(groupId = null, withTabs = false, includeFavIconUrl, includeThumbnail, withArchivedTabs = false, prefetchedTabs = null) {
+    const log = logger.start('load', groupId, {withTabs, includeFavIconUrl, includeThumbnail, withArchivedTabs, prefetchedTabsCount: prefetchedTabs?.length});
+
+    let [allTabs, groups] = await Promise.all([
+        withTabs ? (prefetchedTabs ?? Tabs.get(null, null, null, undefined, includeFavIconUrl, includeThumbnail)) : false,
+        loadRawGroups(withArchivedTabs)
     ]);
 
     if (withTabs) {
@@ -385,6 +689,10 @@ export async function load(groupId = null, withTabs = false, includeFavIconUrl, 
     };
 }
 
+export function loadWithArchivedTabs(groupId = null, withTabs = false, includeFavIconUrl, includeThumbnail, prefetchedTabs = null) {
+    return load(groupId, withTabs, includeFavIconUrl, includeThumbnail, true, prefetchedTabs);
+}
+
 export async function save(groups, withMessage = false) {
     const log = logger.start('save', {withMessage});
 
@@ -392,7 +700,7 @@ export async function save(groups, withMessage = false) {
         log.throwError('groups has invalid type');
     }
 
-    await Storage.set({groups});
+    await saveRaw(groups);
 
     if (isNeedBlockBeforeRequest(groups)) {
         backgroundSelf.addListenerOnBeforeRequest();
@@ -409,78 +717,187 @@ export async function save(groups, withMessage = false) {
     return groups;
 }
 
+export async function saveRaw(groups) {
+    const groupsWithElidedTabs = groups.filter(group => group.isArchive && !group.tabs?.length);
+
+    if (groupsWithElidedTabs.length) {
+        const {groups: storedGroups} = await Storage.get('groups');
+        const storedTabsByGroupId = new Map(storedGroups.map(group => [group.id, group.tabs]));
+
+        for (const group of groupsWithElidedTabs) {
+            group.tabs = storedTabsByGroupId.get(group.id) ?? [];
+        }
+    }
+
+    await Storage.setGroups(groups);
+
+    cachedGroups = structuredClone(slimGroups(groups));
+}
+
 export function createId() {
     return self.crypto.randomUUID();
 }
 
-// extract "uid" from "group.id" that matches UUID
-export function extractUId(groupId) {
-    return groupId?.slice(-4);
+export const PINNED_GROUP_ID = '70696e6e-6564-4000-8000-000000000001';
+
+export function isPinnedGroup(group) {
+    return group?.isPinnedGroup === true;
 }
 
-export function create(id, title, defaultGroupProps = {}) {
-    const group = {
-        id,
-        title: null,
-        iconColor: null,
-        iconUrl: null,
-        iconViewType: Constants.DEFAULT_GROUP_ICON_VIEW_TYPE,
-        tabs: [],
-        isArchive: false,
-        discardTabsAfterHide: false,
-        discardExcludeAudioTabs: false,
-        prependTitleToWindow: false,
-        dontUploadToCloud: false,
-        exportToBookmarks: true,
-        newTabContainer: Constants.DEFAULT_COOKIE_STORE_ID,
-        ifDifferentContainerReOpen: false,
-        excludeContainersForReOpen: [],
-        isSticky: false,
-        catchTabContainers: [],
-        catchTabRules: '',
-        moveToGroupIfNoneCatchTabRules: null,
-        muteTabsWhenGroupCloseAndRestoreWhenOpen: false,
-        showTabAfterMovingItIntoThisGroup: false,
-        showOnlyActiveTabAfterMovingItIntoThisGroup: false,
-        showNotificationAfterMovingTabIntoThisGroup: true,
+export function isPinnedGroupId(groupId) {
+    return groupId === PINNED_GROUP_ID;
+}
 
-        ...defaultGroupProps,
-    };
+export function getPinnedGroup(groups) {
+    return groups.find(isPinnedGroup);
+}
 
-    if (id) { // create title for group
-        group.title = createTitle(title, id, defaultGroupProps);
-    } else { // create title for default group, if needed
-        group.title ??= createTitle(title, null, defaultGroupProps);
+function getPinnedGroupShownWindowId(group) {
+    const shownTab = group?.tabs?.find(tab => !tab.hidden);
+    return shownTab ? shownTab.windowId : null;
+}
+
+async function showPinnedGroupInWindow(group, windowId) {
+    const log = logger.start('showPinnedGroupInWindow', {windowId, count: group.tabs.length});
+
+    if (group.tabs.length) {
+        if (group.tabs.some(tab => tab.windowId !== windowId)) {
+            group.tabs = await Tabs.moveNative(group.tabs, {
+                index: -1,
+                windowId,
+            }, true);
+        }
+
+        await Tabs.show(group.tabs, true);
+        await pinGroupTabs(group.tabs, windowId);
     }
 
-    group.iconColor ??= Utils.randomColor();
+    sendUpdatedAll();
+    Tabs.sendUpdatedGroup(group.id);
 
-    return group;
+    log.stop();
+    return true;
 }
 
-export async function getDefaults() {
-    const {defaultGroupProps} = await Storage.get('defaultGroupProps');
+async function hidePinnedGroup(group) {
+    const log = logger.start('hidePinnedGroup', {count: group.tabs.length});
 
-    const defaultGroup = create(undefined, undefined, defaultGroupProps);
-    const defaultCleanGroup = create(undefined, undefined, {});
+    await unpinGroupTabs(group.tabs);
+    await Tabs.hide(group.tabs, true);
 
-    delete defaultGroup.id;
-    delete defaultGroup.tabs;
+    sendUpdatedAll();
+    Tabs.sendUpdatedGroup(group.id);
 
-    delete defaultCleanGroup.id;
-    delete defaultCleanGroup.tabs;
-
-    defaultGroup.iconColor = defaultGroupProps.iconColor || '';
-    defaultCleanGroup.iconColor = '';
-
-    return {
-        defaultGroup,
-        defaultCleanGroup,
-        defaultGroupProps,
-    };
+    log.stop();
+    return true;
 }
 
-export async function saveDefault(defaultGroupProps) {
+export async function absorbNativePinnedTabs() {
+    const log = logger.start('absorbNativePinnedTabs');
+
+    const pinnedTabs = await Tabs.get(null, true, null).catch(() => []);
+
+    let absorbed = 0;
+
+    for (const tab of pinnedTabs) {
+        await Cache.loadTabSession(tab, false, false).catch(() => {});
+
+        if (Cache.getTabGroup(tab.id)) {
+            continue;
+        }
+
+        await Cache.setTabGroup(tab.id, PINNED_GROUP_ID, tab.windowId)
+            .catch(log.onCatch(['cant absorb pinned tab', tab.id], false));
+        await Cache.setTabGroupPinned(tab.id, true)
+            .catch(log.onCatch(['cant set groupPinned', tab.id], false));
+
+        await Cache.ensureTabUid(tab.id).catch(() => {});
+
+        absorbed++;
+    }
+
+    let backfilled = 0;
+
+    const {group} = await load(PINNED_GROUP_ID, true);
+
+    for (const tab of group?.tabs || []) {
+        if (Cache.getTabGroupPinned(tab.id)) {
+            continue;
+        }
+
+        await Cache.setTabGroupPinned(tab.id, true)
+            .catch(log.onCatch(['cant backfill groupPinned', tab.id], false));
+
+        backfilled++;
+    }
+
+    if (absorbed || backfilled) {
+        sendUpdatedAll();
+    }
+
+    log.stop('absorbed:', absorbed, 'backfilled:', backfilled);
+}
+
+export async function refreshPinnedGroupIfShown() {
+    const {group} = await load(PINNED_GROUP_ID, true);
+    const windowId = getPinnedGroupShownWindowId(group);
+
+    if (windowId && group.tabs.length) {
+        await Tabs.show(group.tabs, true);
+        await pinGroupTabs(group.tabs, windowId);
+    }
+}
+
+export async function togglePinnedGroupInWindow(windowId) {
+    const {group} = await load(PINNED_GROUP_ID, true);
+
+    if (!group) {
+        return false;
+    }
+
+    if (getPinnedGroupShownWindowId(group) === windowId) {
+        return hidePinnedGroup(group);
+    }
+
+    return showPinnedGroupInWindow(group, windowId);
+}
+
+async function activatePinnedGroupTab(tabId, windowId) {
+    const {group} = await load(PINNED_GROUP_ID, true);
+
+    if (!group?.tabs.some(tab => tab.id === tabId)) {
+        return false;
+    }
+
+    let shownWindowId = getPinnedGroupShownWindowId(group);
+
+    if (!shownWindowId) {
+        await showPinnedGroupInWindow(group, windowId);
+        shownWindowId = windowId;
+    }
+
+    const tab = await Tabs.setActive(tabId);
+
+    if (tab) {
+        Windows.setFocus(shownWindowId);
+    }
+
+    return Boolean(tab);
+}
+
+export function ensurePinnedGroup(groups) {
+    if (groups.some(isPinnedGroup)) {
+        return false;
+    }
+
+    const title = Lang('pinnedGroupTitle') || 'Pinned';
+    const group = create(PINNED_GROUP_ID, title, {isPinnedGroup: true});
+    groups.unshift(group);
+
+    return true;
+}
+
+async function saveDefaultCore(defaultGroupProps) {
     const log = logger.start('saveDefault', defaultGroupProps);
 
     await Storage.set({defaultGroupProps});
@@ -488,7 +905,15 @@ export async function saveDefault(defaultGroupProps) {
     log.stop();
 }
 
-export async function add(windowId, tabIds = [], title = null) {
+export async function saveDefault(defaultGroupProps) {
+    return runUserMutation(() => saveDefaultCore(defaultGroupProps));
+}
+
+export async function add(...args) {
+    return runUserMutation(() => addCore(...args));
+}
+
+async function addCore(windowId, tabIds = [], title = null) {
     tabIds = tabIds?.slice?.() || [];
     title = title?.slice(0, 256);
 
@@ -539,7 +964,11 @@ export async function add(windowId, tabIds = [], title = null) {
     return newGroup;
 }
 
-export async function remove(groupId) {
+export async function remove(...args) {
+    return runUserMutation(() => removeCore(...args));
+}
+
+async function removeCore(groupId) {
     const log = logger.start('remove', groupId);
 
     const groupWindowId = Cache.getWindowId(groupId);
@@ -555,11 +984,16 @@ export async function remove(groupId) {
         }
     }
 
-    const {group, groups, groupIndex} = await load(groupId, true);
+    const {group, groups, groupIndex} = await loadWithArchivedTabs(groupId, true);
     const {defaultGroupProps} = await getDefaults();
 
     if (!group) {
         log.stopError('groupId', groupId, 'not found');
+        return;
+    }
+
+    if (isPinnedGroup(group)) {
+        log.stopError('cannot remove the pinned group', groupId);
         return;
     }
 
@@ -577,7 +1011,7 @@ export async function remove(groupId) {
     if (defaultGroupProps.moveToGroupIfNoneCatchTabRules === group.id) {
         log.log('remove moveToGroupIfNoneCatchTabRules from default group props');
         delete defaultGroupProps.moveToGroupIfNoneCatchTabRules;
-        await saveDefault(defaultGroupProps);
+        await saveDefaultCore(defaultGroupProps);
     }
 
     if (!group.isArchive) {
@@ -600,6 +1034,11 @@ const RESTORE_GROUP_PREFIX = 'restore-group-';
 
 async function addUndoRemove(groupToRemove) {
     const restoreId = RESTORE_GROUP_PREFIX + groupToRemove.id;
+
+    if (await Menus.has(restoreId)) {
+        await Menus.remove(restoreId);
+    }
+    await Notification.clear(restoreId);
 
     groupToRemove.tabs = Tabs.prepareForSave(groupToRemove.tabs, false, true, true);
 
@@ -626,12 +1065,18 @@ async function addUndoRemove(groupToRemove) {
     }
 }
 
-export async function restore(groupId) {
+export async function restore(...args) {
+    return runUserMutation(() => restoreCore(...args));
+}
+
+async function restoreCore(groupId) {
     const log = logger.start('restore', groupId);
 
     const restoreId = RESTORE_GROUP_PREFIX + groupId;
 
-    await Menus.remove(restoreId);
+    if (await Menus.has(restoreId)) {
+        await Menus.remove(restoreId);
+    }
     await Notification.clear(restoreId);
 
     const {[restoreId]: group} = await browser.storage.session.get(restoreId);
@@ -643,7 +1088,7 @@ export async function restore(groupId) {
 
     await browser.storage.session.remove(restoreId);
 
-    const {groups} = await load();
+    const {groups} = await loadWithArchivedTabs();
 
     groups.push(group);
 
@@ -667,7 +1112,11 @@ export async function restore(groupId) {
     log.stop('success restored', group.id);
 }
 
-export async function update(groupId, updateData) {
+export async function update(...args) {
+    return runUserMutation(() => updateCore(...args));
+}
+
+async function updateCore(groupId, updateData) {
     const log = logger.start('update', {groupId, updateData});
 
     if (updateData.iconUrl?.startsWith('chrome:')) {
@@ -716,7 +1165,7 @@ export async function update(groupId, updateData) {
 
     if (updateDataKeys.has('exportToBookmarks')) {
         if (updateData.exportToBookmarks) {
-            const {group: groupToExport, groupIndex} = await load(group.id, true);
+            const {group: groupToExport, groupIndex} = await loadWithArchivedTabs(group.id, true);
             await Bookmarks.exportGroup(groupToExport, groupIndex).catch(log.onCatch('cant update bookmark', false));
         } else {
             await Bookmarks.removeGroup(group).catch(log.onCatch('cant remove bookmark', false));
@@ -726,7 +1175,11 @@ export async function update(groupId, updateData) {
     log.stop();
 }
 
-export async function move(groupId, newGroupIndex) {
+export async function move(...args) {
+    return runUserMutation(() => moveCore(...args));
+}
+
+async function moveCore(groupId, newGroupIndex) {
     const log = logger.start('move', {groupId, newGroupIndex});
 
     const {groups, groupIndex} = await load(groupId);
@@ -735,12 +1188,18 @@ export async function move(groupId, newGroupIndex) {
 
     await save(groups, true);
 
+    DeltaCapture.groupMoved(groupId, groups.findIndex(gr => gr.id === groupId));
+
     await MenusMain.groupsUpdated(groups);
 
     log.stop();
 }
 
-export async function sort(vector = 'asc') {
+export async function sort(...args) {
+    return runUserMutation(() => sortCore(...args));
+}
+
+async function sortCore(vector = 'asc') {
     const log = logger.start('sort', vector);
 
     if (!['asc', 'desc'].includes(vector)) {
@@ -756,6 +1215,8 @@ export async function sort(vector = 'asc') {
     }
 
     await save(groups, true);
+
+    groups.forEach((gr, index) => DeltaCapture.groupMoved(gr.id, index));
 
     await MenusMain.groupsUpdated(groups);
 
@@ -781,7 +1242,7 @@ export function isLoaded(groupId) {
     return true;
 }
 
-export async function unload(groupId) {
+export async function unload(groupId, ignoreSharing = false) {
     const log = logger.start('unload', groupId);
 
     if (!groupId) {
@@ -812,8 +1273,14 @@ export async function unload(groupId) {
         return false;
     }
 
-    if (group.tabs.some(Tabs.isCanNotBeHidden)) {
-        Notification('notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera');
+    const sharingTabs = group.tabs.filter(tab => !isGroupPinned(tab) && Tabs.isCanNotBeHidden(tab));
+
+    if (sharingTabs.length && !ignoreSharing) {
+        const titles = sharingTabs.map(tab => Tabs.getTitle(tab, false, 20)).join(', ');
+        Notification(['notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera', titles], {
+            module: ['groups', 'unload', groupId, true],
+            expires: Notification.MAX_EXPIRES,
+        });
         log.stopError('some Tab Can Not Be Hidden');
         return false;
     }
@@ -834,6 +1301,8 @@ export async function unload(groupId) {
     } else {
         await Tabs.createTempActiveTab(windowId, false);
     }
+
+    await unpinGroupTabs(group.tabs);
 
     await Tabs.hide(group.tabs, true);
 
@@ -859,14 +1328,34 @@ export async function unload(groupId) {
     return true;
 }
 
-export async function archiveToggle(groupId) {
+export async function archiveToggle(...args) {
+    return runUserMutation(() => archiveToggleCore(...args));
+}
+
+export async function setArchiveStateWhileHoldingLock(groupId, isArchive) {
+    const {group} = await load(groupId);
+
+    if (!group || Boolean(group.isArchive) === Boolean(isArchive)) {
+        return null;
+    }
+
+    return archiveToggleCore(groupId);
+}
+
+async function archiveToggleCore(groupId) {
     const log = logger.start('archiveToggle', groupId);
 
     await Browser.actionLoading();
 
-    let {group, groups} = await load(groupId, true),
+    let {group, groups} = await loadWithArchivedTabs(groupId, true),
         tabsToRemove = [],
         needUpdateTabs = false;
+
+    if (isPinnedGroup(group)) {
+        await Browser.actionLoading(false);
+        log.stopError('cannot archive the pinned group', groupId);
+        return;
+    }
 
     log.log('group.isArchive', group.isArchive, '=>', !group.isArchive);
 
@@ -889,7 +1378,7 @@ export async function archiveToggle(groupId) {
                 return null;
             }
 
-            ({group, groups} = await load(groupId, true));
+            ({group, groups} = await loadWithArchivedTabs(groupId, true));
         }
 
         Extensions.tabsToId(group.tabs);
@@ -923,6 +1412,7 @@ export function mapForExternalExtension(group) {
         title: getTitle(group),
         isArchive: group.isArchive,
         isSticky: group.isSticky,
+        isPinnedGroup: group.isPinnedGroup === true,
         iconUrl: getIconUrl(group),
         contextualIdentity: Containers.get(group.newTabContainer),
         windowId: Cache.getWindowId(group.id) || null,
@@ -991,7 +1481,11 @@ export function getCatchedForTab(notArchivedGroups, currentGroup, {cookieStoreId
         return;
     }
 
-    const destGroup = notArchivedGroups.find(({catchTabContainers, catchTabRules}) => {
+    const destGroup = notArchivedGroups.find(({isPinnedGroup, catchTabContainers, catchTabRules}) => {
+        if (isPinnedGroup) {
+            return false;
+        }
+
         if (catchTabContainers.includes(cookieStoreId)) {
             return true;
         }
@@ -1041,170 +1535,6 @@ export async function setIconUrl(groupId, iconUrl) {
     } catch (e) {
         Notification(e);
     }
-}
-
-const emojiRegExp = /\p{RI}\p{RI}|\p{Emoji}(\p{EMod}+|\u{FE0F}\u{20E3}?|[\u{E0020}-\u{E007E}]+\u{E007F})?(\u{200D}\p{Emoji}(\p{EMod}+|\u{FE0F}\u{20E3}?|[\u{E0020}-\u{E007E}]+\u{E007F})?)+|\p{EPres}(\p{EMod}+|\u{FE0F}\u{20E3}?|[\u{E0020}-\u{E007E}]+\u{E007F})?|\p{Emoji}(\p{EMod}+|\u{FE0F}\u{20E3}?|[\u{E0020}-\u{E007E}]+\u{E007F})/u;
-const firstCharEmojiRegExp = new RegExp(`^(${emojiRegExp.source})`, emojiRegExp.flags);
-
-export function getEmojiIcon(group) {
-    if (group.iconViewType === 'title') {
-        const [emoji] = firstCharEmojiRegExp.exec(group.title) || [];
-        return emoji;
-    }
-}
-
-const UNKNOWN_GROUP_ICON_PROPS = {
-    title: '❓',
-    iconViewType: 'title',
-    iconColor: 'gray',
-};
-
-export function getIconUrl(group, keyInObj = null) {
-    group ??= UNKNOWN_GROUP_ICON_PROPS;
-
-    let result = null;
-
-    if (group.iconUrl) {
-        result = group.iconUrl;
-    } else {
-        const iconColor = group.iconColor || 'transparent';
-
-        let svg = Constants.GROUP_ICON_VIEW_TYPES[group.iconViewType];
-
-        switch (group.iconViewType) {
-            case 'main-squares':
-                if (iconColor !== 'transparent') {
-                    svg = svg.replace('transparent', iconColor);
-                }
-                break;
-            case 'circle':
-                svg = svg.replace('fill=""', `fill="${iconColor}"`);
-
-                if (iconColor === 'transparent') {
-                    svg = svg.replace('stroke-width="0"', 'stroke-width="1"');
-                }
-                break;
-            case 'squares':
-                if (iconColor !== 'transparent') {
-                    svg = svg.replace('fill=""', `fill="${iconColor}"`);
-                }
-                break;
-            case 'old-tab-groups':
-                if (iconColor !== 'transparent') {
-                    svg = svg.replace('fill=""', `fill="${iconColor}"`);
-                }
-                break;
-            case 'title':
-                const emoji = getEmojiIcon(group);
-
-                svg = svg
-                    .replace('position=""', emoji ? 'text-anchor="middle" x="50%"' : 'x="0"')
-                    .replace('text-content', emoji || group.title);
-
-                if (iconColor !== 'transparent') {
-                    svg = svg.replace('fill=""', `fill="${iconColor}"`);
-                }
-                break;
-        }
-
-        try {
-            result = Utils.convertSvgToUrl(svg.trim());
-        } catch {
-            result = getIconUrl(UNKNOWN_GROUP_ICON_PROPS);
-        }
-    }
-
-    return keyInObj ? {[keyInObj]: result} : result;
-}
-
-export function createTitle(title = null, groupId = null, defaultGroupProps = {}, format = true) {
-    const uid = extractUId(groupId) || '{uid}';
-
-    if (title) {
-        title = String(title);
-    } else if (defaultGroupProps.title) {
-        title = defaultGroupProps.title;
-    } else {
-        title = Lang('newGroupTitle', uid);
-    }
-
-    if (format) {
-        return Utils.format(title, {uid}, Utils.DATE_LOCALE_VARIABLES);
-    }
-
-    return title;
-}
-
-export function getTitle({id, title, isArchive, isSticky, tabs, iconViewType, newTabContainer}, args = '') {
-    const withActiveGroup = args.includes('withActiveGroup');
-    const withCountTabs = args.includes('withCountTabs');
-    const withContainer = args.includes('withContainer');
-    const withSticky = args.includes('withSticky');
-    const withTabs = args.includes('withTabs');
-    const beforeTitle = [];
-
-    if (withSticky && isSticky) {
-        beforeTitle.push(Constants.STICKY_SYMBOL);
-    }
-
-    if (withContainer && newTabContainer !== Constants.DEFAULT_COOKIE_STORE_ID) {
-        beforeTitle.push('[' + Containers.get(newTabContainer).name + ']');
-    }
-
-    if (withActiveGroup) {
-        if (Cache.getWindowId(id)) {
-            beforeTitle.push(Constants.ACTIVE_SYMBOL);
-        } else if (isArchive) {
-            beforeTitle.push(Constants.DISCARDED_SYMBOL);
-        }
-    }
-
-    // replace first emoji to empty string
-    if (iconViewType === 'title') {
-        title = title.replace(firstCharEmojiRegExp, '');
-    }
-
-    if (beforeTitle.length) {
-        title = beforeTitle.join(' ') + ' ' + title;
-    }
-
-    if (withCountTabs) {
-        title += ' (' + tabsCountMessage(tabs.slice(), isArchive) + ')';
-    }
-
-    if (withTabs) {
-        if (tabs.length) {
-            title += ':\n' + tabs
-                .slice(0, 30)
-                .map(tab => Tabs.getTitle(tab, false, 70, !isArchive))
-                .join('\n');
-
-            if (tabs.length > 30) {
-                title += '\n...';
-            }
-        }
-    }
-
-    if (mainStorage.enableDebug) {
-        const windowId = Cache.getWindowId(id) || tabs?.[0]?.windowId || 'no window';
-        title = `@${windowId}:#${id.slice(-4)} ${title}`;
-    }
-
-    return title;
-}
-
-export function tabsCountMessage(tabs, groupIsArchived, lang = true) {
-    if (groupIsArchived) {
-        return lang ? Lang('groupTabsCount', tabs.length) : tabs.length;
-    }
-
-    let activeTabsCount = tabs.filter(tab => !tab.discarded).length;
-
-    if (lang) {
-        return Lang('groupTabsCountActive', [activeTabsCount, tabs.length]);
-    }
-
-    return activeTabsCount ? (activeTabsCount + '/' + tabs.length) : tabs.length;
 }
 
 export function getMenuId(groupId, context) {

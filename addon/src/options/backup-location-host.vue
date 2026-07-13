@@ -13,6 +13,12 @@ import optionsMixin from '/js/mixins/options.mixin.js';
 
 export default {
     mixins: [optionsMixin],
+    props: {
+        pathKey: {
+            type: String,
+            default: 'autoBackupFilePath',
+        },
+    },
     data() {
         this.FILE_PATH_VARIABLES = Utils.getFilePathVariables();
 
@@ -75,7 +81,7 @@ export default {
     methods: {
         lang: Lang,
         addCustomWatchers() {
-            this.optionsWatch('autoBackupFilePath', async (value, oldValue) => {
+            this.optionsWatch(this.pathKey, async (value, oldValue) => {
                 try {
                     value = value.trim();
 
@@ -125,9 +131,9 @@ export default {
             }
         },
         insertVariableToFilePath(variable) {
-            this.options.autoBackupFilePath = Utils.insertVariable(
-                this.$refs.autoBackupFilePath,
-                this.options.autoBackupFilePath,
+            this.options[this.pathKey] = Utils.insertVariable(
+                this.$refs.filePathInput,
+                this.options[this.pathKey],
                 variable
             );
         },
@@ -211,7 +217,7 @@ export default {
                                 <input type="text" @click="selectBackupFolderHost" :value="backupFolder" readonly class="input" :title="lang(backupFolder ? 'backupFolderTitle' : 'selectBackupFolder')" :class="{'is-clickable': hasConnection}" />
                             </div>
                             <div class="control auto-backup-filename">
-                                <input type="text" v-model.lazy.trim="options.autoBackupFilePath" ref="autoBackupFilePath" maxlength="200" class="input" :title="lang('filePathTitle')" />
+                                <input type="text" v-model.lazy.trim="options[pathKey]" ref="filePathInput" maxlength="200" class="input" :title="lang('filePathTitle')" />
                             </div>
                             <div class="control">
                                 <a class="button is-static">.json</a>

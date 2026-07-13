@@ -1,9 +1,11 @@
 
 import Listeners from '/js/listeners.js\
 ?storage.local.onChanged\
-&windows.onFocusChanged';
+&windows.onFocusChanged\
+&menus.onShown';
 import * as Constants from '/js/constants.js';
 import * as Menus from '/js/menus.js';
+import * as Cache from '/js/cache.js';
 import * as Containers from '/js/containers.js';
 import * as Utils from '/js/utils.js';
 import * as Tabs from '/js/tabs.js';
@@ -18,6 +20,7 @@ const CONTEXT = Menus.ContextType.TAB;
 const PARENT_ID = CONTEXT;
 const SETTING_KEYS = ['showContextMenuOnTabs', 'showArchivedGroups'];
 const SET_ICON_TO_GROUP_ID = 'set-tab-icon-as-group-icon';
+const TOGGLE_GROUP_PIN_ID = 'toggle-tab-group-pin';
 
 const MODULE_NAME = 'menus-tab';
 
@@ -62,6 +65,15 @@ async function createMenus(settings = null) {
         id: PARENT_ID,
         title: Lang('moveTabToGroupTitle'),
         context: CONTEXT,
+    });
+
+    await Menus.create({
+        id: TOGGLE_GROUP_PIN_ID,
+        parentId: PARENT_ID,
+        title: Lang('pinTabInGroupTitle'),
+        icon: 'icons/thumbtack.svg',
+        visible: false,
+        module: [MODULE_NAME, 'toggleGroupPin'],
     });
 
     for (const group of groups) {
@@ -112,6 +124,12 @@ export async function updateGroup(group, settings = null) {
     }
 
     const groupProperties = await Groups.getMenuProperties(group, CONTEXT, settings);
+
+    if (!(await Menus.has(groupProperties.id))) {
+        logger.log('updateGroup: menu item missing, skipping', groupProperties.id);
+        return;
+    }
+
     await Menus.update(groupProperties.id, groupProperties);
 }
 
@@ -154,6 +172,9 @@ export async function groupRemoved(group) {
     }
 
     const groupMenuId = await Groups.getMenuId(group.id, CONTEXT);
+    if (!(await Menus.has(groupMenuId))) {
+        return;
+    }
     await Menus.remove(groupMenuId);
 }
 
@@ -166,11 +187,50 @@ export async function groupsUpdated(groups) {
 export function addListeners() {
     Listeners.storage.local.onChanged.add(onStorageChanged, {waitListener: false});
     Listeners.windows.onFocusChanged.add(onWindowFocusChanged, {waitListener: false});
+    Listeners.menus.onShown.add(onMenusShown, {waitListener: false});
 }
 
 export function removeListeners() {
     Listeners.storage.local.onChanged.remove(onStorageChanged);
     Listeners.windows.onFocusChanged.remove(onWindowFocusChanged);
+    Listeners.menus.onShown.remove(onMenusShown);
+}
+
+async function onMenusShown(info, tab) {
+    if (!info.contexts.includes(CONTEXT)) {
+        return;
+    }
+
+    const settings = await loadSettings();
+
+    if (!settings.showContextMenuOnTabs) {
+        return;
+    }
+
+    if (!(await Menus.has(TOGGLE_GROUP_PIN_ID))) {
+        return;
+    }
+
+    const groupId = tab && Cache.getTabGroup(tab.id);
+
+    if (Groups.isPinnedGroupId(groupId)) {
+        await Menus.update(TOGGLE_GROUP_PIN_ID, {visible: false});
+    } else if (groupId) {
+        const groupPinned = Cache.getTabGroupPinned(tab.id);
+        await Menus.update(TOGGLE_GROUP_PIN_ID, {
+            visible: true,
+            title: Lang(groupPinned ? 'unpinTabInGroupTitle' : 'pinTabInGroupTitle'),
+        });
+    } else if (tab && Cache.getWindowGroup(tab.windowId)) {
+        await Menus.update(TOGGLE_GROUP_PIN_ID, {
+            visible: true,
+            title: Lang('pinTabInCurrentGroupTitle'),
+        });
+    } else {
+        await Menus.update(TOGGLE_GROUP_PIN_ID, {visible: false});
+    }
+
+    await browser.menus.refresh();
 }
 
 async function onStorageChanged(changes) {
@@ -277,6 +337,35 @@ export async function moveToGroup(groupId, info, tab) {
     }
 
     log.stop();
+}
+
+export async function toggleGroupPin(info, tab) {
+    const log = logger.start(toggleGroupPin, info, tab);
+
+    if (Cache.getTabGroup(tab.id)) {
+        await Groups.setTabGroupPinned(tab.id, !Cache.getTabGroupPinned(tab.id));
+        log.stop('toggled group pin');
+        return;
+    }
+
+    const targetGroupId = Cache.getWindowGroup(tab.windowId);
+
+    if (!targetGroupId) {
+        log.stopWarn('clicked tab has no group and window has no active group, ignoring', tab.id);
+        return;
+    }
+
+    const tabIds = await Tabs.getHighlightedIds(tab.windowId, tab);
+
+    for (const tabId of tabIds) {
+        if (Cache.getTabGroup(tabId)) {
+            continue;
+        }
+
+        await Groups.setTabGroupPinned(tabId, true, targetGroupId);
+    }
+
+    log.stop('pinned to current group');
 }
 
 export async function createNewGroup(info, tab) {

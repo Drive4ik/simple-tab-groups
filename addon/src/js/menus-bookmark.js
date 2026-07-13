@@ -113,6 +113,12 @@ export async function updateGroup(group, settings = null, hasPermission = null) 
 
     settings ??= await loadSettings();
     const groupProperties = await Groups.getMenuProperties(group, CONTEXT, settings);
+
+    if (!(await Menus.has(groupProperties.id))) {
+        logger.log('updateGroup: menu item missing, skipping', groupProperties.id);
+        return;
+    }
+
     await Menus.update(groupProperties.id, groupProperties);
 }
 
@@ -137,6 +143,9 @@ export async function groupRemoved(group) {
     }
 
     const groupMenuId = await Groups.getMenuId(group.id, CONTEXT);
+    if (!(await Menus.has(groupMenuId))) {
+        return;
+    }
     await Menus.remove(groupMenuId);
 }
 
@@ -385,7 +394,7 @@ export async function createNewGroup(info) {
 export async function exportAllGroups() {
     const log = logger.start(exportAllGroups);
     await Browser.actionLoading();
-    const {groups} = await Groups.load(null, true);
+    const {groups} = await Groups.loadWithArchivedTabs(null, true);
     await Bookmarks.exportGroups(groups);
     await Browser.actionLoading(false);
     // Notification('allGroupsExported'); // ? maybe not needed anymore

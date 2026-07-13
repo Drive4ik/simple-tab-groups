@@ -38,9 +38,23 @@ export async function getForMigrate() {
 export async function set(data) {
     const log = logger.start('set', Object.keys(data));
 
-    data.groups?.forEach(group => !group.isArchive && (group.tabs = []));
+    if ('groups' in data) {
+        log.throwError('setting "groups" via Storage.set is forbidden, it stales the groups cache — use Groups.saveRaw');
+    }
 
     const result = await browser.storage.local.set(data);
+
+    log.stop();
+
+    return result;
+}
+
+export async function setGroups(groups) {
+    const log = logger.start('setGroups');
+
+    groups.forEach(group => !group.isArchive && (group.tabs = []));
+
+    const result = await browser.storage.local.set({groups});
 
     log.stop();
 

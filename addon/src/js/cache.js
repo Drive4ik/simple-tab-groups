@@ -7,14 +7,33 @@ import backgroundSelf from './background.js';
 export const GROUP_KEY = 'groupId';
 export const FAVICON_KEY = 'favIconUrl';
 export const THUMBNAIL_KEY = 'thumbnail';
-export const KEYS = [GROUP_KEY, FAVICON_KEY, THUMBNAIL_KEY];
+export const UID_KEY = 'uid';
+export const LAST_MODIFIED_KEY = 'lastModified';
+export const GROUP_PINNED_KEY = 'groupPinned';
+export const KEYS = [GROUP_KEY, FAVICON_KEY, THUMBNAIL_KEY, UID_KEY, LAST_MODIFIED_KEY, GROUP_PINNED_KEY];
+
+const TAB_UID_BACKUP_KEY = 'tabUidBackup';
 
 export const tabs = {};
 export const lastTabsState = {}; // BUG https://bugzilla.mozilla.org/show_bug.cgi?id=1818392
 export const windows = {};
 
+function hashFavIconUrl(favIconUrl) {
+    if (typeof favIconUrl !== 'string') {
+        return favIconUrl;
+    }
+
+    let hash = 5381;
+
+    for (let i = 0; i < favIconUrl.length; i++) {
+        hash = ((hash << 5) + hash) ^ favIconUrl.charCodeAt(i);
+    }
+
+    return hash >>> 0;
+}
+
 function setLastTabState({id, url, title, status, hidden, pinned, favIconUrl}) {
-    lastTabsState[id] = {id, url, title, status, hidden, pinned, favIconUrl};
+    lastTabsState[id] = {id, url, title, status, hidden, pinned, favIconUrlHash: hashFavIconUrl(favIconUrl)};
 }
 
 // don't forget for pinned tabs events
@@ -23,7 +42,10 @@ export function getRealTabStateChanged(tab) {
 
     if (lastTabsState[tab.id]) {
         for (const key of Constants.ON_UPDATED_TAB_PROPERTIES) {
-            if (tab[key] !== lastTabsState[tab.id][key]) {
+            const lastValue = key === FAVICON_KEY ? lastTabsState[tab.id].favIconUrlHash : lastTabsState[tab.id][key];
+            const currentValue = key === FAVICON_KEY ? hashFavIconUrl(tab[key]) : tab[key];
+
+            if (currentValue !== lastValue) {
                 changeInfo ??= {};
                 changeInfo[key] = tab[key];
             }
@@ -53,8 +75,14 @@ export function setTab({id, url, title, favIconUrl, cookieStoreId, openerTabId, 
         return;
     }
 
+    const nextTitle = title || url;
+
+    if (tabs[id].lastModified && (tabs[id].url !== url || tabs[id].title !== nextTitle)) {
+        tabs[id].lastModified = Utils.unixNowMs();
+    }
+
     tabs[id].url = url;
-    tabs[id].title = title || url;
+    tabs[id].title = nextTitle;
 
     if (Utils.isAvailableFavIconUrl(favIconUrl)) {
         tabs[id].favIconUrl = favIconUrl;
@@ -134,6 +162,20 @@ export async function setTabFavIcon(id, favIconUrl) {
     }
 }
 
+export async function setSyncedTabFavIcon(id, favIconUrl) {
+    if (typeof favIconUrl !== 'string' || !favIconUrl) {
+        return;
+    }
+
+    tabs[id] ??= {id};
+
+    await waitPromises(tabs[id]);
+
+    await addPromise(tabs[id], browser.sessions.setTabValue(id, FAVICON_KEY, favIconUrl));
+
+    tabs[id].favIconUrl = favIconUrl;
+}
+
 export function getTabFavIcon(id) {
     return tabs[id]?.favIconUrl;
 }
@@ -187,6 +229,183 @@ export async function removeTabThumbnail(id) {
     delete tabs[id]?.thumbnail;
 }
 
+export async function loadTabUid(id) {
+    if (tabs[id]) {
+        await waitPromises(tabs[id]);
+
+        if (tabs[id].uid) {
+            return tabs[id].uid;
+        }
+
+        const uid = await addPromise(tabs[id], browser.sessions.getTabValue(id, UID_KEY));
+
+        if (uid) {
+            return tabs[id].uid = uid;
+        }
+
+        const backupUid = (await loadTabUidBackup())[id];
+
+        if (backupUid) {
+            await addPromise(tabs[id], browser.sessions.setTabValue(id, UID_KEY, backupUid));
+            return tabs[id].uid = backupUid;
+        }
+    }
+}
+
+export async function ensureTabUid(id) {
+    await loadTabUid(id);
+    return getTabUid(id) || await setTabUid(id);
+}
+
+export async function setTabUid(id, uid = null) {
+    tabs[id] ??= {id};
+
+    await waitPromises(tabs[id]);
+
+    uid ||= tabs[id].uid || self.crypto.randomUUID();
+
+    await addPromise(tabs[id], browser.sessions.setTabValue(id, UID_KEY, uid));
+
+    tabs[id].uid = uid;
+
+    await backupTabUid(id, uid);
+
+    return uid;
+}
+
+export function getTabUid(id) {
+    return tabs[id]?.uid;
+}
+
+let tabUidBackup = null;
+
+async function loadTabUidBackup() {
+    if (!tabUidBackup) {
+        const stored = await browser.storage.local.get(TAB_UID_BACKUP_KEY);
+        tabUidBackup = stored?.[TAB_UID_BACKUP_KEY] || {};
+    }
+
+    return tabUidBackup;
+}
+
+async function backupTabUid(id, uid) {
+    const backup = await loadTabUidBackup();
+
+    if (backup[id] !== uid) {
+        backup[id] = uid;
+        await browser.storage.local.set({[TAB_UID_BACKUP_KEY]: backup});
+    }
+}
+
+export async function removeTabUidBackup(id) {
+    const backup = await loadTabUidBackup();
+
+    if (id in backup) {
+        delete backup[id];
+        await browser.storage.local.set({[TAB_UID_BACKUP_KEY]: backup});
+    }
+}
+
+export async function pruneTabUidBackup(liveTabIds) {
+    const backup = await loadTabUidBackup();
+    const live = new Set(liveTabIds.map(String));
+    let changed = false;
+
+    for (const id in backup) {
+        if (!live.has(id)) {
+            delete backup[id];
+            changed = true;
+        }
+    }
+
+    if (changed) {
+        await browser.storage.local.set({[TAB_UID_BACKUP_KEY]: backup});
+    }
+}
+
+async function loadTabLastModified(id) {
+    if (tabs[id]) {
+        await waitPromises(tabs[id]);
+
+        if (tabs[id].lastModified) {
+            return tabs[id].lastModified;
+        }
+
+        const lastModified = await addPromise(tabs[id], browser.sessions.getTabValue(id, LAST_MODIFIED_KEY));
+
+        if (lastModified) {
+            return tabs[id].lastModified = lastModified;
+        }
+
+        return setTabLastModified(id);
+    }
+}
+
+export async function setTabLastModified(id, lastModified = null) {
+    tabs[id] ??= {id};
+
+    await waitPromises(tabs[id]);
+
+    lastModified ||= Utils.unixNowMs();
+
+    await addPromise(tabs[id], browser.sessions.setTabValue(id, LAST_MODIFIED_KEY, lastModified));
+
+    return tabs[id].lastModified = lastModified;
+}
+
+export function getTabLastModified(id) {
+    return tabs[id]?.lastModified;
+}
+
+export async function removeTabUid(id) {
+    await waitPromises(tabs[id]);
+    await addPromise(tabs[id], browser.sessions.removeTabValue(id, UID_KEY));
+    delete tabs[id]?.uid;
+}
+
+async function loadTabGroupPinned(id) {
+    if (tabs[id]) {
+        await waitPromises(tabs[id]);
+
+        if (tabs[id].groupPinned !== undefined) {
+            return tabs[id].groupPinned;
+        }
+
+        const groupPinned = await addPromise(tabs[id], browser.sessions.getTabValue(id, GROUP_PINNED_KEY));
+        return tabs[id].groupPinned = groupPinned === true;
+    }
+}
+
+export async function setTabGroupPinned(id, groupPinned = false) {
+    if (groupPinned) {
+        tabs[id] ??= {id};
+
+        await waitPromises(tabs[id]);
+
+        await addPromise(tabs[id], browser.sessions.setTabValue(id, GROUP_PINNED_KEY, true));
+
+        tabs[id].groupPinned = true;
+    } else if (getTabGroupPinned(id)) {
+        await removeTabGroupPinned(id).catch(() => {});
+    }
+}
+
+export function getTabGroupPinned(id) {
+    return tabs[id]?.groupPinned === true;
+}
+
+export async function removeTabGroupPinned(id) {
+    await waitPromises(tabs[id]);
+    await addPromise(tabs[id], browser.sessions.removeTabValue(id, GROUP_PINNED_KEY));
+    delete tabs[id]?.groupPinned;
+}
+
+export async function removeTabLastModified(id) {
+    await waitPromises(tabs[id]);
+    await addPromise(tabs[id], browser.sessions.removeTabValue(id, LAST_MODIFIED_KEY));
+    delete tabs[id]?.lastModified;
+}
+
 // tab
 export function getTabSession(id, key = null) {
     if (key) {
@@ -205,6 +424,9 @@ export async function loadTabSession(tab, includeFavIconUrl = true, includeThumb
 
         await Promise.all([
             loadTabGroup(tab.id),
+            loadTabUid(tab.id),
+            loadTabLastModified(tab.id),
+            loadTabGroupPinned(tab.id),
             includeFavIconUrl === true ? loadTabFavIcon(tab.id) : null,
             includeThumbnail === true ? loadTabThumbnail(tab.id) : null,
         ]);
@@ -222,6 +444,9 @@ export async function setTabSession(tab, session = null) {
 
     await Promise.all([
         setTabGroup(tab.id, tab.groupId),
+        setTabUid(tab.id, tab.uid),
+        setTabLastModified(tab.id, tab.lastModified),
+        setTabGroupPinned(tab.id, tab.groupPinned),
         setTabFavIcon(tab.id, tab.favIconUrl),
         setTabThumbnail(tab.id, tab.thumbnail),
     ]);
@@ -233,12 +458,18 @@ export function clearTabSessionCache(id) {
     delete tabs[id]?.groupId;
     delete tabs[id]?.favIconUrl;
     delete tabs[id]?.thumbnail;
+    delete tabs[id]?.uid;
+    delete tabs[id]?.lastModified;
+    delete tabs[id]?.groupPinned;
 }
 
 export function applySession(toObj, fromObj) {
     fromObj?.groupId && (toObj.groupId = fromObj.groupId);
     fromObj?.favIconUrl && (toObj.favIconUrl = fromObj.favIconUrl);
     fromObj?.thumbnail && (toObj.thumbnail = fromObj.thumbnail);
+    fromObj?.uid && (toObj.uid = fromObj.uid);
+    fromObj?.lastModified && (toObj.lastModified = fromObj.lastModified);
+    fromObj?.groupPinned && (toObj.groupPinned = true);
 
     return toObj;
 }
@@ -252,6 +483,9 @@ export async function removeTabSession(id) {
         removeTabGroup(id),
         removeTabFavIcon(id),
         removeTabThumbnail(id),
+        removeTabUid(id),
+        removeTabLastModified(id),
+        removeTabGroupPinned(id),
     ]);
 }
 

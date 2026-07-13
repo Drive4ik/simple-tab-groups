@@ -723,6 +723,11 @@ migrations.push({
 
             await Promise.allSettled(windows.map(async win => {
                 const groupId = await browser.sessions.getWindowValue(win.id, 'groupId');
+
+                if (Utils.isUUID(groupId)) {
+                    return;
+                }
+
                 const newGroupId = getNewGroupId(groupId);
 
                 if (newGroupId) {
@@ -741,6 +746,11 @@ migrations.push({
             await Promise.allSettled(tabs.map(async tab => {
                 delete tab.groupId; // TODO temp
                 const groupId = await browser.sessions.getTabValue(tab.id, 'groupId');
+
+                if (Utils.isUUID(groupId)) {
+                    return;
+                }
+
                 const newGroupId = getNewGroupId(groupId);
 
                 if (groupId) {
@@ -811,6 +821,20 @@ migrations.push({
         } else {
             data.autoBackupFilePath += `STG-backup {date-full} {time-short}@drive4ik`;
         }
+    },
+});
+
+migrations.push({
+    version: '5.5.1',
+    migration(data) {
+        const now = Utils.unixNowMs();
+
+        data.groups?.forEach(group => {
+            group.tabs?.forEach(tab => {
+                tab.uid ||= self.crypto.randomUUID();
+                tab.lastModified ||= now;
+            });
+        });
     },
 });
 

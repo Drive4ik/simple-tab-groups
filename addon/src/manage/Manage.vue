@@ -7,6 +7,7 @@ import editGroup from '../components/edit-group.vue';
 // import contextMenu from '../components/context-menu.vue';
 import contextMenuTab from '../components/context-menu-tab.vue';
 import contextMenuTabNew from '../components/context-menu-tab-new.vue';
+import pinIcon from '../components/pin-icon.vue';
 import contextMenuGroup from '../components/context-menu-group.vue';
 
 import '/js/prefixed-storage.js';
@@ -62,6 +63,7 @@ export default {
         // 'context-menu': contextMenu,
         'context-menu-tab': contextMenuTab,
         'context-menu-tab-new': contextMenuTabNew,
+        'pin-icon': pinIcon,
         'context-menu-group': contextMenuGroup,
     },
     created() {
@@ -127,7 +129,7 @@ export default {
                             groupId = this.isGroup(to.data.item) ? to.data.item.id : to.data.group.id,
                             newTabIndex = this.isGroup(to.data.item) ? undefined : to.data.item.index;
 
-                        this.sendMessageModule('Tabs.move', tabIds, groupId, {
+                        this.dragMoveTabs(tabIds, groupId, {
                             newTabIndex,
                             showTabAfterMovingItIntoThisGroup: false,
                             showOnlyActiveTabAfterMovingItIntoThisGroup: false,
@@ -508,7 +510,7 @@ export default {
                             <img src="/icons/settings.svg" />
                         </figure>
                     </div>
-                    <div class="other-icon is-clickable is-unselectable" @click="removeGroup(group)" @keydown.enter.stop.prevent="removeGroup(group)" tabindex="0" :title="lang('deleteGroup')">
+                    <div v-if="!group.isPinnedGroup" class="other-icon is-clickable is-unselectable" @click="removeGroup(group)" @keydown.enter.stop.prevent="removeGroup(group)" tabindex="0" :title="lang('deleteGroup')">
                         <figure class="image is-16x16">
                             <img src="/icons/group-delete.svg" />
                         </figure>
@@ -530,7 +532,7 @@ export default {
                             tab.container && `identity-color-${tab.container?.color}`
                         ]"
                         :title="getTabTitle(tab, true)"
-                        @contextmenu.stop.prevent="!group.isArchive && $refs.contextMenuTab.open($event, {tab, group})"
+                        @contextmenu.stop.prevent="!group.isArchive && $refs.contextMenuTab.open($event, {tab, group, targetGroup: currentGroup})"
 
                         @click.stop="!group.isArchive && clickOnTab($event, tab, group)"
 
@@ -567,6 +569,23 @@ export default {
                         </div>
                         <div v-if="options.showTabsWithThumbnailsInManageGroups" class="screenshot">
                             <img v-if="tab.thumbnail" :src="tab.thumbnail" loading="lazy" decoding="async">
+                        </div>
+
+                        <div v-if="tab.groupPinned"
+                            :class="['group-pinned-indicator', {'is-work-group-pin': !group.isPinnedGroup && !group.isArchive}]"
+                            @click.stop="!group.isPinnedGroup && !group.isArchive && toggleTabGroupPinned(tab, false)"
+                            :title="group.isPinnedGroup || group.isArchive ? null : lang('unpinTabInGroupTitle')">
+                            <figure class="image is-16x16">
+                                <pin-icon :color="group.isPinnedGroup ? null : group.iconColor"></pin-icon>
+                            </figure>
+                        </div>
+                        <div v-else-if="!group.isPinnedGroup && !group.isArchive"
+                            class="group-pinned-indicator hover-pin"
+                            @click.stop="toggleTabGroupPinned(tab, true)"
+                            :title="lang('pinTabInGroupTitle')">
+                            <figure class="image is-16x16">
+                                <pin-icon outline :color="group.iconColor"></pin-icon>
+                            </figure>
                         </div>
 
                         <div
@@ -629,7 +648,7 @@ export default {
                             tab.container && `identity-color-${tab.container?.color}`
                         ]"
                         :title="getTabTitle(tab, true)"
-                        @contextmenu.stop.prevent="$refs.contextMenuTab.open($event, {tab})"
+                        @contextmenu.stop.prevent="$refs.contextMenuTab.open($event, {tab, targetGroup: tab.windowId === currentWindow?.id ? currentGroup : undefined})"
 
                         @click.stop="clickOnTab($event, tab)"
 
@@ -722,6 +741,8 @@ export default {
         @archive="toggleArchiveGroup"
         @unarchive="toggleArchiveGroup"
         @reload-all-tabs="reloadAllTabsInGroup"
+        @toggle-pinned-group="togglePinnedGroup"
+        :current-window-id="currentWindow?.id"
         ></context-menu-group>
 
     <context-menu-tab ref="contextMenuTab"
@@ -735,6 +756,7 @@ export default {
         @remove="removeTab"
         @update-thumbnail="updateTabThumbnail"
         @set-group-icon="setTabIconAsGroupIcon"
+        @pin-in-group="toggleTabGroupPinned"
         @move-tab="moveTabs"
         @move-tab-new-group="moveTabToNewGroup"
         ></context-menu-tab>
@@ -945,9 +967,27 @@ export default {
             > .tab-icon,
             > .delete-tab-button,
             > .cookie-container,
+            > .group-pinned-indicator,
             > .refresh-icon,
             > .tab-title {
                 position: absolute;
+                display: flex;
+            }
+
+            > .group-pinned-indicator {
+                align-items: start;
+                justify-content: end;
+                top: var(--inner-indent);
+                right: calc(var(--inner-indent) + var(--tab-icons-size));
+                width: var(--tab-icons-size);
+                height: var(--tab-icons-size);
+            }
+
+            > .group-pinned-indicator.hover-pin {
+                display: none;
+            }
+
+            &:hover > .group-pinned-indicator.hover-pin {
                 display: flex;
             }
 
@@ -1096,6 +1136,14 @@ export default {
                 visibility: visible;
             }
 
+            > .group-pinned-indicator.hover-pin {
+                display: none;
+            }
+
+            &:hover > .group-pinned-indicator.hover-pin {
+                display: flex;
+            }
+
             > .tab-title {
                 flex-grow: 1;
                 white-space: nowrap;
@@ -1136,6 +1184,21 @@ export default {
     .group,
     .group .tab {
         transition: opacity 0.3s;
+    }
+
+    .group-pinned-indicator.is-work-group-pin,
+    .group-pinned-indicator.hover-pin {
+        cursor: pointer;
+    }
+
+    .group-pinned-indicator.is-work-group-pin:hover svg,
+    .group-pinned-indicator.hover-pin:hover svg {
+        transform: scale(1.25);
+    }
+
+    .group-pinned-indicator.hover-pin:hover svg {
+        fill: currentColor;
+        fill-opacity: 0.45;
     }
 
     .drag-tab .tab > *,

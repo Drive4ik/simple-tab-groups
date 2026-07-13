@@ -442,7 +442,9 @@ export const GIT_GIST_FILE_NAME_PARTS = Object.freeze({
 export const DEFAULT_SYNC_OPTIONS = Object.freeze({
     version: MANIFEST.version,
     githubGistToken: '',
+    githubGistName: 'Simple Tab Groups',
     githubGistFileName: GIT_GIST_FILE_NAME_PARTS.start + 'backup' + GIT_GIST_FILE_NAME_PARTS.end,
+    githubGistBackupFileName: GIT_GIST_FILE_NAME_PARTS.start + 'cloud-backup' + GIT_GIST_FILE_NAME_PARTS.end,
 });
 
 const BROWSER_HAS_FSYNC = [
@@ -491,6 +493,7 @@ export const DEFAULT_OPTIONS = Object.freeze({
         'remove',
         'update-thumbnail',
         'set-group-icon',
+        'pin-in-group',
         'move-tab-to-group',
     ],
     contextMenuGroup: [
@@ -515,11 +518,19 @@ export const DEFAULT_OPTIONS = Object.freeze({
     autoBackupIncludeTabFavIcons: true,
 
     syncEnable: true,
+    autoSyncEnable: false,
+    syncProvider: 'github-gist',
     syncOptionsLocation: IS_AVAILABLE_SYNC_STORAGE ? SYNC_STORAGE_FSYNC : SYNC_STORAGE_LOCAL,
     syncLastUpdate: "1970-01-01T00:00:00Z",
-    syncIntervalKey: INTERVAL_KEY.days, // hours, days
-    syncIntervalValue: 1,
+    syncIntervalKey: INTERVAL_KEY.minutes, // minutes, hours, days
+    syncIntervalValue: 5,
     syncTabFavIcons: false,
+    syncBackupBeforeApply: true,
+    syncBackupLocation: AUTO_BACKUP_LOCATIONS.DOWNLOADS,
+    syncBackupFilePath: 'STG-sync-pre-apply-backups-FF-{ff-version}/STG-sync-pre-apply-backup-{slot}',
+    syncSleepNewTabs: true,
+    syncSleepPinnedTabs: false,
+    syncActivatePreviouslyActiveTabs: false,
 
     colorScheme: 'auto', // auto, light, dark
 
@@ -549,7 +560,7 @@ export const ALL_OPTION_KEYS = Object.freeze(DEFAULT_OPTION_KEYS.filter(key => !
 export const ON_UPDATED_TAB_PROPERTIES = Object.freeze([ // browser.tabs not defined into web page scripts
     browser.tabs?.UpdatePropertyName.TITLE, // for cache
     browser.tabs?.UpdatePropertyName.STATUS, // for check update url and thumbnail
-    // browser.tabs?.UpdatePropertyName.URL, // for check update url and thumbnail
+    browser.tabs?.UpdatePropertyName.URL,
     browser.tabs?.UpdatePropertyName.FAVICONURL, // for session
     browser.tabs?.UpdatePropertyName.HIDDEN,
     browser.tabs?.UpdatePropertyName.PINNED,

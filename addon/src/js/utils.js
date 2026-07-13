@@ -10,6 +10,10 @@ export function unixNow() {
     return Math.floor(Date.now() / 1000);
 }
 
+export function unixNowMs() {
+    return Date.now();
+}
+
 export function encodeToBytes(str) {
     return encoder.encode(str);
 }

@@ -28,6 +28,10 @@ export default {
             type: Boolean,
             default: true,
         },
+        currentWindowId: {
+            type: Number,
+            default: null,
+        },
     },
     components: {
         'context-menu': contextMenu,
@@ -40,6 +44,10 @@ export default {
         isOpened({id}) {
             return this.openedWindows.some(win => win.groupId === id);
         },
+        isPinnedGroupShownHere(group) {
+            const shownTab = group.tabs?.find(tab => !tab.hidden);
+            return Boolean(shownTab) && shownTab.windowId === this.currentWindowId;
+        },
     },
 };
 
@@ -50,7 +58,15 @@ export default {
     <template v-slot="{data}">
         <ul v-if="data" class="is-unselectable">
             <li
-                v-if="menu.includes('open-in-new-window') && !data.group.isArchive"
+                v-if="data.group.isPinnedGroup"
+                @click="$emit('toggle-pinned-group', data.group)">
+                <figure class="image is-16x16">
+                    <img src="/icons/thumbtack.svg" />
+                </figure>
+                <span v-text="lang(isPinnedGroupShownHere(data.group) ? 'hidePinnedGroupTitle' : 'showPinnedGroupTitle')"></span>
+            </li>
+            <li
+                v-if="menu.includes('open-in-new-window') && !data.group.isArchive && !data.group.isPinnedGroup"
                 @click="$emit('open-in-new-window', data.group)">
                 <figure class="image is-16x16">
                     <img src="/icons/window-new.svg" />
@@ -106,7 +122,7 @@ export default {
                 <span v-text="lang('unloadGroup')"></span>
             </li>
             <li
-                v-if="menu.includes('archive') && !data.group.isArchive"
+                v-if="menu.includes('archive') && !data.group.isArchive && !data.group.isPinnedGroup"
                 @click="$emit('archive', data.group)">
                 <figure class="image is-16x16">
                     <img src="/icons/archive.svg" />
@@ -153,7 +169,7 @@ export default {
                     <span v-text="lang('groupSettings')"></span>
                 </li>
                 <li
-                    v-if="showRemove"
+                    v-if="showRemove && !data.group.isPinnedGroup"
                     @click="$emit('remove', data.group)">
                     <figure class="image is-16x16">
                         <img src="/icons/group-delete.svg" />

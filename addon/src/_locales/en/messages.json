@@ -454,8 +454,14 @@
         "description": "Exclude tabs with sound"
     },
     "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
-        "message": "It is not possible to change the group because one of the opened tabs share microphone or camera",
-        "description": "It is not possible to change the group because one of the opened tabs share microphone or camera"
+        "message": "These tabs are sharing microphone, camera or screen and will keep doing so: \"$titles$\". Click here to switch anyway.",
+        "description": "Warning shown when switching a group would hide tabs that share microphone, camera or screen. Lists the tabs and lets the user switch anyway by clicking.",
+        "placeholders": {
+            "titles": {
+                "content": "$1",
+                "example": "some titles"
+            }
+        }
     },
     "foundHiddenUnSyncTabsDescription": {
         "message": "Found hidden unsynchronized tabs. Click on tab to show it into current group/window or:",
@@ -759,6 +765,34 @@
         "message": "Discard tab",
         "description": "Discard tab"
     },
+    "pinTabInGroupTitle": {
+        "message": "Pin to group",
+        "description": "Pin this tab within its group (pinned only while the group is active)"
+    },
+    "pinTabInCurrentGroupTitle": {
+        "message": "Pin to current group",
+        "description": "Pin a tab that is not yet in a group into the window's active group (pinned only while that group is active)"
+    },
+    "unpinTabInGroupTitle": {
+        "message": "Unpin from group",
+        "description": "Remove the group-scoped pin from this tab"
+    },
+    "pinnedGroupTitle": {
+        "message": "Pinned",
+        "description": "Default title of the pinned group at first creation"
+    },
+    "unpinToCurrentGroupTitle": {
+        "message": "Unpin into current group",
+        "description": "Move a pinned-group tab into the window's current group as a normal tab"
+    },
+    "showPinnedGroupTitle": {
+        "message": "Show pinned tabs here",
+        "description": "Show the pinned group's tabs in the current window"
+    },
+    "hidePinnedGroupTitle": {
+        "message": "Hide pinned tabs",
+        "description": "Hide the pinned group's tabs"
+    },
     "folderNameTitle": {
         "message": "Folder name",
         "description": "Folder name title"
@@ -766,6 +800,10 @@
     "backupSuccessfullyRestored": {
         "message": "Backup successfully restored!",
         "description": "Backup successfully restored"
+    },
+    "backupRestoreInterrupted": {
+        "message": "Backup restore was interrupted. Click the toolbar button to reload the add-on and finish restoring.",
+        "description": "Backup restore was interrupted"
     },
     "loading": {
         "message": "Loading, please wait...",
@@ -1381,21 +1419,89 @@
         "message": "Start synchronization",
         "description": "Start synchronization"
     },
-    "syncStartTrustLocal": {
-        "message": "Start synchronization and trust local data",
-        "description": "Start synchronization and trust local data"
+    "cloudSettingsTitle": {
+        "message": "Cloud",
+        "description": "Title of the section grouping the cloud access, sync and backup settings blocks"
     },
-    "syncStartTrustCloud": {
-        "message": "Start synchronization and trust cloud data",
-        "description": "Start synchronization and trust cloud data"
+    "githubGistAccessTitle": {
+        "message": "GitHub Gist access",
+        "description": "Title of the GitHub Gist access settings block (token, file, storage location)"
     },
-    "syncDataInCloudCanBeDifferent": {
-        "message": "The data in the cloud can be very different from the current state.",
-        "description": "The data in the cloud can be very different from the current state."
+    "githubGistAccessLocation": {
+        "message": "Store cloud settings in",
+        "description": "Label for the selector choosing where the roaming sync option bag is stored (Firefox Sync or local profile)"
+    },
+    "githubGistNameTitle": {
+        "message": "Gist name",
+        "description": "Label for the gist name (the gist description) used to find or create the cloud gist"
+    },
+    "githubGistNameHelp": {
+        "message": "Names the gist used for syncing. The same name on another device connects to the same gist.",
+        "description": "Help text under the gist name field in the GitHub Gist access block"
+    },
+    "githubGistNameChangeWarning": {
+        "message": "Changing the gist name makes __MSG_extensionName__ forget the current gist: it stays on GitHub but is no longer synced. Synchronization restarts from this device's current state.",
+        "description": "Warning shown when the user changes the gist name to a different value"
+    },
+    "githubGistBackupFileNameTitle": {
+        "message": "Backup file name",
+        "description": "Label for the cloud backup file name field"
+    },
+    "githubGistBackupFileNameChangeWarning": {
+        "message": "Changing the backup file name makes __MSG_extensionName__ forget the previous backups: they stay on GitHub but are no longer listed or restored.",
+        "description": "Warning shown when the user changes the cloud backup file name"
+    },
+    "githubGistSyncTitle": {
+        "message": "Cloud sync",
+        "description": "Title of the cloud sync settings block"
+    },
+    "githubGistBackupTitle": {
+        "message": "Cloud backup",
+        "description": "Title of the cloud backup settings block"
+    },
+    "createBackupButton": {
+        "message": "Create backup",
+        "description": "Button that pushes the current full state to the cloud as a new gist revision"
+    },
+    "backupChangesLabel": {
+        "message": "changes",
+        "description": "Label prefixing the change count of a cloud backup revision"
+    },
+    "resetSyncStateButton": {
+        "message": "Reset sync state",
+        "description": "Reset this device's local sync state (recovery action)"
+    },
+    "resetSyncStateConfirm": {
+        "message": "This clears the local synchronization state for this device only (baseline and change log). The data in the cloud is NOT touched. The next synchronization will behave like a first sync: nothing is removed and your current tabs are re-uploaded.",
+        "description": "Confirmation text for the reset sync state action"
     },
     "syncEnableTitle": {
-        "message": "Enable auto backup to the cloud",
-        "description": "Enable auto backup to the cloud"
+        "message": "Enable sync to the cloud",
+        "description": "Enable sync to the cloud"
+    },
+    "autoSyncEnableTitle": {
+        "message": "Enable auto sync to the cloud",
+        "description": "Enable auto sync to the cloud"
+    },
+    "cloudSyncEveryTitle": {
+        "message": "Cloud sync every",
+        "description": "Cloud sync every"
+    },
+    "syncBackupBeforeApply": {
+        "message": "Create a backup before applying sync changes (recommended)",
+        "description": "Toggle: take a local STG backup before delta-sync applies any change, so a bad sync can be rolled back"
+    },
+    "syncSleepNewTabs": {
+        "message": "Create new synced tabs asleep (recommended)",
+        "description": "Toggle: tabs created by sync show title+favicon and only load when activated"
+    },
+    "syncSleepPinnedTabs": {
+        "message": "Sleep synced pinned tabs (Firefox loads pinned tabs by default)",
+        "description": "Toggle: also create synced pinned tabs asleep via create-then-discard; off by default since pinned tabs normally load"
+    },
+    "syncActivatePreviouslyActiveTabs": {
+        "message": "Activate tabs that were active on the other machine",
+        "description": "Sub-toggle: load a synced tab if it was active (loaded) on the source machine"
     },
     "syncSettingsLocation": {
         "message": "Sync settings location",
@@ -1434,6 +1540,18 @@
     "githubInvalidGistContent": {
         "message": "GitHub Gist backup has incorrect data",
         "description": "GitHub Gist backup has incorrect data"
+    },
+    "githubGistFileNotInRevision": {
+        "message": "The backup file is not present in this revision.",
+        "description": "The selected gist revision does not contain the cloud backup file"
+    },
+    "githubGistBackupFileNameInvalid": {
+        "message": "Enter a file name ending in .json that does not start with «STG-sync-» (that prefix is reserved for cloud sync).",
+        "description": "Cloud backup file name is empty, not .json, or uses the reserved STG-sync- prefix"
+    },
+    "githubBackupFileNameReserved": {
+        "message": "The cloud backup file name must not start with «STG-sync-»; that prefix is reserved for cloud sync files.",
+        "description": "Backup push refused because the file name collides with the reserved sync namespace"
     },
     "githubInvalidToken": {
         "message": "Your GitHub token is invalid",
@@ -1600,5 +1718,9 @@
     "donateItemHelpTronUsdt": {
         "message": "TRX Coin or any TRC20 Tokens",
         "description": "Help for Tron"
+    },
+    "moveTabsFailedTryAgain": {
+        "message": "Couldn't move tabs, please try again.",
+        "description": "Shown when moving tabs by drag and drop fails"
     }
 }

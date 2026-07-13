@@ -13,6 +13,7 @@ const prefixGlue = '.'; // ➡️  →
 const storage = localStorage.create(Constants.MODULES.LOGGER);
 const mainStorage = localStorage.create(Constants.MODULES.BACKGROUND);
 
+const LOGS_RETENTION = 1_000;
 const logs = [];
 
 const backgroundConnect = Constants.IS_BACKGROUND_PAGE
@@ -193,6 +194,10 @@ function Log(cKey, ...args) {
 
 export function addLog(log) {
     logs.push(log);
+
+    if (logs.length > LOGS_RETENTION) {
+        logs.splice(0, logs.length - LOGS_RETENTION);
+    }
 }
 
 export function showLog(log, {cKey, args}) {
@@ -292,7 +297,7 @@ export function clearErrors() {
 }
 
 export function getLogs() {
-    return logs.slice(-5_000);
+    return logs.slice(-LOGS_RETENTION);
 }
 window.clearLogs = function() {
     clearLogs();
@@ -312,7 +317,7 @@ export function catchFunc(asyncFunc, logger) {
         } catch (e) {
             e.message = `catchFunc(${name}), error message: ${e.message}`;
             e.stack = [fromStack, 'Native error stack:', e.stack].join('\n');
-            e.arguments = JSON.clone(Array.from(arguments));
+            e.arguments = normalizeArgumentValue(Array.from(arguments));
             errorEventHandler.call(logger, e);
         }
     };

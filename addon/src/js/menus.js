@@ -132,7 +132,9 @@ export async function update(id, updateProperties) {
     const menus = await loadAll();
 
     if (!menus[id]) {
-        log.throwError([id, "doesn't exist"]);
+        log.warn([id, "doesn't exist, skip update"]);
+        log.stop();
+        return;
     }
 
     delete updateProperties.id; // for easy coding
@@ -170,7 +172,9 @@ export async function remove(id, withReal = true) {
     const menus = await loadAll();
 
     if (!menus[id]) {
-        log.throwError([id, "doesn't exist"]);
+        log.warn([id, "doesn't exist, skip remove"]);
+        log.stop();
+        return;
     }
 
     if (withReal) {

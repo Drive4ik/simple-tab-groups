@@ -1,6 +1,6 @@
 <script>
 import contextMenu from './context-menu.vue';
-import * as Groups from '/js/groups.js';
+import * as Groups from '/js/groups-helpers.js';
 import Lang from '/js/lang.js';
 
 export default {
@@ -46,7 +46,7 @@ export default {
     <template v-slot="{data}">
         <ul v-if="data" class="is-unselectable">
             <li
-                v-if="menu.includes('open-in-new-window') && data.group"
+                v-if="menu.includes('open-in-new-window') && data.group && !data.group.isPinnedGroup"
                 @click="$emit('open-in-new-window', data.group, data.tab)">
                 <figure class="image is-16x16">
                     <img src="/icons/window-new.svg" />
@@ -92,6 +92,30 @@ export default {
                     <img src="/icons/image.svg" />
                 </figure>
                 <span v-text="lang('setTabIconAsGroupIcon')"></span>
+            </li>
+            <li
+                v-if="menu.includes('pin-in-group') && data.group && !data.group.isPinnedGroup"
+                @click="$emit('pin-in-group', data.tab, !data.tab.groupPinned)">
+                <figure class="image is-16x16">
+                    <img src="/icons/thumbtack.svg" />
+                </figure>
+                <span v-text="lang(data.tab.groupPinned ? 'unpinTabInGroupTitle' : 'pinTabInGroupTitle')"></span>
+            </li>
+            <li
+                v-if="menu.includes('pin-in-group') && data.group?.isPinnedGroup && data.targetGroup && !data.targetGroup.isPinnedGroup"
+                @click="$emit('pin-in-group', data.tab, false, data.targetGroup.id)">
+                <figure class="image is-16x16">
+                    <img src="/icons/thumbtack.svg" />
+                </figure>
+                <span v-text="lang('unpinToCurrentGroupTitle')"></span>
+            </li>
+            <li
+                v-if="menu.includes('pin-in-group') && !data.group && data.targetGroup"
+                @click="$emit('pin-in-group', data.tab, true, data.targetGroup.id)">
+                <figure class="image is-16x16">
+                    <img src="/icons/thumbtack.svg" />
+                </figure>
+                <span v-text="lang('pinTabInCurrentGroupTitle')"></span>
             </li>
 
             <template v-if="menu.includes('move-tab-to-group')">

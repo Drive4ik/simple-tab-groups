@@ -9,7 +9,6 @@ import Listeners from '/js/listeners.js\
 &tabs.onAttached\
 &storage.local.onChanged\
 ';
-import './prefixed-storage.js';
 import Logger from './logger.js';
 import Notification from './notification.js';
 import BatchProcessor from './batch-processor.js';
@@ -22,14 +21,17 @@ import * as Containers from './containers.js';
 import * as Extensions from './extensions.js';
 import * as Groups from './groups.js';
 import * as Windows from './windows.js';
-import * as ConstantsBrowser from './constants-browser.js';
 import * as Storage from './storage.js';
 import * as BrowserSettings from './browser-settings.js';
+import * as DeltaCapture from './sync/delta/delta-capture.js';
+import {closedTabCapturePlan} from './sync/delta/close-capture.js';
 
 export {on, off} from './broadcast.js?channel=tabs';
+export * from './tabs-helpers.js';
+
+import {extractId, getTitle, normalizeFavIcon} from './tabs-helpers.js';
 
 const logger = new Logger('Tabs');
-const mainStorage = localStorage.create(Constants.MODULES.BACKGROUND);
 const settings = await Storage.get(['showTabsWithThumbnailsInManageGroups', 'colorScheme']);
 const skipTrackingWindows = new Set();
 const skip = {
@@ -71,6 +73,16 @@ export function sendUpdatedGroup(groupId) {
     send('updated.group', {
         groupId,
     });
+}
+
+function captureSnapshot(tabId) {
+    return {
+        groupId: Cache.getTabGroup(tabId),
+        uid: Cache.getTabUid(tabId),
+        lastModified: Cache.getTabLastModified(tabId),
+        groupPinned: Cache.getTabGroupPinned(tabId),
+        favIconUrl: Cache.getTabFavIcon(tabId),
+    };
 }
 
 // listeners
@@ -155,6 +167,17 @@ async function onCreated(tab) {
     Cache.setTab(tab);
 
     if (isPinned(tab)) {
+        await Cache.setTabGroup(tab.id, Groups.PINNED_GROUP_ID, tab.windowId)
+            .catch(logger.onCatch("onCreated can't set pinned group", false));
+        await Cache.setTabGroupPinned(tab.id, true)
+            .catch(logger.onCatch("onCreated can't set groupPinned", false));
+
+        Cache.applyTabSession(tab);
+
+        await Cache.ensureTabUid(tab.id)
+            .catch(logger.onCatch("onCreated can't mint uid (pinned)", false));
+
+        DeltaCapture.tabAdded(tab);
         return;
     }
 
@@ -163,7 +186,14 @@ async function onCreated(tab) {
 
     Cache.applyTabSession(tab);
 
+    if (Cache.getTabGroup(tab.id)) {
+        await Cache.ensureTabUid(tab.id)
+            .catch(logger.onCatch("onCreated can't mint uid", false));
+    }
+
     updatedBatch.add(tab.id, tab.groupId || `unsync:${tab.windowId}`);
+
+    DeltaCapture.tabAdded(tab);
 }
 
 async function onActivated({tabId, windowId, previousTabId = null}) {
@@ -227,6 +257,12 @@ async function onUpdated(tabId, changeInfo, tab) {
     // if tab was restored along with window, it needs to wait when GrantRestore will add the window to the skipTrackingWindows
     await Utils.wait(50 + 20); // 50ms for tab onCreated + 20ms as a margin
 
+    if (skip.tracking.has(tab.id) || skipTrackingWindows.has(tab.windowId)) {
+        Cache.setTab(tab);
+        logger.log(onUpdated, '🛑 skip tracking tab (after wait):', tab.id);
+        return;
+    }
+
     delete tab.groupId; // TODO tmp
 
     const log = logger.start(onUpdated, tabId, changeInfo);
@@ -240,7 +276,28 @@ async function onUpdated(tabId, changeInfo, tab) {
         return;
     }
 
+    if ((Object.hasOwn(changeInfo, 'title') || Object.hasOwn(changeInfo, 'url'))
+        && DeltaCapture.shouldArmAppliedNavigation()) {
+        DeltaCapture.markAppliedNavigation(tab.id, tab.url);
+    }
+
     if (isPinned(tab) && !Object.hasOwn(changeInfo, 'pinned')) {
+        if (Object.hasOwn(changeInfo, 'favIconUrl')) {
+            await Cache.setTabFavIcon(tab.id, changeInfo.favIconUrl)
+                .catch(log.onCatch(['cant set favIcon (pinned)', tab, changeInfo], false));
+        }
+
+        if (Object.hasOwn(changeInfo, 'title') || Object.hasOwn(changeInfo, 'url')) {
+            await Cache.setTabLastModified(tab.id, Cache.getTabLastModified(tab.id))
+                .catch(log.onCatch(['cant set lastModified (pinned)', tab, changeInfo], false));
+
+            if (Cache.getTabGroupPinned(tab.id) && Cache.getTabGroup(tab.id)) {
+                DeltaCapture.tabModified(tab, captureSnapshot(tab.id));
+            } else {
+                DeltaCapture.pinnedModified(tab, captureSnapshot(tab.id));
+            }
+        }
+
         log.stop('🛑 tab is pinned');
         return;
     }
@@ -250,19 +307,67 @@ async function onUpdated(tabId, changeInfo, tab) {
             .catch(log.onCatch(['cant set favIcon', tab, changeInfo], false));
     }
 
+    if (Object.hasOwn(changeInfo, 'title') || Object.hasOwn(changeInfo, 'url')) {
+        await Cache.setTabLastModified(tab.id, Cache.getTabLastModified(tab.id))
+            .catch(log.onCatch(['cant set lastModified', tab, changeInfo], false));
+
+        DeltaCapture.tabModified(tab, captureSnapshot(tab.id));
+    }
+
     if (Object.hasOwn(changeInfo, 'pinned') || Object.hasOwn(changeInfo, 'hidden')) {
+        const currentGroupId = Cache.getTabGroup(tab.id);
+        const inPinnedGroup = Groups.isPinnedGroupId(currentGroupId);
+
+        if (Object.hasOwn(changeInfo, 'pinned') && Cache.getTabGroupPinned(tab.id) && currentGroupId && !inPinnedGroup) {
+            log.stop('🛑 group-pinned tab pin transition, keeping group', tab.id);
+            return;
+        }
+
         let tabGroupId;
 
-        if (changeInfo.pinned || changeInfo.hidden) {
-            changeInfo.pinned && log.log('remove group for pinned tab', tab.id);
-            changeInfo.hidden && log.log('remove group for hidden tab', tab.id);
-            tabGroupId = Cache.getTabGroup(tab.id);
+        if (changeInfo.pinned) {
+            log.log('absorb pinned tab into pinned group', tab.id);
+
+            if (!inPinnedGroup) {
+                const uid = Cache.getTabUid(tab.id);
+                if (uid && currentGroupId) {
+                    DeltaCapture.tabRemoved(uid, currentGroupId);
+                }
+
+                await Cache.setTabGroup(tab.id, Groups.PINNED_GROUP_ID, tab.windowId)
+                    .catch(log.onCatch(["can't set pinned group", tab.id], false));
+                await Cache.setTabGroupPinned(tab.id, true)
+                    .catch(log.onCatch(["can't set groupPinned", tab.id], false));
+
+                await Cache.ensureTabUid(tab.id).catch(() => {});
+
+                DeltaCapture.tabAdded(tab);
+            }
+
+            tabGroupId = Groups.PINNED_GROUP_ID;
+        } else if (changeInfo.hidden) {
+            log.log('remove group for hidden tab', tab.id);
+            tabGroupId = currentGroupId;
             await Cache.removeTabGroup(tab.id).catch(() => {});
         } else if (changeInfo.pinned === false) {
             log.log('tab is unpinned', tab.id);
 
+            const uid = Cache.getTabUid(tab.id);
+            if (inPinnedGroup) {
+                if (uid) {
+                    DeltaCapture.tabRemoved(uid, Groups.PINNED_GROUP_ID);
+                    DeltaCapture.pinnedRemoved(uid);
+                }
+                await Cache.setTabGroupPinned(tab.id, false)
+                    .catch(log.onCatch(["can't clear groupPinned", tab.id], false));
+            } else if (uid) {
+                DeltaCapture.pinnedRemoved(uid);
+            }
+
             await Cache.setTabGroup(tab.id, null, tab.windowId)
                 .catch(log.onCatch(["can't set group to tab, !pinned", tab.id], false));
+
+            DeltaCapture.tabAdded(tab);
 
             tabGroupId = Cache.getTabGroup(tab.id);
         } else if (changeInfo.hidden === false) {
@@ -284,6 +389,7 @@ async function onUpdated(tabId, changeInfo, tab) {
         }
 
         tabGroupId && updatedBatch.add(tab.id, tabGroupId);
+        currentGroupId && currentGroupId !== tabGroupId && updatedBatch.add(tab.id, currentGroupId);
         updatedBatch.add(tab.id, `unsync:${tab.windowId}`);
 
         log.stop();
@@ -307,7 +413,11 @@ function onRemoved(tabId, {isWindowClosing, windowId}) {
 
     skip.removed.add(tabId); // BUG https://bugzilla.mozilla.org/show_bug.cgi?id=1396758
 
+    DeltaCapture.clearAppliedNavigation(tabId);
+
     const groupId = Cache.getTabGroup(tabId);
+    const uid = Cache.getTabUid(tabId);
+    const wasPinned = Cache.lastTabsState[tabId]?.pinned === true;
 
     updatedBatch.delete(tabId, groupId || `unsync:${windowId}`);
 
@@ -331,6 +441,17 @@ function onRemoved(tabId, {isWindowClosing, windowId}) {
         });
     } else {
         Cache.removeTab(tabId);
+        Cache.removeTabUidBackup(tabId).catch(() => {});
+
+        const capture = closedTabCapturePlan({uid, groupId, wasPinned}, Groups.isPinnedGroupId);
+
+        if (capture.removeFromGroupId) {
+            DeltaCapture.tabRemoved(uid, capture.removeFromGroupId);
+        }
+        if (capture.retirePinnedUid) {
+            DeltaCapture.pinnedRemoved(capture.retirePinnedUid);
+        }
+
         if (groupId) {
             send('removed', {
                 tabId,
@@ -344,9 +465,7 @@ function onRemoved(tabId, {isWindowClosing, windowId}) {
     }
 }
 
-async function onMoved(tabId, {windowId, /* fromIndex, toIndex */}) {
-    // await Utils.wait(); // ? no needs for wait skipTrackingWindows list
-
+async function onMoved(tabId, {windowId, /* fromIndex, */ toIndex}) {
     if (skip.removed.has(tabId)) {
         logger.log(onMoved, '🛑 skip removed tab:', tabId);
         return;
@@ -362,11 +481,24 @@ async function onMoved(tabId, {windowId, /* fromIndex, toIndex */}) {
         return;
     }
 
+    await Utils.wait(50 + 20);
+
+    if (skip.tracking.has(tabId) || skipTrackingWindows.has(windowId)) {
+        logger.log(onMoved, '🛑 skip tracking tab (after wait):', tabId);
+        return;
+    }
+
     const groupId = Cache.getTabGroup(tabId);
 
     logger.log(onMoved, {tabId, groupId});
 
     updatedBatch.add(tabId, groupId || `unsync:${windowId}`);
+
+    if (groupId) {
+        DeltaCapture.tabMoved(tabId);
+    } else if (Cache.lastTabsState[tabId]?.pinned) {
+        DeltaCapture.pinnedMoved(tabId, toIndex);
+    }
 
     /*
     if (Cache.getTabGroup(tabId)) {
@@ -376,8 +508,6 @@ async function onMoved(tabId, {windowId, /* fromIndex, toIndex */}) {
 }
 
 async function onDetached(tabId, {oldWindowId}) { // notice: called before onAttached
-    // await Utils.wait(); // ? no needs for wait skipTrackingWindows list
-
     if (skip.removed.has(tabId)) {
         logger.log(onDetached, '🛑 skip removed tab:', tabId);
         return;
@@ -393,6 +523,8 @@ async function onDetached(tabId, {oldWindowId}) { // notice: called before onAtt
         return;
     }
 
+    await Utils.wait(50 + 20);
+
     const groupId = Cache.getWindowGroup(oldWindowId);
 
     logger.log(onDetached, {tabId, oldWindowId, groupId});
@@ -401,8 +533,6 @@ async function onDetached(tabId, {oldWindowId}) { // notice: called before onAtt
 }
 
 async function onAttached(tabId, {newWindowId}) { // called when tabs.move()
-    // await Utils.wait(); // ? no needs for wait skipTrackingWindows list
-
     if (skip.removed.has(tabId)) {
         logger.log(onAttached, '🛑 skip removed tab:', tabId);
         return;
@@ -418,6 +548,8 @@ async function onAttached(tabId, {newWindowId}) { // called when tabs.move()
         return;
     }
 
+    await Utils.wait(50 + 20);
+
     const log = logger.start(onAttached, {tabId, newWindowId});
 
     await Cache.setTabGroup(tabId, null, newWindowId)
@@ -426,6 +558,11 @@ async function onAttached(tabId, {newWindowId}) { // called when tabs.move()
     const groupId = Cache.getTabGroup(tabId);
 
     log.log('groupId', groupId);
+
+    if (groupId) {
+        await Cache.ensureTabUid(tabId)
+            .catch(log.onCatch("can't mint uid", false));
+    }
 
     updatedBatch.add(tabId, groupId || `unsync:${newWindowId}`);
 
@@ -442,7 +579,7 @@ function onStorageChanged(changes) {
 }
 
 // methods
-export async function create({url, active, pinned, title, index, windowId, openerTabId, cookieStoreId, newTabContainer, ifDifferentContainerReOpen, excludeContainersForReOpen, groupId, favIconUrl, thumbnail}, skipListener = false) {
+export async function create({url, active, pinned, discarded, title, index, windowId, openerTabId, cookieStoreId, newTabContainer, ifDifferentContainerReOpen, excludeContainersForReOpen, groupId, favIconUrl, thumbnail, groupPinned, uid}, skipListener = false) {
     if (!Constants.IS_BACKGROUND_PAGE) {
         throw new Error('is not background');
     }
@@ -480,11 +617,22 @@ export async function create({url, active, pinned, title, index, windowId, opene
 
     tab.active = !!active;
 
+    if (Groups.isPinnedGroupId(groupId)) {
+        pinned = true;
+        groupPinned = true;
+    }
+
     if (pinned) {
         tab.pinned = true;
     }
 
-    if (!tab.active && !tab.pinned && tab.url && !tab.url.startsWith('about:') && !longUrl) {
+    const defaultDiscarded = !tab.pinned;
+    const wantDiscarded = (typeof discarded === 'boolean' ? discarded : defaultDiscarded) && !tab.active
+        && !!tab.url && !tab.url.startsWith('about:') && !longUrl;
+
+    const discardPinnedAfterCreate = wantDiscarded && tab.pinned;
+
+    if (wantDiscarded && !tab.pinned) {
         tab.discarded = true;
     }
 
@@ -522,6 +670,12 @@ export async function create({url, active, pinned, title, index, windowId, opene
         skip.created.add(newTab.id);
     }
 
+    if (discardPinnedAfterCreate) {
+        await browser.tabs.discard(newTab.id)
+            .then(() => { newTab.discarded = true; })
+            .catch(error => logger.logError(['cant discard pinned tab after create', newTab.id], error));
+    }
+
     delete newTab.groupId; // TODO temp
 
     if (longUrl) {
@@ -529,7 +683,7 @@ export async function create({url, active, pinned, title, index, windowId, opene
         self.setTimeout(() => delete longUrls[newTab.id], 30_000);
     }
 
-    await Cache.setTabSession(newTab, {groupId, favIconUrl, thumbnail});
+    await Cache.setTabSession(newTab, {groupId, favIconUrl, thumbnail, groupPinned, uid});
 
     if (skipListener) {
         logger.log('created', newTab.id);
@@ -729,7 +883,7 @@ export async function getNewTabIndex(tabs) {
     return tabs.slice().pop()?.index + 1 || null;
 }
 
-export async function getHighlightedIds(windowId = browser.windows.WINDOW_ID_CURRENT, clickedTab = null, pinned = false) {
+export async function getHighlightedIds(windowId = browser.windows.WINDOW_ID_CURRENT, clickedTab = null, pinned = null) {
     let tabs = await get(windowId, pinned, false, {
         highlighted: true,
     });
@@ -841,7 +995,7 @@ export async function add(groupId, cookieStoreId, url, title) {
         url,
         title,
         cookieStoreId,
-        index: windowId ? null : group.tabs.pop()?.index + 1,
+        index: windowId ? null : group.tabs?.pop()?.index + 1,
         // windowId, // windowId will get from Cache.getWindowId into create function
         ...Groups.getNewTabParams(group),
     }, true);
@@ -926,7 +1080,7 @@ export async function move(tabIds, groupId, params = {}) {
     const tabsCantHide = new Set;
     const groupWindowId = Cache.getWindowId(groupId);
     const {group} = await Groups.load(groupId, !groupWindowId);
-    const windowId = groupWindowId || (group.tabs[0]?.windowId) || await Windows.getLastFocusedNormalWindow();
+    const windowId = groupWindowId || (group.tabs?.[0]?.windowId) || await Windows.getLastFocusedNormalWindow();
     const activeTabs = [];
 
     log.log('vars', {groupWindowId, windowId});
@@ -937,9 +1091,20 @@ export async function move(tabIds, groupId, params = {}) {
     params.showNotificationAfterMovingTabIntoThisGroup ??= group.showNotificationAfterMovingTabIntoThisGroup;
 
     let showPinnedMessage = false;
+    const pinnedToGroupPin = [];
 
     tabs = tabs.filter(function(tab) {
-        if (tab.pinned) {
+        const fromPinnedGroup = !params._pinnedAlreadyHandled &&
+            Groups.isPinnedGroupId(tab.groupId ?? Cache.getTabGroup(tab.id));
+
+        if (tab.pinned || fromPinnedGroup) {
+            if (!params._pinnedAlreadyHandled) {
+                pinnedToGroupPin.push(tab);
+                continueTracking([tab], skippedTabs);
+                log.log('route pinned tab into group as group-pinned', tab.id);
+                return false;
+            }
+
             showPinnedMessage = true;
             continueTracking([tab], skippedTabs);
             log.log('tab pinned', tab);
@@ -959,6 +1124,16 @@ export async function move(tabIds, groupId, params = {}) {
 
         return true;
     });
+
+    const groupPinnedResultTabs = [];
+    for (const tab of pinnedToGroupPin) {
+        const ok = await Groups.setTabGroupPinned(tab.id, true, groupId, params.newTabIndex)
+            .catch(log.onCatch(['cant group-pin tab into group', tab.id, groupId], false));
+
+        if (ok) {
+            groupPinnedResultTabs.push(tab);
+        }
+    }
 
     log.log('active tabs', activeTabs, 'tabs to move COUNT:', tabs.length);
 
@@ -1060,6 +1235,13 @@ export async function move(tabIds, groupId, params = {}) {
 
         await Promise.all(tabs.map(tab => Cache.setTabGroup(tab.id, groupId)));
 
+        if (Groups.isPinnedGroupId(groupId)) {
+            await Promise.all(tabs.map(tab => Cache.setTabGroupPinned(tab.id, true)));
+            tabs.forEach(tab => tab.groupPinned = true);
+        }
+
+        await DeltaCapture.tabsAdded(tabs);
+
         Groups.sendUpdatedAll();
 
         log.log('end moving');
@@ -1077,9 +1259,13 @@ export async function move(tabIds, groupId, params = {}) {
         Notification(['thisTabsCanNotBeHidden', Array.from(tabsCantHide).join(', ')]);
     }
 
+    if (Groups.isPinnedGroupId(groupId)) {
+        await Groups.refreshPinnedGroupIfShown();
+    }
+
     if (!tabs.length) {
         log.stop('empty tabs');
-        return [];
+        return groupPinnedResultTabs;
     }
 
     let [firstTab] = activeTabs.length ? activeTabs : tabs;
@@ -1100,7 +1286,7 @@ export async function move(tabIds, groupId, params = {}) {
 
     if (!params.showNotificationAfterMovingTabIntoThisGroup) {
         log.stop('no notify, count:', tabs.length);
-        return tabs;
+        return [...tabs, ...groupPinnedResultTabs];
     }
 
     let message = [],
@@ -1122,7 +1308,7 @@ export async function move(tabIds, groupId, params = {}) {
     });
 
     log.stop('with notify, count:', tabs.length);
-    return tabs;
+    return [...tabs, ...groupPinnedResultTabs];
 }
 
 export async function moveNative(tabs, moveProperties = {}, skipTrackingFlag = false, fixSessionAfterMove = true) {
@@ -1274,18 +1460,29 @@ async function tabsAction({action, skipTrackingFlag = false, silentRemove = fals
         }
     }
 
-    if (schema.sendArray) {
-        try {
-            result = await browser.tabs[action](tabIds, ...funcArgs);
-            result ||= tabIds;
-        } catch (e) {
-            if (schema.sendOneByOne) {
-                log.logError(`fail ${action} tabs as array of ids, doing it one by one`, e);
-                await sendOneByOne();
-            } else {
-                log.throwError(`fail ${action} tabs`, e);
+    async function sendArrayWithRetry() {
+        const maxAttempts = 3;
+        for (let attempt = 1; ; attempt++) {
+            try {
+                result = await browser.tabs[action](tabIds, ...funcArgs);
+                result ||= tabIds;
+                return;
+            } catch (e) {
+                if (attempt >= maxAttempts) {
+                    if (schema.sendOneByOne) {
+                        log.logError(`fail ${action} tabs as array of ids, doing it one by one`, e);
+                        await sendOneByOne();
+                        return;
+                    }
+                    log.throwError(`fail ${action} tabs`, e);
+                }
+                await Utils.wait(100);
             }
         }
+    }
+
+    if (schema.sendArray) {
+        await sendArrayWithRetry();
     } else if (schema.sendOneByOne) {
         await sendOneByOne();
     } else {
@@ -1346,12 +1543,14 @@ export function prepareForSave(tabs, ...prepareArgs) {
 }
 
 export function prepareForSaveTab(
-        {id, url, title, cookieStoreId, favIconUrl, openerTabId, groupId, thumbnail, lastAccessed},
+        {id, url, title, cookieStoreId, favIconUrl, openerTabId, groupId, thumbnail, lastAccessed, uid, lastModified, groupPinned},
         includeGroupId = false,
         includeFavIconUrl = false,
         includeThumbnail = false,
         includeId = true,
-        includeLastAccessed = true
+        includeLastAccessed = true,
+        includeUid = true,
+        includeLastModified = true
     ) {
     const tab = {url};
 
@@ -1375,7 +1574,7 @@ export function prepareForSaveTab(
         tab.groupId = groupId;
     }
 
-    if (includeFavIconUrl && favIconUrl?.startsWith('data:')) {
+    if (includeFavIconUrl && favIconUrl) {
         tab.favIconUrl = favIconUrl;
     }
 
@@ -1385,6 +1584,18 @@ export function prepareForSaveTab(
 
     if (includeLastAccessed && lastAccessed) {
         tab.lastAccessed = lastAccessed;
+    }
+
+    if (includeUid && uid) {
+        tab.uid = uid;
+    }
+
+    if (includeLastModified && lastModified) {
+        tab.lastModified = lastModified;
+    }
+
+    if (groupPinned) {
+        tab.groupPinned = true;
     }
 
     return tab;
@@ -1410,32 +1621,6 @@ export function getNewTabContainer(
     return Containers.isDefault(cookieStoreId) ? newTabContainer : cookieStoreId;
 }
 
-export function getTitle({id, index, title, url, discarded, windowId, lastAccessed}, withUrl = false, sliceLength = 0, withActiveTab = false) {
-    title = title || url || 'about:blank';
-
-    if (withUrl && url && title !== url) {
-        title += '\n' + url;
-    }
-
-    if (withActiveTab && id) {
-        title = (discarded ? Constants.DISCARDED_SYMBOL : Constants.ACTIVE_SYMBOL) + ' ' + title;
-    }
-
-    if (mainStorage.enableDebug && id) {
-        let lastDate = new Date(lastAccessed);
-
-        if (lastDate.getTime()) {
-            lastDate = `(${lastDate.getMinutes()}:${lastDate.getSeconds()}.${lastDate.getMilliseconds()})`;
-        } else {
-            lastDate = '';
-        }
-
-        title = `@${windowId}:#${id}:i${index} ${lastDate} ${title}`;
-    }
-
-    return sliceLength ? Utils.sliceText(title, sliceLength) : title;
-}
-
 // const restrictedDomainsRegExp = /^https?:\/\/(.+\.)?(mozilla\.(net|org|com)|firefox\.com)\//;
 const restrictedDomains = new Set('accounts-static.cdn.mozilla.net,accounts.firefox.com,addons.cdn.mozilla.net,addons.mozilla.org,api.accounts.firefox.com,content.cdn.mozilla.net,discovery.addons.mozilla.org,oauth.accounts.firefox.com,profile.accounts.firefox.com,support.mozilla.org,sync.services.mozilla.com'.split(','));
 
@@ -1459,10 +1644,6 @@ export function isCanSendMessage({url}) {
     }
 }
 
-export function extractId(tab) {
-    return tab.id || tab;
-}
-
 export function isPinned(tab) {
     return tab.pinned === true;
 }
@@ -1479,20 +1660,8 @@ export function isLoaded(tab) {
     return tab.status === browser.tabs.TabStatus.COMPLETE;
 }
 
-export function isLoading(tab) {
-    return tab.status === browser.tabs.TabStatus.LOADING;
-}
-
 export function normalizeUrl(tab) {
     tab.url = Utils.normalizeUrl(tab.url);
-    return tab;
-}
-
-export function normalizeFavIcon(tab) {
-    if (!Utils.isAvailableFavIconUrl(tab.favIconUrl)) {
-        tab.favIconUrl = ConstantsBrowser.DEFAULT_FAVICON;
-    }
-
     return tab;
 }
 
@@ -1521,7 +1690,7 @@ export async function restoreOldExtensionUrls(parseUrlFunc = null) {
     }));
 }
 
-export async function reconcile(groups, allTabs) {
+export async function reconcile(groups, allTabs, leftoverTabs = null) {
     const log = logger.start(['info', reconcile], 'groups count:', groups.length, 'allTabs count:', allTabs.length);
 
     allTabs = allTabs.slice(); // to prevent bugs...
@@ -1566,19 +1735,19 @@ export async function reconcile(groups, allTabs) {
             }
         }
 
+        tabs = (await Promise.allSettled(tabs)).map(({status, value}) => status === 'fulfilled' ? value : null);
+
         if (newTabs.length) {
             log.log('new tabs count:', newTabs.length);
             newTabs = await createMultiple(newTabs, true);
             tabs = tabs.map(tab => tab ?? newTabs.shift()).filter(Boolean);
         }
 
-        group.tabs = tabs;
+        group.tabs = tabs.filter(Boolean);
+    }
 
-        const firstTabIndex = group.tabs[0]?.index;
-        if (Number.isFinite(firstTabIndex)) {
-            log.log('sorting tabs');
-            group.tabs = await moveNative(group.tabs, {index: firstTabIndex}, true);
-        }
+    if (Array.isArray(leftoverTabs)) {
+        leftoverTabs.push(...allTabs);
     }
 
     log.stop();

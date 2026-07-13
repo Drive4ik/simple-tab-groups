@@ -9,9 +9,10 @@ import * as Utils from '/js/utils.js';
 import Lang from '/js/lang.js';
 import JSON from '/js/json.js';
 import Logger, {nativeErrorToObject, objectToNativeError} from '/js/logger.js';
-import GithubGist from './githubgist.js';
-import * as CloudBroadcast from '/js/broadcast.js?channel=cloud';
+import {createCloudProvider} from './provider.js';
+import {send, on as onCloudMessage} from './cloud-helpers.js';
 import * as SyncStorage from '../sync-storage.js';
+import {isReservedFileName} from '../delta/layout.js';
 import * as Storage from '/js/storage.js';
 import Migration from '/js/migration.js';
 import backgroundSelf from '/js/background.js';
@@ -19,7 +20,7 @@ import backgroundSelf from '/js/background.js';
 //     default as GithubGist,
 // } from './githubgist.js';
 
-export {on, off} from '/js/broadcast.js?channel=cloud';
+export {on, off, send, onSyncUiRequestListener} from './cloud-helpers.js';
 
 const logger = new Logger(Constants.MODULES.CLOUD);
 
@@ -42,6 +43,7 @@ export const TRIGGER_RETRY = 'cloud-trigger-retry';
 
 export const NETWORK_RETRY_DELAY_MINUTES = 3;
 const MAX_NETWORK_RETRY_ATTEMPTS = 3;
+const MAX_RATE_LIMIT_BACKOFF_MINUTES = 65;
 
 let inProgress = false;
 
@@ -71,11 +73,7 @@ export class CloudError extends Error {
     }
 }
 
-function send(action, data = {}) {
-    CloudBroadcast.send({action, ...data});
-}
-
-export async function synchronization(trust = null, revision = null) {
+export async function synchronization(trust = null, revision = null, {useBackupFile = false} = {}) {
     if (!canDoSynchronization) {
         throw new Error('synchronization is not available in this context');
     }
@@ -102,7 +100,7 @@ export async function synchronization(trust = null, revision = null) {
             lastProgress = progress;
             log.log('progress', progress);
             send('sync-progress', {progress});
-        });
+        }, useBackupFile);
 
         syncResult.ok = true;
         syncResult.progress = 100;
@@ -128,7 +126,7 @@ export async function synchronization(trust = null, revision = null) {
     return syncResult;
 }
 
-async function sync(trust = null, revision = null, progressFunc = null) {
+async function sync(trust = null, revision = null, progressFunc = null, useBackupFile = false) {
     const isRestoring = !!revision;
 
     if (isRestoring) {
@@ -141,7 +139,7 @@ async function sync(trust = null, revision = null, progressFunc = null) {
         log.throwError('unknown source of trust argument');
     }
 
-    const {syncOptionsLocation} = await Storage.get('syncOptionsLocation');
+    const {syncOptionsLocation, syncProvider} = await Storage.get(['syncOptionsLocation', 'syncProvider']);
 
     if (syncOptionsLocation === Constants.SYNC_STORAGE_FSYNC) {
         if (!SyncStorage.IS_AVAILABLE) {
@@ -161,15 +159,22 @@ async function sync(trust = null, revision = null, progressFunc = null) {
 
     let cloudInstance;
 
+    if (useBackupFile && isReservedFileName(syncOptions.githubGistBackupFileName)) {
+        const error = new CloudError('githubBackupFileNameReserved');
+        storage.lastError = String(error);
+        log.throwError('reserved backup file name', error);
+    }
+
+    const providerOptions = useBackupFile
+        ? {...syncOptions, githubGistFileName: syncOptions.githubGistBackupFileName}
+        : syncOptions;
+
     try {
-        cloudInstance = new GithubGist(
-            syncOptions.githubGistToken,
-            syncOptions.githubGistFileName
-        );
+        cloudInstance = createCloudProvider(syncProvider, providerOptions);
     } catch (error) {
         const cloudError = new CloudError(error.message, {cause: error});
         storage.lastError = String(cloudError);
-        log.throwError('create GithubGist instance', cloudError);
+        log.throwError('create cloud provider instance', cloudError);
     }
 
     const Cloud = cloudInstance;
@@ -197,13 +202,13 @@ async function sync(trust = null, revision = null, progressFunc = null) {
         } else {
             const cloudError = new CloudError(error.message, {cause: error});
             storage.lastError = String(cloudError);
-            log.throwError('get GithubGist content', cloudError);
+            log.throwError('get cloud content', cloudError);
         }
     }
 
     progressFunc?.(40);
 
-    const localData = await Promise.all([Storage.get(), Groups.load(null, true)])
+    const localData = await Promise.all([Storage.get(), Groups.loadWithArchivedTabs(null, true)])
         .then(([data, {groups}]) => {
             data.groups = groups;
             data.containers = Containers.getToExport(data);
@@ -254,12 +259,11 @@ async function sync(trust = null, revision = null, progressFunc = null) {
 
     if (syncResult.changes.cloud) {
         try {
-            const description = Lang('githubGistBackupDescription');
-            cloudInfo = await Cloud.setContent(syncResult.cloudData, description, createCloudProgress(55, 85));
+            cloudInfo = await Cloud.setContent(syncResult.cloudData, createCloudProgress(55, 85));
         } catch (error) {
             const cloudError = new CloudError(error.message, {cause: error});
             storage.lastError = String(cloudError);
-            log.throwError('set GithubGist content', cloudError);
+            log.throwError('set cloud content', cloudError);
         }
 
         syncResult.changes.local = true; // sync date must be equal in cloud and local
@@ -267,32 +271,17 @@ async function sync(trust = null, revision = null, progressFunc = null) {
 
     progressFunc?.(85);
 
-    // remove unnecessary groups
     for (const groupToRemove of syncResult.changes.groupsToRemove) {
         syncResult.changes.local = true;
 
-        if (Groups.isLoaded(groupToRemove.id)) {
-            // remove group from windows
-            await Groups.unload(groupToRemove.id);
-
-            // remove tabs
-            if (!groupToRemove.isArchive) {
-                for (const tabToRemove of groupToRemove.tabs) {
-                    syncResult.changes.tabsToRemove.add(tabToRemove);
-                }
+        if (Groups.isLoaded(groupToRemove.id) && !groupToRemove.isArchive) {
+            for (const tabToRemove of groupToRemove.tabs) {
+                syncResult.changes.tabsToRemove.add(tabToRemove);
             }
         }
     }
 
     progressFunc?.(90);
-
-    // remove unnecessary tabs
-    if (syncResult.changes.tabsToRemove.size) {
-        // if has local changes - do silent remove. "Cloud.sync-end" event will trigger "Groups.updated.all" event and reload all groups with tabs
-        await Tabs.remove(Array.from(syncResult.changes.tabsToRemove), syncResult.changes.local);
-    }
-
-    progressFunc?.(95);
 
     // set last-update before call saveOptions, saveOptions will reset alarm and it depends on last-update time
     storage.githubGistFileName = syncOptions.githubGistFileName;
@@ -341,6 +330,21 @@ async function sync(trust = null, revision = null, progressFunc = null) {
 
         await backgroundSelf.saveOptions(syncResult.localData);
         await Groups.save(syncResult.localData.groups);
+    }
+
+    progressFunc?.(95);
+
+    for (const groupToRemove of syncResult.changes.groupsToRemove) {
+        if (Groups.isLoaded(groupToRemove.id)) {
+            // remove group from windows
+            await Groups.unload(groupToRemove.id);
+        }
+    }
+
+    // remove unnecessary tabs
+    if (syncResult.changes.tabsToRemove.size) {
+        // if has local changes - do silent remove. "Cloud.sync-end" event will trigger "Groups.updated.all" event and reload all groups with tabs
+        await Tabs.remove(Array.from(syncResult.changes.tabsToRemove), syncResult.changes.local);
     }
 
     progressFunc?.(100);
@@ -477,7 +481,7 @@ async function syncGroups(localData, cloudData, sourceOfTruth, changes) {
         }
 
         if (!changes.cloud) {
-            changes.cloud = JSON.stringify(resultCloudGroups) !== JSON.stringify(cloudGroups);
+            changes.cloud = stringifyGroupsForChangeDetection(resultCloudGroups) !== stringifyGroupsForChangeDetection(cloudGroups);
         }
 
     } else if (sourceOfTruth === TRUST_CLOUD) {
@@ -988,6 +992,27 @@ function isEqual(value1, value2) {
     return JSON.stringify(value1) === JSON.stringify(value2);
 }
 
+const CHANGE_DETECTION_IGNORE_TAB_KEYS = ['uid', 'lastModified'];
+
+function stringifyGroupsForChangeDetection(groups) {
+    const stripped = groups.map(group => {
+        if (!Array.isArray(group.tabs)) {
+            return group;
+        }
+
+        return {
+            ...group,
+            tabs: group.tabs.map(tab => {
+                const cleanTab = {...tab};
+                CHANGE_DETECTION_IGNORE_TAB_KEYS.forEach(key => delete cleanTab[key]);
+                return cleanTab;
+            }),
+        };
+    });
+
+    return JSON.stringify(stripped);
+}
+
 // alarm utils
 function isNetworkError(error) {
     const message = String(error);
@@ -1006,8 +1031,22 @@ function isNetworkError(error) {
     return isNetErr;
 }
 
-export function onSyncUiRequestListener() {
-    return CloudBroadcast.on('sync-ui-request', () => send('sync-ui-response'));
+function syncErrorText(syncResult) {
+    return [syncResult?.langId, syncResult?.message].filter(s => typeof s === 'string').join(' ');
+}
+
+function getRateLimitResetMs(syncResult) {
+    const match = syncErrorText(syncResult).match(/githubRateLimit:(\d+)/);
+    if (!match) {
+        return null;
+    }
+    const resetMs = Number(match[1]);
+    return Number.isFinite(resetMs) ? resetMs : null;
+}
+
+function isRetryableSyncError(syncResult) {
+    return isNetworkError(objectToNativeError(syncResult))
+        || getRateLimitResetMs(syncResult) !== null;
 }
 
 export async function shouldShowSyncErrorNotification(syncResult, trigger) {
@@ -1022,7 +1061,7 @@ export async function shouldShowSyncErrorNotification(syncResult, trigger) {
     if (trigger === TRIGGER_MANUAL) {
         const {promise, resolve} = Promise.withResolvers();
 
-        const off = CloudBroadcast.on('sync-ui-response', () => resolve(false));
+        const off = onCloudMessage('sync-ui-response', () => resolve(false));
         setTimeout(() => resolve(true), 1000);
 
         send('sync-ui-request');
@@ -1034,7 +1073,7 @@ export async function shouldShowSyncErrorNotification(syncResult, trigger) {
         return result;
     }
 
-    if (trigger === TRIGGER_AUTO && !isNetworkError(objectToNativeError(syncResult))) {
+    if (trigger === TRIGGER_AUTO && !isRetryableSyncError(syncResult)) {
         return true;
     }
 
@@ -1047,11 +1086,18 @@ export async function getSyncRetryDelayInMinutes(syncResult, trigger) {
         return 0;
     }
 
-    if (isNetworkError(objectToNativeError(syncResult))) {
+    if (isRetryableSyncError(syncResult)) {
         const networkRetryAttempt = (syncStorage.networkRetryAttempt ?? 0) + 1;
 
         if (networkRetryAttempt <= MAX_NETWORK_RETRY_ATTEMPTS) {
             syncStorage.networkRetryAttempt = networkRetryAttempt;
+
+            const resetMs = getRateLimitResetMs(syncResult);
+            if (resetMs !== null) {
+                const minutesUntilReset = Math.ceil((resetMs - Date.now()) / 60_000);
+                return Math.min(Math.max(minutesUntilReset, 1), MAX_RATE_LIMIT_BACKOFF_MINUTES);
+            }
+
             return networkRetryAttempt * NETWORK_RETRY_DELAY_MINUTES;
         }
     }

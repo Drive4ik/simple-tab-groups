@@ -99,6 +99,12 @@ export async function updateGroup(group, settings = null) {
     }
 
     const groupProperties = await Groups.getMenuProperties(group, CONTEXT, settings);
+
+    if (!(await Menus.has(groupProperties.id))) {
+        logger.log('updateGroup: menu item missing, skipping', groupProperties.id);
+        return;
+    }
+
     await Menus.update(groupProperties.id, groupProperties);
 }
 
@@ -123,6 +129,9 @@ export async function groupRemoved(group) {
     }
 
     const groupMenuId = await Groups.getMenuId(group.id, CONTEXT);
+    if (!(await Menus.has(groupMenuId))) {
+        return;
+    }
     await Menus.remove(groupMenuId);
 }
 

@@ -13,6 +13,12 @@ import optionsMixin from '/js/mixins/options.mixin.js';
 
 export default {
     mixins: [optionsMixin],
+    props: {
+        pathKey: {
+            type: String,
+            default: 'autoBackupFilePath',
+        },
+    },
     data() {
         this.FILE_PATH_VARIABLES = Utils.getFilePathVariables();
 
@@ -27,7 +33,7 @@ export default {
     methods: {
         lang: Lang,
         addCustomWatchers() {
-            this.optionsWatch('autoBackupFilePath', async (value, oldValue) => {
+            this.optionsWatch(this.pathKey, async (value, oldValue) => {
                 try {
                     value = value.trim();
 
@@ -44,9 +50,9 @@ export default {
             });
         },
         insertVariableToFilePath(variable) {
-            this.options.autoBackupFilePath = Utils.insertVariable(
-                this.$refs.autoBackupFilePath,
-                this.options.autoBackupFilePath,
+            this.options[this.pathKey] = Utils.insertVariable(
+                this.$refs.filePathInput,
+                this.options[this.pathKey],
                 variable
             );
         },
@@ -72,8 +78,8 @@ export default {
                         </div>
                         <div class="control is-expanded">
                             <input type="text"
-                                v-model.lazy.trim="options.autoBackupFilePath"
-                                ref="autoBackupFilePath"
+                                v-model.lazy.trim="options[pathKey]"
+                                ref="filePathInput"
                                 maxlength="200"
                                 :title="lang('filePathTitle')"
                                 class="input"
