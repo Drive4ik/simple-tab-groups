@@ -1,12 +1,12 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 12" fill="none">
-  <g stroke="#808892" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M2.5,5.5 L2.5,7 Q2.5,9.5 5,9.5 L6.5,9.5"/>
-    <polyline points="5,8 6.5,9.5 5,11"/>
-    <path d="M9.5,6.5 L9.5,5 Q9.5,2.5 7,2.5 L5.5,2.5"/>
-    <polyline points="7,1 5.5,2.5 7,4"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+  <g stroke="#808892" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M5,11 L5,14 Q5,19 10,19 L13,19"/>
+    <polyline points="10,16 13,19 10,22"/>
+    <path d="M19,13 L19,10 Q19,5 14,5 L11,5"/>
+    <polyline points="14,2 11,5 14,8"/>
   </g>
-  <circle cx="2.5" cy="2.5" r="2.5" fill="#1da260"/>
-  <path d="M0.5,2.5 L4.5,2.5 M2.5,0.5 L2.5,4.5" stroke="#ffffff" stroke-width="0.8" stroke-linecap="round"/>
-  <circle cx="9.5" cy="9.5" r="2.5" fill="#df3a3c"/>
-  <path d="M7.5,9.5 L11.5,9.5" stroke="#ffffff" stroke-width="0.8" stroke-linecap="round"/>
+  <circle cx="5" cy="5" r="5" fill="#1da260"/>
+  <path d="M1,5 L9,5 M5,1 L5,9" stroke="#ffffff" stroke-width="1.6" stroke-linecap="round"/>
+  <circle cx="19" cy="19" r="5" fill="#df3a3c"/>
+  <path d="M15,19 L23,19" stroke="#ffffff" stroke-width="1.6" stroke-linecap="round"/>
 </svg>
