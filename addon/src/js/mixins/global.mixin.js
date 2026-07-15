@@ -40,5 +40,9 @@ export default {
             this.sendMessage('open-options-page', {section});
             this.closeWindow?.();
         },
+        openSyncDiffPage(entry) {
+            this.sendMessage('open-sync-diff-page', {entry});
+            this.closeWindow?.();
+        },
     },
 };

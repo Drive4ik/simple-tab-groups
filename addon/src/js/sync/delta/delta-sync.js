@@ -38,7 +38,9 @@ import {
     maxSeq,
     saveBaseline,
 } from './sync-marks.js';
-import {gatherLocalPending} from './local-state.js';
+import {gatherLocalPending, captureLocalSnapshot} from './local-state.js';
+import {deepClone} from './deep-clone.js';
+import {recordSyncDiff, notifySyncDiff} from './sync-diff-store.js';
 import {buildOutboundContainerMapping, translateInboundContainers} from './container-translation.js';
 import {
     applyBrowserOps,
@@ -197,7 +199,8 @@ export async function deltaSynchronization() {
         send('sync-start');
         progress(1);
 
-        const {syncOptionsLocation, syncProvider} = await Storage.get(['syncOptionsLocation', 'syncProvider']);
+        const {syncOptionsLocation, syncProvider, syncDiffEnable, syncDiffHistoryDepth} =
+            await Storage.get(['syncOptionsLocation', 'syncProvider', 'syncDiffEnable', 'syncDiffHistoryDepth']);
 
         if (syncOptionsLocation === Constants.SYNC_STORAGE_FSYNC && !SyncStorage.IS_AVAILABLE) {
             const error = new CloudError('ffSyncNotSupported');
@@ -225,6 +228,7 @@ export async function deltaSynchronization() {
 
         const {localState, priorBaseline, lastPushedSeq, favIconMap} =
             await gatherLocalPending(selfDeviceId, log);
+        const diffBefore = syncDiffEnable ? deepClone(localState) : null;
         let localPendingEvents = await DeltaLog.getEventsSince(lastPushedSeq);
 
         const resetPending = !!storage[resetPendingKey(selfDeviceId)];
@@ -404,6 +408,17 @@ export async function deltaSynchronization() {
         }
 
         await applyFavIconMap(pulledFavIcons);
+
+        if (syncDiffEnable && diffBefore) {
+            const diffAfter = await captureLocalSnapshot();
+            const diffEntry = await recordSyncDiff(diffBefore, diffAfter, syncDiffHistoryDepth)
+                .catch(log.onCatch('cant record sync diff', false));
+            if (diffEntry) {
+                send('sync-diff', {entryId: diffEntry.id, summary: diffEntry.summary});
+                await notifySyncDiff(diffEntry)
+                    .catch(log.onCatch('cant show sync diff notification', false));
+            }
+        }
 
         progress(85);
 

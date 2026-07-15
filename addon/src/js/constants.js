@@ -64,6 +64,7 @@ export const PAGES = Object.freeze({
     POPUP: browser.runtime.getURL('popup/popup.html'),
     MANAGE: browser.runtime.getURL('manage/manage.html'),
     SETTINGS: browser.runtime.getURL('options/options.html'),
+    SYNC_DIFF: browser.runtime.getURL('sync-diff/sync-diff.html'),
     HELP: {
         WELCOME: browser.runtime.getURL('help/welcome.html'),
         CONFLICTED_EXTENSIONS: browser.runtime.getURL('help/extensions-that-conflict-with-stg.html'),
@@ -531,6 +532,8 @@ export const DEFAULT_OPTIONS = Object.freeze({
     syncSleepNewTabs: true,
     syncSleepPinnedTabs: false,
     syncActivatePreviouslyActiveTabs: false,
+    syncDiffEnable: false,
+    syncDiffHistoryDepth: 20,
 
     colorScheme: 'auto', // auto, light, dark
 
@@ -571,6 +574,7 @@ export const ON_UPDATED_TAB_PROPERTIES = Object.freeze([ // browser.tabs not def
 export const MODULES = Object.freeze({
     BACKGROUND: 'Background',
     MANAGE: 'Manage',
+    SYNC_DIFF: 'SyncDiff',
     POPUP: 'Popup',
     SIDEBAR: 'Sidebar',
     OPTIONS: 'Options',
