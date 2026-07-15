@@ -1560,12 +1560,12 @@ html {
         }
 
         .image {
-            width: 24px;
-            height: 24px;
+            width: 20px;
+            height: 20px;
 
             img {
-                max-width: 24px;
-                max-height: 24px;
+                max-width: 20px;
+                max-height: 20px;
             }
         }
     }
