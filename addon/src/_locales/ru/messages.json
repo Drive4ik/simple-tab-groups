@@ -1479,6 +1479,70 @@
         "message": "Создавать резервную копию перед применением изменений синхронизации (рекомендуется)",
         "description": "Toggle: take a local STG backup before delta-sync applies any change, so a bad sync can be rolled back"
     },
+    "syncDiffEnableTitle": {
+        "message": "Отслеживать изменения синхронизации (записывать различия после каждой синхронизации)",
+        "description": "Toggle: record what each sync changed on this device and keep a diff history"
+    },
+    "syncDiffHistoryDepthTitle": {
+        "message": "Глубина истории различий синхронизации",
+        "description": "How many recent sync diffs to keep"
+    },
+    "syncDiffButtonTitle": {
+        "message": "Открыть историю различий синхронизации",
+        "description": "Popup button tooltip: open the sync diff page"
+    },
+    "tabCounterTitle": {
+        "message": "Открытые вкладки / архивные вкладки / все вкладки",
+        "description": "Tooltip for the popup tab counter"
+    },
+    "syncDiffNotificationTitle": {
+        "message": "Синхронизация применила изменения",
+        "description": "Title of the notification shown after a sync that changed something"
+    },
+    "syncDiffPageTitle": {
+        "message": "Различия синхронизации",
+        "description": "Title of the sync diff page"
+    },
+    "syncDiffHistoryTitle": {
+        "message": "История",
+        "description": "Sync diff page: history list heading"
+    },
+    "syncDiffClear": {
+        "message": "Очистить",
+        "description": "Sync diff page: clear history button"
+    },
+    "syncDiffEmpty": {
+        "message": "Изменения синхронизации ещё не зафиксированы",
+        "description": "Sync diff page: empty history placeholder"
+    },
+    "syncDiffSelectEntry": {
+        "message": "Выберите запись, чтобы увидеть её изменения",
+        "description": "Sync diff page: no entry selected placeholder"
+    },
+    "syncDiffTabs": {
+        "message": "Вкладки",
+        "description": "Sync diff page: tabs section heading"
+    },
+    "syncDiffGroups": {
+        "message": "Группы",
+        "description": "Sync diff page: groups section heading"
+    },
+    "syncDiffOptions": {
+        "message": "Настройки",
+        "description": "Sync diff page: options section heading"
+    },
+    "syncDiffOpenTabs": {
+        "message": "Открытые:",
+        "description": "Sync diff page counter label: open tabs"
+    },
+    "syncDiffArchivedTabs": {
+        "message": "Архивные:",
+        "description": "Sync diff page counter label: archived tabs"
+    },
+    "syncDiffAllTabs": {
+        "message": "Всего:",
+        "description": "Sync diff page counter label: all tabs"
+    },
     "syncSleepNewTabs": {
         "message": "Создавать новые синхронизированные вкладки спящими (рекомендуется)",
         "description": "Toggle: tabs created by sync show title+favicon and only load when activated"
