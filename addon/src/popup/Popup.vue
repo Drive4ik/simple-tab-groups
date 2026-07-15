@@ -1558,6 +1558,11 @@ html {
                 height: 10px;
             }
         }
+
+        .sync-diff .image {
+            width: 20px;
+            height: 20px;
+        }
     }
 
     /* Drag & Drop Styles */
