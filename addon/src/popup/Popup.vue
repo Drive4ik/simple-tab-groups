@@ -1562,6 +1562,11 @@ html {
         .sync-diff .image {
             width: 24px;
             height: 24px;
+
+            img {
+                max-width: 24px;
+                max-height: 24px;
+            }
         }
     }
 
