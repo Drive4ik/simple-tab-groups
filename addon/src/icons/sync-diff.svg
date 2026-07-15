@@ -1,12 +1,12 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 14 14" fill="none">
-  <g stroke="#9ba1a6" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M3.5,6.5 L3.5,8 Q3.5,10.5 6,10.5 L7.5,10.5"/>
-    <polyline points="6,9 7.5,10.5 6,12"/>
-    <path d="M10.5,7.5 L10.5,6 Q10.5,3.5 8,3.5 L6.5,3.5"/>
-    <polyline points="8,2 6.5,3.5 8,5"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 12" fill="none">
+  <g stroke="#808892" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M2.5,5.5 L2.5,7 Q2.5,9.5 5,9.5 L6.5,9.5"/>
+    <polyline points="5,8 6.5,9.5 5,11"/>
+    <path d="M9.5,6.5 L9.5,5 Q9.5,2.5 7,2.5 L5.5,2.5"/>
+    <polyline points="7,1 5.5,2.5 7,4"/>
   </g>
-  <circle cx="3.5" cy="3.5" r="2.5" fill="#22a06b"/>
-  <path d="M2,3.5 L5,3.5 M3.5,2 L3.5,5" stroke="#ffffff" stroke-width="1" stroke-linecap="round"/>
-  <circle cx="10.5" cy="10.5" r="2.5" fill="#e5484d"/>
-  <path d="M9,10.5 L12,10.5" stroke="#ffffff" stroke-width="1" stroke-linecap="round"/>
+  <circle cx="2.5" cy="2.5" r="2.5" fill="#1da260"/>
+  <path d="M0.5,2.5 L4.5,2.5 M2.5,0.5 L2.5,4.5" stroke="#ffffff" stroke-width="0.8" stroke-linecap="round"/>
+  <circle cx="9.5" cy="9.5" r="2.5" fill="#df3a3c"/>
+  <path d="M7.5,9.5 L11.5,9.5" stroke="#ffffff" stroke-width="0.8" stroke-linecap="round"/>
 </svg>
