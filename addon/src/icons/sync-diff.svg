@@ -1,10 +1,12 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" style="color-scheme: light dark;" fill="none" stroke-width="9" stroke-linecap="round" stroke-linejoin="round">
-  <g stroke="light-dark(#5b5b66,#fbfbfe)">
-    <path d="M26,36 L26,60 Q26,72 38,72 L58,72"/>
-    <polyline points="50,63 61,72 50,81"/>
-    <path d="M74,74 L74,40 Q74,28 62,28 L42,28"/>
-    <polyline points="50,19 39,28 50,37"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" fill="none">
+  <g stroke="#9ba1a6" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M24,44 L24,58 Q24,72 38,72 L50,72"/>
+    <polyline points="44,66 50,72 44,78"/>
+    <path d="M72,52 L72,38 Q72,24 58,24 L46,24"/>
+    <polyline points="52,30 46,24 52,18"/>
   </g>
-  <path d="M16,26 L36,26 M26,16 L26,36" stroke="#22a06b"/>
-  <path d="M64,74 L84,74" stroke="#e5484d"/>
+  <circle cx="24" cy="24" r="15" fill="#22a06b"/>
+  <path d="M18,24 L30,24 M24,18 L24,30" stroke="#ffffff" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="72" cy="72" r="15" fill="#e5484d"/>
+  <path d="M64,72 L80,72" stroke="#ffffff" stroke-width="4" stroke-linecap="round"/>
 </svg>
