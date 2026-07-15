@@ -183,11 +183,13 @@ export default {
             return {archived, notArchived, all: archived.length + notArchived.length};
         },
         tabCounterTitle() {
-            return [
-                `${this.lang('tabCounterOpen')} ${this.tabCounts.notArchived.length}`,
+            const open = this.groupTabsCountMessage(this.tabCounts.notArchived, false, false);
+            const line = [
+                `${this.lang('tabCounterOpen')} ${open}`,
                 `${this.lang('tabCounterArchived')} ${this.tabCounts.archived.length}`,
                 `${this.lang('tabCounterAll')} ${this.tabCounts.all}`,
             ].join(' · ');
+            return `${line}\n${this.lang('tabCounterHint')}`;
         },
         countWindowsUnSyncTabs() {
             return this.unSyncTabs.map(tab => tab.windowId).filter(Utils.onlyUniqueFilter).length;
@@ -1213,7 +1215,7 @@ export default {
         </div>
         <div v-if="options.syncTabCounterEnable" class="tab-counter" :title="tabCounterTitle">
             <span class="tab-counter-label" v-text="lang('tabCounterOpen')"></span>
-            <span v-text="tabCounts.notArchived.length"></span>
+            <span v-text="groupTabsCountMessage(tabCounts.notArchived, false, false)"></span>
             <span class="tab-counter-sep">·</span>
             <span class="tab-counter-label" v-text="lang('tabCounterArchived')"></span>
             <span v-text="tabCounts.archived.length"></span>
@@ -1229,7 +1231,9 @@ export default {
             @keydown.enter="openSyncDiffPage()"
             :title="lang('syncDiffButtonTitle')"
             >
-            <span class="sync-diff-label" v-text="lang('syncDiffButtonLabel')"></span>
+            <span class="sync-diff-glyph" aria-hidden="true">
+                <span class="sync-diff-plus">+</span><span class="sync-diff-minus">−</span>
+            </span>
         </div>
         <div
             v-if="options.syncEnable"
@@ -1531,10 +1535,18 @@ html {
             }
 
             &.sync-diff {
-                width: auto;
+                .sync-diff-glyph {
+                    font-weight: bold;
+                    font-size: 1.05em;
+                    letter-spacing: -0.05em;
+                }
 
-                .sync-diff-label {
-                    font-size: 0.85em;
+                .sync-diff-plus {
+                    color: var(--bulma-success);
+                }
+
+                .sync-diff-minus {
+                    color: var(--bulma-danger);
                 }
             }
 

@@ -21,7 +21,10 @@ const KIND_SYMBOL = {
     added: '+',
     removed: '−',
     changed: '~',
+    moved: '↔',
 };
+
+const PINNED_GROUP_REF = 'pinned';
 
 export default {
     name: Constants.MODULES.SYNC_DIFF,
@@ -30,11 +33,30 @@ export default {
             history: [],
             selectedId: null,
             counts: null,
+            groupByGroups: false,
         };
     },
     computed: {
         selectedEntry() {
             return this.history.find(entry => entry.id === this.selectedId) || this.history[0] || null;
+        },
+        tabSections() {
+            const tabs = this.selectedEntry?.tabs || [];
+
+            if (!this.groupByGroups) {
+                return tabs.length ? [{key: 'all', label: null, tabs}] : [];
+            }
+
+            const byGroup = new Map();
+            for (const tab of tabs) {
+                const key = tab.group == null ? PINNED_GROUP_REF : String(tab.group);
+                if (!byGroup.has(key)) {
+                    byGroup.set(key, {key, label: this.groupLabel(tab), tabs: []});
+                }
+                byGroup.get(key).tabs.push(tab);
+            }
+
+            return [...byGroup.values()];
         },
     },
     async created() {
@@ -80,6 +102,21 @@ export default {
         kindSymbol(kind) {
             return KIND_SYMBOL[kind] || '';
         },
+        groupLabel(tab) {
+            if (tab.group == null || tab.group === PINNED_GROUP_REF) {
+                return this.lang('syncDiffPinnedGroup');
+            }
+            return tab.groupTitle || String(tab.group);
+        },
+        movedFromLabel(tab) {
+            if (tab.kind !== 'moved' || tab.fromGroup == null || tab.fromGroup === tab.group) {
+                return '';
+            }
+            const from = tab.fromGroup === PINNED_GROUP_REF
+                ? this.lang('syncDiffPinnedGroup')
+                : (tab.fromGroupTitle || String(tab.fromGroup));
+            return this.lang('syncDiffMovedFrom', from);
+        },
         formatTs(ts) {
             return new Date(ts).toLocaleString();
         },
@@ -100,6 +137,10 @@ export default {
     <div class="sync-diff-page">
         <header class="sync-diff-header">
             <h1 class="title is-5" v-text="lang('syncDiffPageTitle')"></h1>
+            <label class="checkbox sync-diff-groupby">
+                <input v-model="groupByGroups" type="checkbox" />
+                <span v-text="lang('syncDiffGroupByGroups')"></span>
+            </label>
             <div v-if="counts" class="sync-diff-counts">
                 <span class="tag is-info is-light">
                     <span v-text="lang('syncDiffOpenTabs')"></span>&nbsp;<b v-text="tabsCountMessage(counts.notArchived, false, false)"></b>
@@ -136,19 +177,23 @@ export default {
             <section v-if="selectedEntry" class="sync-diff-detail">
                 <div v-if="selectedEntry.tabs.length" class="diff-section">
                     <h2 class="title is-6" v-text="lang('syncDiffTabs')"></h2>
-                    <div v-for="(item, i) in selectedEntry.tabs" :key="'t' + i" class="diff-row" :class="'diff-' + item.kind">
-                        <span class="diff-kind" v-text="kindSymbol(item.kind)"></span>
-                        <div class="diff-main">
-                            <div class="diff-line" v-text="item.title || item.url"></div>
-                            <div class="diff-sub" v-text="item.url"></div>
-                            <ul v-if="item.changes" class="diff-changes">
-                                <li v-for="(change, ci) in item.changes" :key="ci">
-                                    <b v-text="change.field"></b>:
-                                    <span class="diff-from" v-text="formatValue(change.from)"></span>
-                                    →
-                                    <span class="diff-to" v-text="formatValue(change.to)"></span>
-                                </li>
-                            </ul>
+                    <div v-for="section in tabSections" :key="'ts' + section.key" class="diff-group-section">
+                        <h3 v-if="section.label" class="diff-group-heading" v-text="section.label"></h3>
+                        <div v-for="(item, i) in section.tabs" :key="'t' + i" class="diff-row" :class="'diff-' + item.kind">
+                            <span class="diff-kind" v-text="kindSymbol(item.kind)"></span>
+                            <div class="diff-main">
+                                <div class="diff-line" v-text="item.title || item.url"></div>
+                                <div class="diff-sub" v-text="item.url"></div>
+                                <div v-if="movedFromLabel(item)" class="diff-moved-from" v-text="movedFromLabel(item)"></div>
+                                <ul v-if="item.changes" class="diff-changes">
+                                    <li v-for="(change, ci) in item.changes" :key="ci">
+                                        <b v-text="change.field"></b>:
+                                        <span class="diff-from" v-text="formatValue(change.from)"></span>
+                                        →
+                                        <span class="diff-to" v-text="formatValue(change.to)"></span>
+                                    </li>
+                                </ul>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -306,6 +351,26 @@ export default {
     border-left-color: var(--bulma-warning);
 }
 
+.diff-row.diff-moved {
+    border-left-color: var(--bulma-info);
+}
+
+.diff-group-section {
+    margin-bottom: 0.75rem;
+}
+
+.diff-group-heading {
+    font-weight: bold;
+    font-size: 0.95em;
+    margin: 0.5rem 0 0.25rem;
+    opacity: 0.85;
+}
+
+.diff-moved-from {
+    font-size: 0.8em;
+    color: var(--bulma-info);
+}
+
 .diff-kind {
     font-weight: bold;
     width: 1rem;
@@ -323,6 +388,10 @@ export default {
 
 .diff-row.diff-changed .diff-kind {
     color: var(--bulma-warning);
+}
+
+.diff-row.diff-moved .diff-kind {
+    color: var(--bulma-info);
 }
 
 .diff-main {

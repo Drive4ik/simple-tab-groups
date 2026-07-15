@@ -1491,10 +1491,6 @@
         "message": "Відкрити історію відмінностей синхронізації",
         "description": "Popup button tooltip: open the sync diff page"
     },
-    "syncDiffButtonLabel": {
-        "message": "Дифф",
-        "description": "Popup footer button label that opens the sync diff page"
-    },
     "syncTabCounterEnableTitle": {
         "message": "Показувати лічильник вкладок у попапі",
         "description": "Toggle: show the open/archived/all tab counter in the popup footer"
@@ -1510,6 +1506,27 @@
     "tabCounterAll": {
         "message": "усіх",
         "description": "Label for the count of all tabs in the popup counter"
+    },
+    "tabCounterHint": {
+        "message": "open = активні/усього відкритих вкладок, archived = вкладки в архівних групах, all = усього вкладок",
+        "description": "Tooltip hint explaining the popup tab counter fields"
+    },
+    "syncDiffGroupByGroups": {
+        "message": "Групувати за групами",
+        "description": "Sync diff page toggle: group tab changes by the group they belong to"
+    },
+    "syncDiffPinnedGroup": {
+        "message": "Закріплені",
+        "description": "Sync diff page: section title for pinned tabs"
+    },
+    "syncDiffMovedFrom": {
+        "message": "переміщено з $GROUP$",
+        "description": "Sync diff page: note showing the source group of a moved tab",
+        "placeholders": {
+            "group": {
+                "content": "$1"
+            }
+        }
     },
     "syncDiffNotificationTitle": {
         "message": "Синхронізація застосувала зміни",
