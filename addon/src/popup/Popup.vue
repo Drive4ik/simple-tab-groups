@@ -171,6 +171,17 @@ export default {
         unSyncWindowTabs() {
             return this.currentWindow ? this.unSyncTabs.filter(tab => tab.windowId === this.currentWindow.id) : [];
         },
+        tabCounts() {
+            const archived = [];
+            const notArchived = [];
+
+            for (const group of this.groups) {
+                const tabs = Array.isArray(group.tabs) ? group.tabs : [];
+                (group.isArchive ? archived : notArchived).push(...tabs);
+            }
+
+            return {archived, notArchived, all: archived.length + notArchived.length};
+        },
         countWindowsUnSyncTabs() {
             return this.unSyncTabs.map(tab => tab.windowId).filter(Utils.onlyUniqueFilter).length;
         },
@@ -1193,6 +1204,25 @@ export default {
             </figure>
             <span v-text="lang('manageGroupsTitle')"></span>
         </div>
+        <div class="tab-counter" :title="lang('tabCounterTitle')">
+            <span v-text="groupTabsCountMessage(tabCounts.notArchived, false, false)"></span>
+            <span class="tab-counter-sep">·</span>
+            <span v-text="groupTabsCountMessage(tabCounts.archived, true, false)"></span>
+            <span class="tab-counter-sep">·</span>
+            <span v-text="tabCounts.all"></span>
+        </div>
+        <div
+            v-if="options.syncEnable && options.syncDiffEnable"
+            tabindex="0"
+            class="sync-diff"
+            @click="openSyncDiffPage()"
+            @keydown.enter="openSyncDiffPage()"
+            :title="lang('syncDiffButtonTitle')"
+            >
+            <figure class="image is-16x16">
+                <img src="/icons/copy.svg" />
+            </figure>
+        </div>
         <div
             v-if="options.syncEnable"
             tabindex="0"
@@ -1469,6 +1499,23 @@ html {
 
             &.settings-menu {
                 width: auto;
+            }
+
+            &.tab-counter {
+                width: auto;
+                gap: calc(var(--gap-indent) / 2);
+                font-size: 0.85em;
+                white-space: nowrap;
+                cursor: default;
+
+                &:hover {
+                    --current-background-color: var(--footer-background-color);
+                    background-color: var(--current-background-color);
+                }
+
+                .tab-counter-sep {
+                    opacity: 0.5;
+                }
             }
 
             &:not(:first-child)::before {
