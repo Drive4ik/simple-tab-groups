@@ -1503,9 +1503,25 @@
         "message": "Open sync diff history",
         "description": "Popup button tooltip: open the sync diff page"
     },
-    "tabCounterTitle": {
-        "message": "Open tabs / archived tabs / all tabs",
-        "description": "Tooltip for the popup tab counter"
+    "syncDiffButtonLabel": {
+        "message": "Diff",
+        "description": "Popup footer button label that opens the sync diff page"
+    },
+    "syncTabCounterEnableTitle": {
+        "message": "Show the tab counter in the popup",
+        "description": "Toggle: show the open/archived/all tab counter in the popup footer"
+    },
+    "tabCounterOpen": {
+        "message": "open",
+        "description": "Label for the count of open (non-archived) tabs in the popup counter"
+    },
+    "tabCounterArchived": {
+        "message": "archived",
+        "description": "Label for the count of archived tabs in the popup counter"
+    },
+    "tabCounterAll": {
+        "message": "all",
+        "description": "Label for the count of all tabs in the popup counter"
     },
     "syncDiffNotificationTitle": {
         "message": "Sync applied changes",

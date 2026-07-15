@@ -1431,6 +1431,13 @@ export default {
                                 </div>
                             </div>
                         </div>
+
+                        <div class="field">
+                            <label class="checkbox">
+                                <input v-model="options.syncTabCounterEnable" type="checkbox" />
+                                <span v-text="lang('syncTabCounterEnableTitle')"></span>
+                            </label>
+                        </div>
                     </template>
                 </div>
             </div>

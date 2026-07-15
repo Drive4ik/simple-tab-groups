@@ -534,6 +534,7 @@ export const DEFAULT_OPTIONS = Object.freeze({
     syncActivatePreviouslyActiveTabs: false,
     syncDiffEnable: false,
     syncDiffHistoryDepth: 20,
+    syncTabCounterEnable: true,
 
     colorScheme: 'auto', // auto, light, dark
 

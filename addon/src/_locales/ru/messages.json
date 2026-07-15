@@ -1491,9 +1491,25 @@
         "message": "Открыть историю различий синхронизации",
         "description": "Popup button tooltip: open the sync diff page"
     },
-    "tabCounterTitle": {
-        "message": "Открытые вкладки / архивные вкладки / все вкладки",
-        "description": "Tooltip for the popup tab counter"
+    "syncDiffButtonLabel": {
+        "message": "Дифф",
+        "description": "Popup footer button label that opens the sync diff page"
+    },
+    "syncTabCounterEnableTitle": {
+        "message": "Показывать счётчик вкладок в попапе",
+        "description": "Toggle: show the open/archived/all tab counter in the popup footer"
+    },
+    "tabCounterOpen": {
+        "message": "открытых",
+        "description": "Label for the count of open (non-archived) tabs in the popup counter"
+    },
+    "tabCounterArchived": {
+        "message": "в архиве",
+        "description": "Label for the count of archived tabs in the popup counter"
+    },
+    "tabCounterAll": {
+        "message": "всего",
+        "description": "Label for the count of all tabs in the popup counter"
     },
     "syncDiffNotificationTitle": {
         "message": "Синхронизация применила изменения",

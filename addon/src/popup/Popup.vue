@@ -182,6 +182,13 @@ export default {
 
             return {archived, notArchived, all: archived.length + notArchived.length};
         },
+        tabCounterTitle() {
+            return [
+                `${this.lang('tabCounterOpen')} ${this.tabCounts.notArchived.length}`,
+                `${this.lang('tabCounterArchived')} ${this.tabCounts.archived.length}`,
+                `${this.lang('tabCounterAll')} ${this.tabCounts.all}`,
+            ].join(' · ');
+        },
         countWindowsUnSyncTabs() {
             return this.unSyncTabs.map(tab => tab.windowId).filter(Utils.onlyUniqueFilter).length;
         },
@@ -1204,11 +1211,14 @@ export default {
             </figure>
             <span v-text="lang('manageGroupsTitle')"></span>
         </div>
-        <div class="tab-counter" :title="lang('tabCounterTitle')">
-            <span v-text="groupTabsCountMessage(tabCounts.notArchived, false, false)"></span>
+        <div v-if="options.syncTabCounterEnable" class="tab-counter" :title="tabCounterTitle">
+            <span class="tab-counter-label" v-text="lang('tabCounterOpen')"></span>
+            <span v-text="tabCounts.notArchived.length"></span>
             <span class="tab-counter-sep">·</span>
-            <span v-text="groupTabsCountMessage(tabCounts.archived, true, false)"></span>
+            <span class="tab-counter-label" v-text="lang('tabCounterArchived')"></span>
+            <span v-text="tabCounts.archived.length"></span>
             <span class="tab-counter-sep">·</span>
+            <span class="tab-counter-label" v-text="lang('tabCounterAll')"></span>
             <span v-text="tabCounts.all"></span>
         </div>
         <div
@@ -1219,9 +1229,7 @@ export default {
             @keydown.enter="openSyncDiffPage()"
             :title="lang('syncDiffButtonTitle')"
             >
-            <figure class="image is-16x16">
-                <img src="/icons/copy.svg" />
-            </figure>
+            <span class="sync-diff-label" v-text="lang('syncDiffButtonLabel')"></span>
         </div>
         <div
             v-if="options.syncEnable"
@@ -1515,6 +1523,18 @@ html {
 
                 .tab-counter-sep {
                     opacity: 0.5;
+                }
+
+                .tab-counter-label {
+                    opacity: 0.65;
+                }
+            }
+
+            &.sync-diff {
+                width: auto;
+
+                .sync-diff-label {
+                    font-size: 0.85em;
                 }
             }
 
