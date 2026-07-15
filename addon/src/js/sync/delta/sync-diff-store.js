@@ -4,6 +4,16 @@ import Notification from '/js/notification.js';
 import {computeSyncDiff, isEmptySyncDiff} from './sync-diff.js';
 
 export const SYNC_DIFF_HISTORY_KEY = 'syncDiffHistory';
+export const SYNC_DIFF_VIEW_SETTINGS_KEY = 'syncDiffViewSettings';
+
+export const DEFAULT_SYNC_DIFF_VIEW_SETTINGS = Object.freeze({
+    groupByGroups: true,
+    showAdded: true,
+    showRemoved: true,
+    showChanged: true,
+    hideMoves: false,
+    collapsedGroups: [],
+});
 
 const MIN_DEPTH = 1;
 const MAX_DEPTH = 200;
@@ -24,6 +34,17 @@ export async function getSyncDiffHistory() {
 
 export async function clearSyncDiffHistory() {
     await Storage.set({[SYNC_DIFF_HISTORY_KEY]: []});
+}
+
+export async function getSyncDiffViewSettings() {
+    const {[SYNC_DIFF_VIEW_SETTINGS_KEY]: stored} = await Storage.get({[SYNC_DIFF_VIEW_SETTINGS_KEY]: {}});
+    return {...DEFAULT_SYNC_DIFF_VIEW_SETTINGS, ...(stored && typeof stored === 'object' ? stored : {})};
+}
+
+export async function setSyncDiffViewSettings(settings) {
+    const merged = {...DEFAULT_SYNC_DIFF_VIEW_SETTINGS, ...settings};
+    await Storage.set({[SYNC_DIFF_VIEW_SETTINGS_KEY]: merged});
+    return merged;
 }
 
 export async function recordSyncDiff(before, after, depth) {

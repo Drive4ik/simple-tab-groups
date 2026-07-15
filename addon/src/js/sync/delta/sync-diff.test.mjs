@@ -50,7 +50,7 @@ test('detects added, removed and changed tabs', () => {
     assert.deepEqual(diff.counts.tabs, {added: 1, removed: 1, changed: 1, moved: 0});
 });
 
-test('a tab moving between groups (same url/title) is moved, not changed', () => {
+test('a tab moving between groups (same url/title) is a changed move, not a content change', () => {
     const before = snapshot({
         groups: [
             {id: 1, title: 'A', tabs: [{uid: 'u1', url: 'http://a', title: 'a'}]},
@@ -67,17 +67,18 @@ test('a tab moving between groups (same url/title) is moved, not changed', () =>
     const diff = computeSyncDiff(before, after);
     const moved = diff.tabs.find(t => t.uid === 'u1');
 
-    assert.equal(moved.kind, 'moved');
+    assert.equal(moved.kind, 'changed');
+    assert.equal(moved.moveOnly, true);
     assert.equal(moved.fromGroup, 1);
     assert.equal(moved.group, 2);
     const groupChange = moved.changes.find(c => c.field === 'group');
     assert.equal(groupChange.from, 1);
     assert.equal(groupChange.to, 2);
+    assert.equal(diff.counts.tabs.changed, 1);
     assert.equal(diff.counts.tabs.moved, 1);
-    assert.equal(diff.counts.tabs.changed, 0);
 });
 
-test('reordering a tab within a group (index only) is moved', () => {
+test('reordering a tab within a group (index only) is a move subtype of changed', () => {
     const before = snapshot({
         groups: [{id: 1, title: 'A', tabs: [
             {uid: 'u1', url: 'http://a', title: 'a'},
@@ -93,13 +94,16 @@ test('reordering a tab within a group (index only) is moved', () => {
 
     const diff = computeSyncDiff(before, after);
 
-    assert.equal(diff.tabs.find(t => t.uid === 'u1').kind, 'moved');
-    assert.equal(diff.tabs.find(t => t.uid === 'u2').kind, 'moved');
+    for (const uid of ['u1', 'u2']) {
+        const item = diff.tabs.find(t => t.uid === uid);
+        assert.equal(item.kind, 'changed');
+        assert.equal(item.moveOnly, true);
+    }
+    assert.equal(diff.counts.tabs.changed, 2);
     assert.equal(diff.counts.tabs.moved, 2);
-    assert.equal(diff.counts.tabs.changed, 0);
 });
 
-test('a url change stays changed even when the index also moves', () => {
+test('a url change stays a content change even when the index also moves', () => {
     const before = snapshot({
         groups: [{id: 1, title: 'A', tabs: [
             {uid: 'u1', url: 'http://a', title: 'a'},
@@ -114,10 +118,14 @@ test('a url change stays changed even when the index also moves', () => {
     });
 
     const diff = computeSyncDiff(before, after);
+    const u1 = diff.tabs.find(t => t.uid === 'u1');
+    const u2 = diff.tabs.find(t => t.uid === 'u2');
 
-    assert.equal(diff.tabs.find(t => t.uid === 'u1').kind, 'changed');
-    assert.equal(diff.tabs.find(t => t.uid === 'u2').kind, 'moved');
-    assert.equal(diff.counts.tabs.changed, 1);
+    assert.equal(u1.kind, 'changed');
+    assert.notEqual(u1.moveOnly, true);
+    assert.equal(u2.kind, 'changed');
+    assert.equal(u2.moveOnly, true);
+    assert.equal(diff.counts.tabs.changed, 2);
     assert.equal(diff.counts.tabs.moved, 1);
 });
 
@@ -193,9 +201,9 @@ test('summary formats counts with signs', () => {
     assert.equal(summary, '+3 −1 tabs, +1 group');
 });
 
-test('summary shows moved tabs separately from changed', () => {
+test('summary shows moves (a changed subtype) separately from content changes', () => {
     const summary = summarizeSyncDiff({
-        tabs: [{kind: 'changed'}, {kind: 'moved'}, {kind: 'moved'}],
+        tabs: [{kind: 'changed'}, {kind: 'changed', moveOnly: true}, {kind: 'changed', moveOnly: true}],
         groups: [],
         options: [],
     });

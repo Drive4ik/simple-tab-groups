@@ -92,10 +92,10 @@ function diffTabs(before, after) {
             const changes = fieldChanges(before, tab, TAB_FIELDS);
             if (changes.length) {
                 const contentChanged = changes.some(change => TAB_CONTENT_FIELDS.includes(change.field));
-                const kind = contentChanged ? 'changed' : 'moved';
                 result.push({
                     uid,
-                    kind,
+                    kind: 'changed',
+                    ...(contentChanged ? {} : {moveOnly: true}),
                     url: clip(tab.url),
                     title: clip(tab.title),
                     group: tab.group,
@@ -178,16 +178,20 @@ function countKinds(entries) {
     const counts = {added: 0, removed: 0, changed: 0, moved: 0};
     for (const entry of entries) {
         counts[entry.kind] += 1;
+        if (entry.kind === 'changed' && entry.moveOnly) {
+            counts.moved += 1;
+        }
     }
     return counts;
 }
 
 function formatSegment(counts, noun) {
-    const total = counts.added + counts.removed + counts.changed + counts.moved;
+    const total = counts.added + counts.removed + counts.changed;
     if (!total) {
         return null;
     }
 
+    const contentChanged = counts.changed - counts.moved;
     const parts = [];
     if (counts.added) {
         parts.push('+' + counts.added);
@@ -195,8 +199,8 @@ function formatSegment(counts, noun) {
     if (counts.removed) {
         parts.push('−' + counts.removed);
     }
-    if (counts.changed) {
-        parts.push('~' + counts.changed);
+    if (contentChanged) {
+        parts.push('~' + contentChanged);
     }
     if (counts.moved) {
         parts.push('↔' + counts.moved);
