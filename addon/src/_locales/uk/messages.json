@@ -1515,6 +1515,14 @@
         "message": "Групувати за групами",
         "description": "Sync diff page toggle: group tab changes by the group they belong to"
     },
+    "syncDiffExpandAll": {
+        "message": "Розгорнути все",
+        "description": "Sync diff page button: expand every group section"
+    },
+    "syncDiffCollapseAll": {
+        "message": "Згорнути все",
+        "description": "Sync diff page button: collapse every group section"
+    },
     "syncDiffPinnedGroup": {
         "message": "Закріплені",
         "description": "Sync diff page: section title for pinned tabs"
