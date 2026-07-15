@@ -42,6 +42,7 @@ export default {
         'popup/popup': './popup/popup.js',
         'options/options': './options/options.js',
         'manage/manage': './manage/manage.js',
+        'sync-diff/sync-diff': './sync-diff/sync-diff.js',
         'web/content-script': './web/content-script.js',
     },
     experiments: {
@@ -134,6 +135,7 @@ export default {
                 'popup/popup.html',
                 'manage/manage.html',
                 'options/options.html',
+                'sync-diff/sync-diff.html',
 
                 // manifest
                 'manifest.json',

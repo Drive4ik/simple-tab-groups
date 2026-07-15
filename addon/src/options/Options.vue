@@ -294,6 +294,8 @@ export default {
 
             this.optionsWatch('syncIntervalValue', value => Utils.clamp(value, 1, 50));
 
+            this.optionsWatch('syncDiffHistoryDepth', value => Utils.clamp(value, 1, 200));
+
             this.optionsWatch('temporaryContainerTitle', value => value || undefined);
 
             this.optionsWatch('hotkeys', hotkeys => {
@@ -1407,6 +1409,35 @@ export default {
 
                             <backup-location-downloads v-else path-key="syncBackupFilePath"></backup-location-downloads>
                         </template>
+
+                        <hr>
+
+                        <div class="field">
+                            <label class="checkbox">
+                                <input v-model="options.syncDiffEnable" type="checkbox" />
+                                <span v-text="lang('syncDiffEnableTitle')"></span>
+                            </label>
+                        </div>
+
+                        <div v-if="options.syncDiffEnable" class="field is-horizontal">
+                            <div class="field-label is-normal">
+                                <label class="label colon" v-text="lang('syncDiffHistoryDepthTitle')"></label>
+                            </div>
+                            <div class="field-body">
+                                <div class="field">
+                                    <div class="control">
+                                        <input type="number" class="input" v-model.lazy.number="options.syncDiffHistoryDepth" min="1" max="200" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="field">
+                            <label class="checkbox">
+                                <input v-model="options.syncTabCounterEnable" type="checkbox" />
+                                <span v-text="lang('syncTabCounterEnableTitle')"></span>
+                            </label>
+                        </div>
                     </template>
                 </div>
             </div>

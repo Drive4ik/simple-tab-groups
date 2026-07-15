@@ -916,6 +916,10 @@ async function onBackgroundMessage(message, sender) {
                 });
                 result.ok = true;
                 break;
+            case 'open-sync-diff-page':
+                await Tabs.createUrlOnce(Constants.PAGES.SYNC_DIFF + (data.entry ? `?entry=${data.entry}` : ''));
+                result.ok = true;
+                break;
             case 'move-selected-tabs-to-custom-group':
                 let activeTab = await Tabs.getActive(),
                     tabIds = await Tabs.getHighlightedIds(activeTab.windowId, undefined, null);

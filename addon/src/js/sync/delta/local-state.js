@@ -135,6 +135,18 @@ export async function reconcileClosedTabRecords() {
     return appended;
 }
 
+export async function captureLocalSnapshot() {
+    const {groups: loadedGroups} = await Groups.loadWithArchivedTabs(null, true, true);
+    const syncedKeys = syncedOptionKeys(Constants.ALL_OPTION_KEYS);
+    const allLocalOptions = await Storage.get(syncedKeys);
+    const localSyncedOptions = {};
+    for (const key of syncedKeys) {
+        localSyncedOptions[key] = allLocalOptions[key];
+    }
+    const livePinnedTabs = await getLivePinnedTabs();
+    return buildLocalState(loadedGroups, localSyncedOptions, livePinnedTabs);
+}
+
 export async function gatherLocalPending(selfDeviceId, log) {
     const priorBaseline = loadBaseline(selfDeviceId);
 
