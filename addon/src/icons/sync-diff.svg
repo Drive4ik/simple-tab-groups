@@ -1,12 +1,12 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" fill="none">
-  <g stroke="#9ba1a6" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M24,42 L24,58 Q24,72 38,72 L54,72"/>
-    <polyline points="47,65 54,72 47,79"/>
-    <path d="M72,54 L72,38 Q72,24 58,24 L42,24"/>
-    <polyline points="49,31 42,24 49,17"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 14 14" fill="none">
+  <g stroke="#9ba1a6" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3.5,6.5 L3.5,8 Q3.5,10.5 6,10.5 L7.5,10.5"/>
+    <polyline points="6,9 7.5,10.5 6,12"/>
+    <path d="M10.5,7.5 L10.5,6 Q10.5,3.5 8,3.5 L6.5,3.5"/>
+    <polyline points="8,2 6.5,3.5 8,5"/>
   </g>
-  <circle cx="24" cy="24" r="16" fill="#22a06b"/>
-  <path d="M18,24 L30,24 M24,18 L24,30" stroke="#ffffff" stroke-width="7" stroke-linecap="round"/>
-  <circle cx="72" cy="72" r="16" fill="#e5484d"/>
-  <path d="M64,72 L80,72" stroke="#ffffff" stroke-width="7" stroke-linecap="round"/>
+  <circle cx="3.5" cy="3.5" r="2.5" fill="#22a06b"/>
+  <path d="M2,3.5 L5,3.5 M3.5,2 L3.5,5" stroke="#ffffff" stroke-width="1" stroke-linecap="round"/>
+  <circle cx="10.5" cy="10.5" r="2.5" fill="#e5484d"/>
+  <path d="M9,10.5 L12,10.5" stroke="#ffffff" stroke-width="1" stroke-linecap="round"/>
 </svg>
