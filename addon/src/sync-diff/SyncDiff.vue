@@ -215,7 +215,7 @@ export default {
             if (tab.group == null || tab.group === PINNED_GROUP_REF) {
                 return this.lang('syncDiffPinnedGroup');
             }
-            return tab.groupTitle || String(tab.group);
+            return tab.groupTitle;
         },
         movedFromLabel(tab) {
             if (!this.isMove(tab) || tab.fromGroup == null || tab.fromGroup === tab.group) {
@@ -223,7 +223,7 @@ export default {
             }
             const from = tab.fromGroup === PINNED_GROUP_REF
                 ? this.lang('syncDiffPinnedGroup')
-                : (tab.fromGroupTitle || String(tab.fromGroup));
+                : tab.fromGroupTitle;
             return this.lang('syncDiffMovedFrom', from);
         },
         formatTs(ts) {

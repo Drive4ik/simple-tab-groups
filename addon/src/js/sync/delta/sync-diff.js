@@ -2,9 +2,19 @@ const MAX_TEXT_LENGTH = 500;
 const MAX_ARRAY_LENGTH = 50;
 const GROUP_FIELDS = ['title', 'isArchive', 'iconColor', 'iconViewType', 'isSticky'];
 const TAB_CONTENT_FIELDS = ['url', 'title'];
-const TAB_POSITION_FIELDS = ['index', 'group'];
+const TAB_POSITION_FIELDS = ['index'];
 const TAB_FIELDS = [...TAB_CONTENT_FIELDS, ...TAB_POSITION_FIELDS];
 const PINNED_GROUP_REF = 'pinned';
+
+function groupTitleLabel(groupRef, title) {
+    if (title) {
+        return title;
+    }
+    if (groupRef == null || groupRef === PINNED_GROUP_REF) {
+        return PINNED_GROUP_REF;
+    }
+    return `Group ${String(groupRef).slice(-4)}`;
+}
 
 function clip(value, depth = 0) {
     if (typeof value === 'string') {
@@ -47,7 +57,7 @@ function indexTabs(snapshot) {
                     title: tab.title,
                     index,
                     group: group.id,
-                    groupTitle: group.title,
+                    groupTitle: groupTitleLabel(group.id, group.title),
                 });
             }
         });
@@ -90,7 +100,8 @@ function diffTabs(before, after) {
         } else {
             const before = beforeTabs.get(uid);
             const changes = fieldChanges(before, tab, TAB_FIELDS);
-            if (changes.length) {
+            const groupChanged = before.group !== tab.group;
+            if (changes.length || groupChanged) {
                 const contentChanged = changes.some(change => TAB_CONTENT_FIELDS.includes(change.field));
                 result.push({
                     uid,

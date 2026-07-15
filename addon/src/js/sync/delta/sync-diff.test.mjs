@@ -71,11 +71,38 @@ test('a tab moving between groups (same url/title) is a changed move, not a cont
     assert.equal(moved.moveOnly, true);
     assert.equal(moved.fromGroup, 1);
     assert.equal(moved.group, 2);
-    const groupChange = moved.changes.find(c => c.field === 'group');
-    assert.equal(groupChange.from, 1);
-    assert.equal(groupChange.to, 2);
+    assert.equal(moved.changes.some(c => c.field === 'group'), false);
+    assert.equal(moved.fromGroupTitle, 'A');
+    assert.equal(moved.groupTitle, 'B');
     assert.equal(diff.counts.tabs.changed, 1);
     assert.equal(diff.counts.tabs.moved, 1);
+});
+
+test('group labels fall back to a short id, never the raw uid', () => {
+    const uidA = '11111111-2222-3333-4444-5555aaaabbbb';
+    const uidB = '99999999-8888-7777-6666-5555ccccdddd';
+    const before = snapshot({
+        groups: [
+            {id: uidA, title: '', tabs: [{uid: 't1', url: 'http://a', title: 'a'}]},
+            {id: uidB, title: '', tabs: []},
+        ],
+    });
+    const after = snapshot({
+        groups: [
+            {id: uidA, title: '', tabs: []},
+            {id: uidB, title: '', tabs: [{uid: 't1', url: 'http://a', title: 'a'}]},
+        ],
+    });
+
+    const diff = computeSyncDiff(before, after);
+    const moved = diff.tabs.find(t => t.uid === 't1');
+
+    assert.equal(moved.moveOnly, true);
+    assert.equal(moved.fromGroupTitle, 'Group bbbb');
+    assert.equal(moved.groupTitle, 'Group dddd');
+    assert.equal(moved.groupTitle.includes(uidB), false);
+    assert.equal(moved.fromGroupTitle.includes(uidA), false);
+    assert.equal(moved.changes.some(c => c.field === 'group'), false);
 });
 
 test('reordering a tab within a group (index only) is a move subtype of changed', () => {
