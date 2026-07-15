@@ -1,7 +1,9 @@
 const MAX_TEXT_LENGTH = 500;
 const MAX_ARRAY_LENGTH = 50;
 const GROUP_FIELDS = ['title', 'isArchive', 'iconColor', 'iconViewType', 'isSticky'];
-const TAB_FIELDS = ['url', 'title', 'index', 'group'];
+const TAB_CONTENT_FIELDS = ['url', 'title'];
+const TAB_POSITION_FIELDS = ['index', 'group'];
+const TAB_FIELDS = [...TAB_CONTENT_FIELDS, ...TAB_POSITION_FIELDS];
 const PINNED_GROUP_REF = 'pinned';
 
 function clip(value, depth = 0) {
@@ -84,18 +86,31 @@ function diffTabs(before, after) {
 
     for (const [uid, tab] of afterTabs) {
         if (!beforeTabs.has(uid)) {
-            result.push({uid, kind: 'added', url: clip(tab.url), title: clip(tab.title), group: tab.group});
+            result.push({uid, kind: 'added', url: clip(tab.url), title: clip(tab.title), group: tab.group, groupTitle: clip(tab.groupTitle)});
         } else {
-            const changes = fieldChanges(beforeTabs.get(uid), tab, TAB_FIELDS);
+            const before = beforeTabs.get(uid);
+            const changes = fieldChanges(before, tab, TAB_FIELDS);
             if (changes.length) {
-                result.push({uid, kind: 'changed', url: clip(tab.url), title: clip(tab.title), group: tab.group, changes});
+                const contentChanged = changes.some(change => TAB_CONTENT_FIELDS.includes(change.field));
+                const kind = contentChanged ? 'changed' : 'moved';
+                result.push({
+                    uid,
+                    kind,
+                    url: clip(tab.url),
+                    title: clip(tab.title),
+                    group: tab.group,
+                    groupTitle: clip(tab.groupTitle),
+                    fromGroup: before.group,
+                    fromGroupTitle: clip(before.groupTitle),
+                    changes,
+                });
             }
         }
     }
 
     for (const [uid, tab] of beforeTabs) {
         if (!afterTabs.has(uid)) {
-            result.push({uid, kind: 'removed', url: clip(tab.url), title: clip(tab.title), group: tab.group});
+            result.push({uid, kind: 'removed', url: clip(tab.url), title: clip(tab.title), group: tab.group, groupTitle: clip(tab.groupTitle)});
         }
     }
 
@@ -160,7 +175,7 @@ function diffOptions(before, after) {
 }
 
 function countKinds(entries) {
-    const counts = {added: 0, removed: 0, changed: 0};
+    const counts = {added: 0, removed: 0, changed: 0, moved: 0};
     for (const entry of entries) {
         counts[entry.kind] += 1;
     }
@@ -168,7 +183,7 @@ function countKinds(entries) {
 }
 
 function formatSegment(counts, noun) {
-    const total = counts.added + counts.removed + counts.changed;
+    const total = counts.added + counts.removed + counts.changed + counts.moved;
     if (!total) {
         return null;
     }
@@ -182,6 +197,9 @@ function formatSegment(counts, noun) {
     }
     if (counts.changed) {
         parts.push('~' + counts.changed);
+    }
+    if (counts.moved) {
+        parts.push('↔' + counts.moved);
     }
 
     return parts.join(' ') + ' ' + noun + (total === 1 ? '' : 's');
