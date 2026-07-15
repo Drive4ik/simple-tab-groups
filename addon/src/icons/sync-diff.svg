@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" style="color-scheme: light dark;" fill="none" stroke-width="9" stroke-linecap="round" stroke-linejoin="round">
+  <g stroke="light-dark(#5b5b66,#fbfbfe)">
+    <path d="M26,36 L26,60 Q26,72 38,72 L58,72"/>
+    <polyline points="50,63 61,72 50,81"/>
+    <path d="M74,74 L74,40 Q74,28 62,28 L42,28"/>
+    <polyline points="50,19 39,28 50,37"/>
+  </g>
+  <path d="M16,26 L36,26 M26,16 L26,36" stroke="#22a06b"/>
+  <path d="M64,74 L84,74" stroke="#e5484d"/>
+</svg>

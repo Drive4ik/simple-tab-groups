@@ -1231,9 +1231,9 @@ export default {
             @keydown.enter="openSyncDiffPage()"
             :title="lang('syncDiffButtonTitle')"
             >
-            <span class="sync-diff-glyph" aria-hidden="true">
-                <span class="sync-diff-plus">+</span><span class="sync-diff-minus">−</span>
-            </span>
+            <figure class="image is-16x16">
+                <img src="/icons/sync-diff.svg" />
+            </figure>
         </div>
         <div
             v-if="options.syncEnable"
@@ -1531,22 +1531,6 @@ html {
 
                 .tab-counter-label {
                     opacity: 0.65;
-                }
-            }
-
-            &.sync-diff {
-                .sync-diff-glyph {
-                    font-weight: bold;
-                    font-size: 1.05em;
-                    letter-spacing: -0.05em;
-                }
-
-                .sync-diff-plus {
-                    color: var(--bulma-success);
-                }
-
-                .sync-diff-minus {
-                    color: var(--bulma-danger);
                 }
             }
 
