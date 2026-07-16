@@ -7,6 +7,14 @@ function snapshot({groups = [], pinnedTabs = [], options = {}} = {}) {
     return {groups, pinnedTabs, options};
 }
 
+function isMove(item) {
+    return item.kind === 'changed' && item.moveOnly === true;
+}
+
+function viewKind(item) {
+    return isMove(item) ? 'moved' : item.kind;
+}
+
 test('empty diff for identical snapshots', () => {
     const state = snapshot({
         groups: [{id: 1, title: 'A', isArchive: false, tabs: [{uid: 'u1', url: 'http://a', title: 'a'}]}],
@@ -154,6 +162,49 @@ test('a url change stays a content change even when the index also moves', () =>
     assert.equal(u2.moveOnly, true);
     assert.equal(diff.counts.tabs.changed, 2);
     assert.equal(diff.counts.tabs.moved, 1);
+});
+
+test('a tab shifted by a removed predecessor (index only) renders as a move in the flat list', () => {
+    const before = snapshot({
+        groups: [{id: 1, title: 'A', tabs: [
+            {uid: 'gone', url: 'http://gone', title: 'gone'},
+            {uid: 'shift', url: 'http://a', title: 'OL-1685'},
+        ]}],
+    });
+    const after = snapshot({
+        groups: [{id: 1, title: 'A', tabs: [
+            {uid: 'shift', url: 'http://a', title: 'OL-1685'},
+        ]}],
+    });
+
+    const diff = computeSyncDiff(before, after);
+    const shifted = diff.tabs.find(t => t.uid === 'shift');
+
+    assert.equal(shifted.kind, 'changed');
+    assert.equal(shifted.moveOnly, true);
+    assert.deepEqual(shifted.changes.map(c => c.field), ['index']);
+    assert.equal(viewKind(shifted), 'moved');
+});
+
+test('a url fragment change keeps the row a content change even while its index shifts', () => {
+    const before = snapshot({
+        groups: [{id: 1, title: 'A', tabs: [
+            {uid: 'gone', url: 'http://gone', title: 'gone'},
+            {uid: 'frag', url: 'https://gh/pull/1447/files#chg-a/x.csv', title: 'PR'},
+        ]}],
+    });
+    const after = snapshot({
+        groups: [{id: 1, title: 'A', tabs: [
+            {uid: 'frag', url: 'https://gh/pull/1447/files#chg-b/y.csv', title: 'PR'},
+        ]}],
+    });
+
+    const diff = computeSyncDiff(before, after);
+    const frag = diff.tabs.find(t => t.uid === 'frag');
+
+    assert.equal(frag.kind, 'changed');
+    assert.notEqual(frag.moveOnly, true);
+    assert.equal(viewKind(frag), 'changed');
 });
 
 test('detects group add/remove/change', () => {

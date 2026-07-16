@@ -1572,6 +1572,22 @@
         "message": "Настройки",
         "description": "Sync diff page: options section heading"
     },
+    "syncDiffKindAddedTitle": {
+        "message": "Добавлено",
+        "description": "Sync diff page tooltip: green marks added items"
+    },
+    "syncDiffKindRemovedTitle": {
+        "message": "Удалено",
+        "description": "Sync diff page tooltip: red marks removed items"
+    },
+    "syncDiffKindChangedTitle": {
+        "message": "Изменено",
+        "description": "Sync diff page tooltip: orange marks changed items"
+    },
+    "syncDiffKindMovedTitle": {
+        "message": "Перемещено",
+        "description": "Sync diff page tooltip: blue marks moved items"
+    },
     "syncDiffOpenTabs": {
         "message": "Открытые:",
         "description": "Sync diff page counter label: open tabs"
