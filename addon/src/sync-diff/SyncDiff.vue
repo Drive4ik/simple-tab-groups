@@ -155,6 +155,9 @@ export default {
         kindSymbol(item) {
             return KIND_SYMBOL[this.viewKind(item)] || '';
         },
+        kindTitle(kind) {
+            return this.lang('syncDiffKind' + kind.charAt(0).toUpperCase() + kind.slice(1) + 'Title');
+        },
         isVisible(item) {
             if (this.isMove(item)) {
                 return !this.view.hideMoves;
@@ -288,6 +291,7 @@ export default {
                             type="button"
                             class="diff-chip"
                             :class="['diff-chip-' + chip.key, {'is-off': !chip.active}]"
+                            :title="kindTitle(chip.key)"
                             @click="toggleChip(chip.key)"
                             >
                             <span class="diff-chip-symbol" v-text="chip.symbol"></span>
@@ -328,7 +332,7 @@ export default {
                         </div>
                         <div v-show="!section.label || !section.collapsed" class="diff-tree-body">
                             <div v-for="(item, i) in section.tabs" :key="'t' + i" class="diff-row" :class="'diff-' + viewKind(item)">
-                                <span class="diff-kind" v-text="kindSymbol(item)"></span>
+                                <span class="diff-kind" :title="kindTitle(viewKind(item))" v-text="kindSymbol(item)"></span>
                                 <div class="diff-main">
                                     <div class="diff-line" v-text="item.title || item.url"></div>
                                     <div class="diff-sub mono" v-text="item.url"></div>
@@ -350,7 +354,7 @@ export default {
                 <div v-if="visibleGroups.length" class="diff-section">
                     <h2 class="title is-6" v-text="lang('syncDiffGroups')"></h2>
                     <div v-for="(item, i) in visibleGroups" :key="'g' + i" class="diff-row" :class="'diff-' + viewKind(item)">
-                        <span class="diff-kind" v-text="kindSymbol(item)"></span>
+                        <span class="diff-kind" :title="kindTitle(viewKind(item))" v-text="kindSymbol(item)"></span>
                         <div class="diff-main">
                             <div class="diff-line" v-text="item.title"></div>
                             <ul v-if="item.changes" class="diff-changes">
@@ -368,7 +372,7 @@ export default {
                 <div v-if="visibleOptions.length" class="diff-section">
                     <h2 class="title is-6" v-text="lang('syncDiffOptions')"></h2>
                     <div v-for="(item, i) in visibleOptions" :key="'o' + i" class="diff-row" :class="'diff-' + viewKind(item)">
-                        <span class="diff-kind" v-text="kindSymbol(item)"></span>
+                        <span class="diff-kind" :title="kindTitle(viewKind(item))" v-text="kindSymbol(item)"></span>
                         <div class="diff-main">
                             <div class="diff-line"><b v-text="item.key"></b></div>
                             <div class="diff-changes">
