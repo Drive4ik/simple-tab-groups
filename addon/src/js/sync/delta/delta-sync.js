@@ -53,13 +53,20 @@ import {rescheduleSoonAfterDefer, rescheduleSoonAfterLockContention} from './ala
 
 const logger = new Logger('DeltaSync');
 
-DeltaLog.onOverflow(() => {
+DeltaLog.setSafeDropFloor(() => {
     const selfDeviceId = getDeviceId();
-    delete storage[baselineKey(selfDeviceId)];
-    delete storage[lastPushedSeqKey(selfDeviceId)];
-    delete storage[pendingTruncateKey(selfDeviceId)];
-    delete storage[favIconMapKey(selfDeviceId)];
-    storage[resetPendingKey(selfDeviceId)] = '1';
+    return Number(storage[lastPushedSeqKey(selfDeviceId)]) || 0;
+});
+
+DeltaLog.onOverflow(droppedThroughSeq => {
+    logger.info('delta log backstop dropped cloud-durable events below the safe floor', {droppedThroughSeq});
+});
+
+DeltaLog.onDrainBroken(excess => {
+    const error = new CloudError('syncDeltaLogCannotDrain');
+    storage.lastError = String(error);
+    send('sync-error', {ok: false, langId: error.langId, message: String(error), drainBroken: true, excess});
+    logger.warn('delta log cannot drain: un-synced events exceed the cap; surfaced sync-error', {excess});
 });
 
 function favIconFileToWrite(selfDeviceId, favIconMap) {

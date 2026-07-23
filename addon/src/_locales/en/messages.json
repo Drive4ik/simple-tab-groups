@@ -1611,6 +1611,10 @@
         "message": "Firefox sync isn't supported",
         "description": "Firefox sync isn't supported"
     },
+    "syncDeltaLogCannotDrain": {
+        "message": "Synchronization can't upload recent changes, so its change log keeps growing. This usually means the browser is offline, the access token is invalid, or the cloud storage is full. Check your connection and synchronization settings.",
+        "description": "The per-device delta log exceeded its cap and cannot drain because un-synced changes can't be pushed to the cloud"
+    },
     "or": {
         "message": "or",
         "description": "one or the other"
