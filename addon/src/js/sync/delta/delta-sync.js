@@ -232,6 +232,9 @@ export async function deltaSynchronization() {
 
         const {localState, priorBaseline, lastPushedSeq, favIconMap} =
             await gatherLocalPending(selfDeviceId, log);
+
+        await DeltaLog.coalesceUnpushed();
+
         let localPendingEvents = await DeltaLog.getEventsSince(lastPushedSeq);
 
         const resetPending = !!storage[resetPendingKey(selfDeviceId)];
