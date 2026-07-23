@@ -21,27 +21,38 @@ export function buildLocalState(loadedGroups, syncedOptions = {}, livePinnedTabs
     const groups = (loadedGroups || []).map(group => {
         const {tabs, ...props} = group;
 
-        const mappedTabs = (Array.isArray(tabs) ? tabs : [])
-            .filter(tab => tab && tab.uid != null)
-            .map((tab, index) => ({
+        const mappedTabs = [];
+        let nonSyncableDropped = 0;
+        for (const tab of Array.isArray(tabs) ? tabs : []) {
+            if (!tab || tab.uid == null) {
+                continue;
+            }
+            const url = unwrapStubUrl(tab.url);
+            if (!isUrlSyncable(url)) {
+                nonSyncableDropped++;
+                continue;
+            }
+            mappedTabs.push({
                 uid: tab.uid,
-                url: unwrapStubUrl(tab.url),
+                url,
                 title: tab.title,
                 cookieStoreId: tab.cookieStoreId,
-                index,
+                index: mappedTabs.length,
                 lastModified: tab.lastModified,
                 ...(tab.groupPinned ? {pinned: true} : {}),
                 ...(tab.discarded === false ? {loaded: true} : {}),
                 id: tab.id,
-            }));
+            });
+        }
 
         const inputTabCount = Array.isArray(tabs) ? tabs.length : 0;
-        if (!group.isArchive && inputTabCount > mappedTabs.length) {
+        const unexpectedDropped = inputTabCount - mappedTabs.length - nonSyncableDropped;
+        if (!group.isArchive && unexpectedDropped > 0) {
             logger.warn('buildLocalState: non-archived group dropped tabs from local snapshot', {
                 groupId: group.id,
                 inputTabCount,
                 mappedTabCount: mappedTabs.length,
-                droppedCount: inputTabCount - mappedTabs.length,
+                droppedCount: unexpectedDropped,
             });
         }
 
