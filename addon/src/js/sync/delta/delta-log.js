@@ -5,6 +5,7 @@ import {getDeviceId} from './device-id.js';
 import {sanitizeGroupIconUrl} from './url-sync.js';
 import DeltaLogStore from './delta-log-store.js';
 import {isCaptureGateOpen} from './capture-gate-state.js';
+import {coalesceEvents} from './coalesce.js';
 
 const logger = new Logger('DeltaLog');
 
@@ -329,6 +330,26 @@ export async function clearUpTo(seq) {
 export async function getLastSeq() {
     await ensureLoaded();
     return lastSeq;
+}
+
+export async function coalesceUnpushed() {
+    await ensureLoaded();
+
+    const floor = resolveSafeDropFloor();
+    const coalesced = coalesceEvents(events, floor);
+
+    if (coalesced.length >= events.length) {
+        return {removed: 0};
+    }
+
+    const removed = events.length - coalesced.length;
+    events = coalesced;
+
+    await enqueueWrite(() => DeltaLogStore.replaceEvents(events));
+
+    logger.info('coalesced un-pushed delta events', {removed, remaining: events.length, floor});
+
+    return {removed};
 }
 
 export async function clear() {

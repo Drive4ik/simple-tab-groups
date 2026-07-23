@@ -236,6 +236,9 @@ export async function deltaSynchronization() {
         const {localState, priorBaseline, lastPushedSeq, favIconMap} =
             await gatherLocalPending(selfDeviceId, log);
         const diffBefore = syncDiffEnable ? deepClone(localState) : null;
+
+        await DeltaLog.coalesceUnpushed();
+
         let localPendingEvents = await DeltaLog.getEventsSince(lastPushedSeq);
 
         const resetPending = !!storage[resetPendingKey(selfDeviceId)];
