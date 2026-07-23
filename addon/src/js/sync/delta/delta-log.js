@@ -10,7 +10,7 @@ const logger = new Logger('DeltaLog');
 
 export const SCHEMA_VERSION = 1;
 
-export const MAX_EVENTS = 10_000;
+export const MAX_EVENTS = 25_000;
 
 const STORAGE_KEY = 'syncDeltaLog';
 
@@ -47,21 +47,72 @@ export function onOverflow(handler) {
     overflowHandler = handler;
 }
 
-function dropOverflow() {
-    if (events.length <= MAX_EVENTS) {
+let drainBrokenHandler = null;
+
+export function onDrainBroken(handler) {
+    drainBrokenHandler = handler;
+}
+
+let safeDropFloorProvider = null;
+
+export function setSafeDropFloor(provider) {
+    safeDropFloorProvider = provider;
+}
+
+function resolveSafeDropFloor() {
+    if (!safeDropFloorProvider) {
         return 0;
     }
+    try {
+        const floor = safeDropFloorProvider();
+        return Number.isFinite(floor) && floor > 0 ? floor : 0;
+    } catch (e) {
+        logger.onCatch('safeDropFloor provider', false)(e);
+        return 0;
+    }
+}
 
-    const dropped = events.splice(0, events.length - MAX_EVENTS);
-    return dropped[dropped.length - 1].seq;
+function dropOverflow() {
+    if (events.length <= MAX_EVENTS) {
+        return {droppedThroughSeq: 0, drainBrokenExcess: 0};
+    }
+
+    const floor = resolveSafeDropFloor();
+    const overflow = events.length - MAX_EVENTS;
+
+    let droppableHead = 0;
+    while (droppableHead < events.length && events[droppableHead].seq <= floor) {
+        droppableHead += 1;
+    }
+
+    const toDrop = Math.min(overflow, droppableHead);
+
+    let droppedThroughSeq = 0;
+    if (toDrop > 0) {
+        const dropped = events.splice(0, toDrop);
+        droppedThroughSeq = dropped[dropped.length - 1].seq;
+    }
+
+    const drainBrokenExcess = events.length - MAX_EVENTS;
+
+    return {droppedThroughSeq, drainBrokenExcess: drainBrokenExcess > 0 ? drainBrokenExcess : 0};
 }
 
 function notifyOverflow(droppedThroughSeq) {
-    logger.warn('event cap exceeded: dropped oldest events', {droppedThroughSeq, cap: MAX_EVENTS});
+    logger.warn('event cap exceeded: dropped cloud-durable events below the safe floor', {droppedThroughSeq, cap: MAX_EVENTS});
     try {
         overflowHandler?.(droppedThroughSeq);
     } catch (e) {
         logger.onCatch('onOverflow handler', false)(e);
+    }
+}
+
+function notifyDrainBroken(excess) {
+    logger.warn('event cap exceeded but log cannot drain: un-synced events above the safe floor are kept', {excess, cap: MAX_EVENTS});
+    try {
+        drainBrokenHandler?.(excess);
+    } catch (e) {
+        logger.onCatch('onDrainBroken handler', false)(e);
     }
 }
 
@@ -86,7 +137,7 @@ function currentMeta() {
 }
 
 function persistAppended(newEvents) {
-    const droppedThroughSeq = dropOverflow();
+    const {droppedThroughSeq, drainBrokenExcess} = dropOverflow();
     const eventsToPut = droppedThroughSeq
         ? newEvents.filter(event => event.seq > droppedThroughSeq)
         : newEvents;
@@ -104,6 +155,9 @@ function persistAppended(newEvents) {
 
     if (droppedThroughSeq) {
         notifyOverflow(droppedThroughSeq);
+    }
+    if (drainBrokenExcess) {
+        notifyDrainBroken(drainBrokenExcess);
     }
 
     return write;
@@ -158,7 +212,7 @@ function ensureLoaded() {
             }
         }
 
-        const droppedThroughSeq = dropOverflow();
+        const {droppedThroughSeq, drainBrokenExcess} = dropOverflow();
 
         if (legacyLog) {
             logger.info('migrated delta log from storage.local to IndexedDB', {events: events.length});
@@ -184,6 +238,9 @@ function ensureLoaded() {
 
         if (droppedThroughSeq) {
             notifyOverflow(droppedThroughSeq);
+        }
+        if (drainBrokenExcess) {
+            notifyDrainBroken(drainBrokenExcess);
         }
     })().catch(err => {
         loadingPromise = null;

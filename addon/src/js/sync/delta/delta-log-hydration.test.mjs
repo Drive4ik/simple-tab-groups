@@ -627,14 +627,73 @@ const TEST_META = {v: 1, deviceId: 'test-device'};
     delete globalThis.__captureGateOpen;
 }
 
-// --- 12. event cap: an oversized batch head-drops and reports the overflow ---------
+// --- 12. event cap backstop: drops only cloud-durable head events, keeps the tail --
 {
     const {idb, mod} = await freshLog();
 
     const overflows = [];
+    const drainBroken = [];
     mod.onOverflow(seq => overflows.push(seq));
+    mod.onDrainBroken(excess => drainBroken.push(excess));
+
+    let floor = 0;
+    mod.setSafeDropFloor(() => floor);
 
     const extra = 5;
+    const batch = Array.from({length: mod.MAX_EVENTS + extra}, (_, i) => ({
+        op: mod.OPS.GROUP_ADD,
+        group: {id: i + 1, title: `g${i + 1}`},
+    }));
+
+    // the oldest `extra` events are cloud-durable (seq <= floor); the rest are the un-synced tail.
+    floor = extra;
+
+    const p = mod.appendMany(batch);
+    await Promise.resolve();
+    await Promise.resolve();
+    idb.releaseLoads();
+    await p;
+
+    const all = await mod.getEvents();
+    check('the cap bounds the in-memory log', all.length === mod.MAX_EVENTS,
+        `len=${all.length}`);
+    check('the cap drops the OLDEST cloud-durable events', all[0].seq === extra + 1 && all[all.length - 1].seq === mod.MAX_EVENTS + extra,
+        `first=${all[0].seq} last=${all[all.length - 1].seq}`);
+    check('the overflow handler is told the highest dropped seq', overflows.length === 1 && overflows[0] === extra,
+        JSON.stringify(overflows));
+    check('a fully-durable head means the drain-broken signal never fired', drainBroken.length === 0,
+        JSON.stringify(drainBroken));
+    check('the cap bounds the persisted log too', idb.storedEvents().length === mod.MAX_EVENTS,
+        `stored=${idb.storedEvents().length}`);
+    check('the dropped head is deleted from the store', idb.storedEvents()[0].seq === extra + 1,
+        `firstStored=${idb.storedEvents()[0].seq}`);
+
+    // one more event overflows again; advance the floor so the next-oldest event is now durable.
+    floor = extra + 1;
+    const next = await mod.append(mod.OPS.GROUP_ADD, {group: {id: 0, title: 'next'}});
+    check('an append into a full log drops exactly one now-durable head event', next.seq === mod.MAX_EVENTS + extra + 1
+        && (await mod.getEvents()).length === mod.MAX_EVENTS
+        && overflows.length === 2 && overflows[1] === extra + 1,
+        `next=${next.seq} overflows=${JSON.stringify(overflows)}`);
+
+    mod.onOverflow(null);
+    mod.onDrainBroken(null);
+    mod.setSafeDropFloor(null);
+}
+
+// --- 12b. un-synced tail is NEVER dropped; the drain-broken signal fires instead ----
+{
+    const {idb, mod} = await freshLog();
+
+    const overflows = [];
+    const drainBroken = [];
+    mod.onOverflow(seq => overflows.push(seq));
+    mod.onDrainBroken(excess => drainBroken.push(excess));
+
+    // nothing is cloud-durable, so no event may be dropped.
+    mod.setSafeDropFloor(() => 0);
+
+    const extra = 4;
     const batch = Array.from({length: mod.MAX_EVENTS + extra}, (_, i) => ({
         op: mod.OPS.GROUP_ADD,
         group: {id: i + 1, title: `g${i + 1}`},
@@ -647,30 +706,25 @@ const TEST_META = {v: 1, deviceId: 'test-device'};
     await p;
 
     const all = await mod.getEvents();
-    check('the cap bounds the in-memory log', all.length === mod.MAX_EVENTS,
+    check('un-synced excess is kept (log overshoots the cap, no loss)', all.length === mod.MAX_EVENTS + extra,
         `len=${all.length}`);
-    check('the cap drops the OLDEST events', all[0].seq === extra + 1 && all[all.length - 1].seq === mod.MAX_EVENTS + extra,
-        `first=${all[0].seq} last=${all[all.length - 1].seq}`);
-    check('the overflow handler is told the highest dropped seq', overflows.length === 1 && overflows[0] === extra,
-        JSON.stringify(overflows));
-    check('the cap bounds the persisted log too', idb.storedEvents().length === mod.MAX_EVENTS,
+    check('no un-synced event is dropped', overflows.length === 0, JSON.stringify(overflows));
+    check('the drain-broken signal fires with the un-drainable excess',
+        drainBroken.length === 1 && drainBroken[0] === extra, JSON.stringify(drainBroken));
+    check('the persisted log keeps every event too', idb.storedEvents().length === mod.MAX_EVENTS + extra,
         `stored=${idb.storedEvents().length}`);
-    check('the dropped head is deleted from the store', idb.storedEvents()[0].seq === extra + 1,
-        `firstStored=${idb.storedEvents()[0].seq}`);
-
-    const next = await mod.append(mod.OPS.GROUP_ADD, {group: {id: 0, title: 'next'}});
-    check('an append into a full log drops exactly one head event', next.seq === mod.MAX_EVENTS + extra + 1
-        && (await mod.getEvents()).length === mod.MAX_EVENTS
-        && overflows.length === 2 && overflows[1] === extra + 1,
-        `next=${next.seq} overflows=${JSON.stringify(overflows)}`);
 
     mod.onOverflow(null);
+    mod.onDrainBroken(null);
+    mod.setSafeDropFloor(null);
 }
 
-// --- 13. event cap: an over-cap STORED log is trimmed on hydrate --------------------
+// --- 13. event cap: an over-cap STORED log is trimmed on hydrate (up to the floor) --
 {
     const overCap = 7;
-    const seeded = Array.from({length: 10_000 + overCap}, (_, i) => ({
+    const {mod: probe} = await freshLog();
+    const CAP = probe.MAX_EVENTS;
+    const seeded = Array.from({length: CAP + overCap}, (_, i) => ({
         seq: i + 1,
         ts: i + 1,
         op: 'group.add',
@@ -678,11 +732,10 @@ const TEST_META = {v: 1, deviceId: 'test-device'};
     }));
     const {idb, mod} = await freshLog({meta: TEST_META, events: seeded});
 
-    check('the seeded cap matches the module cap', mod.MAX_EVENTS === 10_000,
-        `MAX_EVENTS=${mod.MAX_EVENTS}`);
-
     const overflows = [];
     mod.onOverflow(seq => overflows.push(seq));
+    // the oldest `overCap` events are cloud-durable, so hydration may trim them.
+    mod.setSafeDropFloor(() => overCap);
 
     const pRead = mod.getEvents();
     await Promise.resolve();
@@ -700,6 +753,7 @@ const TEST_META = {v: 1, deviceId: 'test-device'};
         `deleteUpTo=${idb.deleteUpToCallCount} stored=${idb.storedEvents().length}`);
 
     mod.onOverflow(null);
+    mod.setSafeDropFloor(null);
 }
 
 // ---------------------------------------------------------------------------
