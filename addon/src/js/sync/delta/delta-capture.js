@@ -318,9 +318,9 @@ export async function groupRemoved(groupId) {
 
 const SYNCED_OPTION_KEYS = new Set(syncedOptionKeys(Constants.ALL_OPTION_KEYS));
 
-export async function optionsChanged(savedOptions) {
+export async function optionsChanged(savedOptions, {fromSync = false} = {}) {
     try {
-        if (isApplying()) {
+        if (fromSync) {
             return;
         }
 
