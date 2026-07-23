@@ -5,8 +5,8 @@
  * `browser.*` / `constants.js`), so it imports directly. Proves:
  *   - non-trivial about: URLs (about:debugging/config/…) ARE syncable, while the trivial
  *     new-tab/blank states (about:blank/newtab/home/privatebrowsing) are NOT;
- *   - everything the real-creation allow-list admits (http/moz-extension/view-source) stays
- *     syncable;
+ *   - everything the real-creation allow-list admits (http/view-source) stays syncable, while
+ *     bare moz-extension pages (STG's own per-install UUID pages) do NOT sync;
  *   - STG's "unsupported URL" stub page (moz-extension://…/help/stg-unsupported-url.html
  *     ?url=ORIG) decodes back to the embedded original — so a stub-rendered about: tab keeps
  *     its original identity and never diverges into a competing moz-extension tab record.
@@ -55,8 +55,28 @@ const STUB = 'moz-extension://abcd-1234-uuid/help/stg-unsupported-url.html';
 {
     check('syncable: http', isUrlSyncable('http://example.com/') === true);
     check('syncable: https', isUrlSyncable('https://example.com/') === true);
-    check('syncable: moz-extension', isUrlSyncable('moz-extension://uuid/page.html') === true);
     check('syncable: view-source', isUrlSyncable('view-source:http://example.com/') === true);
+}
+
+// --- isUrlSyncable: bare moz-extension pages do NOT sync --------------------
+{
+    // STG's own extension pages carry a per-install moz-extension UUID that can never converge
+    // across machines, so bare moz-extension URLs must never enter the synced state.
+    check('NOT syncable: moz-extension page', isUrlSyncable('moz-extension://uuid/page.html') === false);
+    check('NOT syncable: moz-extension sync-diff page',
+        isUrlSyncable('moz-extension://abcd-1234-uuid/sync-diff/sync-diff.html?entry=1') === false);
+    check('NOT syncable: moz-extension manage page',
+        isUrlSyncable('moz-extension://uuid/manage/manage.html') === false);
+}
+
+// --- isUrlSyncable: STG stub wrapper stays syncable via unwrap --------------
+{
+    // The ONLY legitimate moz-extension URL we sync is the STG stub wrapper, and it is always
+    // unwrapped to its embedded real URL BEFORE the isUrlSyncable call, so it stays syncable.
+    const wrapped = `${STUB}?url=${encodeURIComponent('https://x')}`;
+    check('bare stub wrapper is NOT syncable', isUrlSyncable(wrapped) === false);
+    check('unwrapped stub wrapper is syncable', isUrlSyncable(unwrapStubUrl(wrapped)) === true);
+    check('unwrapped stub wrapper decodes to real url', unwrapStubUrl(wrapped) === 'https://x');
 }
 
 // --- isUrlSyncable: junk / empty --------------------------------------------

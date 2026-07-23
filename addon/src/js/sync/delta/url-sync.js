@@ -20,7 +20,7 @@ export function isUrlSyncable(url) {
         return true;
     }
 
-    return /^((http|moz-extension|view-source)|about:blank)/.test(url);
+    return /^((http|view-source)|about:blank)/.test(url);
 }
 
 export function unwrapStubUrl(url) {
