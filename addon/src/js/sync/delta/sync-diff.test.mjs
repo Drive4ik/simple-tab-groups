@@ -242,6 +242,28 @@ test('detects option changes key-by-key', () => {
     assert.equal(diff.options.find(o => o.key === 'showArchivedGroups').kind, 'added');
 });
 
+test('an inbound OPTION_SET applied on this device surfaces as a before/after option change', () => {
+    const diffBefore = snapshot({
+        groups: [{id: 1, title: 'A', tabs: [{uid: 'u1', url: 'http://a', title: 'a'}]}],
+        options: {closePopupAfterSelectTab: false},
+    });
+    const diffAfter = snapshot({
+        groups: [{id: 1, title: 'A', tabs: [{uid: 'u1', url: 'http://a', title: 'a'}]}],
+        options: {closePopupAfterSelectTab: true},
+    });
+
+    const diff = computeSyncDiff(diffBefore, diffAfter);
+
+    assert.ok(!isEmptySyncDiff(diff));
+
+    const changed = diff.options.find(o => o.key === 'closePopupAfterSelectTab');
+    assert.equal(changed.kind, 'changed');
+    assert.equal(changed.from, false);
+    assert.equal(changed.to, true);
+
+    assert.ok(diff.summary.includes('option'));
+});
+
 test('treats pinned tabs as their own group', () => {
     const before = snapshot({pinnedTabs: [{uid: 'p1', url: 'http://p', title: 'p'}]});
     const after = snapshot({pinnedTabs: []});

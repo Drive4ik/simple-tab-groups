@@ -1136,7 +1136,7 @@ async function onBackgroundMessage(message, sender) {
     return result;
 }
 
-async function saveOptions(_options) {
+async function saveOptions(_options, {fromSync = false} = {}) {
     const log = logger.start('saveOptions');
 
     if (!storage.inited) {
@@ -1190,7 +1190,7 @@ async function saveOptions(_options) {
         await Containers.updateTemporaryContainerTitle(options.temporaryContainerTitle);
     }
 
-    await DeltaCapture.optionsChanged(optionsToSave);
+    await DeltaCapture.optionsChanged(optionsToSave, {fromSync});
 
     sendMessageFromBackground('options-updated', {
         keys: optionsKeys,

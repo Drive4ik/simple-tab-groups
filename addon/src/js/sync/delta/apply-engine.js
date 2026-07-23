@@ -434,7 +434,7 @@ export async function applyOptions(optionsToApply) {
 
     DeltaCapture.beginApply();
     try {
-        await backgroundSelf.saveOptions(optionsToApply);
+        await backgroundSelf.saveOptions(optionsToApply, {fromSync: true});
         log.stop();
     } catch (e) {
         log.logError('cant apply options', e);
