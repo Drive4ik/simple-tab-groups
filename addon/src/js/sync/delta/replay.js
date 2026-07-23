@@ -234,6 +234,22 @@ function hoistPinnedGroupFirst(groups, pinnedGroupId) {
     }
 }
 
+export function partitionPinnedTabsFirst(tabs) {
+    if (!Array.isArray(tabs)) {
+        return [];
+    }
+    const pinned = [];
+    const unpinned = [];
+    for (const tab of tabs) {
+        if (tab && tab.pinned === true) {
+            pinned.push(tab);
+        } else {
+            unpinned.push(tab);
+        }
+    }
+    return pinned.concat(unpinned);
+}
+
 function applyGroupRemove(groups, event) {
     const idx = groups.findIndex(g => g.id === event.groupId);
     if (idx !== -1) {
@@ -319,6 +335,7 @@ export function replay(baseSnapshot, deltaLogs = [], options = {}) {
     hoistPinnedGroupFirst(groups, pinnedGroupId);
 
     for (const group of groups) {
+        group.tabs = partitionPinnedTabsFirst(group.tabs);
         group.tabs.forEach((tab, position) => {
             tab.index = position;
         });
