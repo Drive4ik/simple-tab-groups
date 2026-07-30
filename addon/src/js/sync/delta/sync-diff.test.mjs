@@ -86,6 +86,32 @@ test('a tab moving between groups (same url/title) is a changed move, not a cont
     assert.equal(diff.counts.tabs.moved, 1);
 });
 
+test('a container or pin change (same url/title/index) is a content change, not a move', () => {
+    const before = snapshot({
+        groups: [{id: 1, title: 'A', tabs: [
+            {uid: 'u1', url: 'http://a', title: 'a', cookieStoreId: 'firefox-default', pinned: false},
+        ]}],
+    });
+    const after = snapshot({
+        groups: [{id: 1, title: 'A', tabs: [
+            {uid: 'u1', url: 'http://a', title: 'a', cookieStoreId: 'firefox-container-3', pinned: true},
+        ]}],
+    });
+
+    const diff = computeSyncDiff(before, after);
+    const changed = diff.tabs.find(t => t.uid === 'u1');
+
+    assert.equal(changed.kind, 'changed');
+    assert.notEqual(changed.moveOnly, true);
+
+    const containerChange = changed.changes.find(c => c.field === 'cookieStoreId');
+    const pinChange = changed.changes.find(c => c.field === 'pinned');
+    assert.equal(containerChange.to, 'firefox-container-3');
+    assert.equal(pinChange.to, true);
+
+    assert.deepEqual(diff.counts.tabs, {added: 0, removed: 0, changed: 1, moved: 0});
+});
+
 test('group labels fall back to a short id, never the raw uid', () => {
     const uidA = '11111111-2222-3333-4444-5555aaaabbbb';
     const uidB = '99999999-8888-7777-6666-5555ccccdddd';

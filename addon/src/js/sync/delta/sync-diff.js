@@ -1,7 +1,7 @@
 const MAX_TEXT_LENGTH = 500;
 const MAX_ARRAY_LENGTH = 50;
 const GROUP_FIELDS = ['title', 'isArchive', 'iconColor', 'iconViewType', 'isSticky'];
-const TAB_CONTENT_FIELDS = ['url', 'title'];
+const TAB_CONTENT_FIELDS = ['url', 'title', 'cookieStoreId', 'pinned'];
 const TAB_POSITION_FIELDS = ['index'];
 const TAB_FIELDS = [...TAB_CONTENT_FIELDS, ...TAB_POSITION_FIELDS];
 const PINNED_GROUP_REF = 'pinned';
@@ -55,6 +55,8 @@ function indexTabs(snapshot) {
                     uid: tab.uid,
                     url: tab.url,
                     title: tab.title,
+                    cookieStoreId: tab.cookieStoreId,
+                    pinned: tab.pinned,
                     index,
                     group: group.id,
                     groupTitle: groupTitleLabel(group.id, group.title),
@@ -69,6 +71,8 @@ function indexTabs(snapshot) {
                 uid: tab.uid,
                 url: tab.url,
                 title: tab.title,
+                cookieStoreId: tab.cookieStoreId,
+                pinned: tab.pinned,
                 index,
                 group: PINNED_GROUP_REF,
                 groupTitle: PINNED_GROUP_REF,
