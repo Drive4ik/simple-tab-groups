@@ -39,10 +39,22 @@ export function maxSeq(events, seed) {
     return events.reduce((max, e) => (e.seq > max ? e.seq : max), seed);
 }
 
+function emptyTombstones() {
+    return {tabs: [], pinned: []};
+}
+
+function normalizeTombstones(raw) {
+    const src = raw || {};
+    return {
+        tabs: Array.isArray(src.tabs) ? src.tabs : [],
+        pinned: Array.isArray(src.pinned) ? src.pinned : [],
+    };
+}
+
 export function loadBaseline(deviceId) {
     const raw = storage[baselineKey(deviceId)];
     if (!raw) {
-        return {tabUids: new Set(), groupIds: new Set(), optionKeys: new Set(), pinnedUids: new Set()};
+        return {tabUids: new Set(), groupIds: new Set(), optionKeys: new Set(), pinnedUids: new Set(), tombstones: emptyTombstones()};
     }
     try {
         const parsed = JSON.parse(raw);
@@ -51,9 +63,10 @@ export function loadBaseline(deviceId) {
             groupIds: new Set(parsed.groupIds || []),
             optionKeys: new Set(parsed.optionKeys || []),
             pinnedUids: new Set(parsed.pinnedUids || []),
+            tombstones: normalizeTombstones(parsed.tombstones),
         };
     } catch {
-        return {tabUids: new Set(), groupIds: new Set(), optionKeys: new Set(), pinnedUids: new Set()};
+        return {tabUids: new Set(), groupIds: new Set(), optionKeys: new Set(), pinnedUids: new Set(), tombstones: emptyTombstones()};
     }
 }
 
@@ -63,5 +76,6 @@ export function saveBaseline(deviceId, baseline) {
         groupIds: baseline.groupIds || [],
         optionKeys: baseline.optionKeys || [],
         pinnedUids: baseline.pinnedUids || [],
+        tombstones: normalizeTombstones(baseline.tombstones),
     });
 }

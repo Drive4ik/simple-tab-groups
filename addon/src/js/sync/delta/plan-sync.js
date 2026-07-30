@@ -1,6 +1,7 @@
 import {replay} from './replay.js';
 import {isSyncedOptionKey} from './option-keys.js';
 import {deepClone} from './deep-clone.js';
+import {tabTombstoneKey} from './tombstones.js';
 
 function buildFullLogs(pulledDeltaLogs, localPendingEvents, selfDeviceId) {
     const logs = deepClone(pulledDeltaLogs || []);
@@ -51,11 +52,26 @@ function stableStringify(props) {
 
 function normalizeBaseline(priorBaseline) {
     const src = priorBaseline || {};
+    const rawTombstones = src.tombstones || {};
+    const tabTombstoneKeys = new Set();
+    for (const entry of Array.isArray(rawTombstones.tabs) ? rawTombstones.tabs : []) {
+        if (entry && entry.uid != null && entry.groupId != null) {
+            tabTombstoneKeys.add(tabTombstoneKey(entry.groupId, entry.uid));
+        }
+    }
+    const pinnedTombstoneUids = new Set();
+    for (const entry of Array.isArray(rawTombstones.pinned) ? rawTombstones.pinned : []) {
+        if (entry && entry.uid != null) {
+            pinnedTombstoneUids.add(String(entry.uid));
+        }
+    }
     return {
         tabUids: new Set(src.tabUids || []),
         groupIds: new Set(src.groupIds || []),
         optionKeys: new Set(src.optionKeys || []),
         pinnedUids: new Set(src.pinnedUids || []),
+        tabTombstoneKeys,
+        pinnedTombstoneUids,
     };
 }
 
@@ -322,6 +338,9 @@ export function computeBootstrapEvents(localState, priorBaseline, knownLocalLogU
                 continue;
             }
             groupTabUids.add(tab.uid);
+            if (baseline.tabTombstoneKeys.has(tabTombstoneKey(group.id, tab.uid))) {
+                continue;
+            }
             if (!baseline.tabUids.has(tab.uid) && !logUids.has(tab.uid)) {
                 events.push({op: 'tab.add', groupId: group.id, tab: deepClone(tab)});
             }
@@ -341,6 +360,9 @@ export function computeBootstrapEvents(localState, priorBaseline, knownLocalLogU
             continue;
         }
         if (groupTabUids.has(tab.uid)) {
+            continue;
+        }
+        if (baseline.pinnedTombstoneUids.has(String(tab.uid))) {
             continue;
         }
         if (!baseline.pinnedUids.has(tab.uid) && !logUids.has(tab.uid)) {
@@ -381,5 +403,11 @@ export function baselineFromSnapshot(snapshot) {
         }
     }
 
-    return {tabUids, groupIds, optionKeys, pinnedUids};
+    const rawTombstones = (snapshot && snapshot.tombstones) || {};
+    const tombstones = {
+        tabs: Array.isArray(rawTombstones.tabs) ? rawTombstones.tabs : [],
+        pinned: Array.isArray(rawTombstones.pinned) ? rawTombstones.pinned : [],
+    };
+
+    return {tabUids, groupIds, optionKeys, pinnedUids, tombstones};
 }

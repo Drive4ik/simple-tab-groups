@@ -144,8 +144,9 @@ function buildLogGroupRecordIds(events) {
 }
 
 // ---------------------------------------------------------------------------
-// 4. Conflicting modify resurrects (rule 1): self removed a tab, remote modified
-//    it later. Resolved keeps the tab; locally it is gone ⇒ tabsToCreate (resurrected).
+// 4. Conflicting modify does NOT resurrect (tombstone): self removed a tab, remote
+//    modified the same (groupId,uid) later. Resolved drops the tab; locally already
+//    gone ⇒ no tabsToCreate. The self pending remove is still pushed.
 // ---------------------------------------------------------------------------
 {
     const pulledSnapshot = {groups: [{id: 'g1', title: 'G1', tabs: [{uid: 't1', url: 'http://a', index: 0}]}], watermark: {}};
@@ -165,11 +166,9 @@ function buildLogGroupRecordIds(events) {
     });
 
     const resolvedT1 = resolvedSnapshot.groups[0].tabs.find(t => t.uid === 't1');
-    check('conflict: resolved snapshot resurrects t1 (modify beats delete)',
-        !!resolvedT1 && resolvedT1.url === 'http://a2', JSON.stringify(resolvedT1));
+    check('conflict: resolved snapshot does NOT resurrect a tombstoned t1', !resolvedT1, JSON.stringify(resolvedT1));
     const created = browserOps.tabsToCreate.find(t => t.uid === 't1');
-    check('conflict: resurrected tab surfaces in tabsToCreate (absent locally)',
-        !!created && created.url === 'http://a2', JSON.stringify(browserOps.tabsToCreate));
+    check('conflict: tombstoned tab is NOT re-created locally', !created, JSON.stringify(browserOps.tabsToCreate));
     check('conflict: self pending remove is still pushed in deltaFileToWrite',
         !!deltaFileToWrite && deltaFileToWrite.events.some(e => e.op === 'tab.remove' && e.uid === 't1'),
         JSON.stringify(deltaFileToWrite));
@@ -962,8 +961,9 @@ function buildLogGroupRecordIds(events) {
     check('pinnedToMove carries target {index}', movedP2?.target?.index === 0, JSON.stringify(movedP2));
 }
 
-// pinned modify-beats-delete resurrects: self removed a pinned tab, remote modified it
-// later → resolved keeps it; absent locally ⇒ pinnedToCreate; self pending push kept.
+// pinned modify does NOT resurrect a tombstoned pinned uid: self removed a pinned tab,
+// remote modified it later → resolved drops it; absent locally ⇒ no pinnedToCreate;
+// self pending push kept.
 {
     const pulledSnapshot = {groups: [], pinnedTabs: [{uid: 'p1', url: 'http://p1', index: 0}], watermark: {}};
     const pulledDeltaLogs = [
@@ -981,10 +981,9 @@ function buildLogGroupRecordIds(events) {
     });
 
     const resolvedP1 = (resolvedSnapshot.pinnedTabs || []).find(t => t.uid === 'p1');
-    check('pinned conflict: resolved resurrects p1 (modify beats delete)',
-        !!resolvedP1 && resolvedP1.url === 'http://p1b', JSON.stringify(resolvedP1));
-    check('pinned conflict: resurrected pinned surfaces in pinnedToCreate',
-        browserOps.pinnedToCreate.some(t => t.uid === 'p1' && t.url === 'http://p1b'), JSON.stringify(browserOps.pinnedToCreate));
+    check('pinned conflict: resolved does NOT resurrect a tombstoned p1', !resolvedP1, JSON.stringify(resolvedP1));
+    check('pinned conflict: tombstoned pinned is NOT re-created locally',
+        !browserOps.pinnedToCreate.some(t => t.uid === 'p1'), JSON.stringify(browserOps.pinnedToCreate));
     check('pinned conflict: self pending pinned.remove is still pushed',
         !!deltaFileToWrite && deltaFileToWrite.events.some(e => e.op === 'pinned.remove' && e.uid === 'p1'),
         JSON.stringify(deltaFileToWrite));
@@ -1006,12 +1005,93 @@ function buildLogGroupRecordIds(events) {
     check('bootstrap skips pinned already logged (uid namespace)', !boot.some(e => e.tab?.uid === 'pInLog'), JSON.stringify(boot));
 }
 
+// bootstrap tombstone gate (Bug #1): a locally-live tab whose (groupId,uid) is tombstoned
+// in the persisted baseline must NOT be re-added on baseline loss / bootstrap. A genuine
+// new uid in the same group is still bootstrapped (different key).
+{
+    const localState = {groups: [{id: 'g1', tabs: [
+        {uid: 'dead', url: 'http://dead', index: 0},
+        {uid: 'fresh', url: 'http://fresh', index: 1},
+    ]}]};
+    const priorBaseline = {tombstones: {tabs: [{groupId: 'g1', uid: 'dead', ts: 100}], pinned: []}};
+    const boot = computeBootstrapEvents(localState, priorBaseline, [], [], []);
+    check('bootstrap does NOT re-add a tombstoned (groupId,uid)',
+        !boot.some(e => e.op === 'tab.add' && e.tab?.uid === 'dead'), JSON.stringify(boot));
+    check('bootstrap still re-adds a genuine new uid in the same group',
+        boot.some(e => e.op === 'tab.add' && e.tab?.uid === 'fresh'), JSON.stringify(boot));
+}
+
+// bootstrap tombstone gate is group-scoped: the SAME uid live in a DIFFERENT group than
+// the tombstoned (g1,uid) is still bootstrapped (mirrors a legitimate relocation).
+{
+    const localState = {groups: [{id: 'g2', tabs: [{uid: 'moved', url: 'http://m', index: 0}]}]};
+    const priorBaseline = {tombstones: {tabs: [{groupId: 'g1', uid: 'moved', ts: 100}], pinned: []}};
+    const boot = computeBootstrapEvents(localState, priorBaseline, [], [], []);
+    check('bootstrap re-adds a uid live in a non-tombstoned group (relocation-safe)',
+        boot.some(e => e.op === 'tab.add' && e.groupId === 'g2' && e.tab?.uid === 'moved'), JSON.stringify(boot));
+}
+
+// bootstrap pinned tombstone gate: a locally-live pinned tab whose uid is tombstoned in
+// the pinned namespace must NOT be re-added.
+{
+    const localState = {groups: [], pinnedTabs: [{uid: 'pDead', index: 0}, {uid: 'pFresh', index: 1}]};
+    const priorBaseline = {tombstones: {tabs: [], pinned: [{uid: 'pDead', ts: 100}]}};
+    const boot = computeBootstrapEvents(localState, priorBaseline, [], [], []);
+    check('bootstrap does NOT re-add a tombstoned pinned uid',
+        !boot.some(e => e.op === 'pinned.add' && e.tab?.uid === 'pDead'), JSON.stringify(boot));
+    check('bootstrap still re-adds a non-tombstoned pinned uid',
+        boot.some(e => e.op === 'pinned.add' && e.tab?.uid === 'pFresh'), JSON.stringify(boot));
+}
+
 // baselineFromSnapshot collects pinned uids.
 {
     const snapshot = {groups: [{id: 'g1', tabs: [{uid: 't1'}]}], pinnedTabs: [{uid: 'p1'}, {uid: 'p2'}]};
     const baseline = baselineFromSnapshot(snapshot);
     check('baselineFromSnapshot collects pinnedUids',
         JSON.stringify(baseline.pinnedUids.sort()) === JSON.stringify(['p1', 'p2']), JSON.stringify(baseline.pinnedUids));
+}
+
+// baselineFromSnapshot carries the resolved snapshot's tombstones through to the baseline.
+{
+    const snapshot = {
+        groups: [{id: 'g1', tabs: [{uid: 't1'}]}],
+        pinnedTabs: [],
+        tombstones: {tabs: [{groupId: 'g9', uid: 'gone', ts: 42}], pinned: [{uid: 'pg', ts: 7}]},
+    };
+    const baseline = baselineFromSnapshot(snapshot);
+    check('baselineFromSnapshot carries tab tombstones',
+        baseline.tombstones.tabs.some(e => e.groupId === 'g9' && e.uid === 'gone'), JSON.stringify(baseline.tombstones));
+    check('baselineFromSnapshot carries pinned tombstones',
+        baseline.tombstones.pinned.some(e => e.uid === 'pg'), JSON.stringify(baseline.tombstones));
+}
+
+// tombstone survives the baseline save→JSON→load round-trip AND then gates bootstrap
+// (this is the truncation-survival path: after the remove event is gone, the persisted
+// tombstone still blocks a bootstrap re-seed of the dead uid).
+{
+    const saveBaseline = b => JSON.stringify({
+        tabUids: b.tabUids || [], groupIds: b.groupIds || [],
+        optionKeys: b.optionKeys || [], pinnedUids: b.pinnedUids || [],
+        tombstones: b.tombstones || {tabs: [], pinned: []},
+    });
+    const loadBaseline = raw => {
+        const p = JSON.parse(raw);
+        return {
+            tabUids: p.tabUids || [], groupIds: p.groupIds || [],
+            optionKeys: p.optionKeys || [], pinnedUids: p.pinnedUids || [],
+            tombstones: p.tombstones || {tabs: [], pinned: []},
+        };
+    };
+
+    const resolved = {groups: [{id: 'g1', tabs: []}], pinnedTabs: [], tombstones: {tabs: [{groupId: 'g1', uid: 'dead', ts: 100}], pinned: []}};
+    const reloaded = loadBaseline(saveBaseline(baselineFromSnapshot(resolved)));
+    check('tombstone survives baseline save→JSON→load',
+        reloaded.tombstones.tabs.some(e => e.groupId === 'g1' && e.uid === 'dead'), JSON.stringify(reloaded.tombstones));
+
+    const localState = {groups: [{id: 'g1', tabs: [{uid: 'dead', url: 'http://dead', index: 0}]}]};
+    const boot = computeBootstrapEvents(localState, reloaded, [], [], []);
+    check('reloaded tombstone gates bootstrap re-seed after truncation',
+        !boot.some(e => e.op === 'tab.add' && e.tab?.uid === 'dead'), JSON.stringify(boot));
 }
 
 // BASELINE PERSISTENCE ROUND-TRIP (regression): the transport persists the baseline as
