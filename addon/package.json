@@ -7,7 +7,8 @@
     "scripts": {
         "build": "webpack --mode production",
         "watch": "npm run build -- --watch",
-        "build-zip": "node scripts/build-zip.js"
+        "build-zip": "node scripts/build-zip.js",
+        "test": "node scripts/run-tests.mjs"
     },
     "dependencies": {
         "vue": "^2.7.16",
