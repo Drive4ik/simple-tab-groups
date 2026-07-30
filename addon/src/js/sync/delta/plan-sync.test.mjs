@@ -1507,6 +1507,45 @@ function buildLogGroupRecordIds(events) {
 }
 
 // ---------------------------------------------------------------------------
+// TU5. cookieStoreId CHURN guard: a live tab's container CANNOT change in place in Firefox,
+//   and applyTabContentUpdate never applies cookieStoreId — so a container-ONLY difference on
+//   an EXISTING tab must NOT emit a tabsToUpdate/pinnedToUpdate (perpetual unapplyable op).
+//   A NEW tab still carries its cookieStoreId through the create path.
+// ---------------------------------------------------------------------------
+{
+    const containerOnly = planSync({
+        pulledSnapshot: {
+            groups: [{id: 'g1', title: 'G1', tabs: [{uid: 't1', url: 'http://x', title: 'X', cookieStoreId: 'firefox-container-2', index: 0}]}],
+            pinnedTabs: [{uid: 'p1', url: 'http://p', title: 'P', cookieStoreId: 'firefox-container-2', index: 0}],
+            watermark: {},
+        },
+        pulledDeltaLogs: [], localPendingEvents: [], selfDeviceId: SELF,
+        localState: {
+            groups: [{id: 'g1', title: 'G1', tabs: [{uid: 't1', url: 'http://x', title: 'X', cookieStoreId: 'firefox-container-1', index: 0}]}],
+            pinnedTabs: [{uid: 'p1', url: 'http://p', title: 'P', cookieStoreId: 'firefox-container-1', index: 0}],
+        },
+    });
+    check('container-only difference emits NO tabsToUpdate (existing group tab)',
+        !containerOnly.browserOps.tabsToUpdate.some(u => u.uid === 't1'),
+        JSON.stringify(containerOnly.browserOps.tabsToUpdate));
+    check('container-only difference emits NO pinnedToUpdate (existing pinned tab)',
+        !containerOnly.browserOps.pinnedToUpdate.some(u => u.uid === 'p1'),
+        JSON.stringify(containerOnly.browserOps.pinnedToUpdate));
+
+    const newTab = planSync({
+        pulledSnapshot: {
+            groups: [{id: 'g1', title: 'G1', tabs: [{uid: 'newc', url: 'http://n', title: 'N', cookieStoreId: 'firefox-container-2', index: 0}]}],
+            watermark: {},
+        },
+        pulledDeltaLogs: [], localPendingEvents: [], selfDeviceId: SELF,
+        localState: {groups: [{id: 'g1', title: 'G1', tabs: []}]},
+    });
+    const created = newTab.browserOps.tabsToCreate.find(t => t.uid === 'newc');
+    check('a NEW tab still carries its cookieStoreId through the create path',
+        created && created.cookieStoreId === 'firefox-container-2', JSON.stringify(created));
+}
+
+// ---------------------------------------------------------------------------
 console.log(`\n${passed} passed, ${failures.length} failed`);
 if (failures.length) {
     console.error('FAILURES:', failures.join(', '));

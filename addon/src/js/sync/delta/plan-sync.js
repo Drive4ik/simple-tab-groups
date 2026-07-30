@@ -75,7 +75,7 @@ function normalizeBaseline(priorBaseline) {
     };
 }
 
-const TAB_CONTENT_FIELDS = ['url', 'title', 'cookieStoreId', 'pinned'];
+const TAB_CONTENT_FIELDS = ['url', 'title', 'pinned'];
 
 const MIGRATED_PIN_CONTENT_FIELDS = ['url', 'title', 'cookieStoreId', 'favIconUrl', 'lastModified'];
 
