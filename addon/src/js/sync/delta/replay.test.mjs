@@ -131,13 +131,13 @@ function tabUids(snapshot, groupId) {
             {seq: 1, ts: 100, op: 'tab.add', groupId: 'g1', tab: {uid: 'B1', index: 99}},
         ]},
         {deviceId: 'devA', events: [
-            {seq: 1, ts: 100, op: 'tab.add', groupId: 'g1', tab: {uid: 'A1', index: 99}},
-            {seq: 2, ts: 50, op: 'tab.add', groupId: 'g1', tab: {uid: 'A0', index: 99}},
+            {seq: 1, ts: 50, op: 'tab.add', groupId: 'g1', tab: {uid: 'A0', index: 99}},
+            {seq: 2, ts: 100, op: 'tab.add', groupId: 'g1', tab: {uid: 'A1', index: 99}},
         ]},
     ];
     const {snapshot} = replay(base, logs);
     const uids = tabUids(snapshot, 'g1');
-    // ts order: A0(ts50), then ts100 group {devA seq1 = A1, devB seq1 = B1}.
+    // ts order: A0(ts50), then ts100 group {devA seq2 = A1, devB seq1 = B1}.
     // All append (index 99 out of range) → insertion order = A0, A1, B1.
     check('cross-device ordering by ts then (deviceId,seq)',
         JSON.stringify(uids) === JSON.stringify(['A0', 'A1', 'B1']), JSON.stringify(uids));
@@ -644,6 +644,85 @@ const PIN = '70696e6e-6564-4000-8000-000000000001';
     const {snapshot} = replay(base, []);
     check('no pinnedGroupId option: order left as-is',
         snapshot.groups[0]?.id === 'g1', snapshot.groups.map(g => g.id).join(','));
+}
+
+// ---------------------------------------------------------------------------
+// MONOTONIC TS REPAIR — a device's OWN events must order by seq even when its clock
+// steps BACKWARD (NTP correction / manual change). ts is repaired into a derived
+// ordering key (running max per device in seq order); cross-device stays ts-based.
+// ---------------------------------------------------------------------------
+
+// single-device backwards clock: add(seq1,ts100) then remove(seq2,ts90) → the remove
+// must apply AFTER the add (seq order wins), so the tab ends up REMOVED. With the naive
+// ts-primary sort the remove (ts90) sorted before the add (ts100) and did nothing.
+{
+    const base = {groups: [{id: 'g1', title: 'G1', tabs: []}]};
+    const logs = [
+        {deviceId: 'devA', events: [
+            {seq: 1, ts: 100, op: 'tab.add', groupId: 'g1', tab: {uid: 't1', url: 'http://a', index: 0}},
+            {seq: 2, ts: 90, op: 'tab.remove', groupId: 'g1', uid: 't1'},
+        ]},
+    ];
+    const {snapshot} = replay(base, logs);
+    const uids = tabUids(snapshot, 'g1');
+    check('backwards-clock single device: remove(seq2) applied after add(seq1) → tab removed',
+        JSON.stringify(uids) === JSON.stringify([]), JSON.stringify(uids));
+}
+
+// single-device modify reorder under clock step-back: add(seq1,ts100,old) then
+// modify(seq2,ts90,new) → modify wins by seq, resolved url is the new one.
+{
+    const base = {groups: [{id: 'g1', title: 'G1', tabs: []}]};
+    const logs = [
+        {deviceId: 'devA', events: [
+            {seq: 1, ts: 100, op: 'tab.add', groupId: 'g1', tab: {uid: 't1', url: 'http://old', index: 0}},
+            {seq: 2, ts: 90, op: 'tab.modify', groupId: 'g1', tab: {uid: 't1', url: 'http://new', index: 0}},
+        ]},
+    ];
+    const {snapshot} = replay(base, logs);
+    const t1 = snapshot.groups[0].tabs.find(t => t.uid === 't1');
+    check('backwards-clock single device: modify(seq2) applied after add(seq1) → new record',
+        t1?.url === 'http://new', JSON.stringify(t1));
+}
+
+// cross-device with monotonic clocks: repair is a no-op, order matches plain ts.
+{
+    const base = {groups: [{id: 'g1', title: 'G1', tabs: []}]};
+    const logs = [
+        {deviceId: 'devA', events: [
+            {seq: 1, ts: 100, op: 'tab.add', groupId: 'g1', tab: {uid: 'A1', index: 99}},
+            {seq: 2, ts: 300, op: 'tab.add', groupId: 'g1', tab: {uid: 'A2', index: 99}},
+        ]},
+        {deviceId: 'devB', events: [
+            {seq: 1, ts: 200, op: 'tab.add', groupId: 'g1', tab: {uid: 'B1', index: 99}},
+        ]},
+    ];
+    const {snapshot} = replay(base, logs);
+    const uids = tabUids(snapshot, 'g1');
+    check('monotonic clocks: cross-device order unchanged (A1,B1,A2)',
+        JSON.stringify(uids) === JSON.stringify(['A1', 'B1', 'A2']), JSON.stringify(uids));
+}
+
+// convergence/determinism: two replays of the SAME multi-device logs (one device with a
+// backwards clock), supplied in different log order, yield identical resolved snapshots.
+{
+    const base = {groups: [{id: 'g1', title: 'G1', tabs: []}]};
+    const devA = {deviceId: 'devA', events: [
+        {seq: 1, ts: 100, op: 'tab.add', groupId: 'g1', tab: {uid: 'A1', url: 'http://a1', index: 99}},
+        {seq: 2, ts: 90, op: 'tab.modify', groupId: 'g1', tab: {uid: 'A1', url: 'http://a1b', index: 99}},
+        {seq: 3, ts: 95, op: 'tab.add', groupId: 'g1', tab: {uid: 'A2', url: 'http://a2', index: 99}},
+    ]};
+    const devB = {deviceId: 'devB', events: [
+        {seq: 1, ts: 92, op: 'tab.add', groupId: 'g1', tab: {uid: 'B1', url: 'http://b1', index: 99}},
+        {seq: 2, ts: 110, op: 'tab.add', groupId: 'g1', tab: {uid: 'B2', url: 'http://b2', index: 99}},
+    ]};
+    const {snapshot: s1} = replay(base, [devA, devB]);
+    const {snapshot: s2} = replay(base, [devB, devA]);
+    check('determinism: replay order independent of log-array order',
+        JSON.stringify(s1) === JSON.stringify(s2), `${JSON.stringify(s1)} !== ${JSON.stringify(s2)}`);
+    check('convergence: devA modify (seq2) applied after its add (seq1) despite lower ts',
+        s1.groups[0].tabs.find(t => t.uid === 'A1')?.url === 'http://a1b',
+        JSON.stringify(s1.groups[0].tabs));
 }
 
 // ---------------------------------------------------------------------------

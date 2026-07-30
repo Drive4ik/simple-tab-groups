@@ -46,6 +46,28 @@ const OPS = {
     PINNED_REMOVE: 'pinned.remove',
 };
 
+function repairMonotonicTs(entries) {
+    const byDevice = new Map();
+    for (const entry of entries) {
+        let list = byDevice.get(entry.deviceId);
+        if (!list) {
+            list = [];
+            byDevice.set(entry.deviceId, list);
+        }
+        list.push(entry);
+    }
+
+    for (const list of byDevice.values()) {
+        list.sort((a, b) => (a.event.seq ?? 0) - (b.event.seq ?? 0));
+        let runningMax = -Infinity;
+        for (const entry of list) {
+            const ts = entry.event.ts ?? 0;
+            runningMax = ts > runningMax ? ts : runningMax;
+            entry.orderTs = runningMax;
+        }
+    }
+}
+
 function buildOrderedEvents(deltaLogs) {
     const entries = [];
 
@@ -56,11 +78,11 @@ function buildOrderedEvents(deltaLogs) {
         }
     }
 
+    repairMonotonicTs(entries);
+
     entries.sort((a, b) => {
-        const tsA = a.event.ts ?? 0;
-        const tsB = b.event.ts ?? 0;
-        if (tsA !== tsB) {
-            return tsA - tsB;
+        if (a.orderTs !== b.orderTs) {
+            return a.orderTs - b.orderTs;
         }
         if (a.deviceId !== b.deviceId) {
             return a.deviceId < b.deviceId ? -1 : 1;
