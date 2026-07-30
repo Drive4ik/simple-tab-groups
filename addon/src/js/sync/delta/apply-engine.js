@@ -10,6 +10,7 @@ import {shouldSleepSyncedTab, SLEEP_OPTION_KEYS} from './tab-sleep.js';
 import {isUrlSyncable, unwrapStubUrl, liveUrlMatchesSource, shouldNavigateLiveTabUrl} from './url-sync.js';
 import {getLivePinnedTabs} from './local-state.js';
 import {resolveAbsoluteTabIndex} from './apply-index.js';
+import {groupTabsAlreadyOrdered} from './group-order.js';
 
 const logger = new Logger('DeltaSyncApply');
 
@@ -309,6 +310,10 @@ async function reconcileGroupTabOrders(resolvedSnapshot, log) {
 
         const orderedIds = orderedGroupTabIds(resolvedUidOrder, group.tabs);
         if (!orderedIds.length) {
+            continue;
+        }
+
+        if (groupTabsAlreadyOrdered(orderedIds, group.tabs)) {
             continue;
         }
 

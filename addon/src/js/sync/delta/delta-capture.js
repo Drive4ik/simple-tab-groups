@@ -6,6 +6,7 @@ import {syncedOptionKeys} from './option-keys.js';
 import {isUrlSyncable, unwrapStubUrl, sanitizeGroupRecordForSync} from './url-sync.js';
 import {computeGroupRelativeIndex} from './group-relative-index.js';
 import {isAppliedNavigationEcho} from './applied-nav-echo.js';
+import {isAppliedMoveEcho} from './applied-move-echo.js';
 
 const logger = new Logger('DeltaCapture');
 
@@ -50,6 +51,27 @@ export function markAppliedNavigation(tabId, url) {
 
 export function clearAppliedNavigation(tabId) {
     appliedNavTabs.delete(tabId);
+}
+
+const appliedMoveTabs = new Map();
+
+export function markAppliedMove(tabId) {
+    if (!Number.isFinite(tabId)) {
+        return;
+    }
+    appliedMoveTabs.set(tabId, Date.now() + APPLIED_NAV_WINDOW_MS);
+}
+
+export function consumeAppliedMoveEcho(tabId) {
+    const markExpiry = appliedMoveTabs.get(tabId);
+    if (Number.isFinite(markExpiry)) {
+        appliedMoveTabs.delete(tabId);
+    }
+    return isAppliedMoveEcho({
+        applying: isApplying(),
+        markExpiry,
+        now: Date.now(),
+    });
 }
 
 function consumeAppliedNavigationEcho(tabId, observedUrl) {
