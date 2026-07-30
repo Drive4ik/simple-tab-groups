@@ -18,6 +18,7 @@ import {
     resolveDeferredTruncation,
 } from './compaction.js';
 import {mapStateContainers, mapEventContainers} from './container-map.js';
+import {isResolvedSpuriouslyEmpty, shouldWriteSnapshot} from './snapshot-write-gate.js';
 import {
     SNAPSHOT_FILE_NAME,
     DELTA_FILE_PREFIX,
@@ -336,12 +337,9 @@ export async function deltaSynchronization() {
 
         plan.resolvedSnapshot.containers = {...plan.resolvedSnapshot.containers, ...containerRegistry};
 
-        const resolvedEmpty = (plan.resolvedSnapshot.groups || []).length === 0
-            && (plan.resolvedSnapshot.pinnedTabs || []).length === 0;
-        const localHasState = (localState.groups || []).length > 0
-            || (localState.pinnedTabs || []).length > 0;
-        if (resolvedEmpty && localHasState) {
-            log.warn('resolved state empty but local has groups/pinned - suppressing removals this round');
+        const suppressEmptyResolve = isResolvedSpuriouslyEmpty(plan.resolvedSnapshot, localState);
+        if (suppressEmptyResolve) {
+            log.warn('resolved state empty but local has groups/pinned - suppressing removals and snapshot write this round');
             plan.browserOps.groupsToRemove = [];
             plan.browserOps.tabsToRemove = [];
             plan.browserOps.pinnedToRemove = [];
@@ -432,7 +430,7 @@ export async function deltaSynchronization() {
 
         progress(85);
 
-        const writeSnapshot = shouldCompact || !snapshotExists;
+        const writeSnapshot = shouldWriteSnapshot({shouldCompact, snapshotExists, suppressEmptyResolve});
 
         const cloudSelfTruncateSeq = deferredTruncateConfirmed ? confirmedTruncateSeq : 0;
 
@@ -477,7 +475,7 @@ export async function deltaSynchronization() {
             });
         }
 
-        if (shouldCompact) {
+        if (shouldCompact && writeSnapshot) {
             const foldedSelfSeq = selfFoldedSeq(plan.newWatermark, selfDeviceId, lastPushedSeq);
             if (foldedSelfSeq > 0) {
                 const newPending = Math.max(pendingTruncateSeq, foldedSelfSeq);
@@ -497,7 +495,9 @@ export async function deltaSynchronization() {
 
         progress(90);
 
-        saveBaseline(selfDeviceId, baselineFromSnapshot(plan.resolvedSnapshot));
+        if (!suppressEmptyResolve) {
+            saveBaseline(selfDeviceId, baselineFromSnapshot(plan.resolvedSnapshot));
+        }
 
         Cloud.commitSyncCycle?.(cycle);
 
