@@ -19,6 +19,7 @@ import {
 } from './compaction.js';
 import {mapStateContainers, mapEventContainers} from './container-map.js';
 import {isResolvedSpuriouslyEmpty, shouldWriteSnapshot} from './snapshot-write-gate.js';
+import {deleteOrphanDeltaFiles} from './orphan-gc.js';
 import {
     SNAPSHOT_FILE_NAME,
     DELTA_FILE_PREFIX,
@@ -99,6 +100,7 @@ async function resolvePulledDeltaLogs(Cloud, cycle) {
     const files = await Cloud.readAllMatching(DELTA_FILE_PREFIX, null, cycle);
 
     return (files || []).map(({name, content}) => ({
+        name,
         deviceId: content?.deviceId ?? deviceIdFromDeltaFileName(name),
         events: Array.isArray(content?.events) ? content.events : [],
     }));
@@ -491,6 +493,8 @@ export async function deltaSynchronization() {
                     newWatermark: plan.newWatermark,
                 });
             }
+
+            await deleteOrphanDeltaFiles(Cloud, pulledDeltaLogs, plan.newWatermark, selfDeviceId, log);
         }
 
         progress(90);
