@@ -70,6 +70,7 @@ function normalizeBaseline(priorBaseline) {
         groupIds: new Set(src.groupIds || []),
         optionKeys: new Set(src.optionKeys || []),
         pinnedUids: new Set(src.pinnedUids || []),
+        tabGroups: new Map(Object.entries(src.tabGroups || {})),
         tabTombstoneKeys,
         pinnedTombstoneUids,
     };
@@ -379,9 +380,61 @@ export function computeBootstrapEvents(localState, priorBaseline, knownLocalLogU
     return events;
 }
 
+export function computeOfflineRemoveEvents(localState, priorBaseline, {knownLocalLogUids, aliveUids} = {}) {
+    const baseline = normalizeBaseline(priorBaseline);
+    const logUids = new Set(knownLocalLogUids || []);
+    const alive = aliveUids instanceof Set ? aliveUids : new Set(aliveUids || []);
+
+    const groups = (localState && localState.groups) || [];
+    const groupTabUids = new Set();
+    for (const group of groups) {
+        for (const tab of Array.isArray(group.tabs) ? group.tabs : []) {
+            if (tab.uid != null) {
+                groupTabUids.add(tab.uid);
+            }
+        }
+    }
+
+    const livePinnedUids = new Set();
+    for (const tab of Array.isArray(localState && localState.pinnedTabs) ? localState.pinnedTabs : []) {
+        if (tab.uid != null) {
+            livePinnedUids.add(tab.uid);
+        }
+    }
+
+    const removes = [];
+
+    for (const uid of baseline.tabUids) {
+        if (groupTabUids.has(uid) || logUids.has(uid) || alive.has(uid)) {
+            continue;
+        }
+        const groupId = baseline.tabGroups.get(uid);
+        if (groupId == null) {
+            continue;
+        }
+        if (baseline.tabTombstoneKeys.has(tabTombstoneKey(groupId, uid))) {
+            continue;
+        }
+        removes.push({op: 'tab.remove', groupId, uid});
+    }
+
+    for (const uid of baseline.pinnedUids) {
+        if (groupTabUids.has(uid) || livePinnedUids.has(uid) || logUids.has(uid) || alive.has(uid)) {
+            continue;
+        }
+        if (baseline.pinnedTombstoneUids.has(String(uid))) {
+            continue;
+        }
+        removes.push({op: 'pinned.remove', uid});
+    }
+
+    return removes;
+}
+
 export function baselineFromSnapshot(snapshot) {
     const tabUids = [];
     const groupIds = [];
+    const tabGroups = {};
 
     for (const group of (snapshot && snapshot.groups) || []) {
         if (group.id != null) {
@@ -390,6 +443,9 @@ export function baselineFromSnapshot(snapshot) {
         for (const tab of Array.isArray(group.tabs) ? group.tabs : []) {
             if (tab.uid != null) {
                 tabUids.push(tab.uid);
+                if (group.id != null) {
+                    tabGroups[tab.uid] = group.id;
+                }
             }
         }
     }
@@ -409,5 +465,5 @@ export function baselineFromSnapshot(snapshot) {
         pinned: Array.isArray(rawTombstones.pinned) ? rawTombstones.pinned : [],
     };
 
-    return {tabUids, groupIds, optionKeys, pinnedUids, tombstones};
+    return {tabUids, groupIds, optionKeys, pinnedUids, tabGroups, tombstones};
 }

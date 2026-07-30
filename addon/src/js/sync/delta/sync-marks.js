@@ -51,10 +51,21 @@ function normalizeTombstones(raw) {
     };
 }
 
+function emptyBaseline() {
+    return {
+        tabUids: new Set(),
+        groupIds: new Set(),
+        optionKeys: new Set(),
+        pinnedUids: new Set(),
+        tabGroups: {},
+        tombstones: emptyTombstones(),
+    };
+}
+
 export function loadBaseline(deviceId) {
     const raw = storage[baselineKey(deviceId)];
     if (!raw) {
-        return {tabUids: new Set(), groupIds: new Set(), optionKeys: new Set(), pinnedUids: new Set(), tombstones: emptyTombstones()};
+        return emptyBaseline();
     }
     try {
         const parsed = JSON.parse(raw);
@@ -63,10 +74,11 @@ export function loadBaseline(deviceId) {
             groupIds: new Set(parsed.groupIds || []),
             optionKeys: new Set(parsed.optionKeys || []),
             pinnedUids: new Set(parsed.pinnedUids || []),
+            tabGroups: parsed.tabGroups && typeof parsed.tabGroups === 'object' ? parsed.tabGroups : {},
             tombstones: normalizeTombstones(parsed.tombstones),
         };
     } catch {
-        return {tabUids: new Set(), groupIds: new Set(), optionKeys: new Set(), pinnedUids: new Set(), tombstones: emptyTombstones()};
+        return emptyBaseline();
     }
 }
 
@@ -76,6 +88,7 @@ export function saveBaseline(deviceId, baseline) {
         groupIds: baseline.groupIds || [],
         optionKeys: baseline.optionKeys || [],
         pinnedUids: baseline.pinnedUids || [],
+        tabGroups: baseline.tabGroups || {},
         tombstones: normalizeTombstones(baseline.tombstones),
     });
 }

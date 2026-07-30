@@ -1540,6 +1540,19 @@
         "message": "Синхронизация применила изменения",
         "description": "Title of the notification shown after a sync that changed something"
     },
+    "offlineRemoveConfirmTitle": {
+        "message": "Подтвердите удаление закрытых вкладок",
+        "description": "Title of the notification asking the user to confirm a large offline tab removal"
+    },
+    "offlineRemoveConfirmMessage": {
+        "message": "С момента последнего запуска STG исчезло синхронизированных вкладок: $count$. Нажмите, чтобы удалить их на других синхронизированных устройствах.",
+        "description": "Body of the notification asking the user to confirm a large offline tab removal",
+        "placeholders": {
+            "count": {
+                "content": "$1"
+            }
+        }
+    },
     "syncDiffPageTitle": {
         "message": "Различия синхронизации",
         "description": "Title of the sync diff page"

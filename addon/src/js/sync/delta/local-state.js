@@ -5,7 +5,9 @@ import * as Groups from '/js/groups.js';
 import * as Cache from '/js/cache.js';
 import Logger from '/js/logger.js';
 import * as DeltaLog from './delta-log.js';
-import {computeBootstrapEvents} from './plan-sync.js';
+import {computeBootstrapEvents, computeOfflineRemoveEvents} from './plan-sync.js';
+import {partitionOfflineRemoves} from './offline-remove-gate.js';
+import {persistDeferredOfflineRemoves, notifyDeferredOfflineRemoves} from './offline-remove.js';
 import {planStartupReconcile} from './startup-reconcile.js';
 import {isApplying} from './delta-capture.js';
 import {isCaptureGateOpen} from './capture-gate-state.js';
@@ -16,6 +18,8 @@ import {buildFavIconMap} from './favicon-map.js';
 import {loadBaseline, lastPushedSeqKey, storage} from './sync-marks.js';
 
 const logger = new Logger('DeltaSyncLocalState');
+
+const mainStorage = localStorage.create(Constants.MODULES.BACKGROUND);
 
 export function buildLocalState(loadedGroups, syncedOptions = {}, livePinnedTabs = []) {
     const groups = (loadedGroups || []).map(group => {
@@ -197,6 +201,34 @@ export async function gatherLocalPending(selfDeviceId, log) {
     await DeltaLog.appendMany(bootstrapEvents);
     if (bootstrapEvents.length) {
         log.info('bootstrap-uploaded never-synced local items', {count: bootstrapEvents.length});
+    }
+
+    if (mainStorage.inited === true) {
+        const aliveUids = await collectAliveUids();
+        const offlineRemoves = computeOfflineRemoveEvents(localState, priorBaseline, {
+            knownLocalLogUids: logUids,
+            aliveUids,
+        });
+
+        if (offlineRemoves.length) {
+            const baselineSize = priorBaseline.tabUids.size + priorBaseline.pinnedUids.size;
+            const {apply, deferred} = partitionOfflineRemoves(offlineRemoves, baselineSize);
+
+            if (apply.length) {
+                await DeltaLog.appendMany(apply);
+                log.info('offline-remove: propagated tabs gone since last sync', {count: apply.length});
+            }
+
+            if (deferred.length) {
+                persistDeferredOfflineRemoves(selfDeviceId, deferred);
+                await notifyDeferredOfflineRemoves(deferred.length)
+                    .catch(log.onCatch('cant raise offline-remove confirmation notification', false));
+                log.warn('offline-remove: mass removal deferred pending user confirmation', {
+                    count: deferred.length,
+                    baselineSize,
+                });
+            }
+        }
     }
 
     const lastPushedSeq = Number(storage[lastPushedSeqKey(selfDeviceId)]) || 0;
