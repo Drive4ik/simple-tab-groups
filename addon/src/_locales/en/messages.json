@@ -1552,6 +1552,19 @@
         "message": "Sync applied changes",
         "description": "Title of the notification shown after a sync that changed something"
     },
+    "offlineRemoveConfirmTitle": {
+        "message": "Confirm removing closed tabs",
+        "description": "Title of the notification asking the user to confirm a large offline tab removal"
+    },
+    "offlineRemoveConfirmMessage": {
+        "message": "$count$ synced tabs are gone since STG was last running. Click to remove them on your other synced devices.",
+        "description": "Body of the notification asking the user to confirm a large offline tab removal",
+        "placeholders": {
+            "count": {
+                "content": "$1"
+            }
+        }
+    },
     "syncDiffPageTitle": {
         "message": "Sync diff",
         "description": "Title of the sync diff page"
