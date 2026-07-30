@@ -806,6 +806,7 @@ export default {
                     <template v-if="group.isArchive">
                         <div v-for="(tab, index) in group.filteredTabs" :key="index"
                             class="tab item is-unselectable space-left"
+                            :style="nativeColorStyle(tab, group)"
                             :title="getTabTitle(tab, true)"
                             >
                             <div class="item-icon">
@@ -835,9 +836,7 @@ export default {
                                 'is-active-element': group === currentGroup && tab.active,
                                 'is-multiple-tab-to-move': multipleTabIds.includes(tab.id),
                             }]"
-                            :style="{
-                                '--group-icon-color': group.iconColor,
-                            }"
+                            :style="nativeColorStyle(tab, group)"
                             :title="getTabTitle(tab, true)"
                             >
                             <figure class="item-icon image is-16x16">
@@ -1057,6 +1056,7 @@ export default {
                     v-for="(tab, tabIndex) in groupToShow.tabs"
                     :key="tabIndex"
                     class="tab item is-unselectable"
+                    :style="nativeColorStyle(tab, groupToShow)"
                     :title="getTabTitle(tab, true)"
                     @mousedown.middle.prevent
                     >
@@ -1095,6 +1095,7 @@ export default {
                             tab.container && `identity-color-${tab.container?.color}`,
                         ]"
                         :title="getTabTitle(tab, true)"
+                        :style="nativeColorStyle(tab, groupToShow)"
 
                         draggable="true"
                         @dragstart="dragHandle($event, 'tab', ['tab'], {item: tab, group: groupToShow})"
@@ -1485,25 +1486,39 @@ html {
         min-height: var(--item-height);
         padding-inline-start: var(--bulma-block-spacing);
         gap: var(--gap-indent);
+        position: relative;
 
         &.space-left {
             padding-inline-start: calc(var(--bulma-block-spacing) * 2);
         }
 
-        &.is-active-element:before,
-        &.is-opened:before,
-        &.is-multiple-tab-to-move:before {
+        &[style*="--group-native-color"] {
+            &:before {
+                content: '';
+                position: absolute;
+                background-color: var(--group-native-color);
+                left: 0;
+                top: 0;
+                bottom: 0;
+                width: 3px;
+            }
+
+            &.is-opened:before,
+            &.is-multiple-tab-to-move:before {
+                left: 3px;
+            }
+        }
+
+
+        &.is-opened:after,
+        &.is-multiple-tab-to-move:after {
             content: '';
             position: absolute;
             background-color: var(--group-icon-color, var(--bulma-info-50));
             left: 0;
             top: 0;
             bottom: 0;
-            width: 4px;
-        }
-
-        &.is-active-element.is-multiple-tab-to-move:before {
-            width: 6px;
+            width: 3px;
         }
 
         &:not(.no-hover):hover,
@@ -1547,7 +1562,7 @@ html {
             display: flex;
             align-items: center;
             align-self: stretch;
-            /* padding-inline: var(--bulma-block-spacing); */
+            padding-inline: var(--bulma-block-spacing);
             white-space: nowrap;
             gap: var(--gap-indent);
         }

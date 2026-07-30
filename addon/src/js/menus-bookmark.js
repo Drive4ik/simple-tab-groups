@@ -268,12 +268,9 @@ export async function openInGroup(groupId, info) {
             tabToCreate.windowId = group.tabs[0]?.windowId;
         }
 
-        const newTabIndex = await Tabs.getNewTabIndex(group.tabs);
-        const createdTabs = await Tabs.createMultiple(Groups.setNewTabsParams(tabsToCreate, group), true);
-
-        if (newTabIndex) {
-            await Tabs.moveNative(createdTabs, {index: newTabIndex}, true);
-        }
+        const createdTabs = await Tabs.createMultiple(Groups.setNewTabsParams(tabsToCreate, group), true, {
+            startIndex: await Tabs.getNewTabIndex(group.tabs),
+        });
 
         if (!Groups.isLoaded(groupId) && !info.button.RIGHT) {
             log.log('hiding created tabs because group is not loaded and left click');

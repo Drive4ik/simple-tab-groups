@@ -6,6 +6,7 @@ import backgroundSelf from '/js/background.js';
 import * as Constants from '/js/constants.js';
 import * as File from '/js/file.js';
 import * as Cache from '/js/cache.js';
+import * as GroupsNative from '/js/groups-native.js';
 import * as Utils from '/js/utils.js';
 
 const mainStorage = localStorage.create(Constants.MODULES.BACKGROUND);
@@ -154,7 +155,7 @@ async function saveConsoleLogs() {
     let loadedWindows = await Promise.all(windows.map(Cache.loadWindowSession));
     loadedWindows = loadedWindows.filter(Boolean);
 
-    tabs.forEach(tab => delete tab.groupId); // TODO temp
+    tabs.forEach(GroupsNative.detachTabGroupId);
     let loadedTabs = await Promise.all(tabs.map(Cache.loadTabSession));
     loadedTabs = loadedTabs.filter(Boolean);
 

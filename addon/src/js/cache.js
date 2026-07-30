@@ -5,9 +5,10 @@ import * as Utils from './utils.js';
 import backgroundSelf from './background.js';
 
 export const GROUP_KEY = 'groupId';
+export const GROUP_NATIVE_KEY = 'groupNativeId';
 export const FAVICON_KEY = 'favIconUrl';
 export const THUMBNAIL_KEY = 'thumbnail';
-export const KEYS = [GROUP_KEY, FAVICON_KEY, THUMBNAIL_KEY];
+export const KEYS = [GROUP_KEY, GROUP_NATIVE_KEY, FAVICON_KEY, THUMBNAIL_KEY];
 
 export const tabs = {};
 export const lastTabsState = {}; // BUG https://bugzilla.mozilla.org/show_bug.cgi?id=1818392
@@ -109,6 +110,45 @@ export async function removeTabGroup(id) {
     delete tabs[id]?.groupId;
 }
 
+// groupNativeId - membership in a native tab group: the stable string id of the sub-group
+// (GroupsNative.createSubGroupId), never the ephemeral browser group id. The single source of
+// truth: survives addon and browser restarts and travels with the tab.
+export async function loadTabNativeGroupId(id) {
+    tabs[id] ??= {id};
+
+    await waitPromises(tabs[id]);
+
+    if (tabs[id].groupNativeId) {
+        return tabs[id].groupNativeId;
+    }
+
+    return tabs[id].groupNativeId = await addPromise(tabs[id], browser.sessions.getTabValue(id, GROUP_NATIVE_KEY));
+}
+
+export async function setTabNativeGroupId(id, groupNativeId) {
+    if (groupNativeId) {
+        tabs[id] ??= {id};
+
+        await waitPromises(tabs[id]);
+
+        await addPromise(tabs[id], browser.sessions.setTabValue(id, GROUP_NATIVE_KEY, groupNativeId));
+
+        tabs[id].groupNativeId = groupNativeId;
+    } else {
+        await removeTabNativeGroupId(id).catch(() => {});
+    }
+}
+
+export function getTabNativeGroupId(id) {
+    return tabs[id]?.groupNativeId;
+}
+
+export async function removeTabNativeGroupId(id) {
+    await waitPromises(tabs[id]);
+    await addPromise(tabs[id], browser.sessions.removeTabValue(id, GROUP_NATIVE_KEY));
+    delete tabs[id]?.groupNativeId;
+}
+
 // favIconUrl
 async function loadTabFavIcon(id) {
     if (tabs[id]) {
@@ -205,6 +245,7 @@ export async function loadTabSession(tab, includeFavIconUrl = true, includeThumb
 
         await Promise.all([
             loadTabGroup(tab.id),
+            loadTabNativeGroupId(tab.id),
             includeFavIconUrl === true ? loadTabFavIcon(tab.id) : null,
             includeThumbnail === true ? loadTabThumbnail(tab.id) : null,
         ]);
@@ -222,6 +263,7 @@ export async function setTabSession(tab, session = null) {
 
     await Promise.all([
         setTabGroup(tab.id, tab.groupId),
+        setTabNativeGroupId(tab.id, tab.groupNativeId),
         setTabFavIcon(tab.id, tab.favIconUrl),
         setTabThumbnail(tab.id, tab.thumbnail),
     ]);
@@ -231,12 +273,14 @@ export async function setTabSession(tab, session = null) {
 
 export function clearTabSessionCache(id) {
     delete tabs[id]?.groupId;
+    delete tabs[id]?.groupNativeId;
     delete tabs[id]?.favIconUrl;
     delete tabs[id]?.thumbnail;
 }
 
 export function applySession(toObj, fromObj) {
     fromObj?.groupId && (toObj.groupId = fromObj.groupId);
+    fromObj?.groupNativeId && (toObj.groupNativeId = fromObj.groupNativeId);
     fromObj?.favIconUrl && (toObj.favIconUrl = fromObj.favIconUrl);
     fromObj?.thumbnail && (toObj.thumbnail = fromObj.thumbnail);
 
@@ -250,6 +294,7 @@ export function applyTabSession(tab) {
 export async function removeTabSession(id) {
     await Promise.allSettled([
         removeTabGroup(id),
+        removeTabNativeGroupId(id),
         removeTabFavIcon(id),
         removeTabThumbnail(id),
     ]);

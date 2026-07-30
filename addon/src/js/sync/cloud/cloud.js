@@ -2,8 +2,11 @@ import Listeners from '/js/listeners.js?extension.onStart';
 import '/js/prefixed-storage.js';
 import * as Constants from '/js/constants.js';
 import * as Containers from '/js/containers.js';
+import * as Cache from '/js/cache.js';
 import * as Tabs from '/js/tabs.js';
 import * as Groups from '/js/groups.js';
+import * as GroupsNative from '/js/groups-native.js';
+import * as MenusMain from '/js/menus-main.js';
 import * as Extensions from '/js/extensions.js';
 import * as Utils from '/js/utils.js';
 import Lang from '/js/lang.js';
@@ -302,6 +305,8 @@ async function sync(trust = null, revision = null, progressFunc = null) {
         // map cookie-store-id to gecko browser
         Containers.mapDefaultContainer(syncResult.localData, Constants.DEFAULT_COOKIE_STORE_ID);
 
+        // the native-group mirror is gated inside GroupsNative.apply itself,
+        // and apply makes the browser match the synced state - no extra reconcile pass is needed
         // sync changes with current profile
         for (const group of syncResult.localData.groups) {
             if (group.isArchive) {
@@ -309,30 +314,41 @@ async function sync(trust = null, revision = null, progressFunc = null) {
             }
 
             const tabsToCreate = group.tabs.filter(tab => tab.new);
+            const groupWindowId = Cache.getWindowId(group.id) || group.tabs.find(tab => !tab.new)?.windowId;
 
-            if (!tabsToCreate.length) {
-                continue;
+            if (tabsToCreate.length) {
+                for (const tabToCreate of tabsToCreate) {
+                    tabToCreate.groupId = group.id;
+                    tabToCreate.windowId = groupWindowId;
+                }
+
+                // the created tabs carry tab.groupNativeId into their sessions
+                const newTabs = await Tabs.createMultiple(tabsToCreate, true);
+
+                group.tabs = group.tabs.map(tab => tab.new ? newTabs.shift() : tab).filter(Boolean);
             }
 
-            const groupWindowId = group.tabs.find(tab => !tab.new)?.windowId;
+            // per-tab membership: the merge left the final sub-group id on each tab object
+            await Promise.allSettled(group.tabs.map(tab => {
+                if (Cache.getTabNativeGroupId(tab.id) !== tab.groupNativeId) {
+                    return Cache.setTabNativeGroupId(tab.id, tab.groupNativeId);
+                }
+            }));
 
-            for (const tabToCreate of tabsToCreate) {
-                tabToCreate.groupId = group.id;
-                tabToCreate.windowId = groupWindowId;
-            }
-
-            const newTabs = await Tabs.createMultiple(tabsToCreate, true);
-
-            // filter(Boolean): if some tabs weren't created (due to invalid url) - remove them from group.tabs
-            group.tabs = group.tabs.map(tab => tab.new ? newTabs.shift() : tab).filter(Boolean);
-
-            // sorting tabs
+            // sort tabs to the synced order (must run even without new tabs - order may have changed,
+            // including for hidden groups: their tabs can be reordered in the addon or the browser)
             const firstTabIndex = group.tabs[0]?.index;
-            if (Number.isFinite(firstTabIndex)) {
+            if (Number.isInteger(firstTabIndex)) {
                 group.tabs = await Tabs.moveNative(group.tabs, {index: firstTabIndex}, true);
             }
 
-            if (!Groups.isLoaded(group.id)) {
+            if (Groups.isLoaded(group.id)) {
+                // the sort above may have torn live native groups apart (moving an array of tabs
+                // breaks their groups), and the synced state may differ - apply is a no-op when
+                // the live state still matches
+                await GroupsNative.apply(groupWindowId, group);
+            } else {
+                // hide the group's tabs (the browser skips the ones already hidden)
                 await Tabs.hide(group.tabs, true);
             }
         }
@@ -341,6 +357,8 @@ async function sync(trust = null, revision = null, progressFunc = null) {
 
         await backgroundSelf.saveOptions(syncResult.localData);
         await Groups.save(syncResult.localData.groups);
+
+        await MenusMain.groupsUpdated(syncResult.localData.groups);
     }
 
     progressFunc?.(100);
@@ -454,7 +472,7 @@ async function syncGroups(localData, cloudData, sourceOfTruth, changes) {
         const includeId = hasSomeTreeTabsExtension;
         const includeLastAccessed = prepareFor === TRUST_LOCAL || groupIsArchive === true;
 
-        return Tabs.prepareForSave(tabs, false, includeFavIconUrl, false, includeId, includeLastAccessed);
+        return Tabs.prepareForSave(tabs, {includeGroupNativeId: true, includeFavIconUrl, includeId, includeLastAccessed});
     }
 
     if (sourceOfTruth === TRUST_LOCAL) {
@@ -465,6 +483,11 @@ async function syncGroups(localData, cloudData, sourceOfTruth, changes) {
             if (resultLocalGroup.dontUploadToCloud) {
                 resultLocalGroups.push(resultLocalGroup);
             } else {
+                // the cloud gets only sub-groups that still have member tabs
+                if (!resultLocalGroup.isArchive) {
+                    resultCloudGroup.groupsNative = GroupsNative.referencedGroupsNative(resultLocalGroup);
+                }
+
                 resultCloudGroup.tabs = prepareForSaveTabs(resultLocalGroup.tabs, TRUST_CLOUD, resultCloudGroup.isArchive);
 
                 resultLocalGroups.push(resultLocalGroup);
@@ -504,6 +527,7 @@ async function syncGroups(localData, cloudData, sourceOfTruth, changes) {
                 localGroup = JSON.clone(cloudGroup);
 
                 if (!localGroup.isArchive) {
+                    // the tabs carry their groupNativeId - creation writes it into the sessions
                     localGroup.tabs.forEach(localTab => localTab.new = true);
                 }
 
@@ -584,6 +608,19 @@ async function syncGroups(localData, cloudData, sourceOfTruth, changes) {
             */
 
             // sync tabs:
+            // cloud wins the per-tab sub-group membership of matched tabs
+            function syncTabNativeMembership(localTab, cloudTab) {
+                if ((localTab.groupNativeId ?? null) !== (cloudTab.groupNativeId ?? null)) {
+                    if (cloudTab.groupNativeId) {
+                        localTab.groupNativeId = cloudTab.groupNativeId;
+                    } else {
+                        delete localTab.groupNativeId;
+                    }
+
+                    changes.local = true;
+                }
+            }
+
             if (resultCloudGroup.isArchive !== resultLocalGroup.isArchive) {
                 // changes.local = true; // set when sync group keys
 
@@ -594,6 +631,7 @@ async function syncGroups(localData, cloudData, sourceOfTruth, changes) {
 
                 syncTabs(
                     (localTab, cloudTab) => {
+                        localTab && syncTabNativeMembership(localTab, cloudTab);
                         return localTab ?? cloudTab;
                     },
                     (localTab, localTabIndex, resultLocalTabs, resultCloudTabs) => {
@@ -628,6 +666,8 @@ async function syncGroups(localData, cloudData, sourceOfTruth, changes) {
                             changes.local = true;
                         }
 
+                        localTab && syncTabNativeMembership(localTab, cloudTab);
+
                         return localTab ?? {...cloudTab};
                     },
                     (localTab, localTabIndex, resultLocalTabs, resultCloudTabs) => {
@@ -653,8 +693,12 @@ async function syncGroups(localData, cloudData, sourceOfTruth, changes) {
                         if (!localTab) {
                             localTab = {...cloudTab, new: true};
                             changes.local = true;
-                        } else if (localIndex !== cloudIndex) {
-                            changes.local = true;
+                        } else {
+                            if (localIndex !== cloudIndex) {
+                                changes.local = true;
+                            }
+
+                            syncTabNativeMembership(localTab, cloudTab);
                         }
 
                         return localTab;
@@ -678,7 +722,8 @@ async function syncGroups(localData, cloudData, sourceOfTruth, changes) {
                 );
             }
 
-            // assign group keys
+            mergeGroupsNative(resultLocalGroup, resultCloudGroup, changes);
+
             assignGroupKeys(resultLocalGroup, resultCloudGroup, sourceOfTruth, changes);
 
             resultLocalGroups.push(resultLocalGroup);
@@ -705,6 +750,12 @@ async function syncGroups(localData, cloudData, sourceOfTruth, changes) {
                 log.log('add local group to cloud:', localGroup.id);
 
                 const cloudGroup = JSON.clone(localGroup);
+
+                // the cloud gets only sub-groups that still have member tabs
+                if (!localGroup.isArchive) {
+                    cloudGroup.groupsNative = GroupsNative.referencedGroupsNative(localGroup);
+                }
+
                 cloudGroup.tabs = prepareForSaveTabs(localGroup.tabs, TRUST_CLOUD, cloudGroup.isArchive);
 
                 // changes.local = true;
@@ -732,6 +783,35 @@ async function syncGroups(localData, cloudData, sourceOfTruth, changes) {
     log.stop();
 }
 
+// sub-group metadata merge after the tab merge: cloud meta wins by id, local-only sub-groups
+// that still have member tabs are added, entries nobody references are dropped on both sides
+function mergeGroupsNative(localGroup, cloudGroup, changes) {
+    const entryById = new Map;
+
+    for (const entry of cloudGroup.groupsNative ?? []) {
+        entryById.set(entry.id, entry);
+    }
+
+    for (const entry of localGroup.groupsNative ?? []) {
+        if (!entryById.has(entry.id)) {
+            entryById.set(entry.id, entry);
+        }
+    }
+
+    const referencedIds = new Set([...localGroup.tabs, ...cloudGroup.tabs].map(tab => tab.groupNativeId));
+    const merged = [...entryById.values()].filter(entry => referencedIds.has(entry.id));
+
+    if (!isEqual(cloudGroup.groupsNative, merged)) {
+        changes.cloud = true;
+        cloudGroup.groupsNative = merged;
+    }
+
+    if (!isEqual(localGroup.groupsNative, merged)) {
+        changes.local = true;
+        localGroup.groupsNative = JSON.clone(merged);
+    }
+}
+
 function assignGroupKeys(localGroup, cloudGroup, sourceOfTruth, changes) {
     const isDefaultGroup = !localGroup.tabs && !cloudGroup.tabs;
 
@@ -739,6 +819,7 @@ function assignGroupKeys(localGroup, cloudGroup, sourceOfTruth, changes) {
 
     const EXCLUDE_GROUP_KEYS = [
         'tabs',
+        'groupsNative', // merged explicitly by mergeGroupsNative
     ];
 
     // because we also need to be able to compare "defaultGroupProps"

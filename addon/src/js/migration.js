@@ -104,7 +104,7 @@ migrations.push({
 
             if (tabs.length) {
                 tabs.forEach(tab => delete tab.openerTabId);
-                tabs.forEach(tab => delete tab.groupId); // TODO temp
+                tabs.forEach(tab => delete tab.groupId); // native groupId conflicts with STG groupId key
 
                 await Promise.all(tabs.map(tab => Tabs.create(Tabs.normalizeUrl(tab), true)));
 
@@ -607,6 +607,7 @@ migrations.push({
     async migration(data, applyToCurrentInstance) {
         for (const group of data.groups) {
             group.dontUploadToCloud = false;
+            group.groupsNative = [];
             delete group.leaveBookmarksOfClosedTabs;
             group.exportToBookmarks = group.exportToBookmarksWhenAutoBackup;
             delete group.exportToBookmarksWhenAutoBackup;
@@ -739,7 +740,7 @@ migrations.push({
             });
 
             await Promise.allSettled(tabs.map(async tab => {
-                delete tab.groupId; // TODO temp
+                delete tab.groupId; // native groupId conflicts with STG groupId key
                 const groupId = await browser.sessions.getTabValue(tab.id, 'groupId');
                 const newGroupId = getNewGroupId(groupId);
 
@@ -750,6 +751,44 @@ migrations.push({
                         await browser.sessions.removeTabValue(tab.id, 'groupId');
                     }
                 }
+            }));
+
+            // adopt the live native groups of each window: every live group gets a stable string
+            // id, per-tab membership → sessions, metadata → the window's active STG group.
+            // the id minting is inlined - migrations must not depend on evolving module code
+            await Promise.allSettled(windows.map(async win => {
+                const groupsNativeList = await browser.tabGroups.query({windowId: win.id});
+
+                if (!groupsNativeList.length) {
+                    return;
+                }
+
+                const stableIdByLiveId = new Map(groupsNativeList.map(({id}) => [id, self.crypto.randomUUID().slice(0, 8)]));
+
+                const winTabs = await browser.tabs.query({
+                    windowId: win.id,
+                    pinned: false,
+                    hidden: false,
+                });
+
+                await Promise.allSettled(winTabs.map(tab => {
+                    const stableId = stableIdByLiveId.get(tab.groupId);
+
+                    if (stableId) {
+                        return browser.sessions.setTabValue(tab.id, 'groupNativeId', stableId);
+                    }
+                }));
+
+                const stgGroupId = await browser.sessions.getWindowValue(win.id, 'groupId');
+                const group = data.groups.find(gr => gr.id === stgGroupId);
+
+                if (!group || group.isArchive) {
+                    return;
+                }
+
+                group.groupsNative = groupsNativeList.map(({id, title, collapsed, color}) => {
+                    return {id: stableIdByLiveId.get(id), title, collapsed, color};
+                });
             }));
 
             // migrate STG addons

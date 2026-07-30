@@ -23,7 +23,7 @@ export default {
 
             DEFAULT_COOKIE_STORE_ID: Constants.DEFAULT_COOKIE_STORE_ID,
 
-            defaultAvailableTabKeys: ['id', 'url', 'title', 'favIconUrl', 'status', 'index', 'discarded', 'active', 'cookieStoreId', 'windowId'],
+            defaultAvailableTabKeys: ['id', 'url', 'title', 'favIconUrl', 'status', 'index', 'discarded', 'active', 'cookieStoreId', 'windowId', 'groupNativeId'],
 
             currentWindow: null,
             openedWindows: [],
@@ -150,7 +150,9 @@ export default {
             }));
 
             list.add(Groups.on('added', request => {
-                this.groups.push(this.mapGroup(request.group));
+                if (!this.groups.some(group => group.id === request.group.id)) {
+                    this.groups.push(this.mapGroup(request.group));
+                }
                 this.onGroupAdded?.(request);
             }));
             list.add(Groups.on('updated', request => {
@@ -261,6 +263,18 @@ export default {
                             iconViewType: this.iconViewType,
                         });
                     },
+                    groupNativeByTab() {
+                        const map = new Map;
+                        const groupsNative = this.groupsNative ?? [];
+                        const groupNativeById = new Map(groupsNative.map(groupNative => [groupNative.id, groupNative]));
+
+                        for (const tab of this.tabs) {
+                            const groupNative = groupNativeById.get(tab.groupNativeId);
+                            groupNative && map.set(tab, groupNative);
+                        }
+
+                        return map;
+                    },
                 },
             });
         },
@@ -308,7 +322,25 @@ export default {
             return tab;
         },
 
-        // tabs ang groups actions
+        // set --group-native-color only when the tab belongs to a native group;
+        // when absent, `border: … var(--group-native-color)` collapses (invalid var, no fallback) instead of drawing a transparent line
+        nativeColorStyle(tab, group) {
+            const groupNative = group.groupNativeByTab.get(tab);
+
+            if (!groupNative) {
+                return null;
+            }
+
+            const [lightL, darkL] = groupNative.collapsed
+                ? [0.97, 0.48]
+                : [0.48, 0.83];
+
+            return {
+                '--group-native-color': `light-dark(oklch(from ${groupNative.color} ${lightL} c h), oklch(from ${groupNative.color} ${darkL} c h))`,
+            };
+        },
+
+        // tabs and groups actions
         getTabIdsForMove(tabId) {
             if (tabId && !this.multipleTabIds.includes(tabId)) {
                 this.multipleTabIds.push(tabId);

@@ -1,11 +1,11 @@
-import Listeners from '/js/listeners.js\
+import Listeners, {getExtensionStartTime} from './listeners.js\
 ?windows.onCreated\
 &windows.onFocusChanged\
 &windows.onRemoved\
 &storage.local.onChanged\
 ';
 import Logger from './logger.js';
-import backgroundSelf from './background.js';
+// import backgroundSelf from './background.js';
 import BatchProcessor from './batch-processor.js';
 import * as Browser from './browser.js';
 import * as Broadcast from './broadcast.js';
@@ -13,6 +13,7 @@ import * as WindowsBroadcast from './broadcast.js?channel=windows';
 import * as Constants from './constants.js';
 import * as Tabs from './tabs.js';
 import * as Groups from './groups.js';
+import * as GroupsNative from './groups-native.js';
 import * as Utils from './utils.js';
 import * as Cache from './cache.js';
 import * as MenusMain from '/js/menus-main.js';
@@ -291,6 +292,11 @@ async function runGrandRestore(restoredWindowIds) {
         const win = allWindowsMap.get(activeTab.windowId);
         const groupToKeep = groupsAlreadyRestored.get(win.groupId);
 
+        // BUG sometimes groupToKeep is undefined
+        if (!groupToKeep) {
+            return;
+        }
+
         log.log('processing active tab', activeTab.id, 'in window', activeTab.windowId, 'groupToKeep', groupToKeep.id, 'lastAccessed', groupToKeep.lastAccessed);
 
         // если удаляемая вкладка находится в нужном окне группы которую оставляем, делаем активной другую вкладку группы
@@ -331,14 +337,23 @@ async function runGrandRestore(restoredWindowIds) {
 
         Tabs.skipTracking(tabsIntoAnotherWindows, skippTrackingTabs);
 
+        const isLoadedGroup = groupToKeep.window.groupId === groupToKeep.id;
+
+        // native membership travels with the tabs in sessions (restored for discarded tabs by
+        // moveNative's fixSessionAfterMove) - no bookkeeping is needed here
+
         groupToKeep.tabs = await Tabs.moveNative(groupToKeep.tabs, {
             windowId: groupToKeep.window.id,
             index: -1,
         });
 
-        if (groupToKeep.window.groupId === groupToKeep.id) {
+        if (isLoadedGroup) {
             log.log('showing group tabs, group', groupToKeep.id, 'in window', groupToKeep.window.id);
             await Tabs.show(groupToKeep.tabs);
+
+            // the array move above can tear live native groups apart - recreate them from sessions
+            await GroupsNative.apply(groupToKeep.window.id, groupToKeep)
+                .catch(log.onCatch(['cant apply native groups', groupToKeep.id], false));
 
             if (groupToKeep.deleteTabAfterMove) {
                 await Tabs.setActive(null, groupToKeep.tabs.filter(tab => !tabsToDelete.has(tab.id)));
@@ -774,4 +789,123 @@ export async function tryRestoreMissedTabs(actionLoading = true) {
     }
 
     log.stop();
+}
+
+export async function initializeGroups(currentGroupIds, restoreFromStg = false) {
+    const log = logger.start(initializeGroups, {restoreFromStg});
+
+    const EXTENSION_START_TIME = await getExtensionStartTime();
+
+    let windows = await load(true);
+
+    const currentGroupIdsSet = new Set(currentGroupIds);
+    let tabsToShow = new Set();
+    let tabsToHide = new Set();
+    const moveTabsToWin = new Map();
+
+    for (const win of windows) {
+        const otherWindows = windows.filter(w => w.id !== win.id);
+        const duplicateGroupedWindows = otherWindows.filter(w => w.groupId && w.groupId === win.groupId);
+
+        if (win.groupId && (!currentGroupIdsSet.has(win.groupId) || duplicateGroupedWindows.length)) {
+            duplicateGroupedWindows.push(win);
+
+            for (const w of duplicateGroupedWindows) {
+                delete w.groupId;
+                await Cache.removeWindowSession(w.id);
+            }
+        }
+
+        await Promise.all(win.tabs.map(async tab => {
+            if (tab.groupId && !currentGroupIdsSet.has(tab.groupId)) {
+                delete tab.groupId;
+                await Cache.removeTabGroup(tab.id).catch(log.onCatch(['cant removeTabGroup', tab.id], false));
+            }
+
+            if (tab.groupId) {
+                // TODO create bug in bugzilla: if set tab session, disable addon, move tab to other window, enable addon - session will empty
+                const targetWindow = otherWindows.find(w => w.groupId === tab.groupId);
+
+                if (targetWindow) {
+                    moveTabsToWin.getOrInsert(targetWindow.id, []).push(tab);
+
+                    if (tab.hidden) {
+                        tabsToShow.add(tab);
+                    }
+                } else if (win.groupId === tab.groupId) {
+                    if (tab.hidden) {
+                        tabsToShow.add(tab);
+                    }
+                } else if (!tab.hidden) {
+                    tabsToHide.add(tab);
+                }
+            } else if (win.groupId) {
+                if (!tab.hidden) {
+                    if (Tabs.isLoading(tab) || tab.url.startsWith('file:') || tab.lastAccessed > EXTENSION_START_TIME) {
+                        await Cache.setTabGroup(tab.id, win.groupId)
+                            .then(() => tab.groupId = win.groupId)
+                            .catch(log.onCatch(["can't setTabGroup", tab.id, 'group', win.groupId], false));
+                    } else {
+                        tabsToHide.add(tab);
+                    }
+                }
+            } else if (tab.hidden) {
+                tabsToShow.add(tab);
+            }
+        }));
+    }
+
+    for (const [windowId, tabs] of moveTabsToWin) {
+        await Tabs.moveNative(tabs, {
+            index: -1,
+            windowId,
+        });
+
+        log.log('tabs count', tabs.length, 'moved to window', windowId);
+    }
+
+    windows = await load(true);
+
+    const tabsById = new Map(Utils.flatTabs(windows).map(tab => [tab.id, tab]));
+    const remapToFreshTabs = set => new Set(Array.from(set, tab => tabsById.get(tab.id)).filter(Boolean));
+    tabsToShow = remapToFreshTabs(tabsToShow);
+    tabsToHide = remapToFreshTabs(tabsToHide);
+
+    if (tabsToShow.size) {
+        await Tabs.show([...tabsToShow], true);
+
+        for (const tab of tabsToShow) {
+            tab.hidden = false;
+        }
+
+        log.log('tabsToShow count', tabsToShow.size);
+    }
+
+    if (tabsToHide.size) {
+        const activeTabsToHide = [...tabsToHide].filter(tab => tab.active);
+
+        for (const tabToHide of activeTabsToHide) {
+            const visibleTabs = windows.flatMap(win =>
+                win.tabs.filter(tab => tabToHide.windowId === tab.windowId && !tab.hidden && !tabsToHide.has(tab))
+            );
+
+            if (visibleTabs.length) {
+                await Tabs.setActive(null, visibleTabs);
+            } else {
+                await Tabs.createTempActiveTab(tabToHide.windowId, false);
+            }
+        }
+
+        await Tabs.hide([...tabsToHide], true);
+
+        log.log('tabsToHide count', tabsToHide.size);
+    }
+
+    for (const win of windows) {
+        await GroupsNative.reconcileWindow(win.id, restoreFromStg).catch(log.onCatch(['cant reconcile native groups for window', win.id], false));
+    }
+
+    log.stop();
+
+    return windows;
 }

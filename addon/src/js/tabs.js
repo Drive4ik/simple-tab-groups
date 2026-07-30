@@ -2,7 +2,7 @@
 import Listeners from '/js/listeners.js\
 ?tabs.onActivated\
 &tabs.onCreated\
-&tabs.onUpdated=[{"properties":["title","status","favIconUrl","hidden","pinned","discarded","audible"]}]\
+&tabs.onUpdated=[{"properties":["title","status","favIconUrl","hidden","pinned","discarded","audible","groupId"]}]\
 &tabs.onRemoved\
 &tabs.onMoved\
 &tabs.onDetached\
@@ -21,6 +21,7 @@ import * as Cache from './cache.js';
 import * as Containers from './containers.js';
 import * as Extensions from './extensions.js';
 import * as Groups from './groups.js';
+import * as GroupsNative from './groups-native.js';
 import * as Windows from './windows.js';
 import * as ConstantsBrowser from './constants-browser.js';
 import * as Storage from './storage.js';
@@ -126,10 +127,6 @@ export function isSkippedTracking(tab) {
     return skip.tracking.has(extractId(tab));
 }
 
-export function clearSkipTracking() { // TODO remove/refactor
-    return skip.tracking.clear();
-}
-
 async function onCreated(tab) {
     await Utils.wait(50);
 
@@ -138,17 +135,24 @@ async function onCreated(tab) {
         return;
     }
 
-    if (skip.created.has(tab.id)) {
-        logger.log(onCreated, '🛑 skip created tab:', tab.id);
-        return;
-    }
-
     if (skipTrackingWindows.has(tab.windowId)) {
         logger.log(onCreated, '🛑 skip tracking tab:', tab.id, 'for window:', tab.windowId);
         return;
     }
 
-    delete tab.groupId; // TODO tmp
+    // the mirror reacts to every appeared tab, including the addon's own (skip.created):
+    // newTabPosition=afterCurrent can drop the new tab inside a native group span and the
+    // browser joins it to the group. The skip flags only suppress STG's own bookkeeping.
+    if (!isPinned(tab)) {
+        GroupsNative.scheduleMirrorWindow(tab.windowId);
+    }
+
+    if (skip.created.has(tab.id)) {
+        logger.log(onCreated, '🛑 skip created tab:', tab.id);
+        return;
+    }
+
+    GroupsNative.detachTabGroupId(tab); // native groupId conflicts with STG groupId key
 
     logger.log(onCreated, tab);
 
@@ -227,7 +231,25 @@ async function onUpdated(tabId, changeInfo, tab) {
     // if tab was restored along with window, it needs to wait when GrantRestore will add the window to the skipTrackingWindows
     await Utils.wait(50 + 20); // 50ms for tab onCreated + 20ms as a margin
 
-    delete tab.groupId; // TODO tmp
+    if (Object.hasOwn(changeInfo, 'groupId')) {
+        GroupsNative.scheduleMirrorWindow(tab.windowId);
+    }
+
+    // an addon operation could start while we were waiting, and the event snapshot is stale by
+    // now anyway - diffing it against lastTabsState would fabricate transitions that never
+    // happened. The event is only a signal, the state comes fresh from the browser
+    if (skip.tracking.has(tab.id)) {
+        Cache.setTab(tab);
+        logger.log(onUpdated, '🛑 skip tracking tab:', tab.id);
+        return;
+    }
+
+    tab = await getOne(tabId);
+
+    if (!tab) {
+        logger.log(onUpdated, '🛑 tab not found:', tabId);
+        return;
+    }
 
     const log = logger.start(onUpdated, tabId, changeInfo);
 
@@ -256,8 +278,14 @@ async function onUpdated(tabId, changeInfo, tab) {
         if (changeInfo.pinned || changeInfo.hidden) {
             changeInfo.pinned && log.log('remove group for pinned tab', tab.id);
             changeInfo.hidden && log.log('remove group for hidden tab', tab.id);
+
             tabGroupId = Cache.getTabGroup(tab.id);
             await Cache.removeTabGroup(tab.id).catch(() => {});
+
+            if (changeInfo.pinned) {
+                // pinned tabs can't be in a native group, and the mirror doesn't see pinned tabs - clean up here
+                await Cache.removeTabNativeGroupId(tab.id).catch(() => {});
+            }
         } else if (changeInfo.pinned === false) {
             log.log('tab is unpinned', tab.id);
 
@@ -341,10 +369,13 @@ function onRemoved(tabId, {isWindowClosing, windowId}) {
                 tabId,
             });
         }
+
+        // membership dies with the tab; if it was the last member of a native group,
+        // tabGroups.onRemoved fires and schedules the mirror itself
     }
 }
 
-async function onMoved(tabId, {windowId, /* fromIndex, toIndex */}) {
+async function onMoved(tabId, {windowId, fromIndex, toIndex}) {
     // await Utils.wait(); // ? no needs for wait skipTrackingWindows list
 
     if (skip.removed.has(tabId)) {
@@ -364,9 +395,12 @@ async function onMoved(tabId, {windowId, /* fromIndex, toIndex */}) {
 
     const groupId = Cache.getTabGroup(tabId);
 
-    logger.log(onMoved, {tabId, groupId});
+    logger.log(onMoved, {tabId, windowId, groupId, fromIndex, toIndex});
 
     updatedBatch.add(tabId, groupId || `unsync:${windowId}`);
+
+    // a move can change native membership (join/leave a span) - let the mirror resync the window
+    GroupsNative.scheduleMirrorWindow(windowId);
 
     /*
     if (Cache.getTabGroup(tabId)) {
@@ -398,6 +432,8 @@ async function onDetached(tabId, {oldWindowId}) { // notice: called before onAtt
     logger.log(onDetached, {tabId, oldWindowId, groupId});
 
     updatedBatch.add(tabId, groupId || `unsync:${oldWindowId}`);
+
+    GroupsNative.scheduleMirrorWindow(oldWindowId);
 }
 
 async function onAttached(tabId, {newWindowId}) { // called when tabs.move()
@@ -423,11 +459,16 @@ async function onAttached(tabId, {newWindowId}) { // called when tabs.move()
     await Cache.setTabGroup(tabId, null, newWindowId)
         .catch(log.onCatch("can't set group"));
 
+    // a tab dragged to another window always leaves its native group
+    await Cache.removeTabNativeGroupId(tabId).catch(() => {});
+
     const groupId = Cache.getTabGroup(tabId);
 
     log.log('groupId', groupId);
 
     updatedBatch.add(tabId, groupId || `unsync:${newWindowId}`);
+
+    GroupsNative.scheduleMirrorWindow(newWindowId);
 
     log.stop();
 }
@@ -442,7 +483,7 @@ function onStorageChanged(changes) {
 }
 
 // methods
-export async function create({url, active, pinned, title, index, windowId, openerTabId, cookieStoreId, newTabContainer, ifDifferentContainerReOpen, excludeContainersForReOpen, groupId, favIconUrl, thumbnail}, skipListener = false) {
+export async function create({url, active, pinned, title, index, windowId, openerTabId, cookieStoreId, newTabContainer, ifDifferentContainerReOpen, excludeContainersForReOpen, groupId, groupNativeId, favIconUrl, thumbnail}, skipListener = false) {
     if (!Constants.IS_BACKGROUND_PAGE) {
         throw new Error('is not background');
     }
@@ -522,14 +563,14 @@ export async function create({url, active, pinned, title, index, windowId, opene
         skip.created.add(newTab.id);
     }
 
-    delete newTab.groupId; // TODO temp
+    GroupsNative.detachTabGroupId(newTab);
 
     if (longUrl) {
         longUrls[newTab.id] = longUrl;
         self.setTimeout(() => delete longUrls[newTab.id], 30_000);
     }
 
-    await Cache.setTabSession(newTab, {groupId, favIconUrl, thumbnail});
+    await Cache.setTabSession(newTab, {groupId, groupNativeId, favIconUrl, thumbnail});
 
     if (skipListener) {
         logger.log('created', newTab.id);
@@ -550,12 +591,37 @@ function isStrictlyAscendingBy(arr, key) {
     return arr.every((item, i) => i === 0 || item[key] > arr[i - 1][key]);
 }
 
-export async function createMultiple(tabsToCreate, skipCreateListenerAndTracking = false) {
+// explicit ascending indexes per window: no-index batches get scrambled by newTabPosition,
+// and active:true breaks explicit indexes too (docs/CREATE-TABS-BEHAVIOR.md §4-5, §11),
+// so tabs are created inactive and createMultiple activates the requested tab afterwards
+async function assignPlacement(tabsToCreate, startIndex) {
+    const nextIndexByWindow = new Map();
+    let fallbackWindowId = null;
+
+    for (const tab of tabsToCreate) {
+        tab.windowId = Cache.getWindowId(tab.groupId) || tab.windowId
+            || (fallbackWindowId ??= await Windows.getLastFocusedNormalWindow());
+
+        if (tab.pinned) {
+            continue;
+        }
+
+        tab.active = false;
+
+        tab.index = nextIndexByWindow.get(tab.windowId)
+            ?? startIndex
+            ?? (await browser.tabs.query({windowId: tab.windowId})).length;
+
+        nextIndexByWindow.set(tab.windowId, tab.index + 1);
+    }
+}
+
+export async function createMultiple(tabsToCreate, skipCreateListenerAndTracking = false, {startIndex = null} = {}) {
     if (!Array.isArray(tabsToCreate)) {
         throw new Error('tabs must be an array');
     }
 
-    const log = logger.start(createMultiple, 'count:', tabsToCreate.length, {skipCreateListenerAndTracking});
+    const log = logger.start(createMultiple, 'count:', tabsToCreate.length, {skipCreateListenerAndTracking, startIndex});
 
     if (!tabsToCreate.length) {
         log.stop('no tabs');
@@ -567,6 +633,8 @@ export async function createMultiple(tabsToCreate, skipCreateListenerAndTracking
     for (const tab of tabsToCreate) {
         delete tab.openerTabId;
     }
+
+    await assignPlacement(tabsToCreate, startIndex);
 
     const hasTreeTabs = Extensions.hasTreeTabs();
     const createdTabsByWindow = new Map();
@@ -600,9 +668,10 @@ export async function createMultiple(tabsToCreate, skipCreateListenerAndTracking
     for (let [windowId, createdTabs] of createdTabsByWindow) {
         const needSorting = createdTabs.length > 1 && !isStrictlyAscendingBy(createdTabs, 'index');
 
-        // because of "New tab position" setting,
-        // tabs can be created in wrong order, so we need to re-sort them by previous index
+        // safety net: explicit indexes from assignPlacement must keep the order (Э2/Э7,
+        // docs/CREATE-TABS-BEHAVIOR.md), firing means an unknown browser scenario
         if (needSorting) {
+            log.warn('needSorting fired despite explicit indexes, tabs:', createdTabs.map(extractId));
             const minIndex = Math.min(...createdTabs.map(tab => tab.index));
             createdTabs = await moveNative(createdTabs, {index: minIndex}, skipCreateListenerAndTracking);
         }
@@ -643,6 +712,12 @@ export async function createMultiple(tabsToCreate, skipCreateListenerAndTracking
         }
 
         createdTabsByWindow.set(windowId, createdTabs);
+    }
+
+    for (const {active, newId} of tabsToCreateBackup) {
+        if (active === true && newId) {
+            await setActive(newId);
+        }
     }
 
     log.stop();
@@ -773,9 +848,9 @@ export async function get(
 
     tabs = tabs.filter(tab => !skip.removed.has(tab.id)); // BUG https://bugzilla.mozilla.org/show_bug.cgi?id=1396758
 
-    tabs.forEach(tab => delete tab.groupId); // TODO temp
-
     if (!query.pinned) {
+        tabs.forEach(GroupsNative.detachTabGroupId);
+
         tabs = await Promise.all(
             tabs.map(tab => Cache.loadTabSession(normalizeUrl(tab), includeFavIconUrl, includeThumbnail))
         );
@@ -794,7 +869,7 @@ export async function getOne(tabId) {
         }
 
         const tab = await browser.tabs.get(tabId);
-        delete tab.groupId; // TODO temp
+        GroupsNative.detachTabGroupId(tab);
         return normalizeUrl(tab);
     } catch {
         return null;
@@ -841,8 +916,8 @@ export async function add(groupId, cookieStoreId, url, title) {
         url,
         title,
         cookieStoreId,
-        index: windowId ? null : group.tabs.pop()?.index + 1,
-        // windowId, // windowId will get from Cache.getWindowId into create function
+        index: windowId ? null : await getNewTabIndex(group.tabs),
+        windowId: windowId || group.tabs[0]?.windowId,
         ...Groups.getNewTabParams(group),
     }, true);
 
@@ -911,6 +986,14 @@ export async function updateThumbnail(tabId) {
 export async function move(tabIds, groupId, params = {}) {
     const log = logger.start(move, {tabIds, groupId, params});
 
+    const groupWindowId = Cache.getWindowId(groupId);
+    const {group, groups} = await Groups.load(groupId, !groupWindowId);
+
+    if (!group) {
+        log.stopError('group not found', groupId);
+        return [];
+    }
+
     let tabs = await getList(tabIds);
     tabs = await Promise.all(tabs.map(tab => Cache.loadTabSession(tab, true, settings.showTabsWithThumbnailsInManageGroups)));
 
@@ -924,8 +1007,6 @@ export async function move(tabIds, groupId, params = {}) {
     const skippedTabs = skipTracking(tabIds);
 
     const tabsCantHide = new Set;
-    const groupWindowId = Cache.getWindowId(groupId);
-    const {group} = await Groups.load(groupId, !groupWindowId);
     const windowId = groupWindowId || (group.tabs[0]?.windowId) || await Windows.getLastFocusedNormalWindow();
     const activeTabs = [];
 
@@ -964,6 +1045,18 @@ export async function move(tabIds, groupId, params = {}) {
 
     if (tabs.length) {
         const excludeMovingTabs = tab => !tabs.some(t => t.id === tab.id);
+
+        // dropping onto a tab of an UNLOADED group: the moved tabs inherit its native sub-group
+        let destGroupNativeId;
+
+        if (!groupWindowId && params.newTabIndex != null) {
+            const movingTabIds = new Set(tabs.map(extractId));
+            const targetTab = group.tabs.find(tab => !movingTabIds.has(tab.id) && tab.index === params.newTabIndex);
+
+            if (group.groupsNative.some(entry => entry.id === targetTab?.groupNativeId)) {
+                destGroupNativeId = targetTab.groupNativeId;
+            }
+        }
 
         await Promise.all(activeTabs.map(async function(activeTab) {
             let allTabsInActiveTabWindow = await get(activeTab.windowId, null, null),
@@ -1047,8 +1140,16 @@ export async function move(tabIds, groupId, params = {}) {
 
         await remove(tabIdsToRemove, true);
 
+        // tabs carry their native sub-group into the target group; not for a reorder inside the
+        // same group and not when the drop target dictates the sub-group
+        const membershipSnapshot = destGroupNativeId
+            ? null
+            : await GroupsNative.snapshotMembership(tabs.filter(tab => tab.groupId !== groupId), groups);
+
         tabs = await moveNative(tabs, {
-            index: params.newTabIndex ?? -1,
+            // an array moved to -1 breaks native groups (docs/TABGROUPS-BEHAVIOR.md §2) - when the
+            // tabs are already in the target window, reorder to the first tab's index instead
+            index: params.newTabIndex ?? (tabs.every(tab => tab.windowId === windowId) ? tabs[0].index : -1),
             windowId,
         });
 
@@ -1059,6 +1160,16 @@ export async function move(tabIds, groupId, params = {}) {
         }
 
         await Promise.all(tabs.map(tab => Cache.setTabGroup(tab.id, groupId)));
+
+        if (destGroupNativeId) {
+            // dropped onto a tab of an unloaded group's sub-group - it wins over the carried membership
+            await Promise.allSettled(tabs.map(tab => {
+                tab.groupNativeId = destGroupNativeId;
+                return Cache.setTabNativeGroupId(tab.id, destGroupNativeId);
+            }));
+        } else {
+            await GroupsNative.restoreMembership(group, tabs, membershipSnapshot);
+        }
 
         Groups.sendUpdatedAll();
 
@@ -1111,7 +1222,7 @@ export async function move(tabIds, groupId, params = {}) {
         iconUrl = Groups.getIconUrl(group);
     } else {
         let tabTitle = getTitle(firstTab, false, 50);
-        message = ['moveTabToGroupMessage', [group.title, tabTitle]];
+        message = ['moveTabToGroupMessage', group.title, tabTitle];
         firstTab = normalizeFavIcon(firstTab);
         iconUrl = firstTab.favIconUrl;
     }
@@ -1205,6 +1316,16 @@ export async function moveNative(tabs, moveProperties = {}, skipTrackingFlag = f
     // clean session data from tab object to avoid confusion, return only clean data from browser.tabs.move()
     tabs.forEach(tab => Cache.KEYS.forEach(key => delete tab[key]));
 
+    // our moves are event-suppressed - let the mirror resync native membership of the touched windows
+    const mirrorWindowIds = new Set();
+    for (const tab of tabsBeforeMoveMap.values()) {
+        mirrorWindowIds.add(tab.windowId);
+    }
+    for (const tab of tabs) {
+        mirrorWindowIds.add(tab.windowId);
+    }
+    mirrorWindowIds.forEach(id => GroupsNative.scheduleMirrorWindow(id));
+
     if (tabs.length !== tabsLengthBefore) {
         log.stopWarn('some tabs were not moved, before:', tabsLengthBefore, 'after:', tabs.length);
     } else {
@@ -1223,6 +1344,8 @@ const tabsActionSchema = new Map([
     ['update', {sendOneByOne: true, processGroupId: true}],
     ['reload', {sendOneByOne: true}],
     ['move', {sendArray: true, processGroupId: true}],
+    ['group', {sendAsIs: true, defaultValue: browser.tabGroups.TAB_GROUP_ID_NONE}], // single options object → native groupId; defaultValue on fail
+    ['ungroup', {sendArray: true, sendOneByOne: true}],
 ]);
 
 async function tabsAction({action, skipTrackingFlag = false, silentRemove = false}, tabs, ...funcArgs) {
@@ -1238,7 +1361,7 @@ async function tabsAction({action, skipTrackingFlag = false, silentRemove = fals
 
     tabs = Array.isArray(tabs) ? tabs : [tabs];
 
-    let result = [];
+    let result = schema.defaultValue ?? [];
 
     const tabIds = tabs.map(extractId);
     const log = logger.start(tabsAction, `browser.tabs.${action}(`,tabIds,...funcArgs,')', {skipTrackingFlag, silentRemove});
@@ -1257,7 +1380,7 @@ async function tabsAction({action, skipTrackingFlag = false, silentRemove = fals
     }
 
     if (skipTrackingFlag) {
-        skipTracking(tabIds); // TODO
+        skipTracking(tabIds);
     }
 
     async function sendOneByOne() {
@@ -1274,30 +1397,45 @@ async function tabsAction({action, skipTrackingFlag = false, silentRemove = fals
         }
     }
 
-    if (schema.sendArray) {
-        try {
-            result = await browser.tabs[action](tabIds, ...funcArgs);
-            result ||= tabIds;
-        } catch (e) {
-            if (schema.sendOneByOne) {
-                log.logError(`fail ${action} tabs as array of ids, doing it one by one`, e);
-                await sendOneByOne();
-            } else {
-                log.throwError(`fail ${action} tabs`, e);
+    try {
+        if (schema.sendAsIs) {
+            // the caller passes prebuilt args as-is; result isn't a tabs array → skip the array post-processing below
+            try {
+                result = await browser.tabs[action](...funcArgs);
+            } catch (e) {
+                log.logError(`fail ${action} tabs`, e);
             }
-        }
-    } else if (schema.sendOneByOne) {
-        await sendOneByOne();
-    } else {
-        log.throwError('invalid schema config');
-    }
 
-    if (skipTrackingFlag) {
-        continueTracking(tabIds);
+            log.stop(result, ')');
+
+            return result;
+        }
+
+        if (schema.sendArray) {
+            try {
+                result = await browser.tabs[action](tabIds, ...funcArgs);
+                result ||= tabIds;
+            } catch (e) {
+                if (schema.sendOneByOne) {
+                    log.logError(`fail ${action} tabs as array of ids, doing it one by one`, e);
+                    await sendOneByOne();
+                } else {
+                    log.throwError(`fail ${action} tabs`, e);
+                }
+            }
+        } else if (schema.sendOneByOne) {
+            await sendOneByOne();
+        } else {
+            log.throwError('invalid schema config');
+        }
+    } finally {
+        if (skipTrackingFlag) {
+            continueTracking(tabIds);
+        }
     }
 
     if (schema.processGroupId) {
-        result.forEach(tab => delete tab.groupId); // TODO tmp
+        result.forEach(GroupsNative.detachTabGroupId);
     }
 
     log.stop(result.map(extractId), ')');
@@ -1310,11 +1448,28 @@ export async function show(tabs, skipTrackingFlag = false) {
 }
 
 export async function hide(tabs, skipTrackingFlag = false) {
+    // GroupsNative owns the ungroup-before-hide ordering (docs/TABGROUPS-BEHAVIOR.md §4)
+    return await GroupsNative.hideTabs(tabs, {skipTrackingFlag});
+}
+
+export async function hideNative(tabs, skipTrackingFlag = false) {
     return await tabsAction({action: 'hide', skipTrackingFlag}, tabs);
 }
 
 export async function discard(tabs, skipTrackingFlag = false) {
     return await tabsAction({action: 'discard', skipTrackingFlag}, tabs);
+}
+
+export async function group(tabs, windowId, skipTrackingFlag = false, joinLiveGroupId = null) {
+    const tabIds = tabs.map(extractId);
+    const options = joinLiveGroupId
+        ? {tabIds, groupId: joinLiveGroupId}
+        : {tabIds, createProperties: {windowId}};
+    return await tabsAction({action: 'group', skipTrackingFlag}, tabs, options);
+}
+
+export async function ungroup(tabs, skipTrackingFlag = false) {
+    return await tabsAction({action: 'ungroup', skipTrackingFlag}, tabs);
 }
 
 export async function reload(tabs, bypassCache = false) {
@@ -1341,18 +1496,23 @@ export async function sendMessage(tabId, message = {}) {
     return browser.tabs.sendMessage(tabId, message).catch(() => {});
 }
 
-export function prepareForSave(tabs, ...prepareArgs) {
-    return tabs.map(tab => prepareForSaveTab(tab, ...prepareArgs));
+export function prepareForSave(tabs, options) {
+    return tabs.map(tab => prepareForSaveTab(tab, options));
 }
 
 export function prepareForSaveTab(
-        {id, url, title, cookieStoreId, favIconUrl, openerTabId, groupId, thumbnail, lastAccessed},
-        includeGroupId = false,
-        includeFavIconUrl = false,
-        includeThumbnail = false,
-        includeId = true,
-        includeLastAccessed = true
+        sourceTab,
+        {
+            includeGroupId = false,
+            includeGroupNativeId = false,
+            includeFavIconUrl = false,
+            includeThumbnail = false,
+            includeId = true,
+            includeLastAccessed = true,
+        } = {}
     ) {
+    const {id, url, title, cookieStoreId, favIconUrl, openerTabId, groupId, groupNativeId, thumbnail, lastAccessed} = sourceTab;
+
     const tab = {url};
 
     if (includeId && id) {
@@ -1373,6 +1533,10 @@ export function prepareForSaveTab(
 
     if (includeGroupId && groupId) {
         tab.groupId = groupId;
+    }
+
+    if (includeGroupNativeId && groupNativeId) {
+        tab.groupNativeId = groupNativeId;
     }
 
     if (includeFavIconUrl && favIconUrl?.startsWith('data:')) {
@@ -1541,6 +1705,7 @@ export async function reconcile(groups, allTabs) {
 
         let tabs = [];
         let newTabs = [];
+        const sessionPromises = [];
 
         for (const tab of group.tabs) {
             tab.groupId = group.id;
@@ -1551,7 +1716,10 @@ export async function reconcile(groups, allTabs) {
             if (winTabIndex !== -1) {
                 const [winTab] = allTabs.splice(winTabIndex, 1);
 
-                tabs.push(Cache.setTabSession(winTab, tab));
+                // the adopted tab takes the source's native membership - its own belongs to the old group
+                delete winTab.groupNativeId;
+                sessionPromises.push(Cache.setTabSession(winTab, tab));
+                tabs.push(winTab);
             } else {
                 tabs.push(null);
 
@@ -1566,6 +1734,8 @@ export async function reconcile(groups, allTabs) {
             }
         }
 
+        await Promise.allSettled(sessionPromises);
+
         if (newTabs.length) {
             log.log('new tabs count:', newTabs.length);
             newTabs = await createMultiple(newTabs, true);
@@ -1575,7 +1745,7 @@ export async function reconcile(groups, allTabs) {
         group.tabs = tabs;
 
         const firstTabIndex = group.tabs[0]?.index;
-        if (Number.isFinite(firstTabIndex)) {
+        if (Number.isInteger(firstTabIndex)) {
             log.log('sorting tabs');
             group.tabs = await moveNative(group.tabs, {index: firstTabIndex}, true);
         }
