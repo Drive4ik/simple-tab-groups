@@ -139,7 +139,7 @@ test('group labels fall back to a short id, never the raw uid', () => {
     assert.equal(moved.changes.some(c => c.field === 'group'), false);
 });
 
-test('reordering a tab within a group (index only) is a move subtype of changed', () => {
+test('an adjacent swap yields the minimal single move, not one row per shifted index', () => {
     const before = snapshot({
         groups: [{id: 1, title: 'A', tabs: [
             {uid: 'u1', url: 'http://a', title: 'a'},
@@ -154,14 +154,11 @@ test('reordering a tab within a group (index only) is a move subtype of changed'
     });
 
     const diff = computeSyncDiff(before, after);
+    const moves = diff.tabs.filter(isMove);
 
-    for (const uid of ['u1', 'u2']) {
-        const item = diff.tabs.find(t => t.uid === uid);
-        assert.equal(item.kind, 'changed');
-        assert.equal(item.moveOnly, true);
-    }
-    assert.equal(diff.counts.tabs.changed, 2);
-    assert.equal(diff.counts.tabs.moved, 2);
+    assert.equal(moves.length, 1);
+    assert.equal(diff.counts.tabs.changed, 1);
+    assert.equal(diff.counts.tabs.moved, 1);
 });
 
 test('a url change stays a content change even when the index also moves', () => {
@@ -190,7 +187,7 @@ test('a url change stays a content change even when the index also moves', () =>
     assert.equal(diff.counts.tabs.moved, 1);
 });
 
-test('a tab shifted by a removed predecessor (index only) renders as a move in the flat list', () => {
+test('a tab shifted only because a predecessor was removed is a consequential shift, not a move', () => {
     const before = snapshot({
         groups: [{id: 1, title: 'A', tabs: [
             {uid: 'gone', url: 'http://gone', title: 'gone'},
@@ -204,12 +201,53 @@ test('a tab shifted by a removed predecessor (index only) renders as a move in t
     });
 
     const diff = computeSyncDiff(before, after);
-    const shifted = diff.tabs.find(t => t.uid === 'shift');
 
-    assert.equal(shifted.kind, 'changed');
-    assert.equal(shifted.moveOnly, true);
-    assert.deepEqual(shifted.changes.map(c => c.field), ['index']);
-    assert.equal(viewKind(shifted), 'moved');
+    assert.equal(diff.tabs.find(t => t.uid === 'shift'), undefined);
+    assert.equal(diff.tabs.find(t => t.uid === 'gone').kind, 'removed');
+    assert.equal(diff.counts.tabs.moved, 0);
+});
+
+test('one tab moved to the front of a hundred yields exactly one move, not a hundred shifts', () => {
+    const makeTabs = order => order.map(n => ({uid: `u${n}`, url: `http://${n}`, title: `t${n}`}));
+    const sequential = Array.from({length: 101}, (_, i) => i);
+    const before = snapshot({groups: [{id: 1, title: 'A', tabs: makeTabs(sequential)}]});
+    const after = snapshot({groups: [{id: 1, title: 'A', tabs: makeTabs([100, ...sequential.slice(0, 100)])}]});
+
+    const diff = computeSyncDiff(before, after);
+    const moves = diff.tabs.filter(isMove);
+
+    assert.equal(moves.length, 1);
+    assert.equal(diff.counts.tabs.moved, 1);
+
+    const mover = moves[0];
+    assert.equal(mover.uid, 'u100');
+    const indexChange = mover.changes.find(c => c.field === 'index');
+    assert.equal(indexChange.from, 100);
+    assert.equal(indexChange.to, 0);
+
+    for (let n = 0; n < 100; n++) {
+        assert.equal(diff.tabs.find(t => t.uid === `u${n}`), undefined);
+    }
+});
+
+test('a real url change on a shifted tab stays a content change and is not counted as a move', () => {
+    const makeTabs = specs => specs.map(([n, url]) => ({uid: `u${n}`, url, title: `t${n}`}));
+    const before = snapshot({groups: [{id: 1, title: 'A', tabs: makeTabs([
+        [0, 'http://0'], [1, 'http://1'], [2, 'http://2'],
+    ])}]});
+    const after = snapshot({groups: [{id: 1, title: 'A', tabs: makeTabs([
+        [2, 'http://2-changed'], [0, 'http://0'], [1, 'http://1'],
+    ])}]});
+
+    const diff = computeSyncDiff(before, after);
+    const u2 = diff.tabs.find(t => t.uid === 'u2');
+
+    assert.equal(u2.kind, 'changed');
+    assert.notEqual(u2.moveOnly, true);
+    assert.ok(u2.changes.some(c => c.field === 'url'));
+    assert.equal(diff.counts.tabs.moved, 0);
+    assert.equal(diff.tabs.find(t => t.uid === 'u0'), undefined);
+    assert.equal(diff.tabs.find(t => t.uid === 'u1'), undefined);
 });
 
 test('a url fragment change keeps the row a content change even while its index shifts', () => {

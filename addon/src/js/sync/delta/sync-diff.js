@@ -2,8 +2,6 @@ const MAX_TEXT_LENGTH = 500;
 const MAX_ARRAY_LENGTH = 50;
 const GROUP_FIELDS = ['title', 'isArchive', 'iconColor', 'iconViewType', 'isSticky'];
 const TAB_CONTENT_FIELDS = ['url', 'title', 'cookieStoreId', 'pinned'];
-const TAB_POSITION_FIELDS = ['index'];
-const TAB_FIELDS = [...TAB_CONTENT_FIELDS, ...TAB_POSITION_FIELDS];
 const PINNED_GROUP_REF = 'pinned';
 
 function groupTitleLabel(groupRef, title) {
@@ -93,34 +91,114 @@ function fieldChanges(before, after, fields) {
     return changes;
 }
 
+function groupOrders(byUid) {
+    const orders = new Map();
+    for (const tab of byUid.values()) {
+        if (!orders.has(tab.group)) {
+            orders.set(tab.group, []);
+        }
+        orders.get(tab.group).push(tab);
+    }
+    for (const list of orders.values()) {
+        list.sort((a, b) => a.index - b.index);
+    }
+    return orders;
+}
+
+function keptInOrder(beforeOrder, afterOrder) {
+    const rank = new Map();
+    beforeOrder.forEach((uid, i) => rank.set(uid, i));
+
+    const seq = afterOrder.map(uid => rank.get(uid));
+    const tailIndex = [];
+    const parent = new Array(seq.length).fill(-1);
+
+    for (let i = 0; i < seq.length; i++) {
+        let lo = 0;
+        let hi = tailIndex.length;
+        while (lo < hi) {
+            const mid = (lo + hi) >> 1;
+            if (seq[tailIndex[mid]] < seq[i]) {
+                lo = mid + 1;
+            } else {
+                hi = mid;
+            }
+        }
+        if (lo > 0) {
+            parent[i] = tailIndex[lo - 1];
+        }
+        tailIndex[lo] = i;
+    }
+
+    const kept = new Set();
+    let k = tailIndex.length ? tailIndex[tailIndex.length - 1] : -1;
+    while (k !== -1) {
+        kept.add(afterOrder[k]);
+        k = parent[k];
+    }
+    return kept;
+}
+
+function keptInPlaceSet(beforeTabs, afterTabs) {
+    const kept = new Set();
+    const beforeOrders = groupOrders(beforeTabs);
+    const afterOrders = groupOrders(afterTabs);
+
+    for (const [group, afterList] of afterOrders) {
+        const beforeList = beforeOrders.get(group);
+        if (!beforeList) {
+            continue;
+        }
+        const inSameGroup = uid => beforeTabs.get(uid)?.group === group && afterTabs.get(uid)?.group === group;
+        const beforeCommon = beforeList.map(tab => tab.uid).filter(inSameGroup);
+        const afterCommon = afterList.map(tab => tab.uid).filter(inSameGroup);
+        for (const uid of keptInOrder(beforeCommon, afterCommon)) {
+            kept.add(uid);
+        }
+    }
+
+    return kept;
+}
+
 function diffTabs(before, after) {
     const beforeTabs = indexTabs(before);
     const afterTabs = indexTabs(after);
+    const keptInPlace = keptInPlaceSet(beforeTabs, afterTabs);
     const result = [];
 
     for (const [uid, tab] of afterTabs) {
         if (!beforeTabs.has(uid)) {
             result.push({uid, kind: 'added', url: clip(tab.url), title: clip(tab.title), group: tab.group, groupTitle: clip(tab.groupTitle)});
-        } else {
-            const before = beforeTabs.get(uid);
-            const changes = fieldChanges(before, tab, TAB_FIELDS);
-            const groupChanged = before.group !== tab.group;
-            if (changes.length || groupChanged) {
-                const contentChanged = changes.some(change => TAB_CONTENT_FIELDS.includes(change.field));
-                result.push({
-                    uid,
-                    kind: 'changed',
-                    ...(contentChanged ? {} : {moveOnly: true}),
-                    url: clip(tab.url),
-                    title: clip(tab.title),
-                    group: tab.group,
-                    groupTitle: clip(tab.groupTitle),
-                    fromGroup: before.group,
-                    fromGroupTitle: clip(before.groupTitle),
-                    changes,
-                });
-            }
+            continue;
         }
+
+        const before = beforeTabs.get(uid);
+        const changes = fieldChanges(before, tab, TAB_CONTENT_FIELDS);
+        const contentChanged = changes.length > 0;
+        const groupChanged = before.group !== tab.group;
+        const movedInGroup = !groupChanged && !keptInPlace.has(uid) && !equalValue(before.index, tab.index);
+        const moved = groupChanged || movedInGroup;
+
+        if (!contentChanged && !moved) {
+            continue;
+        }
+
+        if (moved && !equalValue(before.index, tab.index)) {
+            changes.push({field: 'index', from: clip(before.index), to: clip(tab.index)});
+        }
+
+        result.push({
+            uid,
+            kind: 'changed',
+            ...(moved && !contentChanged ? {moveOnly: true} : {}),
+            url: clip(tab.url),
+            title: clip(tab.title),
+            group: tab.group,
+            groupTitle: clip(tab.groupTitle),
+            fromGroup: before.group,
+            fromGroupTitle: clip(before.groupTitle),
+            changes,
+        });
     }
 
     for (const [uid, tab] of beforeTabs) {
