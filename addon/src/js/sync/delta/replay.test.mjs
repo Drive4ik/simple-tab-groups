@@ -31,8 +31,10 @@ function tabUids(snapshot, groupId) {
 }
 
 // ---------------------------------------------------------------------------
-// 1. modify-beats-delete: a tab deleted on one device, modified on another, with
-//    the modify ordered AFTER the delete, must be resurrected with the new data.
+// 1. remove tombstones the (groupId,uid): a tab deleted on one device must NOT be
+//    resurrected by a later tab.modify for the same key (favicon/title churn). The
+//    suppression is a pure presence check — it holds even though the modify has a
+//    HIGHER ts than the remove.
 // ---------------------------------------------------------------------------
 {
     const base = {
@@ -49,9 +51,84 @@ function tabUids(snapshot, groupId) {
     const {snapshot} = replay(base, logs);
     const g1 = snapshot.groups.find(g => g.id === 'g1');
     const t1 = g1.tabs.find(t => t.uid === 't1');
-    check('modify-beats-delete resurrects the tab', !!t1, 'tab t1 missing');
-    check('modify-beats-delete uses the new record', t1?.url === 'http://a2' && t1?.title === 'A2',
-        JSON.stringify(t1));
+    check('later tab.modify does NOT resurrect a tombstoned (groupId,uid)', !t1, JSON.stringify(g1.tabs));
+    check('remove emits a (groupId,uid) tombstone into the snapshot',
+        (snapshot.tombstones?.tabs || []).some(e => e.groupId === 'g1' && e.uid === 't1'),
+        JSON.stringify(snapshot.tombstones));
+}
+
+// 1b. a later tab.add (not just modify) for the SAME (groupId,uid) is also suppressed —
+//     the tombstone is permanent and ts-independent (add has the higher ts here).
+{
+    const base = {groups: [{id: 'g1', title: 'G1', tabs: [{uid: 't1', url: 'http://a'}]}]};
+    const logs = [
+        {deviceId: 'devA', events: [
+            {seq: 1, ts: 100, op: 'tab.remove', groupId: 'g1', uid: 't1'},
+        ]},
+        {deviceId: 'devB', events: [
+            {seq: 1, ts: 900, op: 'tab.add', groupId: 'g1', tab: {uid: 't1', url: 'http://a2', index: 0}},
+        ]},
+    ];
+    const {snapshot} = replay(base, logs);
+    check('later tab.add does NOT resurrect a tombstoned (groupId,uid)',
+        !snapshot.groups[0].tabs.some(t => t.uid === 't1'), JSON.stringify(snapshot.groups[0].tabs));
+}
+
+// 1c. cross-group relocation is safe: a tab.remove(uid,g1) tombstones ONLY (g1,uid);
+//     a tab.add of the SAME uid into a DIFFERENT group g2 survives (this is the
+//     native pin / unpin-from-pinned vector — remove and re-add carry different groups).
+{
+    const base = {groups: [
+        {id: 'g1', title: 'G1', tabs: [{uid: 't1', url: 'http://a', index: 0}]},
+        {id: 'g2', title: 'G2', tabs: []},
+    ]};
+    const logs = [
+        {deviceId: 'devA', events: [
+            {seq: 1, ts: 100, op: 'tab.remove', groupId: 'g1', uid: 't1'},
+            {seq: 2, ts: 200, op: 'tab.add', groupId: 'g2', tab: {uid: 't1', url: 'http://a', index: 0}},
+        ]},
+    ];
+    const {snapshot} = replay(base, logs);
+    check('cross-group re-add of a removed uid survives (different group key)',
+        !tabUids(snapshot, 'g1').includes('t1') && tabUids(snapshot, 'g2').includes('t1'),
+        JSON.stringify(snapshot.groups.map(g => ({id: g.id, uids: g.tabs.map(t => t.uid)}))));
+}
+
+// 1d. tombstone seeded from the base snapshot survives even when the tab.remove event
+//     itself has been truncated/compacted away — a later modify stays suppressed.
+{
+    const base = {
+        groups: [{id: 'g1', title: 'G1', tabs: []}],
+        tombstones: {tabs: [{groupId: 'g1', uid: 't1', ts: 100}], pinned: []},
+    };
+    const logs = [
+        {deviceId: 'devB', events: [
+            {seq: 5, ts: 500, op: 'tab.modify', groupId: 'g1', tab: {uid: 't1', url: 'http://a2'}},
+        ]},
+    ];
+    const {snapshot} = replay(base, logs);
+    check('a persisted tombstone (no remove event present) still suppresses a modify',
+        !tabUids(snapshot, 'g1').includes('t1'), JSON.stringify(tabUids(snapshot, 'g1')));
+    check('a persisted tombstone is carried forward into the resolved snapshot',
+        (snapshot.tombstones?.tabs || []).some(e => e.groupId === 'g1' && e.uid === 't1'),
+        JSON.stringify(snapshot.tombstones));
+}
+
+// 1e. a genuinely new tab (a DIFFERENT uid) added to a group where another uid was
+//     removed is unaffected — this models a user re-opening a closed page, which yields
+//     a NEW uid (per-tab identity), so the tombstone never touches it.
+{
+    const base = {groups: [{id: 'g1', title: 'G1', tabs: [{uid: 't1', url: 'http://a', index: 0}]}]};
+    const logs = [
+        {deviceId: 'devA', events: [
+            {seq: 1, ts: 100, op: 'tab.remove', groupId: 'g1', uid: 't1'},
+            {seq: 2, ts: 200, op: 'tab.add', groupId: 'g1', tab: {uid: 't2', url: 'http://a', index: 0}},
+        ]},
+    ];
+    const {snapshot} = replay(base, logs);
+    const uids = tabUids(snapshot, 'g1');
+    check('a new uid in the same group is unaffected by a sibling tombstone',
+        JSON.stringify(uids) === JSON.stringify(['t2']), JSON.stringify(uids));
 }
 
 // ---------------------------------------------------------------------------
@@ -374,7 +451,9 @@ function pinnedUids(snapshot) {
         JSON.stringify(pinnedUids(snapshot)) === JSON.stringify(['p3', 'p1', 'p2']), JSON.stringify(pinnedUids(snapshot)));
 }
 
-// P4. modify-beats-delete resurrects a pinned tab (rule 1 on the pinned section).
+// P4. pinned.remove tombstones the uid: a later pinned.modify (or pinned.add) must NOT
+//     resurrect it. Pinned tombstones are keyed by uid alone (no group). Pure presence
+//     check — holds despite the modify's higher ts.
 {
     const base = {pinnedTabs: [{uid: 'p1', url: 'http://p1', title: 'P1'}]};
     const logs = [
@@ -387,9 +466,21 @@ function pinnedUids(snapshot) {
     ];
     const {snapshot} = replay(base, logs);
     const p1 = (snapshot.pinnedTabs || []).find(t => t.uid === 'p1');
-    check('pinned modify-beats-delete resurrects the tab', !!p1, JSON.stringify(snapshot.pinnedTabs));
-    check('pinned modify-beats-delete uses the new record',
-        p1?.url === 'http://p1b' && p1?.title === 'P1B', JSON.stringify(p1));
+    check('later pinned.modify does NOT resurrect a tombstoned pinned uid', !p1, JSON.stringify(snapshot.pinnedTabs));
+    check('pinned.remove emits a pinned tombstone into the snapshot',
+        (snapshot.tombstones?.pinned || []).some(e => e.uid === 'p1'), JSON.stringify(snapshot.tombstones));
+
+    const logsAdd = [
+        {deviceId: 'devA', events: [
+            {seq: 1, ts: 100, op: 'pinned.remove', uid: 'p1'},
+        ]},
+        {deviceId: 'devB', events: [
+            {seq: 1, ts: 900, op: 'pinned.add', tab: {uid: 'p1', url: 'http://p1c', index: 0}},
+        ]},
+    ];
+    const {snapshot: snapAdd} = replay(base, logsAdd);
+    check('later pinned.add does NOT resurrect a tombstoned pinned uid',
+        !(snapAdd.pinnedTabs || []).some(t => t.uid === 'p1'), JSON.stringify(snapAdd.pinnedTabs));
 }
 
 // P5. pinned add-of-existing folds to modify (no duplicate); watermark dedup applies.

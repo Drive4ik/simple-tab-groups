@@ -1,4 +1,12 @@
 import {deepClone} from './deep-clone.js';
+import {
+    seedTombstones,
+    serializeTombstones,
+    recordTabTombstone,
+    recordPinnedTombstone,
+    hasTabTombstone,
+    hasPinnedTombstone,
+} from './tombstones.js';
 
 const DEFAULT_COOKIE_STORE_ID = 'firefox-default';
 
@@ -93,9 +101,13 @@ function ensureGroup(groups, groupId, resolveGroupTitle) {
     return group;
 }
 
-function applyTabUpsert(groups, event, resolveGroupTitle) {
+function applyTabUpsert(groups, event, resolveGroupTitle, tombstones) {
     const incoming = deepClone(event.tab);
     if (!incoming || incoming.uid == null) {
+        return;
+    }
+
+    if (hasTabTombstone(tombstones, event.groupId, incoming.uid)) {
         return;
     }
 
@@ -125,7 +137,8 @@ function applyTabMove(groups, event, resolveGroupTitle) {
     insertInListAt(target.tabs, tab, event.toIndex);
 }
 
-function applyTabRemove(groups, event) {
+function applyTabRemove(groups, event, tombstones) {
+    recordTabTombstone(tombstones, event.groupId, event.uid, event.ts);
     const found = findTab(groups, event.uid);
     if (found.group) {
         found.group.tabs.splice(found.tabIndex, 1);
@@ -144,9 +157,13 @@ function insertInListAt(list, tab, index) {
     list.splice(at, 0, tab);
 }
 
-function applyPinnedUpsert(pinnedTabs, event) {
+function applyPinnedUpsert(pinnedTabs, event, tombstones) {
     const incoming = deepClone(event.tab);
     if (!incoming || incoming.uid == null) {
+        return;
+    }
+
+    if (hasPinnedTombstone(tombstones, incoming.uid)) {
         return;
     }
 
@@ -172,7 +189,8 @@ function applyPinnedMove(pinnedTabs, event) {
     insertInListAt(pinnedTabs, tab, event.toIndex);
 }
 
-function applyPinnedRemove(pinnedTabs, event) {
+function applyPinnedRemove(pinnedTabs, event, tombstones) {
+    recordPinnedTombstone(tombstones, event.uid, event.ts);
     const idx = pinnedTabs.findIndex(t => t.uid === event.uid);
     if (idx !== -1) {
         pinnedTabs.splice(idx, 1);
@@ -278,6 +296,8 @@ export function replay(baseSnapshot, deltaLogs = [], options = {}) {
 
     const watermark = {...baseWatermark};
 
+    const tombstones = seedTombstones(baseSnapshot?.tombstones);
+
     const ordered = buildOrderedEvents(deltaLogs);
 
     for (const {deviceId, event} of ordered) {
@@ -290,13 +310,13 @@ export function replay(baseSnapshot, deltaLogs = [], options = {}) {
         switch (event.op) {
             case OPS.TAB_ADD:
             case OPS.TAB_MODIFY:
-                applyTabUpsert(groups, event, resolveGroupTitle);
+                applyTabUpsert(groups, event, resolveGroupTitle, tombstones);
                 break;
             case OPS.TAB_MOVE:
                 applyTabMove(groups, event, resolveGroupTitle);
                 break;
             case OPS.TAB_REMOVE:
-                applyTabRemove(groups, event);
+                applyTabRemove(groups, event, tombstones);
                 break;
             case OPS.GROUP_ADD:
             case OPS.GROUP_MODIFY:
@@ -310,13 +330,13 @@ export function replay(baseSnapshot, deltaLogs = [], options = {}) {
                 break;
             case OPS.PINNED_ADD:
             case OPS.PINNED_MODIFY:
-                applyPinnedUpsert(pinnedTabs, event);
+                applyPinnedUpsert(pinnedTabs, event, tombstones);
                 break;
             case OPS.PINNED_MOVE:
                 applyPinnedMove(pinnedTabs, event);
                 break;
             case OPS.PINNED_REMOVE:
-                applyPinnedRemove(pinnedTabs, event);
+                applyPinnedRemove(pinnedTabs, event, tombstones);
                 break;
             case OPS.OPTION_SET:
                 if (event.key != null) {
@@ -346,7 +366,14 @@ export function replay(baseSnapshot, deltaLogs = [], options = {}) {
     });
 
     return {
-        snapshot: {groups, pinnedTabs, options: resolvedOptions, containers, watermark},
+        snapshot: {
+            groups,
+            pinnedTabs,
+            options: resolvedOptions,
+            containers,
+            watermark,
+            tombstones: serializeTombstones(tombstones),
+        },
         watermark,
     };
 }
