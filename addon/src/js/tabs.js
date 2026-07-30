@@ -494,6 +494,11 @@ async function onMoved(tabId, {windowId, /* fromIndex, */ toIndex}) {
 
     updatedBatch.add(tabId, groupId || `unsync:${windowId}`);
 
+    if (DeltaCapture.consumeAppliedMoveEcho(tabId)) {
+        logger.log(onMoved, '🛑 skip apply-echo move:', tabId);
+        return;
+    }
+
     if (groupId) {
         DeltaCapture.tabMoved(tabId);
     } else if (Cache.lastTabsState[tabId]?.pinned) {
@@ -1444,6 +1449,10 @@ async function tabsAction({action, skipTrackingFlag = false, silentRemove = fals
 
     if (skipTrackingFlag) {
         skipTracking(tabIds); // TODO
+    }
+
+    if (action === 'move' && DeltaCapture.isApplying()) {
+        tabIds.forEach(id => DeltaCapture.markAppliedMove(id));
     }
 
     async function sendOneByOne() {

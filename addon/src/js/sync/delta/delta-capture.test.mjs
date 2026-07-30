@@ -36,7 +36,7 @@ function check(name, cond, detail) {
 
 globalThis.__appended = [];
 
-const {optionsChanged, beginApply, endApply, isApplying} = await import('./delta-capture.js');
+const {optionsChanged, beginApply, endApply, isApplying, markAppliedMove, consumeAppliedMoveEcho} = await import('./delta-capture.js');
 
 function reset() {
     globalThis.__appended.length = 0;
@@ -80,6 +80,29 @@ function reset() {
 
     check('local-only keys (syncEnable) are filtered out',
         globalThis.__appended.length === 1 && globalThis.__appended[0].key === 'closePopupAfterSelectTab');
+}
+
+// --- 5. applied-move echo gate (#6): reconcile's own moves are not recaptured ----------
+{
+    // A move armed by apply and settling within the trailing window ⇒ echo (suppress).
+    markAppliedMove(101);
+    check('apply-armed move settling after endApply ⇒ echo (suppress)',
+        consumeAppliedMoveEcho(101) === true);
+    // The mark is consumed on read, so a genuine LATER user move of the SAME tab syncs.
+    check('mark consumed on read ⇒ next move of the same tab is a USER move (capture)',
+        consumeAppliedMoveEcho(101) === false);
+
+    // A move of a tab apply never touched is a USER move even right after apply.
+    check('unmarked tab ⇒ USER move (capture)',
+        consumeAppliedMoveEcho(202) === false);
+
+    // While apply is in progress every move is an echo (matches the existing isApplying gate).
+    beginApply();
+    check('in-apply move (no mark) ⇒ echo (suppress)',
+        consumeAppliedMoveEcho(303) === true);
+    endApply();
+    check('after endApply, an unmarked tab is a USER move (capture)',
+        consumeAppliedMoveEcho(303) === false);
 }
 
 // ---------------------------------------------------------------------------
