@@ -15,6 +15,8 @@
  */
 
 import {planSync} from './plan-sync.js';
+import {deleteOrphanDeltaFiles} from './orphan-gc.js';
+import {shouldWriteSnapshot} from './snapshot-write-gate.js';
 
 let passed = 0;
 const failures = [];
@@ -559,6 +561,97 @@ function extractArchiveTransition(currentIsArchive, props) {
     check('undefined current and explicit false compare equal (no spurious toggle)', coerced.archiveTransition === null);
 
     check('null props never crash', extractArchiveTransition(false, null).archiveTransition === null);
+}
+
+// ---------------------------------------------------------------------------
+// orphan delta GC (#10): after a compaction cycle publishes a snapshot, peer delta
+// files whose events are FULLY folded into that snapshot's watermark are safe to
+// delete. `deleteOrphanDeltaFiles` (orphan-gc.js) does the real selection + provider
+// delete + logging; `runCompactionGc` below MIRRORS the delta-sync.js gate exactly
+// (GC runs ONLY on `shouldCompact && writeSnapshot`) so the suppression path is
+// exercised. MUST stay in sync with the compaction block in delta-sync.js.
+// ---------------------------------------------------------------------------
+function spyCloud() {
+    const deleted = [];
+    return {
+        deleted,
+        deleteFile: async name => {
+            deleted.push(name);
+        },
+    };
+}
+
+async function runCompactionGc({Cloud, pulledDeltaLogs, watermark, selfDeviceId, shouldCompact, snapshotExists, suppressEmptyResolve}) {
+    const writeSnapshot = shouldWriteSnapshot({shouldCompact, snapshotExists, suppressEmptyResolve});
+    if (!(shouldCompact && writeSnapshot)) {
+        return [];
+    }
+    return deleteOrphanDeltaFiles(Cloud, pulledDeltaLogs, watermark, selfDeviceId);
+}
+
+{
+    // SELF (folded), PEER-A (fully folded ⇒ orphan), PEER-B (has an unfolded event ⇒ keep).
+    const SELF = 'self';
+    const pulledDeltaLogs = [
+        {name: 'STG-sync-delta-self.json', deviceId: SELF, events: [{seq: 5}]},
+        {name: 'STG-sync-delta-peerA.json', deviceId: 'peerA', events: [{seq: 3}, {seq: 4}]},
+        {name: 'STG-sync-delta-peerB.json', deviceId: 'peerB', events: [{seq: 2}, {seq: 9}]},
+    ];
+    // published snapshot folds self@5, peerA@4 (all), peerB@7 (seq 9 still unfolded).
+    const watermark = {self: 5, peerA: 4, peerB: 7};
+
+    const Cloud = spyCloud();
+    const deleted = await runCompactionGc({
+        Cloud, pulledDeltaLogs, watermark, selfDeviceId: SELF,
+        shouldCompact: true, snapshotExists: true, suppressEmptyResolve: false,
+    });
+
+    check('GC deletes fully-folded peer delta file', deleted.includes('STG-sync-delta-peerA.json'), JSON.stringify(deleted));
+    check('GC does NOT delete self delta file', !deleted.includes('STG-sync-delta-self.json'), JSON.stringify(deleted));
+    check('GC does NOT delete peer with unfolded events', !deleted.includes('STG-sync-delta-peerB.json'), JSON.stringify(deleted));
+    check('GC provider delete calls match selection', JSON.stringify(Cloud.deleted) === JSON.stringify(['STG-sync-delta-peerA.json']), JSON.stringify(Cloud.deleted));
+}
+
+{
+    // SUPPRESSED write (empty-resolve gate) ⇒ writeSnapshot=false ⇒ NO deletion even though
+    // peerA looks fully folded. Deleting a delta not durably in a published snapshot = data loss.
+    const SELF = 'self';
+    const pulledDeltaLogs = [
+        {name: 'STG-sync-delta-peerA.json', deviceId: 'peerA', events: [{seq: 1}, {seq: 2}]},
+    ];
+    const watermark = {peerA: 2};
+
+    const Cloud = spyCloud();
+    const deleted = await runCompactionGc({
+        Cloud, pulledDeltaLogs, watermark, selfDeviceId: SELF,
+        shouldCompact: true, snapshotExists: true, suppressEmptyResolve: true,
+    });
+
+    check('suppressed snapshot write ⇒ NO orphan deletion requested', deleted.length === 0 && Cloud.deleted.length === 0, JSON.stringify(Cloud.deleted));
+}
+
+{
+    // NO compaction (shouldCompact=false) ⇒ GC does not run, even if a snapshot is written
+    // for another reason. Orphan GC is scoped to the compaction publish path.
+    const SELF = 'self';
+    const pulledDeltaLogs = [
+        {name: 'STG-sync-delta-peerA.json', deviceId: 'peerA', events: [{seq: 1}]},
+    ];
+    const Cloud = spyCloud();
+    const deleted = await runCompactionGc({
+        Cloud, pulledDeltaLogs, watermark: {peerA: 1}, selfDeviceId: SELF,
+        shouldCompact: false, snapshotExists: false, suppressEmptyResolve: false,
+    });
+    check('non-compaction cycle ⇒ NO orphan deletion requested', deleted.length === 0 && Cloud.deleted.length === 0, JSON.stringify(Cloud.deleted));
+}
+
+{
+    // provider WITHOUT deleteFile ⇒ helper is a safe no-op (never throws).
+    const SELF = 'self';
+    const deleted = await deleteOrphanDeltaFiles(
+        {}, [{name: 'STG-sync-delta-peerA.json', deviceId: 'peerA', events: [{seq: 1}]}], {peerA: 1}, SELF,
+    );
+    check('provider without deleteFile ⇒ GC no-op', deleted.length === 0);
 }
 
 // ---------------------------------------------------------------------------
