@@ -9,6 +9,7 @@ import * as DeltaCapture from './delta-capture.js';
 import {shouldSleepSyncedTab, SLEEP_OPTION_KEYS} from './tab-sleep.js';
 import {isUrlSyncable, unwrapStubUrl, liveUrlMatchesSource, shouldNavigateLiveTabUrl} from './url-sync.js';
 import {getLivePinnedTabs} from './local-state.js';
+import {resolveAbsoluteTabIndex} from './apply-index.js';
 
 const logger = new Logger('DeltaSyncApply');
 
@@ -187,13 +188,36 @@ async function buildLiveTabIndexByUid() {
     return byUid;
 }
 
-async function applyTabMove(liveTab, target, log) {
+async function buildTabMoveContext() {
+    const {groups} = await Groups.load(null, true);
+    const byUid = new Map();
+    const indicesByGroupId = new Map();
+    for (const group of groups) {
+        if (group.isArchive || !Array.isArray(group.tabs)) {
+            continue;
+        }
+        const indices = [];
+        for (const tab of group.tabs) {
+            if (Number.isFinite(tab.index)) {
+                indices.push(tab.index);
+            }
+            if (tab.uid != null && tab.id != null) {
+                byUid.set(tab.uid, tab);
+            }
+        }
+        indicesByGroupId.set(group.id, indices);
+    }
+    return {byUid, indicesByGroupId};
+}
+
+async function applyTabMove(liveTab, target, destGroupTabIndices, log) {
     const groupId = target.groupId;
     const destinationWindowId = groupId != null ? Cache.getWindowId(groupId) : null;
     const groupChanged = groupId != null && Cache.getTabGroup(liveTab.id) !== groupId;
+    const absoluteIndex = resolveAbsoluteTabIndex(destGroupTabIndices, target.index);
 
     if (!groupChanged) {
-        const moveProps = {index: target.index};
+        const moveProps = {index: absoluteIndex};
         if (Number.isFinite(destinationWindowId)) {
             moveProps.windowId = destinationWindowId;
         }
@@ -203,7 +227,7 @@ async function applyTabMove(liveTab, target, log) {
     }
 
     if (Number.isFinite(destinationWindowId)) {
-        await Tabs.moveNative([{id: liveTab.id}], {index: target.index, windowId: destinationWindowId}, true)
+        await Tabs.moveNative([{id: liveTab.id}], {index: absoluteIndex, windowId: destinationWindowId}, true)
             .catch(log.onCatch(['cant move tab', liveTab.id], false));
         if (liveTab.hidden) {
             await Tabs.show([{id: liveTab.id}], true)
@@ -605,14 +629,15 @@ export async function applyBrowserOps(browserOps, resolvedSnapshot) {
 
         if (browserOps.tabsToMove.length) {
             const endPhase = beginApplyPhase('tabs-move', log);
-            const liveByUid = await buildLiveTabRecordByUid();
+            const {byUid, indicesByGroupId} = await buildTabMoveContext();
 
             for (const move of browserOps.tabsToMove) {
-                const liveTab = liveByUid.get(move.uid);
+                const liveTab = byUid.get(move.uid);
                 if (liveTab == null) {
                     continue;
                 }
-                await applyTabMove(liveTab, move.target || {}, log);
+                const target = move.target || {};
+                await applyTabMove(liveTab, target, indicesByGroupId.get(target.groupId), log);
             }
             endPhase();
         }
