@@ -390,3 +390,11 @@ test('shouldNotifyEmptySync only fires on an empty diff when the option is on', 
     assert.equal(shouldNotifyEmptySync(nonEmpty, true), false);
     assert.equal(shouldNotifyEmptySync(nonEmpty, false), false);
 });
+
+test('a remote-unchanged idle sync is a trivially empty diff that notifies only when enabled', () => {
+    const trivial = {tabs: [], groups: [], options: []};
+
+    assert.ok(isEmptySyncDiff(trivial));
+    assert.equal(shouldNotifyEmptySync(trivial, true), true);
+    assert.equal(shouldNotifyEmptySync(trivial, false), false);
+});

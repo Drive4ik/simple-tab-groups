@@ -262,6 +262,11 @@ export async function deltaSynchronization() {
             syncResult.skippedPull = true;
             syncResult.changes = {local: false, cloud: pushed || faviconPushed};
 
+            if (syncNotifyEmptyDiff) {
+                await notifyEmptySyncDiff()
+                    .catch(log.onCatch('cant show empty sync notification', false));
+            }
+
             send('sync-end', syncResult);
             log.stop('remote unchanged: skipped pull/apply', {pushedLocalPending: pushed});
             return syncResult;
