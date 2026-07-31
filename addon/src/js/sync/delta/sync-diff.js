@@ -333,3 +333,7 @@ export function computeSyncDiff(before, after) {
 export function isEmptySyncDiff(diff) {
     return !diff.tabs.length && !diff.groups.length && !diff.options.length;
 }
+
+export function shouldNotifyEmptySync(diff, notifyEnabled) {
+    return !!notifyEnabled && isEmptySyncDiff(diff);
+}

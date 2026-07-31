@@ -1552,6 +1552,18 @@
         "message": "Sync applied changes",
         "description": "Title of the notification shown after a sync that changed something"
     },
+    "syncNotifyEmptyDiffTitle": {
+        "message": "Notify when a sync finds no changes",
+        "description": "Toggle: show a notification after a sync that changed nothing on this device"
+    },
+    "syncNotifyEmptyDiffNotificationTitle": {
+        "message": "Sync complete",
+        "description": "Title of the notification shown after a sync that changed nothing"
+    },
+    "syncNotifyEmptyDiffNotificationMessage": {
+        "message": "No changes",
+        "description": "Body of the notification shown after a sync that changed nothing"
+    },
     "offlineRemoveConfirmTitle": {
         "message": "Confirm removing closed tabs",
         "description": "Title of the notification asking the user to confirm a large offline tab removal"

@@ -1,7 +1,7 @@
 import * as Constants from '/js/constants.js';
 import * as Storage from '/js/storage.js';
 import Notification from '/js/notification.js';
-import {computeSyncDiff, isEmptySyncDiff} from './sync-diff.js';
+import {isEmptySyncDiff} from './sync-diff.js';
 
 export const SYNC_DIFF_HISTORY_KEY = 'syncDiffHistory';
 export const SYNC_DIFF_VIEW_SETTINGS_KEY = 'syncDiffViewSettings';
@@ -47,9 +47,7 @@ export async function setSyncDiffViewSettings(settings) {
     return merged;
 }
 
-export async function recordSyncDiff(before, after, depth) {
-    const diff = computeSyncDiff(before, after);
-
+export async function recordSyncDiff(diff, depth) {
     if (isEmptySyncDiff(diff)) {
         return null;
     }
@@ -77,5 +75,11 @@ export async function notifySyncDiff(entry) {
     return Notification(entry.summary, {
         title: 'syncDiffNotificationTitle',
         module: ['tabs', 'createUrlOnce', `${Constants.PAGES.SYNC_DIFF}?entry=${entry.id}`],
+    });
+}
+
+export async function notifyEmptySyncDiff() {
+    return Notification('syncNotifyEmptyDiffNotificationMessage', {
+        title: 'syncNotifyEmptyDiffNotificationTitle',
     });
 }
