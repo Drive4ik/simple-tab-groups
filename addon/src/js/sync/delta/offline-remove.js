@@ -1,40 +1,35 @@
 import Logger from '/js/logger.js';
 import Lang from '/js/lang.js';
 import Notification from '/js/notification.js';
+import * as Constants from '/js/constants.js';
 import {ALARM_NAME_RETRY} from '../cloud/cloud.js?can-do-synchronization';
 import * as DeltaLog from './delta-log.js';
 import {getDeviceId} from './device-id.js';
 import {storage} from './sync-marks.js';
+import {
+    loadPendingOfflineRemoves,
+    persistPendingOfflineRemoves,
+    dropPendingOfflineRemoves,
+} from './offline-remove-record.js';
 
 const logger = new Logger('DeltaOfflineRemove');
 
-const PENDING_PREFIX = 'deltaOfflineRemovePending:';
-
 const NOTIFICATION_ID = 'delta-offline-remove-confirm';
 
-function pendingKey(deviceId) {
-    return PENDING_PREFIX + deviceId;
-}
-
 export function loadDeferredOfflineRemoves(deviceId) {
-    const raw = storage[pendingKey(deviceId)];
-    if (!raw) {
-        return [];
-    }
-    try {
-        const parsed = JSON.parse(raw);
-        return Array.isArray(parsed) ? parsed : [];
-    } catch {
-        return [];
-    }
+    return loadPendingOfflineRemoves(storage, deviceId);
 }
 
 export function persistDeferredOfflineRemoves(deviceId, removes) {
-    storage[pendingKey(deviceId)] = JSON.stringify(removes);
+    persistPendingOfflineRemoves(storage, deviceId, removes);
 }
 
 export function dropDeferredOfflineRemoves(deviceId) {
-    delete storage[pendingKey(deviceId)];
+    dropPendingOfflineRemoves(storage, deviceId);
+}
+
+export function pendingOfflineRemoveCount() {
+    return loadDeferredOfflineRemoves(getDeviceId()).length;
 }
 
 export async function notifyDeferredOfflineRemoves(count) {
@@ -42,7 +37,7 @@ export async function notifyDeferredOfflineRemoves(count) {
         id: NOTIFICATION_ID,
         title: 'offlineRemoveConfirmTitle',
         iconUrl: '/icons/exclamation-triangle-yellow.svg',
-        module: ['sync/delta/offline-remove', 'confirmOfflineRemovals'],
+        module: ['tabs', 'createUrlOnce', `${Constants.PAGES.OFFLINE_REMOVE_CONFIRM}?count=${count}`],
         expires: Notification.MAX_EXPIRES,
     });
 }
@@ -50,6 +45,8 @@ export async function notifyDeferredOfflineRemoves(count) {
 export async function confirmOfflineRemovals() {
     const deviceId = getDeviceId();
     const removes = loadDeferredOfflineRemoves(deviceId);
+
+    await Notification.clear(NOTIFICATION_ID).catch(() => {});
 
     if (!removes.length) {
         return {ok: true, applied: 0};
@@ -70,6 +67,6 @@ export async function discardOfflineRemovals() {
     const deviceId = getDeviceId();
     dropDeferredOfflineRemoves(deviceId);
     await Notification.clear(NOTIFICATION_ID).catch(() => {});
-    logger.info('user discarded deferred offline removals');
+    logger.info('user discarded deferred offline removals; tabs kept');
     return {ok: true};
 }

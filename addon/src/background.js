@@ -54,6 +54,7 @@ import * as BrowserSettings from '/js/browser-settings.js';
 import * as Cloud from '/js/sync/cloud/cloud.js?can-do-synchronization';
 import {deltaSynchronization, resetSyncState} from '/js/sync/delta/delta-sync.js';
 import * as DeltaCapture from '/js/sync/delta/delta-capture.js';
+import * as OfflineRemove from '/js/sync/delta/offline-remove.js';
 import {reconcileClosedTabRecords} from '/js/sync/delta/local-state.js';
 import {invalidateCaptureGate} from '/js/sync/delta/capture-gate-state.js';
 
@@ -449,6 +450,7 @@ const INTERNAL_MODULES = {
     Tabs,
     Groups,
     Windows,
+    OfflineRemove,
 };
 
 function isStgSender(sender) {

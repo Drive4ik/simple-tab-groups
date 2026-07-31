@@ -1553,6 +1553,48 @@
             }
         }
     },
+    "offlineRemoveConfirmPageTitle": {
+        "message": "Отсутствующие вкладки",
+        "description": "Title of the offline-remove confirmation page"
+    },
+    "offlineRemoveConfirmHeading": {
+        "message": "Удалить закрытые вкладки везде?",
+        "description": "Heading of the offline-remove confirmation page"
+    },
+    "offlineRemoveConfirmBody": {
+        "message": "На этом устройстве отсутствует $count$ синхронизированных вкладок с момента, когда STG был выключен. Удалить их на всех синхронизированных устройствах или оставить?",
+        "description": "Explanatory text of the offline-remove confirmation page",
+        "placeholders": {
+            "count": {
+                "content": "$1"
+            }
+        }
+    },
+    "offlineRemoveConfirmApply": {
+        "message": "Удалить $count$ вкладок",
+        "description": "Confirm button that applies the offline tab removals",
+        "placeholders": {
+            "count": {
+                "content": "$1"
+            }
+        }
+    },
+    "offlineRemoveConfirmKeep": {
+        "message": "Оставить",
+        "description": "Button that discards the offline tab removals and keeps the tabs"
+    },
+    "offlineRemoveConfirmApplied": {
+        "message": "Вкладки будут удалены на синхронизированных устройствах.",
+        "description": "Outcome shown after the user confirms the offline tab removals"
+    },
+    "offlineRemoveConfirmKept": {
+        "message": "Вкладки сохранены.",
+        "description": "Outcome shown after the user keeps the tabs"
+    },
+    "offlineRemoveConfirmNothingPending": {
+        "message": "Нет вкладок, ожидающих вашего решения.",
+        "description": "Shown when the confirmation page opens but no removals are pending"
+    },
     "syncDiffPageTitle": {
         "message": "Различия синхронизации",
         "description": "Title of the sync diff page"

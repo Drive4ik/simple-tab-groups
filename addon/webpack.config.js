@@ -43,6 +43,7 @@ export default {
         'options/options': './options/options.js',
         'manage/manage': './manage/manage.js',
         'sync-diff/sync-diff': './sync-diff/sync-diff.js',
+        'offline-remove/offline-remove': './offline-remove/offline-remove.js',
         'web/content-script': './web/content-script.js',
     },
     experiments: {
@@ -136,6 +137,7 @@ export default {
                 'manage/manage.html',
                 'options/options.html',
                 'sync-diff/sync-diff.html',
+                'offline-remove/offline-remove.html',
 
                 // manifest
                 'manifest.json',
