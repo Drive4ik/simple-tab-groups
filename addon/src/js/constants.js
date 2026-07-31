@@ -65,6 +65,7 @@ export const PAGES = Object.freeze({
     MANAGE: browser.runtime.getURL('manage/manage.html'),
     SETTINGS: browser.runtime.getURL('options/options.html'),
     SYNC_DIFF: browser.runtime.getURL('sync-diff/sync-diff.html'),
+    OFFLINE_REMOVE_CONFIRM: browser.runtime.getURL('offline-remove/offline-remove.html'),
     HELP: {
         WELCOME: browser.runtime.getURL('help/welcome.html'),
         CONFLICTED_EXTENSIONS: browser.runtime.getURL('help/extensions-that-conflict-with-stg.html'),
@@ -576,6 +577,7 @@ export const MODULES = Object.freeze({
     BACKGROUND: 'Background',
     MANAGE: 'Manage',
     SYNC_DIFF: 'SyncDiff',
+    OFFLINE_REMOVE: 'OfflineRemove',
     POPUP: 'Popup',
     SIDEBAR: 'Sidebar',
     OPTIONS: 'Options',
