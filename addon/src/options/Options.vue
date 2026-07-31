@@ -1434,6 +1434,13 @@ export default {
 
                         <div class="field">
                             <label class="checkbox">
+                                <input v-model="options.syncNotifyEmptyDiff" type="checkbox" />
+                                <span v-text="lang('syncNotifyEmptyDiffTitle')"></span>
+                            </label>
+                        </div>
+
+                        <div class="field">
+                            <label class="checkbox">
                                 <input v-model="options.syncTabCounterEnable" type="checkbox" />
                                 <span v-text="lang('syncTabCounterEnableTitle')"></span>
                             </label>

@@ -1540,6 +1540,18 @@
         "message": "Синхронізація застосувала зміни",
         "description": "Title of the notification shown after a sync that changed something"
     },
+    "syncNotifyEmptyDiffTitle": {
+        "message": "Сповіщати, коли синхронізація не знайшла змін",
+        "description": "Toggle: show a notification after a sync that changed nothing on this device"
+    },
+    "syncNotifyEmptyDiffNotificationTitle": {
+        "message": "Синхронізацію завершено",
+        "description": "Title of the notification shown after a sync that changed nothing"
+    },
+    "syncNotifyEmptyDiffNotificationMessage": {
+        "message": "Без змін",
+        "description": "Body of the notification shown after a sync that changed nothing"
+    },
     "offlineRemoveConfirmTitle": {
         "message": "Підтвердьте видалення закритих вкладок",
         "description": "Title of the notification asking the user to confirm a large offline tab removal"

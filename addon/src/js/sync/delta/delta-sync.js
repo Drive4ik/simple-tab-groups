@@ -42,7 +42,8 @@ import {
 } from './sync-marks.js';
 import {gatherLocalPending, captureLocalSnapshot} from './local-state.js';
 import {deepClone} from './deep-clone.js';
-import {recordSyncDiff, notifySyncDiff} from './sync-diff-store.js';
+import {recordSyncDiff, notifySyncDiff, notifyEmptySyncDiff} from './sync-diff-store.js';
+import {computeSyncDiff, shouldNotifyEmptySync} from './sync-diff.js';
 import {buildOutboundContainerMapping, translateInboundContainers} from './container-translation.js';
 import {
     applyBrowserOps,
@@ -209,8 +210,8 @@ export async function deltaSynchronization() {
         send('sync-start');
         progress(1);
 
-        const {syncOptionsLocation, syncProvider, syncDiffEnable, syncDiffHistoryDepth} =
-            await Storage.get(['syncOptionsLocation', 'syncProvider', 'syncDiffEnable', 'syncDiffHistoryDepth']);
+        const {syncOptionsLocation, syncProvider, syncDiffEnable, syncDiffHistoryDepth, syncNotifyEmptyDiff} =
+            await Storage.get(['syncOptionsLocation', 'syncProvider', 'syncDiffEnable', 'syncDiffHistoryDepth', 'syncNotifyEmptyDiff']);
 
         if (syncOptionsLocation === Constants.SYNC_STORAGE_FSYNC && !SyncStorage.IS_AVAILABLE) {
             const error = new CloudError('ffSyncNotSupported');
@@ -238,7 +239,7 @@ export async function deltaSynchronization() {
 
         const {localState, priorBaseline, lastPushedSeq, favIconMap} =
             await gatherLocalPending(selfDeviceId, log);
-        const diffBefore = syncDiffEnable ? deepClone(localState) : null;
+        const diffBefore = (syncDiffEnable || syncNotifyEmptyDiff) ? deepClone(localState) : null;
 
         await DeltaLog.coalesceUnpushed();
 
@@ -260,6 +261,11 @@ export async function deltaSynchronization() {
             syncResult.progress = 100;
             syncResult.skippedPull = true;
             syncResult.changes = {local: false, cloud: pushed || faviconPushed};
+
+            if (syncNotifyEmptyDiff) {
+                await notifyEmptySyncDiff()
+                    .catch(log.onCatch('cant show empty sync notification', false));
+            }
 
             send('sync-end', syncResult);
             log.stop('remote unchanged: skipped pull/apply', {pushedLocalPending: pushed});
@@ -419,14 +425,21 @@ export async function deltaSynchronization() {
 
         await applyFavIconMap(pulledFavIcons);
 
-        if (syncDiffEnable && diffBefore) {
+        if (diffBefore) {
             const diffAfter = await captureLocalSnapshot();
-            const diffEntry = await recordSyncDiff(diffBefore, diffAfter, syncDiffHistoryDepth)
-                .catch(log.onCatch('cant record sync diff', false));
-            if (diffEntry) {
-                send('sync-diff', {entryId: diffEntry.id, summary: diffEntry.summary});
-                await notifySyncDiff(diffEntry)
-                    .catch(log.onCatch('cant show sync diff notification', false));
+            const diff = computeSyncDiff(diffBefore, diffAfter);
+
+            if (shouldNotifyEmptySync(diff, syncNotifyEmptyDiff)) {
+                await notifyEmptySyncDiff()
+                    .catch(log.onCatch('cant show empty sync notification', false));
+            } else if (syncDiffEnable) {
+                const diffEntry = await recordSyncDiff(diff, syncDiffHistoryDepth)
+                    .catch(log.onCatch('cant record sync diff', false));
+                if (diffEntry) {
+                    send('sync-diff', {entryId: diffEntry.id, summary: diffEntry.summary});
+                    await notifySyncDiff(diffEntry)
+                        .catch(log.onCatch('cant show sync diff notification', false));
+                }
             }
         }
 

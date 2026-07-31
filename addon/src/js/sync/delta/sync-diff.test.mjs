@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import {computeSyncDiff, isEmptySyncDiff, summarizeSyncDiff} from './sync-diff.js';
+import {computeSyncDiff, isEmptySyncDiff, shouldNotifyEmptySync, summarizeSyncDiff} from './sync-diff.js';
 
 function snapshot({groups = [], pinnedTabs = [], options = {}} = {}) {
     return {groups, pinnedTabs, options};
@@ -373,4 +373,28 @@ test('summary shows moves (a changed subtype) separately from content changes', 
     });
 
     assert.equal(summary, '~1 ↔2 tabs');
+});
+
+test('shouldNotifyEmptySync only fires on an empty diff when the option is on', () => {
+    const empty = computeSyncDiff(snapshot(), snapshot());
+    const nonEmpty = computeSyncDiff(
+        snapshot(),
+        snapshot({groups: [{id: 1, title: 'A', tabs: [{uid: 'u1', url: 'http://a', title: 'a'}]}]}),
+    );
+
+    assert.ok(isEmptySyncDiff(empty));
+    assert.ok(!isEmptySyncDiff(nonEmpty));
+
+    assert.equal(shouldNotifyEmptySync(empty, true), true);
+    assert.equal(shouldNotifyEmptySync(empty, false), false);
+    assert.equal(shouldNotifyEmptySync(nonEmpty, true), false);
+    assert.equal(shouldNotifyEmptySync(nonEmpty, false), false);
+});
+
+test('a remote-unchanged idle sync is a trivially empty diff that notifies only when enabled', () => {
+    const trivial = {tabs: [], groups: [], options: []};
+
+    assert.ok(isEmptySyncDiff(trivial));
+    assert.equal(shouldNotifyEmptySync(trivial, true), true);
+    assert.equal(shouldNotifyEmptySync(trivial, false), false);
 });
