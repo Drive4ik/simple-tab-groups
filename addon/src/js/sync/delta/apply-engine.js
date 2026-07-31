@@ -10,7 +10,7 @@ import {shouldSleepSyncedTab, SLEEP_OPTION_KEYS} from './tab-sleep.js';
 import {isUrlSyncable, unwrapStubUrl, liveUrlMatchesSource, shouldNavigateLiveTabUrl} from './url-sync.js';
 import {getLivePinnedTabs} from './local-state.js';
 import {resolveAbsoluteTabIndex} from './apply-index.js';
-import {groupTabsAlreadyOrdered} from './group-order.js';
+import {liveGroupTabOrder, planGroupReorderMoves} from './group-order.js';
 
 const logger = new Logger('DeltaSyncApply');
 
@@ -313,17 +313,25 @@ async function reconcileGroupTabOrders(resolvedSnapshot, log) {
             continue;
         }
 
-        if (groupTabsAlreadyOrdered(orderedIds, group.tabs)) {
-            continue;
-        }
-
         const minIndex = Math.min(...group.tabs.map(tab => tab.index).filter(Number.isFinite));
         if (!Number.isFinite(minIndex)) {
             continue;
         }
 
-        await Tabs.moveNative(orderedIds.map(id => ({id})), {index: minIndex}, true)
-            .catch(log.onCatch(['cant reorder group tabs to resolved order', group.id], false));
+        const reorderPlan = planGroupReorderMoves(orderedIds, group.tabs, minIndex);
+        if (!reorderPlan.length) {
+            continue;
+        }
+
+        for (const move of reorderPlan) {
+            await Tabs.moveNative([{id: move.id}], {index: move.index}, true)
+                .catch(log.onCatch(['cant reorder group tab to resolved order', group.id, move.id], false));
+        }
+
+        const achievedOrder = await Groups.load(group.id, true)
+            .then(({group: reloaded}) => liveGroupTabOrder(reloaded?.tabs))
+            .catch(log.onCatch(['cant read achieved order after reorder', group.id], false));
+        log.log('reconciled group tab order', {groupId: group.id, minIndex, intended: orderedIds, achieved: achievedOrder});
 
         if (Groups.isLoaded(group.id) && group.tabs.some(tab => tab.groupPinned)) {
             await Groups.applyGroupPinnedOrder(group.id)

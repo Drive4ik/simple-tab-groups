@@ -18,3 +18,15 @@ export function groupTabsAlreadyOrdered(orderedIds, liveTabs) {
 
     return orderedIds.every((id, i) => id === live[i]);
 }
+
+export function planGroupReorderMoves(orderedIds, liveTabs, minIndex) {
+    if (!Array.isArray(orderedIds) || !orderedIds.length || !Number.isFinite(minIndex)) {
+        return [];
+    }
+
+    if (groupTabsAlreadyOrdered(orderedIds, liveTabs)) {
+        return [];
+    }
+
+    return orderedIds.map((id, k) => ({id, index: minIndex + k}));
+}
