@@ -157,8 +157,8 @@ begin
 
   MsgLength := LengthBytes[0] or (LengthBytes[1] shl 8) or (LengthBytes[2] shl 16) or (LengthBytes[3] shl 24);
 
-//  if (MsgLength = 0) or (MsgLength > MAX_MSG_SIZE) then
-//    raise Exception.CreateFmt('Invalid message length: %d', [MsgLength]);
+  if MsgLength = 0 then
+    raise Exception.Create('Empty message');
 
   SetLength(Payload, MsgLength);
 
@@ -192,22 +192,21 @@ begin
 
   for var Dir in SubDirs do
   begin
-    var Entries := TDirectory.GetFileSystemEntries(Dir);
-
-    if Length(Entries) = 0 then
-    begin
-      try
+    try
+      if Length(TDirectory.GetFileSystemEntries(Dir)) = 0 then
+      begin
         TDirectory.Delete(Dir);
         Result := True;
-      except
-        on E: Exception do
-          Log(Format('Unable to delete directory "%s": %s', [Dir, sLineBreak + E.ToString]), 'error');
       end;
+    except
+      on E: Exception do
+        Log(Format('Unable to delete directory "%s": %s', [Dir, sLineBreak + E.ToString]), 'error');
     end;
   end;
 end;
 
-function GetBackupFiles(const Extension: TExtension; parseOnlyLastBackup: Boolean): TObjectList<TBackupFileInfo>;
+function GetBackupFiles(const Extension: TExtension; parseOnlyLastBackup: Boolean;
+  alwaysReturnJson: Boolean = false): TObjectList<TBackupFileInfo>;
 var
   Files: TStringDynArray;
   BackupFolder: string;
@@ -263,9 +262,12 @@ begin
       var Info := TBackupFileInfo.Create;
       Info.Path := MetaInfo.Path;
       Info.LastWriteUnix := MetaInfo.LastWriteUnix;
-      Info.Json := FileJson as TJSONObject;
-
       Result.Add(Info);
+
+      if parseOnlyLastBackup or alwaysReturnJson then
+        Info.Json := FileJson as TJSONObject
+      else
+        FileJson.Free;
 
       if parseOnlyLastBackup then
         Break;
@@ -531,7 +533,10 @@ begin
 
   var BackupFolder := SelectFolderModern(json.GetValue<string>('dialogTitle'), GetBackupFolder(Extension));
   if BackupFolder <> '' then
+  begin
     SetBackupFolder(Extension, BackupFolder);
+    SaveSettings;
+  end;
 
   Result := HandleGetBackupFolder(json, Extension);
 end;
@@ -569,6 +574,9 @@ begin
     SetKeepBackupFiles(Extension, keepBackupFilesJSON.GetValue<Integer>);
     SavedSettings.AddPair('keepBackupFiles', GetKeepBackupFiles(Extension));
   end;
+
+  if SavedSettings.Count > 0 then
+    SaveSettings;
 
   Result := CreateResponseJSON(true, SavedSettings);
 end;

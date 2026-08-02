@@ -17,6 +17,7 @@ type
     CloseButton: TButton;
     AboutButton: TButton;
     LogsCheckBox: TCheckBox;
+    PortableCheckBox: TCheckBox;
     NotesBackupFolderEdit: TLabeledEdit;
     NotesBackupBrowseButton: TButton;
     STGDeleteBackupDaysEdit: TSpinEdit;
@@ -49,6 +50,7 @@ type
     procedure NotesKeepBackupFilesEditChange(Sender: TObject);
     procedure STGKeepBackupFilesEditChange(Sender: TObject);
     procedure CheckUpdatesButtonClick(Sender: TObject);
+    procedure PortableCheckBoxClick(Sender: TObject);
   private
     { Private declarations }
   public
@@ -228,6 +230,7 @@ begin
   STGKeepBackupFilesEdit.Value:= GetKeepBackupFiles(STG);
   NotesKeepBackupFilesEdit.Value:= GetKeepBackupFiles(NOTES);
 
+  PortableCheckBox.Checked := IsPortableMode;
   LogsCheckBox.Checked := IsLoggingEnabled;
 end;
 
@@ -241,6 +244,12 @@ procedure TMainForm.LogsCheckBoxClick(Sender: TObject);
 begin
   if LogsCheckBox.Focused then
     SetLoggingEnabled(LogsCheckBox.Checked);
+end;
+
+procedure TMainForm.PortableCheckBoxClick(Sender: TObject);
+begin
+  if PortableCheckBox.Focused then
+    SetPortableMode(PortableCheckBox.Checked);
 end;
 
 procedure TMainForm.NotesBackupFolderEditChange(Sender: TObject);

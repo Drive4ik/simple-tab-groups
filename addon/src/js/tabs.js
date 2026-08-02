@@ -591,9 +591,7 @@ function isStrictlyAscendingBy(arr, key) {
     return arr.every((item, i) => i === 0 || item[key] > arr[i - 1][key]);
 }
 
-// explicit ascending indexes per window: no-index batches get scrambled by newTabPosition,
-// and active:true breaks explicit indexes too (docs/CREATE-TABS-BEHAVIOR.md §4-5, §11),
-// so tabs are created inactive and createMultiple activates the requested tab afterwards
+// explicit ascending indexes per window: a no-index batch comes out reversed (docs/CREATE-TABS-BEHAVIOR.md §4-5)
 async function assignPlacement(tabsToCreate, startIndex) {
     const nextIndexByWindow = new Map();
     let fallbackWindowId = null;
@@ -668,8 +666,7 @@ export async function createMultiple(tabsToCreate, skipCreateListenerAndTracking
     for (let [windowId, createdTabs] of createdTabsByWindow) {
         const needSorting = createdTabs.length > 1 && !isStrictlyAscendingBy(createdTabs, 'index');
 
-        // safety net: explicit indexes from assignPlacement must keep the order (Э2/Э7,
-        // docs/CREATE-TABS-BEHAVIOR.md), firing means an unknown browser scenario
+        // safety net: explicit indexes must keep the order (docs/CREATE-TABS-BEHAVIOR.md §2)
         if (needSorting) {
             log.warn('needSorting fired despite explicit indexes, tabs:', createdTabs.map(extractId));
             const minIndex = Math.min(...createdTabs.map(tab => tab.index));

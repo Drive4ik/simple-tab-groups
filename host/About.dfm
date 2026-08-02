@@ -3,7 +3,7 @@ object AboutForm: TAboutForm
   Top = 0
   BorderStyle = bsToolWindow
   Caption = 'About'
-  ClientHeight = 241
+  ClientHeight = 210
   ClientWidth = 351
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -17,21 +17,21 @@ object AboutForm: TAboutForm
   OnShow = FormShow
   DesignSize = (
     351
-    241)
+    210)
   TextHeight = 15
   object InfoLabel: TLabel
     Left = 8
     Top = 78
     Width = 335
-    Height = 105
+    Height = 74
     Anchors = [akLeft, akTop, akRight, akBottom]
     AutoSize = False
     Caption = 'InfoLabel'
     WordWrap = True
   end
   object AppImage: TImage
-    Left = 8
-    Top = 8
+    Left = 7
+    Top = 7
     Width = 64
     Height = 64
     Center = True
@@ -52,14 +52,14 @@ object AboutForm: TAboutForm
   end
   object DescriptionLabel: TLabel
     Left = 78
-    Top = 50
+    Top = 51
     Width = 88
     Height = 15
     Caption = 'DescriptionLabel'
   end
   object OKButton: TButton
-    Left = 255
-    Top = 208
+    Left = 256
+    Top = 178
     Width = 88
     Height = 25
     Anchors = [akRight, akBottom]
@@ -69,8 +69,8 @@ object AboutForm: TAboutForm
   end
   object GiHubLinkLabel: TLinkLabel
     Left = 8
-    Top = 214
-    Width = 38
+    Top = 184
+    Width = 37
     Height = 19
     Anchors = [akLeft, akBottom]
     Caption = 
@@ -79,13 +79,12 @@ object AboutForm: TAboutForm
     TabOrder = 2
     TabStop = True
     OnLinkClick = LabelLinkClick
-    ExplicitTop = 206
   end
   object HomeLinkLabel: TLinkLabel
     Left = 8
-    Top = 189
+    Top = 158
     Width = 66
-    Height = 19
+    Height = 20
     Anchors = [akLeft, akBottom]
     Caption = 
       '<a href="https://github.com/Drive4ik/simple-tab-groups/tree/mast' +
@@ -93,6 +92,5 @@ object AboutForm: TAboutForm
     TabOrder = 1
     TabStop = True
     OnLinkClick = LabelLinkClick
-    ExplicitTop = 181
   end
 end

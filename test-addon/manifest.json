@@ -1,0 +1,29 @@
+{
+    "manifest_version": 2,
+
+    "browser_specific_settings": {
+        "gecko": {
+            "id": "stg-behavior-tests@drive4ik",
+            "strict_min_version": "140.0"
+        }
+    },
+
+    "name": "STG behavior tests",
+    "description": "Throwaway harness for verifying Firefox tab/tabGroups behavior. Not for publishing.",
+    "version": "1.0",
+
+    "incognito": "not_allowed",
+
+    "permissions": [
+        "tabs",
+        "tabGroups",
+        "tabHide",
+        "sessions",
+        "browserSettings"
+    ],
+
+    "background": {
+        "type": "module",
+        "scripts": ["harness.js"]
+    }
+}

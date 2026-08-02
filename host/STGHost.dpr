@@ -29,22 +29,18 @@ uses
   {$RTTI EXPLICIT METHODS([]) PROPERTIES([]) FIELDS([])}
 {$ENDIF}
 
-var
-  hStdin: THandle;
-
 begin
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
 
-  hStdin := GetStdHandle(STD_INPUT_HANDLE);
-  if (hStdin <> INVALID_HANDLE_VALUE) and (GetFileType(hStdin) = FILE_TYPE_PIPE) then
+  if IsPipeMode then
   begin
 
 //    AllocConsole;
 
-    Log(sLineBreak);
-
     try
+      Log(sLineBreak);
+
       const ExtensionId = ParamStr(2);
 
       if AllowedExtensionsMap.ContainsKey(ExtensionId) then

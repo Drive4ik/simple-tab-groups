@@ -21,8 +21,9 @@ type
     IconHandle: HICON;
   end;
 
+function IsPipeMode: Boolean;
 function ReadJSONFile(const FilePath: string; const RaiseExc: Boolean = false): TJSONValue;
-procedure WriteJSONFile(const FilePath: string; const json: TJSONValue; const Indent: Integer = 4;
+procedure WriteJSONFile(const FilePath: string; const json: TJSONValue; const Indent: Integer = 2;
   const LineBreakLF: Boolean = true);
 function SelectFolderModern(const Title: string = 'Select folder'; const DefaultDir: string = ''): string;
 function TrimVersion(const VerStr: string): string;
@@ -38,6 +39,12 @@ function RunApp(const aCmd: string; aShowMode: Integer = SW_SHOWNORMAL; aWait: B
 
 implementation
 
+function IsPipeMode: Boolean;
+begin
+  const StdIn = GetStdHandle(STD_INPUT_HANDLE);
+  Result := (StdIn <> INVALID_HANDLE_VALUE) and (GetFileType(StdIn) = FILE_TYPE_PIPE);
+end;
+
 function ReadJSONFile(const FilePath: string; const RaiseExc: Boolean = false): TJSONValue;
 var
   FileContent: string;
@@ -46,7 +53,7 @@ begin
   Result:= TJSONObject.ParseJSONValue(FileContent, false, RaiseExc);
 end;
 
-procedure WriteJSONFile(const FilePath: string; const json: TJSONValue; const Indent: Integer = 4;
+procedure WriteJSONFile(const FilePath: string; const json: TJSONValue; const Indent: Integer = 2;
   const LineBreakLF: Boolean = true);
 var
   FileContent: string;

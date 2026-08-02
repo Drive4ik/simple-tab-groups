@@ -27,6 +27,10 @@ const NOTES: TExtension = (
 
 procedure InitSettings;
 
+function IsPortableMode: Boolean;
+procedure SetPortableMode(const Enabled: Boolean);
+procedure SaveSettings;
+
 function GetBackupFolder(const Extension: TExtension; const PreparePath: Boolean = true): string;
 procedure SetBackupFolder(const Extension: TExtension; const Folder: string);
 function GetDeleteBackupDays(const Extension: TExtension): Integer;
@@ -42,6 +46,10 @@ var
 
 implementation
 
+const
+  SettingsFileName = 'settings.ini';
+  SettingsRegKey = '\Software\STGHost';
+
 var
   SettingsIni: TCustomIniFile;
 
@@ -53,24 +61,106 @@ begin
     AllowedExtensionsMap.AddOrSetValue(Extension.Id, Extension);
 end;
 
+function SettingsFilePath: string;
+begin
+  Result := ExeInfo.FilePath + SettingsFileName;
+end;
+
+function IsPortableMode: Boolean;
+begin
+  Result := TFile.Exists(SettingsFilePath);
+end;
+
+function CreateFileStorage: TCustomIniFile;
+begin
+  Result := TMemIniFile.Create(SettingsFilePath, TEncoding.UTF8);
+end;
+
+function CreateRegistryStorage: TCustomIniFile;
+begin
+  Result := TRegistryIniFile.Create(SettingsRegKey);
+  TRegistryIniFile(Result).RegIniFile.RootKey := HKEY_CURRENT_USER;
+end;
+
+procedure SaveSettings;
+begin
+  SettingsIni.UpdateFile;
+end;
+
+procedure SaveSettingsIfGUI;
+begin
+  if not IsPipeMode then
+    SaveSettings;
+end;
+
 procedure InitSettings;
-const
-  SettingsFileName = 'settings.ini';
 begin
   ExeInfo:= GetExeInfo;
   try
-    if TFile.Exists(ExeInfo.FilePath + SettingsFileName) then
-      SettingsIni := TMemIniFile.Create(ExeInfo.FilePath + SettingsFileName, TEncoding.Unicode)
-    else begin
-      SettingsIni := TRegistryIniFile.Create('Software\STGHost');
-      TRegistryIniFile(SettingsIni).RegIniFile.RootKey := HKEY_CURRENT_USER;
-    end;
+    FreeAndNil(SettingsIni);
+
+    if IsPortableMode then
+      SettingsIni := CreateFileStorage
+    else
+      SettingsIni := CreateRegistryStorage;
   except
     on E: Exception do
     begin
       // don't know what to do, it happens when there are lot of calls
       Halt;
     end;
+  end;
+end;
+
+procedure SetPortableMode(const Enabled: Boolean);
+begin
+  if Enabled = IsPortableMode then
+    Exit;
+
+  const Logging = IsLoggingEnabled;
+  const PreviousStorage = SettingsIni;
+
+  var NewStorage: TCustomIniFile;
+  if Enabled then
+    NewStorage := CreateFileStorage
+  else
+    NewStorage := CreateRegistryStorage;
+
+  try
+    SettingsIni := NewStorage;
+    SetLoggingEnabled(Logging);
+
+    for var Extension in AllowedExtensionsMap.Values do
+    begin
+      SettingsIni := PreviousStorage;
+      const BackupFolder = GetBackupFolder(Extension, false);
+      const DeleteBackupDays = GetDeleteBackupDays(Extension);
+      const KeepBackupFiles = GetKeepBackupFiles(Extension);
+
+      SettingsIni := NewStorage;
+      SetBackupFolder(Extension, BackupFolder);
+      SetDeleteBackupDays(Extension, DeleteBackupDays);
+      SetKeepBackupFiles(Extension, KeepBackupFiles);
+    end;
+
+    SaveSettings;
+  except
+    SettingsIni := PreviousStorage;
+    NewStorage.Free;
+
+    if Enabled and TFile.Exists(SettingsFilePath) then
+      TFile.Delete(SettingsFilePath);
+
+    raise;
+  end;
+
+  try
+    if Enabled then
+      PreviousStorage.EraseSection(SettingsRegKey)
+    else
+      TFile.Delete(SettingsFilePath);
+  finally
+    PreviousStorage.Free;
   end;
 end;
 
@@ -93,6 +183,7 @@ end;
 procedure SetBackupFolder(const Extension: TExtension; const Folder: string);
 begin
   SettingsIni.WriteString(Extension.Id, 'BackupFolder', Folder.Trim);
+  SaveSettingsIfGUI;
 end;
 
 function GetDeleteBackupDays(const Extension: TExtension): Integer;
@@ -103,6 +194,7 @@ end;
 procedure SetDeleteBackupDays(const Extension: TExtension; const Value: Integer);
 begin
   SettingsIni.WriteInteger(Extension.Id, 'DeleteBackupDays', Value);
+  SaveSettingsIfGUI;
 end;
 
 function GetKeepBackupFiles(const Extension: TExtension): Integer;
@@ -113,6 +205,7 @@ end;
 procedure SetKeepBackupFiles(const Extension: TExtension; const Value: Integer);
 begin
   SettingsIni.WriteInteger(Extension.Id, 'KeepBackupFiles', Value);
+  SaveSettingsIfGUI;
 end;
 
 function IsLoggingEnabled: Boolean;
@@ -123,6 +216,7 @@ end;
 procedure SetLoggingEnabled(const enabled: boolean);
 begin
   SettingsIni.WriteBool('', 'WriteLogs', enabled);
+  SaveSettingsIfGUI;
 end;
 
 initialization
@@ -130,15 +224,7 @@ initialization
   InitSettings;
 
 finalization
-  try
-    SettingsIni.UpdateFile;
-  except
-    on E: Exception do
-      begin
-        // don't know what to do, it happens when there are lot of calls
-        Halt;
-      end;
-  end;
+  FreeAndNil(SettingsIni);
   AllowedExtensionsMap.Free;
 
 end.

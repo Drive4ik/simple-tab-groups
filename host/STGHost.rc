@@ -19,8 +19,7 @@ BEGIN
             VALUE "ProductVersion",   "1.0.0.0\0"
             VALUE "Comments",         "This program is designed to save backup files for \
 the Simple Tab Groups v6.0+ add-on and its extensions. \
-If this program is moved to another folder, it must be run once so that Firefox knows its new location. \
-For portable mode, create an empty settings.ini file in the program folder.\0"
+If this program is moved to another folder, it must be run once so that Firefox knows its new location.\0"
         END
     END
 
