@@ -1,6 +1,5 @@
 
 import '/js/prefixed-storage.js';
-import {objectToNativeError} from '/js/logger.js';
 import * as Constants from '/js/constants.js';
 import * as Utils from '/js/utils.js';
 import * as Cloud from '/js/sync/cloud/cloud-helpers.js';
@@ -44,7 +43,7 @@ export default {
         }));
 
         list.add(Cloud.on('sync-error', e => {
-            this.syncCloudErrorMessage = String(objectToNativeError(e));
+            this.syncCloudErrorMessage = Cloud.syncErrorMessage(e);
         }));
 
         list.add(Cloud.on('sync-finish', ({ok}) => {

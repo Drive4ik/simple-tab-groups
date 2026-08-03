@@ -144,7 +144,7 @@ async function sync(trust = null, revision = null, progressFunc = null, useBacku
     if (syncOptionsLocation === Constants.SYNC_STORAGE_FSYNC) {
         if (!SyncStorage.IS_AVAILABLE) {
             const error = new CloudError('ffSyncNotSupported');
-            storage.lastError = String(error);
+            storage.lastError = error.message;
             log.throwError('sync not supported', error);
         }
     }
@@ -161,7 +161,7 @@ async function sync(trust = null, revision = null, progressFunc = null, useBacku
 
     if (useBackupFile && isReservedFileName(syncOptions.githubGistBackupFileName)) {
         const error = new CloudError('githubBackupFileNameReserved');
-        storage.lastError = String(error);
+        storage.lastError = error.message;
         log.throwError('reserved backup file name', error);
     }
 
@@ -173,7 +173,7 @@ async function sync(trust = null, revision = null, progressFunc = null, useBacku
         cloudInstance = createCloudProvider(syncProvider, providerOptions);
     } catch (error) {
         const cloudError = new CloudError(error.message, {cause: error});
-        storage.lastError = String(cloudError);
+        storage.lastError = cloudError.message;
         log.throwError('create cloud provider instance', cloudError);
     }
 
@@ -201,7 +201,7 @@ async function sync(trust = null, revision = null, progressFunc = null, useBacku
             //
         } else {
             const cloudError = new CloudError(error.message, {cause: error});
-            storage.lastError = String(cloudError);
+            storage.lastError = cloudError.message;
             log.throwError('get cloud content', cloudError);
         }
     }
@@ -262,7 +262,7 @@ async function sync(trust = null, revision = null, progressFunc = null, useBacku
             cloudInfo = await Cloud.setContent(syncResult.cloudData, createCloudProgress(55, 85));
         } catch (error) {
             const cloudError = new CloudError(error.message, {cause: error});
-            storage.lastError = String(cloudError);
+            storage.lastError = cloudError.message;
             log.throwError('set cloud content', cloudError);
         }
 
@@ -375,7 +375,7 @@ async function syncData(localData, cloudData, sourceOfTruth, progressFunc = null
         cloudData = resultMigrate.data;
     } else if (resultMigrate.error) {
         const error = new CloudError(resultMigrate.error);
-        storage.lastError = String(error);
+        storage.lastError = error.message;
         log.throwError('migrate data', error);
     }
 

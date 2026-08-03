@@ -2,7 +2,7 @@ import * as Constants from '/js/constants.js';
 import * as Storage from '/js/storage.js';
 import * as Groups from '/js/groups.js';
 import * as MenusMain from '/js/menus-main.js';
-import Logger from '/js/logger.js';
+import Logger, {nativeErrorToObject} from '/js/logger.js';
 import {createCloudProvider} from '../cloud/provider.js';
 import * as SyncStorage from '../sync-storage.js';
 import {CloudError, send} from '../cloud/cloud.js?can-do-synchronization';
@@ -69,8 +69,8 @@ DeltaLog.onOverflow(droppedThroughSeq => {
 
 DeltaLog.onDrainBroken(excess => {
     const error = new CloudError('syncDeltaLogCannotDrain');
-    storage.lastError = String(error);
-    send('sync-error', {ok: false, langId: error.langId, message: String(error), drainBroken: true, excess});
+    storage.lastError = error.message;
+    send('sync-error', {ok: false, langId: error.langId, ...nativeErrorToObject(error), drainBroken: true, excess});
     logger.warn('delta log cannot drain: un-synced events exceed the cap; surfaced sync-error', {excess});
 });
 
@@ -215,7 +215,7 @@ export async function deltaSynchronization() {
 
         if (syncOptionsLocation === Constants.SYNC_STORAGE_FSYNC && !SyncStorage.IS_AVAILABLE) {
             const error = new CloudError('ffSyncNotSupported');
-            storage.lastError = String(error);
+            storage.lastError = error.message;
             log.throwError('sync not supported', error);
         }
 
@@ -229,7 +229,7 @@ export async function deltaSynchronization() {
             Cloud = createCloudProvider(syncProvider, syncOptions);
         } catch (error) {
             const cloudError = new CloudError(error.message, {cause: error});
-            storage.lastError = String(cloudError);
+            storage.lastError = cloudError.message;
             log.throwError('create cloud provider instance', cloudError);
         }
 
@@ -533,7 +533,7 @@ export async function deltaSynchronization() {
     } catch (e) {
         syncResult.langId = e.langId;
         syncResult.progress = lastProgress;
-        Object.assign(syncResult, {message: String(e), stack: e.stack});
+        Object.assign(syncResult, nativeErrorToObject(e));
 
         send('sync-error', syncResult);
         log.logError('cant delta sync', e);
