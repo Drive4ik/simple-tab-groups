@@ -1749,6 +1749,10 @@
         "message": "Your GitHub token doesn't have the right access.",
         "description": "Your GitHub token doesn't have the right access."
     },
+    "githubNotFound": {
+        "message": "The synchronization gist was not found. It may have been deleted or renamed, or your token doesn't have access to it.\nPlease check your synchronization settings.",
+        "description": "The gist used for synchronization does not exist or is not accessible with the current token"
+    },
     "githubRateLimit": {
         "message": "The GitHub API speed limit has been exceeded.\nThe limit will be reset $relativeTime$.",
         "description": "The GitHub API rate limit has been exceeded",
