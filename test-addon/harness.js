@@ -1,579 +1,340 @@
-'use strict';
+import {ROUNDS, RUN_KEY, LOGS_KEY, BATCH_GAP} from './constants.js';
+import {wait, RestartRequested} from './test.js';
+import {TabsTest, closeHarnessWindows, nameFromUrl} from './tabs.js';
 
-const TAB_GROUP_ID_NONE = -1;
-const SQUARES = ['🟥', '🟩', '🟦', '🟨', '🟪', '⬛'];
-const SCENE_URL = 'https://example.com/';
+let running = false;
+let stopping = false;
+let awaitingAnswer = null;
 
-const LOAD_WAIT = 2000;
-const SETTLE_WAIT = 300;
-const SETTING_WAIT = 100;
+const loadRun = () => JSON.parse(localStorage.getItem(RUN_KEY) ?? 'null');
+const saveRun = state => localStorage.setItem(RUN_KEY, JSON.stringify(state));
+const dropRun = () => localStorage.removeItem(RUN_KEY);
 
-const NOISY_UPDATE_KEYS = ['status', 'url', 'title', 'favIconUrl', 'isArticle', 'audible', 'attention'];
+const loadRound = round => import(`${browser.runtime.getURL(`tests/${round}.js`)}?v=${Date.now()}`);
 
-const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+async function openResults() {
+    const tab = await browser.tabs.create({url: browser.runtime.getURL('results.html'), active: true});
 
-// the name travels in the url, so a tab stays identifiable across a browser restart,
-// when no harness instance remembers its id
-const sceneUrl = name => `${SCENE_URL}?tab=${encodeURIComponent(name)}`;
-const nameFromUrl = url => new URL(url).searchParams.get('tab');
+    await browser.windows.update(tab.windowId, {focused: true});
 
-const openedWindows = new Set();
+    return tab;
+}
 
-class Test {
-    constructor(name) {
-        this.name = name;
-        this.t0 = Date.now();
-        this.win = null;
-        this.idByName = new Map();
-        this.nameById = new Map();
-        this.createdByAction = new Set();
-        this.squareByGroupId = new Map();
-        this.rows = [];
-        this.notes = [];
-        this.questions = [];
-        this.events = [];
-        this.listeners = [];
-        this.droppedEvents = 0;
-        this.unknownCount = 0;
-        this.reported = false;
+async function askUser(test, question) {
+    const described = await test.describe();
+
+    console.debug([
+        `👁️  ${test.data.id}  question ${test.data.asked.length + 1}`,
+        ...described,
+        `> ${question}`,
+        `answer with:  T.visualAnswer('what you see')      not looked at:  T.visualAnswer()`,
+    ].join('\n'));
+
+    const {promise, resolve} = Promise.withResolvers();
+
+    awaitingAnswer = resolve;
+    const answer = await promise;
+    awaitingAnswer = null;
+
+    return answer;
+}
+
+async function cleanup(state, test) {
+    const closed = await closeHarnessWindows();
+    const cleared = [];
+
+    for (const name of state.settings) {
+        await test.clearSetting(name);
+        cleared.push(name);
     }
 
-    ms() {
-        return Date.now() - this.t0;
-    }
+    state.settings = [];
 
-    note(text) {
-        this.notes.push(text);
-    }
+    if (closed.length || cleared.length) {
+        const parts = [];
 
-    ask(question) {
-        this.questions.push(question);
-    }
-
-    bind(tabId, name) {
-        this.idByName.set(name, tabId);
-        this.nameById.set(tabId, name);
-    }
-
-    id(name) {
-        const tabId = this.idByName.get(name);
-
-        if (tabId === undefined) {
-            throw new Error(`unknown tab name "${name}"`);
+        if (closed.length) {
+            parts.push(`closed ${closed.length} leftover window(s)`);
         }
 
-        return tabId;
-    }
-
-    ids(names) {
-        return names.map(name => this.id(name));
-    }
-
-    nameOf(tab) {
-        if (!this.nameById.has(tab.id)) {
-            this.unknownCount++;
-            this.bind(tab.id, `unknown${this.unknownCount}`);
+        if (cleared.length) {
+            parts.push(`restored setting(s): ${cleared.join(', ')}`);
         }
 
-        return this.nameById.get(tab.id);
-    }
-
-    square(groupId) {
-        if (groupId === TAB_GROUP_ID_NONE || groupId === undefined || groupId === null) {
-            return '';
-        }
-
-        if (!this.squareByGroupId.has(groupId)) {
-            this.squareByGroupId.set(groupId, SQUARES[this.squareByGroupId.size % SQUARES.length]);
-        }
-
-        return this.squareByGroupId.get(groupId);
-    }
-
-    async query() {
-        const tabs = await browser.tabs.query({windowId: this.win});
-        return tabs.sort((a, b) => a.index - b.index);
-    }
-
-    async scene(names) {
-        const win = await browser.windows.create({url: SCENE_URL});
-
-        this.win = win.id;
-        openedWindows.add(win.id);
-
-        const firstTabs = win.tabs?.length ? win.tabs : await browser.tabs.query({windowId: this.win});
-        this.bind(firstTabs[0].id, names[0]);
-        await browser.tabs.update(firstTabs[0].id, {url: sceneUrl(names[0])});
-
-        for (let index = 1; index < names.length; index++) {
-            const tab = await browser.tabs.create({
-                windowId: this.win,
-                url: sceneUrl(names[index]),
-                index,
-                active: false,
-            });
-
-            this.bind(tab.id, names[index]);
-        }
-
-        await wait(LOAD_WAIT);
-        await this.assertScene(names);
-
-        return this;
-    }
-
-    async assertScene(expected) {
-        const actual = (await this.query()).map(tab => this.nameOf(tab));
-
-        if (actual.join(',') !== expected.join(',')) {
-            this.note(`SCENE MISMATCH — requested [${expected.join(', ')}], got [${actual.join(', ')}]`);
-            throw new Error('scene mismatch, test aborted');
-        }
-    }
-
-    async activate(name) {
-        await browser.tabs.update(this.id(name), {active: true});
-        await wait(SETTLE_WAIT);
-    }
-
-    async group(names, properties) {
-        const groupId = await browser.tabs.group({
-            tabIds: this.ids(names),
-            createProperties: {windowId: this.win},
-        });
-
-        this.square(groupId);
-
-        if (properties) {
-            await browser.tabGroups.update(groupId, properties);
-        }
-
-        await wait(SETTLE_WAIT);
-
-        return groupId;
-    }
-
-    async joinGroup(names, groupId) {
-        await browser.tabs.group({tabIds: this.ids(names), groupId});
-        await wait(SETTLE_WAIT);
-    }
-
-    async ungroup(names) {
-        await browser.tabs.ungroup(this.ids(names));
-        await wait(SETTLE_WAIT);
-    }
-
-    async hide(names) {
-        await browser.tabs.hide(this.ids(names));
-        await wait(SETTLE_WAIT);
-    }
-
-    async show(names) {
-        await browser.tabs.show(this.ids(names));
-        await wait(SETTLE_WAIT);
-    }
-
-    async create(name, properties = {}) {
-        const tab = await browser.tabs.create({
-            windowId: this.win,
-            url: sceneUrl(name),
-            active: false,
-            ...properties,
-        });
-
-        this.bind(tab.id, name);
-        this.createdByAction.add(tab.id);
-
-        return tab;
-    }
-
-    async createMany(entries) {
-        const tabs = await Promise.all(entries.map(({name, ...properties}) => browser.tabs.create({
-            windowId: this.win,
-            url: sceneUrl(name),
-            active: false,
-            ...properties,
-        }).then(tab => ({tab, name}))));
-
-        for (const {tab, name} of tabs) {
-            this.bind(tab.id, name);
-            this.createdByAction.add(tab.id);
-        }
-
-        await wait(LOAD_WAIT);
-    }
-
-    cell(tab) {
-        const square = this.square(tab.groupId);
-        const prefix = this.createdByAction.has(tab.id) ? '➕' : '';
-
-        let text = (square ? square + ' ' : '') + prefix + this.nameOf(tab);
-
-        if (tab.active) {
-            text += '*';
-        }
-
-        if (tab.hidden) {
-            text += '(h)';
-        }
-
-        return text;
-    }
-
-    // polls until the window really holds the tabs it should and nothing is still on about:blank.
-    // a fast batch can otherwise be measured before the browser has caught up
-    async settle({expect = null, timeout = 20000} = {}) {
-        const started = Date.now();
-        let tabs = [];
-        let pending = 0;
-
-        while (Date.now() - started < timeout) {
-            tabs = await this.query();
-            pending = tabs.filter(tab => !tab.discarded && (!tab.url || tab.url === 'about:blank')).length;
-
-            if (!pending && (expect === null || tabs.length === expect)) {
-                this.note(`settled after ${Date.now() - started} ms — ${tabs.length} tabs, none pending`);
-                return tabs;
-            }
-
-            await wait(250);
-        }
-
-        this.note(`SETTLE TIMEOUT after ${timeout} ms — ${tabs.length} tabs${expect === null ? '' : ` (expected ${expect})`}, ${pending} still on about:blank`);
-
-        return tabs;
-    }
-
-    async snap(label) {
-        const tabs = await this.query();
-        this.rows.push({kind: 'state', label, cells: tabs.map(tab => this.cell(tab))});
-    }
-
-    act(text) {
-        this.rows.push({kind: 'action', label: '`' + text + '`'});
-    }
-
-    async groupsInfo() {
-        const groups = await browser.tabGroups.query({windowId: this.win});
-
-        return groups.map(group => {
-            const parts = [`${this.square(group.id)} title:${JSON.stringify(group.title ?? '')}`];
-
-            if (group.color !== undefined) {
-                parts.push(`color:${group.color}`);
-            }
-
-            if (group.collapsed !== undefined) {
-                parts.push(`collapsed:${group.collapsed}`);
-            }
-
-            return parts.join(' ');
-        });
-    }
-
-    watch(specs, {updatedKeys} = {}) {
-        for (const spec of specs) {
-            const [namespace, event] = spec.split('.');
-            const target = browser[namespace]?.[event];
-
-            if (!target?.addListener) {
-                this.note(`event API missing: ${spec}`);
-                continue;
-            }
-
-            const handler = (...args) => this.onEvent(spec, args, updatedKeys);
-
-            try {
-                target.addListener(handler);
-                this.listeners.push({target, handler});
-            } catch (error) {
-                this.note(`cannot listen ${spec}: ${error.message}`);
-            }
-        }
-    }
-
-    // rendered lazily: tabs.onCreated arrives before create() has bound the tab's name
-    push(spec, text) {
-        const at = String(this.ms()).padStart(5);
-        this.events.push(() => `${at}ms  ${spec.padEnd(22)}${typeof text === 'function' ? text() : text}`);
-    }
-
-    known(tabId) {
-        return this.nameById.get(tabId) ?? `unknown(${this.nameById.size})`;
-    }
-
-    onEvent(spec, args, updatedKeys) {
-        if (spec === 'tabs.onMoved') {
-            const [tabId, info] = args;
-
-            if (info.windowId === this.win) {
-                this.push(spec, `${this.known(tabId)}  ${info.fromIndex} → ${info.toIndex}`);
-            }
-        } else if (spec === 'tabs.onUpdated') {
-            const [tabId, changeInfo, tab] = args;
-
-            if (tab.windowId !== this.win) {
-                return;
-            }
-
-            const keys = Object.keys(changeInfo).filter(key => {
-                return updatedKeys ? updatedKeys.includes(key) : !NOISY_UPDATE_KEYS.includes(key);
-            });
-
-            if (!keys.length) {
-                this.droppedEvents++;
-                return;
-            }
-
-            const shown = keys.map(key => {
-                const value = changeInfo[key];
-                return key === 'groupId' ? `groupId: ${this.square(value) || value}` : `${key}: ${value}`;
-            });
-
-            this.push(spec, `${this.known(tabId)}  {${shown.join(', ')}}`);
-        } else if (spec === 'tabs.onCreated') {
-            const [tab] = args;
-
-            if (tab.windowId === this.win) {
-                this.push(spec, () => `${this.known(tab.id)}  index:${tab.index} group:${this.square(tab.groupId) || tab.groupId}`);
-            }
-        } else if (spec === 'tabs.onRemoved') {
-            const [tabId, info] = args;
-
-            if (info.windowId === this.win) {
-                this.push(spec, `${this.known(tabId)}  isWindowClosing:${info.isWindowClosing}`);
-            }
-        } else if (spec === 'tabs.onActivated') {
-            const [info] = args;
-
-            if (info.windowId === this.win) {
-                this.push(spec, `${this.known(info.tabId)}  previous:${info.previousTabId ? this.known(info.previousTabId) : '-'}`);
-            }
-        } else if (spec.startsWith('tabGroups.')) {
-            const [group] = args;
-
-            if (group.windowId === undefined || group.windowId === this.win) {
-                this.push(spec, `${this.square(group.id)}  title:${JSON.stringify(group.title ?? '')} collapsed:${group.collapsed}`);
-            }
-        } else {
-            this.push(spec, JSON.stringify(args));
-        }
-    }
-
-    stopWatching() {
-        for (const {target, handler} of this.listeners) {
-            try {
-                target.removeListener(handler);
-            } catch {}
-        }
-
-        this.listeners = [];
-    }
-
-    render() {
-        const states = this.rows.filter(row => row.kind === 'state');
-        const width = states.reduce((max, row) => Math.max(max, row.cells.length), 0);
-        const header = ['tab index', ...Array.from({length: width}, (_, index) => String(index))];
-
-        const lines = [`### ${this.name}`, ''];
-
-        if (width) {
-            lines.push(`| ${header.join(' | ')} |`);
-            lines.push(`| ${header.map(() => '-').join(' | ')} |`);
-
-            for (const row of this.rows) {
-                if (row.kind === 'action') {
-                    lines.push(`| ${[row.label, ...Array.from({length: width}, () => '')].join(' | ')} |`);
-                } else {
-                    const cells = [...row.cells];
-
-                    while (cells.length < width) {
-                        cells.push('');
-                    }
-
-                    lines.push(`| ${row.label} | ${cells.join(' | ')} |`);
-                }
-            }
-        }
-
-        if (this.events.length || this.droppedEvents) {
-            lines.push('', 'events:', '```text');
-            lines.push(...(this.events.length ? this.events.map(event => event()) : ['(none)']));
-
-            if (this.droppedEvents) {
-                lines.push(`(${this.droppedEvents} noisy tabs.onUpdated dropped: ${NOISY_UPDATE_KEYS.join('/')})`);
-            }
-
-            lines.push('```');
-        }
-
-        if (this.notes.length) {
-            lines.push('', 'notes:');
-            lines.push(...this.notes.map(note => `- ${note}`));
-        }
-
-        if (this.questions.length) {
-            lines.push('', '👁️ look at the window and answer:');
-            lines.push(...this.questions.map((question, index) => `${index + 1}. ${question}`));
-        }
-
-        return lines.join('\n');
-    }
-
-    async done({keepOpen = false} = {}) {
-        if (this.reported) {
-            return;
-        }
-
-        this.reported = true;
-        this.stopWatching();
-
-        console.debug(this.render());
-
-        if (keepOpen) {
-            console.debug(`### ${this.name}: window left open — answer the 👁️ questions, then close that window and hit Reload on the add-on before the next run`);
-        } else {
-            await this.close();
-        }
-    }
-
-    async close() {
-        if (this.win !== null) {
-            openedWindows.delete(this.win);
-            await browser.windows.remove(this.win).catch(() => {});
-            this.win = null;
-        }
+        test.note(`cleaned up before the test — ${parts.join('; ')}`);
     }
 }
 
-const T = {
-    TAB_GROUP_ID_NONE,
-    SQUARES,
-    SCENE_URL,
-    wait,
+function collect(state, test) {
+    state.reports.push(test.render());
+    state.counts.tests++;
+    state.counts.mismatches += test.data.checks.filter(check => !check.ok).length;
+    state.counts.answers += test.data.asked.length;
 
-    test(name) {
-        return new Test(name);
-    },
+    if (test.data.failed) {
+        state.counts.failed++;
+        state.failures.push(`${test.data.id} — ${test.data.failed}`);
+    }
 
-    // the only entry point: T.start('round-06') loads tests/round-06.js and runs what it exports.
-    // edited a test file? reload the add-on in about:debugging - modules are cached per load
-    async start(name) {
-        const module = await import(browser.runtime.getURL(`tests/${name}.js`));
+    state.settings = [...new Set([...state.settings, ...test.data.settings])];
+}
 
-        if (!Array.isArray(module.tests)) {
-            throw new Error(`tests/${name}.js must export an array named "tests"`);
+async function runTest(state, spec, TestClass, round, url) {
+    const test = new TestClass({id: spec.id, title: spec.title, url: spec.url ?? url, round, onQuestion: askUser});
+    const started = Date.now();
+
+    await cleanup(state, test);
+
+    let suspended = false;
+
+    try {
+        await spec.run(test);
+    } catch (error) {
+        if (error instanceof RestartRequested) {
+            suspended = true;
+        } else {
+            test.data.failed = error.message;
+        }
+    }
+
+    const touched = [...test.data.settings];
+    await test.finish();
+
+    if (suspended) {
+        state.settings = [...new Set([...state.settings, ...touched])];
+        state.pending = {round, data: test.data};
+        saveRun(state);
+
+        console.debug([
+            `⏸  ${spec.id} needs a browser restart`,
+            'the scene window is left open on purpose — keep it',
+            'restart Firefox, load the add-on again in about:debugging, then run:  T.continue()',
+        ].join('\n'));
+
+        return false;
+    }
+
+    await test.close();
+    collect(state, test);
+
+    const marks = test.data.checks.filter(check => !check.ok).length;
+    const verdict = test.data.failed ? 'FAILED' : marks ? `${marks} MISMATCH` : 'ok';
+
+    console.debug(`${round}  ${spec.id}  ${verdict}  ${Date.now() - started} ms`);
+
+    return true;
+}
+
+async function resumeRestart(state) {
+    const {round, data} = state.pending;
+    const module = await loadRound(round);
+    const spec = module.tests.find(test => test.id === data.id);
+    const TestClass = module.testClass ?? TabsTest;
+    const test = new TestClass({id: data.id, title: data.title, url: spec?.url ?? module.url, round, onQuestion: askUser, data});
+
+    try {
+        await test.reattach();
+        await spec.afterRestart(test);
+    } catch (error) {
+        test.data.failed = error.message;
+    }
+
+    await test.finish();
+    await test.close();
+    collect(state, test);
+
+    console.debug(`${round}  ${data.id}  ${test.data.failed ? 'FAILED' : 'ok'}  (after restart)`);
+
+    state.pending = null;
+    state.index++;
+    saveRun(state);
+}
+
+function finalize(state, reason) {
+    const summary = [
+        '## summary',
+        '',
+        `${state.counts.tests} test(s), ${state.counts.mismatches} mismatch(es), ${state.counts.failed} failed, ${state.counts.answers} 👁️ answer(s)`,
+        ...(state.failures.length ? ['', 'failed:', ...state.failures.map(line => `- ${line}`)] : []),
+        ...(reason === 'stopped' ? ['', 'the run was stopped with T.stop() — the rounds below it never ran'] : []),
+    ].join('\n');
+
+    localStorage.setItem(LOGS_KEY, [...state.reports, summary].join('\n\n'));
+    dropRun();
+
+    console.debug(`=== ${reason}: ${state.counts.tests} test(s), ${state.counts.mismatches} mismatch(es), ${state.counts.failed} failed — full report in the tab that just opened, and in T.logs() ===`);
+
+    return openResults();
+}
+
+async function drive(state) {
+    running = true;
+    stopping = false;
+
+    try {
+        if (state.pending) {
+            await resumeRestart(state);
         }
 
-        if (module.note) {
-            console.debug(module.note);
-        }
+        while (state.queue.length) {
+            const [round, ...only] = state.queue[0].split(':');
+            const module = await loadRound(round);
+            const TestClass = module.testClass ?? TabsTest;
+            const gap = module.gap ?? BATCH_GAP;
 
-        await T.batch(module.tests, {gap: module.gap ?? 1500});
-
-        if (module.after) {
-            await module.after();
-        }
-    },
-
-    async batch(tests, {gap = 1500} = {}) {
-        console.debug(`=== batch start: ${tests.length} test(s) ===`);
-
-        for (const [position, {name, run, keepOpen = false}] of tests.entries()) {
-            if (position > 0) {
-                await wait(gap);
+            if (!Array.isArray(module.tests)) {
+                throw new Error(`tests/${round}.js must export an array named "tests"`);
             }
 
-            const test = new Test(name);
+            const tests = only.length ? module.tests.filter(test => only.includes(test.id)) : module.tests;
 
-            try {
-                await run(test);
-                await test.done({keepOpen});
-            } catch (error) {
-                test.note(`FAILED: ${error.message}`);
-                await test.done();
+            if (!tests.length) {
+                throw new Error(`${state.queue[0]} matched no test`);
             }
-        }
 
-        console.debug('=== batch done ===');
-    },
+            if (state.index === 0) {
+                state.reports.push(`## ${round}${module.note ? `\n\n${module.note}` : ''}`);
+                console.debug(`=== ${round}: ${tests.length} test(s) ===`);
+            }
 
-    // dumps every normal window without relying on harness memory - names come back from the urls.
-    // this is what survives a browser restart, where no Test instance exists any more
-    async report(title = 'current state') {
-        const windows = await browser.windows.getAll({windowTypes: ['normal']});
-        const test = new Test(title);
+            while (state.index < tests.length) {
+                if (stopping) {
+                    saveRun(state);
+                    return finalize(state, 'stopped');
+                }
 
-        for (const [position, win] of windows.entries()) {
-            // tabs.query, not windows.getAll({populate}) - only this one is known to return hidden tabs
-            const tabs = (await browser.tabs.query({windowId: win.id})).sort((a, b) => a.index - b.index);
+                const finished = await runTest(state, tests[state.index], TestClass, round, module.url);
 
-            for (const tab of tabs) {
-                const name = nameFromUrl(tab.url);
+                if (!finished) {
+                    return;
+                }
 
-                if (name) {
-                    test.bind(tab.id, name);
+                state.index++;
+                saveRun(state);
+
+                if (state.index < tests.length) {
+                    await wait(gap);
                 }
             }
 
-            test.rows.push({
-                kind: 'state',
-                label: `window ${position + 1}`,
-                cells: tabs.map(tab => test.cell(tab)),
-            });
-
-            const groups = await browser.tabGroups.query({windowId: win.id});
-            const described = groups.map(group => `${test.square(group.id)} title:${JSON.stringify(group.title ?? '')} collapsed:${group.collapsed}`);
-            test.note(`window ${position + 1}: ${described.join(' | ') || 'no groups'}`);
+            state.queue.shift();
+            state.index = 0;
+            saveRun(state);
         }
 
-        console.debug(test.render());
-    },
+        return finalize(state, 'done');
+    } finally {
+        running = false;
+    }
+}
 
-    async newTabPosition(value) {
-        const api = browser.browserSettings?.newTabPosition;
+async function start(...rounds) {
+    if (running) {
+        return 'a run is already going — T.stop() first';
+    }
 
-        if (!api) {
-            return {ok: false, reason: 'browser.browserSettings.newTabPosition is missing'};
+    if (loadRun()?.pending) {
+        return 'a run is waiting for a browser restart — T.continue() to pick it up, or T.forget() to drop it';
+    }
+
+    const queue = rounds.flat().filter(Boolean);
+
+    if (!queue.length) {
+        queue.push(...ROUNDS);
+    }
+
+    await drive({
+        queue,
+        index: 0,
+        pending: null,
+        reports: [`# STG behavior test run`, `rounds: ${queue.join(', ')}`],
+        counts: {tests: 0, mismatches: 0, failed: 0, answers: 0},
+        failures: [],
+        settings: [],
+    });
+}
+
+async function resume() {
+    if (running) {
+        return 'a run is already going';
+    }
+
+    const state = loadRun();
+
+    if (!state) {
+        return 'nothing to continue — no checkpoint';
+    }
+
+    await drive(state);
+}
+
+function stop() {
+    if (!running) {
+        return 'nothing is running';
+    }
+
+    stopping = true;
+    awaitingAnswer?.('(stopped)');
+
+    return 'stopping after the current test';
+}
+
+function visualAnswer(text = '(not looked at)') {
+    if (!awaitingAnswer) {
+        return 'nothing is waiting for an answer';
+    }
+
+    awaitingAnswer(text);
+
+    return 'recorded';
+}
+
+async function report(title = 'current state') {
+    const test = new TabsTest({id: title, title: '', round: 'report', onQuestion: askUser});
+
+    for (const [position, win] of (await browser.windows.getAll({windowTypes: ['normal']})).entries()) {
+        const tabs = (await browser.tabs.query({windowId: win.id})).sort((a, b) => a.index - b.index);
+
+        for (const tab of tabs) {
+            const name = nameFromUrl(tab.url);
+
+            if (name) {
+                test.bind(tab.id, name);
+            }
         }
 
-        const before = await api.get({});
-        let setResult;
+        test.win = win.id;
+        test.row(`window ${position + 1}`, tabs.map(tab => test.cell(tab)), {groups: await test.groupsInfo()});
+    }
 
-        try {
-            setResult = await api.set({value});
-        } catch (error) {
-            return {ok: false, reason: error.message, previous: before.value};
-        }
+    test.win = null;
+    await test.finish();
 
-        await wait(SETTING_WAIT);
+    console.debug(test.render());
+}
 
-        const after = await api.get({});
+function forget() {
+    dropRun();
+    return 'checkpoint dropped';
+}
 
-        return {
-            ok: after.value === value,
-            setResult,
-            requested: value,
-            applied: after.value,
-            previous: before.value,
-            levelOfControl: after.levelOfControl,
-        };
-    },
-
-    async clearNewTabPosition() {
-        const api = browser.browserSettings?.newTabPosition;
-
-        if (!api) {
-            return {ok: false, reason: 'browser.browserSettings.newTabPosition is missing'};
-        }
-
-        const cleared = await api.clear({});
-        await wait(SETTING_WAIT);
-
-        return {cleared, value: (await api.get({})).value};
-    },
+globalThis.T = {
+    start,
+    continue: resume,
+    stop,
+    forget,
+    visualAnswer,
+    report,
+    logs: openResults,
 };
 
-globalThis.T = T;
-
-console.debug('STG behavior test harness ready — run a round with:  await T.start("round-01")');
+console.debug([
+    'STG behavior test harness ready',
+    '  T.start()                          every round in order',
+    "  T.start('round-05')                one round",
+    "  T.start('round-01', 'round-07')    a few rounds",
+    '  T.visualAnswer(\'…\')              answer a 👁️ question the run is waiting on',
+    '  T.continue()                     pick a run back up after a restart or a reload',
+    '  T.stop()                         end the run after the current test',
+    '  T.logs()                         open the last report again',
+].join('\n'));

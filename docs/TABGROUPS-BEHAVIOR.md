@@ -6,7 +6,8 @@ a claim is as strong as the runs cited next to it, and no stronger.
 
 Only facts confirmed by an actual test run belong here — never assumptions about how the browser
 "probably" works. Tab-creation facts (`tabs.create`, `index`, newTabPosition) live in
-CREATE-TABS-BEHAVIOR.md; what overlaps is duplicated in both files with cross-references.
+CREATE-TABS-BEHAVIOR.md; plain `tabs.move` facts with no groups involved — in
+MOVE-TABS-BEHAVIOR.md. What overlaps is duplicated in both files with cross-references.
 
 State tables, markers, confirmation rules and how the tests are written — BEHAVIOR-NOTATION.md.
 
@@ -218,6 +219,39 @@ joined 🟥. The browser looks at the window as it was when `tabs.move` was call
 
   Duplicate of CREATE-TABS-BEHAVIOR.md §7 — keep both copies in sync.
 
+## 9. `tabs.ungroup` and `tabs.hide` vs the active tab
+
+- **`tabs.ungroup` treats the active tab like any other member**: it leaves the group
+  (`groupId: -1`), and when that empties the group, the group is destroyed and
+  `tabGroups.onRemoved` fires. (R7.03)
+- **`tabs.hide` silently skips the window's active tab**: no error, the call resolves with only
+  the ids it actually hid, and the active tab stays visible and ungrouped. After another tab is
+  activated, a second `tabs.hide` on the former active tab hides it normally. (R7.03)
+
+  | tab index | 0 | 1 | 2 | 3 |
+  | - | - | - | - | - |
+  | before | x | 🟥 a* | 🟥 b | 🟥 c |
+  | `tabs.ungroup([a, b, c])  — a is active` | | | | |
+  | after ungroup | x | a* | b | c |
+  | `tabs.hide([a, b, c])  — a is active` | | | | |
+  | after hide | x | a* | b(h) | c(h) |
+  | `activate(x), then tabs.hide([a])` | | | | |
+  | after activate x + hide a | x* | a(h) | b(h) | c(h) |
+
+  events:
+
+  ```text
+   2841ms  tabGroups.onRemoved   🟥  title:"G" collapsed:false
+   2841ms  tabs.onUpdated        a  {groupId: -1}
+   2841ms  tabs.onUpdated        b  {groupId: -1}
+   2842ms  tabs.onUpdated        c  {groupId: -1}
+   3357ms  tabs.onUpdated        b  {hidden: true}
+   3357ms  tabs.onUpdated        c  {hidden: true}
+   4204ms  tabs.onUpdated        a  {hidden: true}
+  ```
+
+  `tabs.hide([a, b, c])` resolved with `[b, c]`; the later `tabs.hide([a])` resolved with `[a]`.
+
 ## Implications for STG code
 
 1. **Do not move tabs as an array to `{index: -1}`/`{index: 0}` if their native groups must be
@@ -231,3 +265,6 @@ joined 🟥. The browser looks at the window as it was when `tabs.move` was call
    about which tabs it ends up between gives the wrong answer, as §1 shows.
 5. The order in `tabs.group({tabIds})` is controlled by us — the browser preserves it (§3). The
    first id is the anchor that stays put, so put the tab whose position should survive first.
+6. **`tabs.hide` never hides the window's active tab** (§9) — hiding a whole group takes two
+   steps (hide the rest, hand activity to another tab, hide the former active tab), and the state
+   between the steps is observable from outside: the former active tab sits visible and ungrouped.

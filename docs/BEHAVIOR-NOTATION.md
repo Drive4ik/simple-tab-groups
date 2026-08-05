@@ -39,8 +39,16 @@ Reading a column top to bottom shows what happened at that index. The action row
 the first column and pads the rest with empty cells — it reads across the full width, and the table
 stays valid markdown.
 
-A test with several steps just keeps appending `action` / `state` rows to the same table. More
-than one window in a test → one table per window, each with its own heading.
+The action row also carries how long the harness waited after the call before measuring —
+`settled 212 ms`. That is not decoration: it is the difference between a state that had finished
+moving and one that was measured too early.
+
+A test with several steps just keeps appending `action` / `state` rows to the same table.
+
+More than one window in a test (e.g. a transfer from one window to another) → still **one table**:
+it shows the state of **every participating window both before and after each action**, as
+separate rows — `before (window 1)`, `before (window 2)`, `after (window 1)`, `after (window 2)`.
+A window that does not exist yet at that point is written as `not created yet`.
 
 ## 2. What goes in a cell
 
@@ -72,7 +80,9 @@ notation replaced.
 ## 3. Events
 
 When the fact is about event order, the events go in a fenced block under the table, with the
-elapsed time from the start of the test:
+elapsed time from the **preceding action row** — the harness clock resets when `t.act()` writes
+the row, so scene-setup waits never inflate the numbers. For that to hold, `t.act()` is called
+right **before** the API call it names:
 
 ```text
   312ms  tabs.onMoved      member2  3 → 4
@@ -89,9 +99,9 @@ Every fact carries the run that produced it:
 - **`R<round>.<test>`** — confirmed by the API output of that test, e.g. `R1.07` is test 07 of
   round 1. The table in the doc is the harness output, not a retelling.
 - **👁️** — confirmed by eye. Some facts have no API surface at all (a group header staying in the
-  tab bar, the empty-title group button, part of the collapsed behavior). For those the harness
-  builds the scene, leaves the window open, says what to look at, and the answer is recorded as
-  👁️ plus the question that was answered.
+  tab bar, the empty-title group button, part of the collapsed behavior). For those the run stops
+  at the exact frame in question, prints what to look at, and waits for `T.visualAnswer('…')`. The
+  answer is recorded as 👁️ next to the question that was answered, in the same report.
 - **`E<n>`** — legacy marker from the runs made before this harness existed. Those runs are not
   reproducible and their tables carry raw tab ids. Every `E<n>` fact is being re-verified; the
   marker is replaced with an `R` one as that happens. Do not mint new `E` numbers.
@@ -121,24 +131,34 @@ The add-on itself is disposable and lives outside the repo; these constraints ar
 test that breaks one of them produces a table that looks like a fact and is not one.
 
 **Environment.** A clean profile, no other add-ons, `test-addon/` loaded through about:debugging
-with `tabs`, `tabGroups`, `tabHide` and `browserSettings` permissions. Output goes through
-`console.debug`, with console timestamps turned on.
+with `tabs`, `tabGroups`, `tabHide` and `browserSettings` permissions. Progress goes to
+`console.debug`; the report itself opens in a tab at the end of the run.
 
 **Isolation.** One test = one window it opens itself = one table. Tests never share a window and
-never depend on the order they ran in. Between rounds the add-on is **reloaded** rather than cleaned
-up: wiping all state is more reliable than unwinding it, and it is the only way an edited test file
-is picked up.
+never depend on the order they ran in. Cleanliness is the harness's job, not the test's: before
+every test it removes every listener, closes every window it opened, and restores every browser
+setting a previous test changed — and writes into the report whatever it had to clean up. Each
+round is imported fresh, so nothing a round file holds at module level survives into the next run.
 
 **The scene is asserted.** After building it, the test compares the actual tab order against the
 requested one and aborts on any mismatch. A scene that silently came out wrong must never reach a
 conclusion. This also means a test may not lean on an unverified fact to build its scene.
 
+**A recorded fact is asserted too.** Once a table is written down here, the test that produced it
+carries that table as an expectation (`t.expectRow`), so a re-run either reproduces it or prints
+`MISMATCH` with both sides. Discovering a new fact is the one case where a test only prints: the
+expectation is added when the fact is written down.
+
 **Identity.** Every tab gets a meaningful name at creation, carried in its url (`?tab=<name>`) so
 it stays identifiable even across a browser restart, when nothing remembers its id. Real ids are
 used only to call the API and never printed.
 
-**Timing.** Browsers answer late. Wait ~2s after creating tabs that load a real url, ~100ms after
-changing a browser setting, and ~500ms between an action and the snapshot that measures it.
+**Timing.** A test waits for a condition, not for a number. After the action under test the harness
+waits until nothing has moved: no watched event for `QUIET_WAIT`, two identical readings of the
+state, and every tab it created showing its own url instead of `about:blank` — a created tab always
+starts blank, and a tab that has not arrived yet cannot be identified. How long that took is
+printed in the action row. A fixed number is used only where the number is the fact itself, and
+then it comes from a named constant of `test-addon/constants.js`.
 
 **Events.** Listeners are attached before the action and removed after, filtered to the test's own
 window. Noisy `tabs.onUpdated` (status, url, title, favicon) is dropped and the dropped count is
@@ -148,8 +168,8 @@ printed — a fact must never look more complete than it is.
 cells where they disagree, and the output must print whatever the hypotheses differ about. §1 of
 TABGROUPS-BEHAVIOR.md was settled by exactly two rows out of eight.
 
-**Visual checks.** A 👁️ test leaves its window open, asks its question in the output, and is run
-alone — nobody remembers what a tab bar looked like twenty tests ago. The question may only be
-about **the state the window is left in**: a test that acts once more after the interesting moment
-has destroyed the very thing it asks about. One state to look at per run; another state means
-another run.
+**Visual checks.** `await t.ask('…')` stops the run at that exact frame, prints the window as the
+API sees it and the question, and waits for `T.visualAnswer('…')`. The answer lands in the report
+under its own question. A test may act again after an answer and ask about the next frame — each
+question is answered while its own state is on screen, so several visual facts can live in one
+test.

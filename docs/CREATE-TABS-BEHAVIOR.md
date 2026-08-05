@@ -208,9 +208,15 @@ seven attempts (R5.28–R5.34). See the table in §2. The claim is withdrawn.
 ### 12. A tab is created with `about:blank`, the real `url` arrives later (R5.01)
 
 `tabs.create` resolves with `url: "about:blank"`, and `tabs.get` still reports `about:blank`
-immediately after and 200 ms later. The requested url was already in place at the next sample, 2 s
-later; when within those 2 s it arrived was not measured. Any test that filters tabs by url has to
-wait.
+immediately after — whatever the url was. How long it stays blank is what differs:
+
+| requested url | at `create` | immediately after | after 200 ms | after a further 2 s |
+| - | - | - | - | - |
+| a page of the add-on itself | `about:blank` | `about:blank` | the real url | the real url |
+| `https://example.com/` | `about:blank` | `about:blank` | `about:blank` | the real url |
+
+When within those 2 s the network page's url arrived was not measured. Any code that filters tabs by
+url has to wait, and must not take the local timing as the general case.
 
 ---
 

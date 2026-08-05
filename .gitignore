@@ -6,4 +6,4 @@ package-lock.json
 
 CLAUDE.md
 /.claude/*.local.json
-graphify-out/
+/sandbox/

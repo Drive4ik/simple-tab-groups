@@ -1432,8 +1432,6 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
 
     const allTabs = await Tabs.get(null, false, null, undefined, true, options.showTabsWithThumbnailsInManageGroups);
 
-    // the restored tabs carry their groupNativeId - (re)creation writes it into sessions,
-    // the sub-groups are materialized after the reload, on initializeGroups(restoreFromStg)
     await Tabs.reconcile(data.groups, allTabs);
 
     if (Array.isArray(data.pinnedTabs)) {
@@ -1710,7 +1708,7 @@ async function init() {
 
         await Windows.tryRestoreMissedTabs(false);
 
-        windows = await Windows.initializeGroups(data.groups.filter(g => !g.isArchive).map(g => g.id), storage.isBackupRestoring);
+        windows = await Windows.initializeGroups(data.groups, storage.isBackupRestoring);
 
         await Groups.fillHistory(windows);
 

@@ -25,5 +25,7 @@
     "background": {
         "type": "module",
         "scripts": ["harness.js"]
-    }
+    },
+
+    "web_accessible_resources": ["tab.html"]
 }

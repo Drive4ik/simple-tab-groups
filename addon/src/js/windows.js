@@ -791,14 +791,14 @@ export async function tryRestoreMissedTabs(actionLoading = true) {
     log.stop();
 }
 
-export async function initializeGroups(currentGroupIds, restoreFromStg = false) {
-    const log = logger.start(initializeGroups, {restoreFromStg});
+export async function initializeGroups(groups, afterRestoring = false) {
+    const log = logger.start(initializeGroups, {afterRestoring});
 
     const EXTENSION_START_TIME = await getExtensionStartTime();
 
     let windows = await load(true);
 
-    const currentGroupIdsSet = new Set(currentGroupIds);
+    const currentGroupIdsSet = new Set(groups.filter(g => !g.isArchive).map(g => g.id));
     let tabsToShow = new Set();
     let tabsToHide = new Set();
     const moveTabsToWin = new Map();
@@ -902,7 +902,8 @@ export async function initializeGroups(currentGroupIds, restoreFromStg = false) 
     }
 
     for (const win of windows) {
-        await GroupsNative.reconcileWindow(win.id, restoreFromStg).catch(log.onCatch(['cant reconcile native groups for window', win.id], false));
+        await GroupsNative.reconcileWindow(win.id, afterRestoring)
+            .catch(log.onCatch(['cant reconcile native groups for window', win.id], false));
     }
 
     log.stop();

@@ -586,10 +586,10 @@ export async function restoreMembership(group, movedTabs, snapshot = null) {
 }
 
 // startup / restore entry point for a window
-export async function reconcileWindow(windowId, restoreFromStg = false) {
-    const log = logger.start(reconcileWindow, windowId, {restoreFromStg});
+export async function reconcileWindow(windowId, afterRestoring = false) {
+    const log = logger.start(reconcileWindow, windowId, {afterRestoring});
 
-    if (restoreFromStg) {
+    if (afterRestoring) {
         const groupId = Cache.getWindowGroup(windowId);
         const {group} = groupId ? await Groups.load(groupId, true) : {};
 

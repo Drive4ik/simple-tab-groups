@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>STG behavior test report</title>
+    <style>
+        :root {
+            color-scheme: light dark;
+        }
+
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            font: 13px/1.45 ui-monospace, monospace;
+        }
+
+        header {
+            padding: 8px 12px;
+        }
+
+        textarea {
+            flex: 1;
+            border: 0;
+            border-top: 1px solid;
+            padding: 12px;
+            font: inherit;
+            resize: none;
+        }
+    </style>
+</head>
+<body>
+    <header>the whole run, ready to copy — Ctrl+A, Ctrl+C</header>
+    <textarea id="report" spellcheck="false"></textarea>
+    <script src="results.js" type="module"></script>
+</body>
+</html>
