@@ -7,6 +7,8 @@ import * as MenusLink from './menus-link.js';
 import * as Containers from '/js/containers.js';
 import * as Tabs from '/js/tabs.js';
 import * as Groups from '/js/groups.js';
+import * as GroupsNative from '/js/groups-native.js';
+import * as Operations from '/js/operations.js';
 import * as Browser from '/js/browser.js';
 // import * as Cache from '/js/cache.js';
 import Logger from '/js/logger.js';
@@ -103,7 +105,11 @@ export async function groupsUpdated(groups) {
 }
 
 // actions
-export async function reopenTabsWithTemporaryContainers(info) {
+export function reopenTabsWithTemporaryContainers(...args) {
+    return Operations.run('reopen-temp-containers', () => reopenTabsWithTemporaryContainersNow(...args));
+}
+
+async function reopenTabsWithTemporaryContainersNow(info) {
     const log = logger.start(reopenTabsWithTemporaryContainers, info);
 
     const allTabs = await Tabs.get(null, null, null, undefined, true, true);
@@ -124,7 +130,7 @@ export async function reopenTabsWithTemporaryContainers(info) {
     if (tabsToCreate.length) {
         await Browser.actionLoading();
 
-        const newTabs = await Promise.all(tabsToCreate.map(Tabs.create));
+        const newTabs = await Promise.all(tabsToCreate.map(tab => Tabs.create(tab, true)));
 
         const tabsToHide = [];
 
@@ -138,6 +144,8 @@ export async function reopenTabsWithTemporaryContainers(info) {
             }
         }
 
+        // recreated at their originals' slots - they can inherit a live group (docs/TABGROUPS-BEHAVIOR.md §7)
+        await GroupsNative.ungroup(tabsToHide);
         await Tabs.hide(tabsToHide, true);
 
         await Tabs.remove(tabsToRemove);

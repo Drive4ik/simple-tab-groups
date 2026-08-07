@@ -18,6 +18,7 @@ import * as MenusMain from './menus-main.js';
 // import JSON from './json.js';
 import * as Tabs from './tabs.js';
 import * as GroupsNative from './groups-native.js';
+import * as Operations from './operations.js';
 import * as Windows from './windows.js';
 import * as Utils from './utils.js';
 import GroupsHistory from './groups-history.js';
@@ -54,7 +55,11 @@ export async function applyByHistory(direction, windowId, groups) {
     return apply(windowId, nextGroupId, undefined, true);
 }
 
-export async function apply(windowId, groupId, activeTabId, applyFromHistory = false) {
+export function apply(...args) {
+    return Operations.run('apply-group', () => applyNow(...args));
+}
+
+async function applyNow(windowId, groupId, activeTabId, applyFromHistory = false) {
     const log = logger.start(apply, 'groupId:', groupId, 'windowId:', windowId, 'activeTabId:', activeTabId);
 
     windowId ||= await Windows.getLastFocusedNormalWindow();
@@ -134,7 +139,8 @@ export async function apply(windowId, groupId, activeTabId, applyFromHistory = f
             const activeTabGroupToHide = groupToHide?.tabs.find(tab => tab.active);
 
             async function hideTabs(tabs = []) {
-                await GroupsNative.hideTabs(tabs, {skipTrackingFlag: true});
+                await GroupsNative.ungroup(tabs);
+                await Tabs.hide(tabs, true);
 
                 if (groupToHide) {
                     if (groupToHide.muteTabsWhenGroupCloseAndRestoreWhenOpen) {
@@ -157,7 +163,9 @@ export async function apply(windowId, groupId, activeTabId, applyFromHistory = f
                 }
 
                 // unsync tabs are managed by the addon: their native groups are consciously destroyed
-                await GroupsNative.hideTabs(tabs, {clearMembership: true, skipTrackingFlag: true});
+                await GroupsNative.ungroup(tabs);
+                await Tabs.hide(tabs, true);
+                await GroupsNative.clearMembership(tabs);
 
                 let showNotif = mainStorage.showTabsInThisWindowWereHidden ?? 0;
                 if (showNotif < 5) {
@@ -490,11 +498,15 @@ export async function saveDefault(defaultGroupProps) {
     log.stop();
 }
 
-export async function add(windowId, tabIds = [], title = null) {
+export function add(...args) {
+    return Operations.run('add-group', () => addNow(...args));
+}
+
+async function addNow(windowId, tabIds = [], title = null) {
     tabIds = tabIds?.slice?.() || [];
     title = title?.slice(0, 256);
 
-    const log = logger.start('add', {windowId, tabIds, title});
+    const log = logger.start(addNow, {windowId, tabIds, title});
 
     const windowGroupId = Cache.getWindowGroup(windowId);
 
@@ -541,8 +553,12 @@ export async function add(windowId, tabIds = [], title = null) {
     return newGroup;
 }
 
-export async function remove(groupId) {
-    const log = logger.start('remove', groupId);
+export function remove(...args) {
+    return Operations.run('remove-group', () => removeNow(...args));
+}
+
+async function removeNow(groupId) {
+    const log = logger.start(removeNow, groupId);
 
     const groupWindowId = Cache.getWindowId(groupId);
 
@@ -635,7 +651,11 @@ async function addUndoRemove(groupToRemove) {
     }
 }
 
-export async function restore(groupId) {
+export function restore(...args) {
+    return Operations.run('restore-group', () => restoreNow(...args));
+}
+
+async function restoreNow(groupId) {
     const log = logger.start('restore', groupId);
 
     const restoreId = RESTORE_GROUP_PREFIX + groupId;
@@ -665,6 +685,7 @@ export async function restore(groupId) {
     if (tabs.length && !group.isArchive) {
         await Browser.actionLoading();
         group.tabs = await Tabs.createMultiple(setNewTabsParams(tabs, group), true);
+        // appended at the end of the strip - they can't be in a live group (docs/TABGROUPS-BEHAVIOR.md §10)
         await Tabs.hide(group.tabs, true);
         await Browser.actionLoading(false);
     }
@@ -802,7 +823,11 @@ export function isLoaded(groupId) {
     return true;
 }
 
-export async function unload(groupId) {
+export function unload(...args) {
+    return Operations.run('unload-group', () => unloadNow(...args));
+}
+
+async function unloadNow(groupId) {
     const log = logger.start('unload', groupId);
 
     if (!groupId) {
@@ -857,7 +882,8 @@ export async function unload(groupId) {
     }
 
     // sessions keep the membership of hidden tabs - nothing to save here
-    await GroupsNative.hideTabs(group.tabs, {skipTrackingFlag: true});
+    await GroupsNative.ungroup(group.tabs);
+    await Tabs.hide(group.tabs, true);
 
     if (group.discardTabsAfterHide) {
         log.log('run discard tabs');
@@ -881,7 +907,11 @@ export async function unload(groupId) {
     return true;
 }
 
-export async function archiveToggle(groupId) {
+export function archiveToggle(...args) {
+    return Operations.run('archive-toggle', () => archiveToggleNow(...args));
+}
+
+async function archiveToggleNow(groupId) {
     const log = logger.start('archiveToggle', groupId);
 
     await Browser.actionLoading();
@@ -900,6 +930,7 @@ export async function archiveToggle(groupId) {
         // the archived tabs carry their groupNativeId - Tabs.create writes it back into sessions
         const createdTabs = await Tabs.createMultiple(setNewTabsParams(group.tabs, group), true);
 
+        // appended at the end of the strip - they can't be in a live group (docs/TABGROUPS-BEHAVIOR.md §10)
         await Tabs.hide(createdTabs, true);
 
         group.tabs = [];

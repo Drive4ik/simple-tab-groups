@@ -7,6 +7,8 @@ import * as Containers from '/js/containers.js';
 import * as Utils from '/js/utils.js';
 import * as Tabs from '/js/tabs.js';
 import * as Groups from '/js/groups.js';
+import * as GroupsNative from '/js/groups-native.js';
+import * as Operations from '/js/operations.js';
 import * as Storage from '/js/storage.js';
 import * as Browser from '/js/browser.js';
 import * as Permissions from '/js/permissions.js';
@@ -227,7 +229,11 @@ export async function openInTemporaryContainer(info) {
     log.stop();
 }
 
-export async function openInGroup(groupId, info) {
+export function openInGroup(...args) {
+    return Operations.run('bookmarks-open-in-group', () => openInGroupNow(...args));
+}
+
+async function openInGroupNow(groupId, info) {
     const log = logger.start(openInGroup, groupId, info);
 
     if (!info.bookmarkId) {
@@ -274,6 +280,8 @@ export async function openInGroup(groupId, info) {
 
         if (!Groups.isLoaded(groupId) && !info.button.RIGHT) {
             log.log('hiding created tabs because group is not loaded and left click');
+            // the startIndex anchor can land inside a live span (docs/TABGROUPS-BEHAVIOR.md §7)
+            await GroupsNative.ungroup(createdTabs);
             await Tabs.hide(createdTabs, true);
         }
 
@@ -294,7 +302,11 @@ export async function openInGroup(groupId, info) {
     log.stop('created tabs count:', tabsToCreate.length);
 }
 
-export async function createNewGroup(info) {
+export function createNewGroup(...args) {
+    return Operations.run('bookmarks-create-group', () => createNewGroupNow(...args));
+}
+
+async function createNewGroupNow(info) {
     const log = logger.start(createNewGroup, info);
 
     if (!info.bookmarkId) {
@@ -355,6 +367,7 @@ export async function createNewGroup(info) {
             if (tabsToCreate.length) {
                 const newGroup = await Groups.add(undefined, undefined, folder.title);
                 const createdTabs = await Tabs.createMultiple(Groups.setNewTabsParams(tabsToCreate, newGroup), true);
+                // appended at the end of the strip - they can't be in a live group (docs/TABGROUPS-BEHAVIOR.md §10)
                 await Tabs.hide(createdTabs, true);
                 Tabs.sendUpdatedGroup(newGroup.id);
                 groupsCreatedCount++;

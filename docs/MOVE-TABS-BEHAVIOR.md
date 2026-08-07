@@ -31,7 +31,9 @@ them by number (`docs/MOVE-TABS-BEHAVIOR.md §1`).
   Resolved object: `hidden:true index:0 groupId:-1`; a fresh `tabs.get` agrees.
 
 - **A hidden tab moved to another window arrives VISIBLE.** The move itself reveals it: both the
-  resolved Tab objects and a fresh `tabs.get` report `hidden: false`. (R7.02)
+  resolved Tab objects and a fresh `tabs.get` report `hidden: false`. (R7.02) The browser's own
+  gestures reveal the same way — and silently, with no `tabs.onUpdated {hidden}` at all:
+  TABGROUPS-BEHAVIOR.md §17 (R9.02).
 
   | tab index | 0 | 1 | 2 |
   | - | - | - | - |

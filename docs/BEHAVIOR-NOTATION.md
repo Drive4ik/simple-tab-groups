@@ -121,8 +121,12 @@ means the same run.
 - **New facts are appended** at the end of their document under the next free number. Numbers are
   never renumbered or reused — code comments point at them.
 - **One topic per document.** Tab creation and `index` → CREATE-TABS-BEHAVIOR.md; native groups →
-  TABGROUPS-BEHAVIOR.md. A fact that genuinely belongs to both is duplicated in both, with
-  cross-references, and both copies are kept in sync.
+  TABGROUPS-BEHAVIOR.md. Anything involving a native group — including the membership of created
+  or moved tabs — lives in TABGROUPS-BEHAVIOR.md; other documents cross-reference it instead of
+  copying. The exception that DOES get a copy: when creation or movement in the presence of native
+  groups behaves differently from what CREATE-TABS/MOVE-TABS themselves document — such a deviation
+  is recorded in both documents, with cross-references, and both copies are kept in sync. Overlaps
+  with no groups involved (create vs move) are duplicated the same way.
 - **No pinned tabs.** STG does not work with them, so they are outside the scope of these tests.
 
 ## 6. How a test is written

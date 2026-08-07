@@ -59,7 +59,9 @@ writes into the report whatever it had to clean up.
 | `round-04` | collapsed seen from the tab bar, hidden tabs across a restart |
 | `round-05` | CREATE-TABS: the newTabPosition matrix, speed, window targeting, the races |
 | `round-06` | explicit index at restore scale, 100–300 tabs, all three settings |
-| `round-07` | the `hidden` flag on what `tabs.move` resolves with, ungroup/hide of an active member |
+| `round-07` | the `hidden` flag on what `tabs.move` resolves with, ungroup/hide of an active member, membership at creation next to a span, array move onto a member slot, ungroup of a hidden member |
+| `round-08` | MANUAL: mouse and menu gestures on native groups — which events each gesture emits. Fully attended: every test waits for a gesture and a `T.visualAnswer('done')` |
+| `round-09` | MANUAL: windows born from moved tabs (move group to new window, drag out, `windows.create({tabId})`) and undo-close restore — `windows.onCreated` vs the attaches, the initial tab, fresh ids, hidden tabs on both trips |
 
 ## Files
 
@@ -118,6 +120,20 @@ either way the name still travels in `?tab=` and everything else works unchanged
 - **A test that needs a browser restart** splits into `run(t)`, which builds the scene and ends with
   `await t.restart()`, and `afterRestart(t)`, which measures. The window is found again by the names
   in the tab urls; the table continues in the same report.
+- **Never put a foreign window into `openedWindows`.** That set marks windows as the harness's own,
+  and the pre-test cleanup CLOSES everything in it — including the user's main browser window, if a
+  test grabbed it while enumerating `windows.getAll()`. Add only windows the test itself created;
+  to inspect a window some gesture produced, locate it from a tab you know:
+
+  ```js
+  // wrong: brands every other window as ours - the cleanup closes them all, user's window included
+  for (const win of await browser.windows.getAll()) {
+      if (win.id !== t.win) openedWindows.add(win.id);
+  }
+
+  // right: find the exact window the gesture moved the tab into
+  const movedTo = (await browser.tabs.get(t.id('gr1'))).windowId;
+  ```
 
 ## API
 

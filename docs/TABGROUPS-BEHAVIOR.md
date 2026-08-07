@@ -7,7 +7,8 @@ a claim is as strong as the runs cited next to it, and no stronger.
 Only facts confirmed by an actual test run belong here — never assumptions about how the browser
 "probably" works. Tab-creation facts (`tabs.create`, `index`, newTabPosition) live in
 CREATE-TABS-BEHAVIOR.md; plain `tabs.move` facts with no groups involved — in
-MOVE-TABS-BEHAVIOR.md. What overlaps is duplicated in both files with cross-references.
+MOVE-TABS-BEHAVIOR.md. Anything involving a native group lives here; a copy goes into those
+documents only when groups make creation or movement deviate from what they themselves state.
 
 State tables, markers, confirmation rules and how the tests are written — BEHAVIOR-NOTATION.md.
 
@@ -217,7 +218,24 @@ joined 🟥. The browser looks at the window as it was when `tabs.move` was call
 - **The tab is grouped from birth.** `tabs.onCreated` already reports the group (`group:🟥`); there
   is no follow-up `tabs.onUpdated {groupId}` the way a `tabs.move` produces one. (R5.03)
 
-  Duplicate of CREATE-TABS-BEHAVIOR.md §7 — keep both copies in sync.
+- **The FIRST member's slot is the boundary, not the inside**: a tab created at the index of the
+  group's first member lands BEFORE the span and joins nothing — even though a member held that
+  index. Holds with visible neighbours (R7.13) and with hidden tabs before the span (R7.12);
+  R5.03's joining slot was an inside one (the second member). For creation the occupant rule
+  reaches only INSIDE the span — unlike `tabs.move`, which joins at the first member's slot
+  (§1, R2.01, R2.05).
+
+  | tab index | 0 | 1 | 2 | 3 | 4 |
+  | - | - | - | - | - | - |
+  | before | x1* | x2 | 🟥 gr1 | 🟥 gr2 | |
+  | `tabs.create({index: 2})` — that slot held 🟥 gr1, the first member | | | | | |
+  | after | x1* | x2 | ➕new1 | 🟥 gr1 | 🟥 gr2 |
+
+  | tab index | 0 | 1 | 2 | 3 | 4 |
+  | - | - | - | - | - | - |
+  | before | hid1(h) | hid2(h) | 🟥 gr1* | 🟥 gr2 | |
+  | `tabs.create({index: 2})` — the same call with hidden tabs before the span | | | | | |
+  | after | hid1(h) | hid2(h) | ➕new1 | 🟥 gr1* | 🟥 gr2 |
 
 ## 9. `tabs.ungroup` and `tabs.hide` vs the active tab
 
@@ -252,6 +270,190 @@ joined 🟥. The browser looks at the window as it was when `tabs.move` was call
 
   `tabs.hide([a, b, c])` resolved with `[b, c]`; the later `tabs.hide([a])` resolved with `[a]`.
 
+## 10. Creating a tab next to a group span
+
+- **Appending past the end of a strip that ends with a group span → the tab does NOT join.** Both
+  with an explicit `index` equal to the strip length and with no index under `atEnd`.
+  `tabs.onCreated` already reports `group:-1`. (R7.04)
+
+  | tab index | 0 | 1 | 2 | 3 | 4 |
+  | - | - | - | - | - | - |
+  | before | keep1* | 🟥 gr1 | 🟥 gr2 | | |
+  | `tabs.create(new1, {index: 3})` | | | | | |
+  | after | keep1* | 🟥 gr1 | 🟥 gr2 | ➕new1 | |
+  | `tabs.create(new2)  — no index, atEnd` | | | | | |
+  | after | keep1* | 🟥 gr1 | 🟥 gr2 | ➕new1 | ➕new2 |
+
+- **`afterCurrent` without an index, active tab is a member → the new tab JOINS the group**, born
+  inside it (`tabs.onCreated` reports the group, no follow-up `onUpdated`). Holds both for a middle
+  member (R7.05) and for the last member of a span at the very end of the strip (R7.06) — in the
+  latter case the tab is effectively appended past the end and still joins, unlike the
+  explicit-index append above.
+
+  | tab index | 0 | 1 | 2 | 3 |
+  | - | - | - | - | - |
+  | before | keep1 | 🟥 gr1 | 🟥 gr2* | |
+  | `tabs.create(new1)  — no index, afterCurrent` | | | | |
+  | after | keep1 | 🟥 gr1 | 🟥 gr2* | 🟥 ➕new1 |
+
+## 11. Moving an ARRAY onto a member's slot
+
+- **The §1 occupant rule applies to arrays: every moved tab joins.** `tabs.move([m1, m2],
+  {index: 4})` where index 4 was held by a member → both tabs join, in array order. Moving the
+  array back onto a slot held by an outsider → both leave; the group survives while it keeps other
+  members. Events per tab: `tabs.onMoved`, then `tabs.onUpdated {groupId}`. (R7.07)
+
+  | tab index | 0 | 1 | 2 | 3 | 4 | 5 | 6 |
+  | - | - | - | - | - | - | - | - |
+  | before | m1* | m2 | keep1 | 🟥 gr1 | 🟥 gr2 | 🟥 gr3 | keep2 |
+  | `tabs.move([m1, m2], {index: 4})  — that slot held 🟥 gr2` | | | | | | | |
+  | after | keep1 | 🟥 gr1 | 🟥 gr2 | 🟥 m1* | 🟥 m2 | 🟥 gr3 | keep2 |
+  | `tabs.move([m1, m2], {index: 0})` | | | | | | | |
+  | after | m1* | m2 | keep1 | 🟥 gr1 | 🟥 gr2 | 🟥 gr3 | keep2 |
+
+## 12. `tabs.ungroup` of a hidden member
+
+- **Works like on a visible member**: the call resolves, the tab loses the group and is MOVED to
+  the position after the group's last remaining member (the §3 partial-ungroup relocation applies
+  to hidden tabs too), staying hidden. `tabs.show` afterwards reveals it in place — no further
+  move. Events: `tabs.onMoved`, `tabs.onUpdated {groupId: -1}`. (R7.08)
+
+  | tab index | 0 | 1 | 2 | 3 |
+  | - | - | - | - | - |
+  | before | keep1* | 🟥 gr1 | 🟥 gr2(h) | 🟥 gr3 |
+  | `tabs.ungroup([gr2])` | | | | |
+  | after | keep1* | 🟥 gr1 | 🟥 gr3 | gr2(h) |
+
+## 13. User gestures in the same window emit the same events as the API
+
+Every fact above this section came from API calls; these are the mouse/menu counterparts.
+
+- **Dragging a member out of the span** → `tabs.onMoved`, `tabs.onUpdated {groupId: -1}` (R8.01);
+  dragging the LAST member out additionally fires `tabGroups.onRemoved` (R8.02) — same as §1/R1.06.
+- **Dragging an outsider into the span** → `tabs.onMoved`, `tabs.onUpdated {groupId}` (R8.03).
+- **The ungroup item of the header context menu** → `tabGroups.onRemoved` first, then
+  `tabs.onUpdated {groupId: -1}` per member; the tabs do NOT move (R8.05) — the full-ungroup
+  behavior of §9, not the partial-ungroup relocation of §3.
+- **The delete item of the header context menu closes the tabs**: `tabs.onRemoved` per member,
+  then `tabGroups.onRemoved`. No confirmation prompt. (R8.06)
+
+## 14. Dragging a whole group by its header
+
+- **The browser collapses the group for the duration of the drag and re-expands it on drop**:
+  `tabGroups.onUpdated {collapsed: true}`, then `tabs.onMoved` per member and
+  `tabGroups.onMoved`, then `tabGroups.onUpdated {collapsed: false}`. **Membership never
+  flaps** — no `{groupId}` updates at all. (R8.04)
+
+## 15. UI edits of the group header
+
+- **Renaming types per keystroke**: every keystroke fires its own `tabGroups.onUpdated` with the
+  partial title (`"R"`, `"Re"`, `"Ren"`, …). Collapse, expand and recolor fire one
+  `tabGroups.onUpdated` each. (R8.07)
+
+## 16. Native groups across windows
+
+- **"Move group to new window" (header menu) keeps the group alive**: the SAME live group id
+  arrives in the new window, every member keeps its membership. Events: `tabs.onDetached` +
+  `tabs.onAttached` per member, then `tabGroups.onMoved` (in the new window). **No membership
+  events fire** — nothing ever reports `groupId: -1`. (R8.08)
+- **A single member dragged into another window arrives UNGROUPED** — and no `tabs.onUpdated
+  {groupId: -1}` fires anywhere: only `tabs.onDetached` + `tabs.onAttached`. The source group
+  survives with the remaining members. The membership is dropped silently — the only signal is
+  the arrived tab's own `groupId`. (R8.09)
+
+## 17. Windows born from moved tabs
+
+How a window created by moving existing tabs announces itself. Three paths, two different orders.
+
+- **"Move group to new window" (header menu): `windows.onCreated` is delivered FIRST**, tens of
+  milliseconds before the first tab event; then `tabs.onDetached` + `tabs.onAttached` per member
+  in group order, then `tabGroups.onMoved` — same live id, membership intact, as §16/R8.08.
+  (R9.01, R9.02)
+- **The initial tab of that window never fires `tabs.onCreated`.** The window is born with a
+  regular initial tab, but the only event it ever emits is `tabs.onRemoved`
+  (`isWindowClosing:false`), right after the attaches, when the browser closes it itself.
+  (R9.01, R9.02)
+
+  ```text
+  21361ms  windows.onCreated     winA  type:normal
+  21437ms  tabs.onDetached       gr1  from index:1
+  21437ms  tabs.onAttached       gr1  to index:0  [winA]
+  21437ms  tabs.onDetached       gr2  from index:1
+  21437ms  tabs.onAttached       gr2  to index:1  [winA]
+  21437ms  tabs.onDetached       gr3  from index:1
+  21437ms  tabs.onAttached       gr3  to index:2  [winA]
+  21437ms  tabGroups.onMoved     🟥  title:"G" color:blue collapsed:false  [winA]
+  21438ms  tabs.onRemoved        initial  isWindowClosing:false  [winA]
+  21439ms  tabs.onActivated      gr3  previous:-  [winA]
+  ```
+
+- **A hidden member travels with the group and arrives VISIBLE — silently.** No
+  `tabs.onUpdated {hidden}` fires anywhere; the reveal is observable only by re-reading the tab.
+  The reveal itself matches a cross-window `tabs.move` (MOVE-TABS-BEHAVIOR.md §1, R7.02); the
+  no-event part is this run's addition. (R9.02)
+
+  | tab index | 0 | 1 | 2 | 3 | 4 |
+  | - | - | - | - | - | - |
+  | before (scene) | keep1* | 🟥 gr1 | 🟥 hid1(h) | 🟥 gr2 | keep2 |
+  | `USER: header context menu → move group to new window` | | | | | |
+  | after (scene) | keep1* | keep2 | | | |
+  | after (new window) | 🟥 gr1 | 🟥 hid1 | 🟥 gr2* | | |
+
+- **A single tab dragged out to empty space (its own new window): the attach is delivered
+  FIRST.** `tabs.onDetached` + `tabs.onAttached` arrive before `windows.onCreated` — same
+  millisecond, attach ahead in the queue. The tab arrives UNGROUPED (extends §16/R8.09 to the
+  new-window case), the source group survives, and the new window has NO initial tab at all —
+  no `tabs.onCreated`, no `tabs.onRemoved`. (R9.03)
+
+  ```text
+  28943ms  tabs.onDetached       gr2  from index:2
+  28943ms  tabs.onAttached       gr2  to index:0  [winA]
+  28943ms  windows.onCreated     winA  type:normal
+  28989ms  tabs.onActivated      keep2  previous:-
+  28989ms  tabs.onActivated      gr2  previous:gr2  [winA]
+  ```
+
+- **`windows.create({tabId})` with a group member behaves exactly like the mouse drag**: attach
+  delivered before `windows.onCreated`, no initial tab, the tab arrives ungrouped, the source
+  group survives. (R9.05)
+
+The two orders are the trap: a moved GROUP announces the window first, a moved single tab
+announces the tab first. Per-window state initialized in `windows.onCreated` is already too late
+for the single-tab paths.
+
+## 18. Undo close window (Ctrl+Shift+N)
+
+Scene closed with the window's X button, restored with Ctrl+Shift+N — came back exactly the same:
+`res1* | 🟥 resGr1 | 🟥 resHid1(h) | 🟥 resGr2 | resHid2(h)`, group title/color included. (R9.04)
+
+- **The restored window is populated ONLY through `tabs.onCreated`, with FRESH tab ids** — 0 of 5
+  ids reused, not a single `tabs.onAttached`. (R9.04)
+- **The first tab's `tabs.onCreated` is delivered BEFORE `windows.onCreated`** — 1 ms ahead in
+  the queue. (R9.04)
+- **The native group returns with the SAME live id it had before the close** — the one known
+  exception to "grouping again produces a different id" (§5). Its `tabGroups.onCreated` fires
+  between the first and the remaining tab creations. (R9.04)
+- **Grouped tabs are born already grouped** (`tabs.onCreated` reports the group, like §7);
+  **hidden tabs are born and immediately hidden by a follow-up `tabs.onUpdated {hidden: true}`**
+  in the same millisecond. Hidden state and membership are fully restored, including the hidden
+  tab inside the group. (R9.04)
+
+  ```text
+  10518ms  tabs.onCreated        res1  index:0 group:-1  [restored]
+  10518ms  tabs.onActivated      res1  previous:-  [restored]
+  10519ms  windows.onCreated     winB  type:normal
+  10528ms  tabGroups.onCreated   🟥  title:"R" color:blue collapsed:false  [winB]
+  10529ms  tabs.onCreated        resGr1  index:1 group:🟥  [restored]
+  10530ms  tabs.onCreated        resHid1  index:2 group:🟥  [restored]
+  10530ms  tabs.onCreated        resGr2  index:3 group:🟥  [restored]
+  10530ms  tabs.onCreated        resHid2  index:4 group:-1  [restored]
+  10530ms  tabs.onUpdated        unknown1  {hidden: true}  [winB]
+  10530ms  tabs.onUpdated        unknown2  {hidden: true}  [winB]
+  ```
+
+  `unknown1`/`unknown2` are resHid1/resHid2 under their fresh ids — the harness had not learned
+  their names yet at event time; the final state confirms exactly those two tabs are hidden.
+
 ## Implications for STG code
 
 1. **Do not move tabs as an array to `{index: -1}`/`{index: 0}` if their native groups must be
@@ -260,11 +462,33 @@ joined 🟥. The browser looks at the window as it was when `tabs.move` was call
 2. **Never do `move(allWindowTabs, {index: -1})`** — §2, the bug that assigns the group to them all.
 3. Group (`tabs.group`) only visible tabs; before `hide` — ungroup (§3, §4).
 4. Membership on insertion is decided by **the tab that currently occupies the target index**, for
-   both `tabs.move` and `tabs.create` (§1, §7). To place a tab outside every group, aim at an index
-   held by a tab that is itself outside every group — computing the "final order" and reasoning
-   about which tabs it ends up between gives the wrong answer, as §1 shows.
+   both `tabs.move` and `tabs.create` (§1, §7) — with one creation-only exception: at the FIRST
+   member's slot `tabs.create` lands before the span and joins nothing, while `tabs.move` joins
+   (§7 R7.12/R7.13 vs §1 R2.01). To place a tab outside every group, aim at an index held by a tab
+   that is itself outside every group — computing the "final order" and reasoning about which tabs
+   it ends up between gives the wrong answer, as §1 shows.
 5. The order in `tabs.group({tabIds})` is controlled by us — the browser preserves it (§3). The
    first id is the anchor that stays put, so put the tab whose position should survive first.
 6. **`tabs.hide` never hides the window's active tab** (§9) — hiding a whole group takes two
    steps (hide the rest, hand activity to another tab, hide the former active tab), and the state
    between the steps is observable from outside: the former active tab sits visible and ungrouped.
+7. **Tabs appended past the end of the strip with explicit indexes can never join a live group**
+   (§10) — hiding freshly appended tabs (restore, unarchive, bookmark import) needs no ungroup.
+   A tab created WITHOUT an index CAN be born inside a group under `afterCurrent` (§10) — those
+   paths must ungroup before hide.
+8. **`tabs.onAttached` must not treat every arrival as a membership loss**: a group moved to
+   another window arrives with its members and the same live id (§16), while a single dragged
+   member arrives ungrouped with no `groupId` event (§16) — the arrived tab's own `groupId` is
+   the only signal, decide by it.
+9. **Array moves change membership by the same occupant rule as single moves** (§11) — sorting or
+   moving arrays of tabs around live spans can silently join them to a group; §2 destruction rules
+   and §11 join rules together mean no array move near spans is membership-neutral.
+10. **A restored window and a window assembled from moved tabs differ by MECHANISM, not by
+    heuristics**: a restored window repopulates only through `tabs.onCreated` with fresh ids
+    (§18), moved tabs arrive through `tabs.onAttached` keeping their ids (§17). But the order
+    relative to `windows.onCreated` varies by path — for single-tab windows the attach, and for
+    restored windows the first creation, are delivered BEFORE `windows.onCreated` (§17, §18).
+    Per-tab events must never be gated on state initialized in `windows.onCreated`.
+11. **The browser reveals hidden tabs it moves between windows silently** — no `{hidden}` event
+    at all (§17). Hidden-state bookkeeping driven by `tabs.onUpdated` misses the transition;
+    re-read the tab.

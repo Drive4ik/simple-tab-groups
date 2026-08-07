@@ -1009,6 +1009,15 @@ export default {
                 <span v-text="lang('showTabsWithThumbnailsInManageGroups')"></span>
             </label>
             <label class="checkbox">
+                <input v-model="options.cloneSubGroupsWhenMovingTabs" type="checkbox" />
+                <span class="icon-text">
+                    <span v-text="lang('cloneSubGroupsWhenMovingTabs')"></span>
+                    <figure class="icon image is-16x16 cursor-help" :title="lang('cloneSubGroupsWhenMovingTabsHelp')">
+                        <img src="/icons/help.svg" />
+                    </figure>
+                </span>
+            </label>
+            <label class="checkbox">
                 <input v-model="options.showConfirmDialogBeforeGroupArchiving" type="checkbox" />
                 <span v-text="lang('showConfirmDialogBeforeGroupArchiving')"></span>
             </label>

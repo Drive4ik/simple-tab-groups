@@ -7,10 +7,10 @@ import * as Constants from '/js/constants.js';
 import * as Extensions from '/js/extensions.js';
 import * as Utils from '/js/utils.js';
 import * as Groups from '/js/groups.js';
+import * as GroupsNative from '/js/groups-native.js';
 import * as Tabs from '/js/tabs.js';
 import * as Windows from '/js/windows.js';
 import * as Messages from '/js/messages.js';
-import * as Storage from '/js/storage.js';
 
 const logger = new Logger(Constants.MODULES.BACKGROUND);
 const storage = localStorage.create(Constants.MODULES.BACKGROUND);
@@ -216,6 +216,8 @@ migrations.push({
         if (applyToCurrentInstance) {
             let allTabs = Utils.flatTabs(windows);
 
+            // live members among them - detach before hiding (docs/TABGROUPS-BEHAVIOR.md §4)
+            await GroupsNative.ungroup(allTabs);
             await Tabs.hide(allTabs, true);
 
             data.groups = await Tabs.reconcile(data.groups, allTabs);
@@ -626,16 +628,21 @@ migrations.push({
 
         delete data.defaultGroupProps.exportToBookmarksWhenAutoBackup;
 
-        data.showArchivedGroups = localStorage.showArchivedGroupsInPopup === '1';
+        // the key is consumed below; a repeated run after a crash must not force false
+        if (localStorage.showArchivedGroupsInPopup !== undefined) {
+            data.showArchivedGroups = localStorage.showArchivedGroupsInPopup === '1';
+        }
 
         data.colorScheme = data.theme;
 
         data.browserSettings = {};
 
         if (applyToCurrentInstance) {
-            storage.autoBackupLastTimeStamp = data.autoBackupLastBackupTimeStamp;
-            storage.mainBookmarksFolderId = localStorage.mainBookmarksFolderId;
-            storage.showTabsInThisWindowWereHidden = Number(localStorage.showTabsInThisWindowWereHidden) || 0;
+            // a crashed earlier run has already consumed these source keys - a repeated run
+            // must not overwrite the transferred values with emptiness
+            storage.autoBackupLastTimeStamp = data.autoBackupLastBackupTimeStamp ?? storage.autoBackupLastTimeStamp;
+            storage.mainBookmarksFolderId = localStorage.mainBookmarksFolderId ?? storage.mainBookmarksFolderId;
+            storage.showTabsInThisWindowWereHidden = Number(localStorage.showTabsInThisWindowWereHidden) || storage.showTabsInThisWindowWereHidden || 0;
 
             delete localStorage.START_TIME;
             delete localStorage.autoBackupLastTimeStamp;
@@ -724,6 +731,13 @@ migrations.push({
 
             await Promise.allSettled(windows.map(async win => {
                 const groupId = await browser.sessions.getWindowValue(win.id, 'groupId');
+
+                // already a UUID - an interrupted earlier run rewrote this window; the repeated
+                // run has no int→UUID mapping for it and must not erase the binding
+                if (Utils.isUUID(groupId)) {
+                    return;
+                }
+
                 const newGroupId = getNewGroupId(groupId);
 
                 if (newGroupId) {
@@ -742,6 +756,13 @@ migrations.push({
             await Promise.allSettled(tabs.map(async tab => {
                 delete tab.groupId; // native groupId conflicts with STG groupId key
                 const groupId = await browser.sessions.getTabValue(tab.id, 'groupId');
+
+                // already a UUID - an interrupted earlier run rewrote this tab; the repeated
+                // run has no int→UUID mapping for it and must not erase the membership
+                if (Utils.isUUID(groupId)) {
+                    return;
+                }
+
                 const newGroupId = getNewGroupId(groupId);
 
                 if (groupId) {
@@ -753,9 +774,14 @@ migrations.push({
                 }
             }));
 
-            // adopt the live native groups of each window: every live group gets a stable string
-            // id, per-tab membership → sessions, metadata → the window's active STG group.
-            // the id minting is inlined - migrations must not depend on evolving module code
+            // adopt the live native groups of each window: per-tab membership → sessions,
+            // metadata → the STG group that OWNS the member tabs. Hidden tabs keep their native
+            // membership (docs/TABGROUPS-BEHAVIOR.md §4) and pre-5.5 STG hid tabs without
+            // ungrouping, so one live group can span several STG groups: visible members belong
+            // to the window's active group, hidden ones to their unloaded groups. Every
+            // (live group, owner) pair gets its OWN stable id - one id never lives in two STG
+            // groups. The id minting is inlined - migrations must not depend on evolving module
+            // code
             await Promise.allSettled(windows.map(async win => {
                 const groupsNativeList = await browser.tabGroups.query({windowId: win.id});
 
@@ -763,32 +789,47 @@ migrations.push({
                     return;
                 }
 
-                const stableIdByLiveId = new Map(groupsNativeList.map(({id}) => [id, self.crypto.randomUUID().slice(0, 8)]));
+                const liveById = new Map(groupsNativeList.map(groupNative => [groupNative.id, groupNative]));
+                const activeStgGroupId = await browser.sessions.getWindowValue(win.id, 'groupId');
 
                 const winTabs = await browser.tabs.query({
                     windowId: win.id,
                     pinned: false,
-                    hidden: false,
                 });
 
-                await Promise.allSettled(winTabs.map(tab => {
-                    const stableId = stableIdByLiveId.get(tab.groupId);
+                const stableIdByOwnerAndLiveId = new Map;
 
-                    if (stableId) {
-                        return browser.sessions.setTabValue(tab.id, 'groupNativeId', stableId);
+                for (const tab of winTabs) {
+                    const live = liveById.get(tab.groupId);
+
+                    if (!live) {
+                        continue;
                     }
-                }));
 
-                const stgGroupId = await browser.sessions.getWindowValue(win.id, 'groupId');
-                const group = data.groups.find(gr => gr.id === stgGroupId);
+                    const sessionGroupId = await browser.sessions.getTabValue(tab.id, 'groupId');
+                    const ownerGroupId = sessionGroupId ?? (tab.hidden ? null : activeStgGroupId) ?? null;
+                    const key = `${ownerGroupId}:${live.id}`;
 
-                if (!group || group.isArchive) {
-                    return;
+                    let stableId = stableIdByOwnerAndLiveId.get(key);
+
+                    if (!stableId) {
+                        stableId = self.crypto.randomUUID().slice(0, 8);
+                        stableIdByOwnerAndLiveId.set(key, stableId);
+
+                        const ownerGroup = data.groups.find(gr => gr.id === ownerGroupId);
+
+                        if (ownerGroup && !ownerGroup.isArchive) {
+                            ownerGroup.groupsNative.push({
+                                id: stableId,
+                                title: live.title,
+                                collapsed: live.collapsed,
+                                color: live.color,
+                            });
+                        }
+                    }
+
+                    await browser.sessions.setTabValue(tab.id, 'groupNativeId', stableId);
                 }
-
-                group.groupsNative = groupsNativeList.map(({id, title, collapsed, color}) => {
-                    return {id: stableIdByLiveId.get(id), title, collapsed, color};
-                });
             }));
 
             // migrate STG addons
@@ -866,6 +907,7 @@ export default async function(data, applyToCurrentInstance = false) {
         data,
         migrated: false,
         error: null,
+        keysToRemove: [],
     };
 
     if (DATA_VERSION === CURRENT_VERSION) {
@@ -909,10 +951,9 @@ export default async function(data, applyToCurrentInstance = false) {
     if (keysToRemoveFromStorage.size) {
         log.log('removing keys in data object:', Array.from(keysToRemoveFromStorage), '...');
         keysToRemoveFromStorage.forEach(key => delete data[key]);
-        if (applyToCurrentInstance) {
-            log.log('and remove these keys in storage...');
-            await Storage.remove(...keysToRemoveFromStorage);
-        }
+        // the storage keys are removed by the caller AFTER the migrated data is committed -
+        // removing them here would starve a repeated run after a crash before the commit
+        resultMigrate.keysToRemove = Array.from(keysToRemoveFromStorage);
     }
 
     resultMigrate.migrated = true;

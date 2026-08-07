@@ -22,6 +22,7 @@ import * as Containers from './containers.js';
 import * as Extensions from './extensions.js';
 import * as Groups from './groups.js';
 import * as GroupsNative from './groups-native.js';
+import * as Operations from './operations.js';
 import * as Windows from './windows.js';
 import * as ConstantsBrowser from './constants-browser.js';
 import * as Storage from './storage.js';
@@ -409,9 +410,12 @@ async function onMoved(tabId, {windowId, fromIndex, toIndex}) {
     } */
 }
 
+// onDetached/onAttached are never muted per-window: the addon's own moves are muted per-tab, a
+// restored window never emits attaches (docs/TABGROUPS-BEHAVIOR.md §18), and a moved tab's attach
+// can be delivered BEFORE windows.onCreated (§17) - a window-level flag set there is always too
+// late. An unmuted attach is a user move and must be mirrored immediately: GrandRestore reads the
+// window a second later and relies on the arrived tabs being already unbound from their groups
 async function onDetached(tabId, {oldWindowId}) { // notice: called before onAttached
-    // await Utils.wait(); // ? no needs for wait skipTrackingWindows list
-
     if (skip.removed.has(tabId)) {
         logger.log(onDetached, '🛑 skip removed tab:', tabId);
         return;
@@ -419,11 +423,6 @@ async function onDetached(tabId, {oldWindowId}) { // notice: called before onAtt
 
     if (skip.tracking.has(tabId)) {
         logger.log(onDetached, '🛑 skip tracking tab:', tabId);
-        return;
-    }
-
-    if (skipTrackingWindows.has(oldWindowId)) {
-        logger.log(onDetached, '🛑 skip tracking tab:', tabId, 'for window:', oldWindowId);
         return;
     }
 
@@ -437,8 +436,6 @@ async function onDetached(tabId, {oldWindowId}) { // notice: called before onAtt
 }
 
 async function onAttached(tabId, {newWindowId}) { // called when tabs.move()
-    // await Utils.wait(); // ? no needs for wait skipTrackingWindows list
-
     if (skip.removed.has(tabId)) {
         logger.log(onAttached, '🛑 skip removed tab:', tabId);
         return;
@@ -449,18 +446,19 @@ async function onAttached(tabId, {newWindowId}) { // called when tabs.move()
         return;
     }
 
-    if (skipTrackingWindows.has(newWindowId)) {
-        logger.log(onAttached, '🛑 skip tracking tab:', tabId, 'for window:', newWindowId);
-        return;
-    }
-
     const log = logger.start(onAttached, {tabId, newWindowId});
 
     await Cache.setTabGroup(tabId, null, newWindowId)
         .catch(log.onCatch("can't set group"));
 
-    // a tab dragged to another window always leaves its native group
-    await Cache.removeTabNativeGroupId(tabId).catch(() => {});
+    // a single moved tab arrives ungrouped, a group moved whole arrives with its membership and
+    // the same live id, both without any groupId event (docs/TABGROUPS-BEHAVIOR.md §16, §17) -
+    // the arrived tab's own groupId is the only signal
+    const attachedTab = await browser.tabs.get(tabId).catch(() => null);
+
+    if (attachedTab?.groupId === GroupsNative.TAB_GROUP_ID_NONE) {
+        await Cache.removeTabNativeGroupId(tabId).catch(() => {});
+    }
 
     const groupId = Cache.getTabGroup(tabId);
 
@@ -902,8 +900,12 @@ export async function createTempActiveTab(windowId, createPinnedTab = true, newT
     }
 }
 
-export async function add(groupId, cookieStoreId, url, title) {
-    const log = logger.start(add, {groupId, cookieStoreId, url, title});
+export function add(...args) {
+    return Operations.run('add-tab', () => addNow(...args));
+}
+
+async function addNow(groupId, cookieStoreId, url, title) {
+    const log = logger.start(addNow, {groupId, cookieStoreId, url, title});
 
     const windowId = Cache.getWindowId(groupId);
 
@@ -919,6 +921,9 @@ export async function add(groupId, cookieStoreId, url, title) {
     }, true);
 
     if (!windowId) {
+        // the anchor index can land inside a live span and the tab joins it from birth
+        // (docs/TABGROUPS-BEHAVIOR.md §7, §10)
+        await GroupsNative.ungroup(tab);
         await hide(tab, true);
     }
 
@@ -980,8 +985,12 @@ export async function updateThumbnail(tabId) {
     }
 }
 
-export async function move(tabIds, groupId, params = {}) {
-    const log = logger.start(move, {tabIds, groupId, params});
+export function move(...args) {
+    return Operations.run('move-tabs', () => moveNow(...args));
+}
+
+async function moveNow(tabIds, groupId, params = {}) {
+    const log = logger.start(moveNow, {tabIds, groupId, params});
 
     const groupWindowId = Cache.getWindowId(groupId);
     const {group, groups} = await Groups.load(groupId, !groupWindowId);
@@ -1098,6 +1107,14 @@ export async function move(tabIds, groupId, params = {}) {
         }));
         activeTabs.length = 0; // reset active tabs
 
+        // the movers' sub-group fate is decided on the ORIGINAL tabs (a drop onto a sub-group
+        // tab is dictated by destGroupNativeId instead): the container recreation below swaps
+        // tab ids and pre-binds the new tab to the target group, which would hide it from the
+        // snapshot
+        const membershipSnapshot = destGroupNativeId
+            ? null
+            : await GroupsNative.snapshotMembership(tabs, groups, groupId);
+
         let tabIdsToRemove = [],
             newTabParams = Groups.getNewTabParams(group);
 
@@ -1128,6 +1145,11 @@ export async function move(tabIds, groupId, params = {}) {
 
             skipTracking([newTab], skippedTabs);
 
+            if (membershipSnapshot?.has(tab.id)) {
+                membershipSnapshot.set(newTab.id, membershipSnapshot.get(tab.id));
+                membershipSnapshot.delete(tab.id);
+            }
+
             if (tab.active) {
                 activeTabs.push({...newTab, active: true});
             }
@@ -1136,12 +1158,6 @@ export async function move(tabIds, groupId, params = {}) {
         }));
 
         await remove(tabIdsToRemove, true);
-
-        // tabs carry their native sub-group into the target group; not for a reorder inside the
-        // same group and not when the drop target dictates the sub-group
-        const membershipSnapshot = destGroupNativeId
-            ? null
-            : await GroupsNative.snapshotMembership(tabs.filter(tab => tab.groupId !== groupId), groups);
 
         tabs = await moveNative(tabs, {
             // an array moved to -1 breaks native groups (docs/TABGROUPS-BEHAVIOR.md §2) - when the
@@ -1153,7 +1169,10 @@ export async function move(tabIds, groupId, params = {}) {
         if (groupWindowId) {
             await show(tabs.filter(tab => tab.hidden));
         } else {
-            await hide(tabs.filter(tab => !tab.hidden));
+            // the move can have dropped them onto live-member slots (docs/TABGROUPS-BEHAVIOR.md §1, §11)
+            const tabsToHide = tabs.filter(tab => !tab.hidden);
+            await GroupsNative.ungroup(tabsToHide);
+            await hide(tabsToHide);
         }
 
         await Promise.all(tabs.map(tab => Cache.setTabGroup(tab.id, groupId)));
@@ -1444,12 +1463,9 @@ export async function show(tabs, skipTrackingFlag = false) {
     return await tabsAction({action: 'show', skipTrackingFlag}, tabs);
 }
 
+// a tab that can sit in a live native group must be detached first - GroupsNative.ungroup
+// before hide (docs/TABGROUPS-BEHAVIOR.md §4); freshly appended tabs don't need it (§10)
 export async function hide(tabs, skipTrackingFlag = false) {
-    // GroupsNative owns the ungroup-before-hide ordering (docs/TABGROUPS-BEHAVIOR.md §4)
-    return await GroupsNative.hideTabs(tabs, {skipTrackingFlag});
-}
-
-export async function hideNative(tabs, skipTrackingFlag = false) {
     return await tabsAction({action: 'hide', skipTrackingFlag}, tabs);
 }
 

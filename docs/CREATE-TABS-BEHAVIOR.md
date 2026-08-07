@@ -5,8 +5,9 @@ other add-ons. All tests — without pinned tabs. Every fact here is one browser
 a claim is as strong as the runs cited next to it, and no stronger.
 
 Only facts confirmed by an actual test run belong in "Verified facts" — never assumptions about how
-the browser "probably" works. Native tab group facts live in TABGROUPS-BEHAVIOR.md; what overlaps is
-duplicated in both files with cross-references.
+the browser "probably" works. Native tab group facts — including the membership of created tabs —
+live in TABGROUPS-BEHAVIOR.md (§7, §10 there). A copy lands here only when creation next to native
+groups behaves differently from what this document itself states.
 
 State tables, markers, confirmation rules and how the tests are written — BEHAVIOR-NOTATION.md.
 
@@ -131,23 +132,6 @@ With a scene window in the background and another window freshly focused, `tabs.
 `windowId` put the tab in the **focused** window, leaving the scene window untouched. The add-on's
 standard is still explicit windowId+index for bulk creation.
 
-### 7. An explicit index inside a native group's span → the tab joins the group (R5.03)
-
-`tabs.create` obeys the same membership rule as `tabs.move`: the new tab takes the group of
-whichever tab held that index. It is grouped from birth — `tabs.onCreated` already reports the group
-(`group:🟥`), with no follow-up `tabs.onUpdated {groupId}` the way a `tabs.move` produces one.
-
-| tab index | 0 | 1 | 2 | 3 | 4 | 5 |
-| - | - | - | - | - | - | - |
-| before | a* | 🟥 gr1 | 🟥 gr2 | b | | |
-| `tabs.create({index: 2})` — that slot held 🟥 gr2 | | | | | | |
-| after | a* | 🟥 gr1 | 🟥 ➕onMember | 🟥 gr2 | b | |
-| `tabs.create({index: 4})` — that slot held b | | | | | | |
-| after | a* | 🟥 gr1 | 🟥 ➕onMember | 🟥 gr2 | ➕onOutsider | b |
-
-Duplicate of TABGROUPS-BEHAVIOR.md §7, which states the same rule from the groups side — keep both
-copies in sync.
-
 ### 8. `windows.create({url: [...]})` preserved the array order in every run (R5.04, R5.26)
 
 13 attempts — three with 5 urls, ten with 8 urls — all came back in the requested order.
@@ -231,7 +215,7 @@ url has to wait, and must not take the local timing as the general case.
   max `lastAccessed`, otherwise/without permission — end of the group (exactly matches the
   browser, §1). Without group context — end of the window.
 - The anchor may land inside a native subgroup's span → the tab will join that subgroup
-  (§7); this is expected, the mirror syncs membership.
+  (TABGROUPS-BEHAVIOR.md §7); this is expected, the mirror syncs membership.
 - **A single new tab**: into a loaded group — do NOT pass index, the browser itself will place
   it by newTabPosition, including non-focused windows (§9); into an unloaded one — an
   explicit index by the `getNewTabIndex` anchor (hidden tabs are addressable by index, §3).

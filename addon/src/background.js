@@ -46,6 +46,7 @@ import * as MenusMain from '/js/menus-main.js';
 import * as Groups from '/js/groups.js';
 import * as GroupsNative from '/js/groups-native.js';
 import * as GroupsExternal from '/js/groups-external.js';
+import * as Operations from '/js/operations.js';
 import * as Tabs from '/js/tabs.js';
 import * as Windows from '/js/windows.js';
 import * as Extensions from '/js/extensions.js?auto-detect-conflicted';
@@ -247,7 +248,8 @@ const onBeforeTabRequest = catchFunc(async function onBeforeTabRequest({tabId, u
     canceledRequests.add(requestId);
     setTimeout(requestId => canceledRequests.delete(requestId), 2000, requestId);
 
-    Promise.resolve().then(async () => {
+    // this block must be async
+    Operations.run('reopen-tab-container', async () => {
         const newTabParams = {
             ...tab,
             cookieStoreId: newTabContainer,
@@ -272,7 +274,9 @@ const onBeforeTabRequest = catchFunc(async function onBeforeTabRequest({tabId, u
 
         if (tab.hidden) {
             log.log('hide tab', newTab);
-            Tabs.hide(newTab, true);
+            // recreated at the original's slot - it can inherit a live group (docs/TABGROUPS-BEHAVIOR.md §7)
+            await GroupsNative.ungroup(newTab);
+            await Tabs.hide(newTab, true);
         }
     });
 
@@ -1673,8 +1677,15 @@ async function init() {
         }
 
         if (dataChanged.has(true)) {
-            log.log('data was changed, save data');
+            log.log('data was changed, saving data');
             await Storage.set(data);
+        }
+
+        // only after the migrated data is committed - a crash before this point leaves the
+        // legacy keys in place for the repeated migration run
+        if (resultMigrate.keysToRemove.length) {
+            log.log('removing migrated keys from storage:', resultMigrate.keysToRemove);
+            await Storage.remove(...resultMigrate.keysToRemove);
         }
 
         let windows = await Windows.load();

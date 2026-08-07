@@ -627,6 +627,14 @@
         "message": "Створювати нову групу при відкритті нового вікна",
         "description": "Create a new group when opening a new window"
     },
+    "cloneSubGroupsWhenMovingTabs": {
+        "message": "Зберігати (клонувати) нативну групу у вкладок, перенесених до іншої групи",
+        "description": "Keep (clone) the native tab group of tabs moved to another group"
+    },
+    "cloneSubGroupsWhenMovingTabsHelp": {
+        "message": "Діє під час перенесення вкладок до іншої групи засобами додатка. Нативна група, перенесена цілком, завжди переїжджає разом із вкладками. Це налаштування вирішує долю часткового перенесення: вимк — як у браузері, перенесені вкладки покидають свою нативну групу; увімк — нативна група клонується до цільової групи разом із ними.",
+        "description": "Applies when tabs are moved to another group by the add-on. A native tab group moved whole always survives the move. This option decides a partial move: off — as in the browser, the moved tabs leave their native group; on — the native group is cloned into the target group along with them."
+    },
     "prependTitleToWindow": {
         "message": "Додати заголовок групи до заголовку вікна",
         "description": "Prepend group title to window title"

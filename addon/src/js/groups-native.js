@@ -3,16 +3,28 @@ import Listeners from './listeners.js\
 &tabGroups.onUpdated\
 &tabGroups.onMoved\
 &tabGroups.onRemoved\
+&storage.local.onChanged\
 ';
 import Logger from './logger.js';
 import BatchProcessor from './batch-processor.js';
 import * as Cache from './cache.js';
+import * as Operations from './operations.js';
+import * as Storage from './storage.js';
 import * as Tabs from './tabs.js';
 import * as Groups from './groups.js';
 
 export const TAB_GROUP_ID_NONE = browser.tabGroups.TAB_GROUP_ID_NONE;
 
 const logger = new Logger('GroupsNative');
+const settings = await Storage.get(['cloneSubGroupsWhenMovingTabs']);
+
+Listeners.storage.local.onChanged.add(onStorageChanged, {waitListener: false});
+
+function onStorageChanged(changes) {
+    if (Storage.isChangedBooleanKey('cloneSubGroupsWhenMovingTabs', changes)) {
+        settings.cloneSubGroupsWhenMovingTabs = changes.cloneSubGroupsWhenMovingTabs.newValue;
+    }
+}
 
 // Membership model (browser behavior details: docs/TABGROUPS-BEHAVIOR.md):
 // - session value 'groupNativeId' on a tab = stable string id of its sub-group. The single source
@@ -24,6 +36,16 @@ const logger = new Logger('GroupsNative');
 // - live browser group ids are ephemeral (a re-created group gets a new id, see
 //   docs/TABGROUPS-BEHAVIOR.md §5) and never leave the runtime: the maps below translate them
 //   to stable ids and back.
+// - the mirror records live membership immediately, but ERASES a session only through a deferred
+//   settled re-check (clearWindowSessionsNow): the id must have been live in that window before
+//   and the tab must still be visible and out of every live group. Detection is state-based -
+//   any mirror pass re-nominates, nothing depends on catching an event exactly once.
+// - a move by the addon (loaded or unloaded groups alike): a sub-group whose EVERY member is in
+//   the moved set travels with them under the same stable id - the addon's counterpart of the
+//   browser's header drag, which STG's UI does not have. A partial move loses the sub-group,
+//   except a partial move to ANOTHER group with cloneSubGroupsWhenMovingTabs on - then it is
+//   CLONED there under a fresh stable id. Landing inside another sub-group's span always wins.
+//   One id never lives in two STG groups (snapshotMembership/restoreMembership).
 
 export function createSubGroupId() {
     return self.crypto.randomUUID().slice(0, 8);
@@ -32,11 +54,19 @@ export function createSubGroupId() {
 const liveIdByStableId = new Map;
 const stableIdByLiveId = new Map;
 
-// stable ids the browser has materialized in this session. For a visible tab outside any live
-// group the mirror clears the session only when its id was live once (the user pulled the tab
-// out or deleted the group); an id the browser never knew is a pending import - the session is
-// the only thing that will materialize it, so it must stay.
-const materializedSubGroupIds = new Set;
+// stable ids the browser has materialized, per window. For a visible tab outside any live group
+// the mirror may clear the session only when its id was live once in THAT window (the user
+// pulled the tab out or destroyed the group there); an id the window never knew is a pending
+// import - the session is the only thing that will materialize it, so it must stay
+const materializedByWindow = new Map; // windowId → Set of stable ids
+
+function markMaterialized(windowId, stableId) {
+    materializedByWindow.getOrInsertComputed(windowId, () => new Set).add(stableId);
+}
+
+function isMaterialized(windowId, stableId) {
+    return materializedByWindow.get(windowId)?.has(stableId) ?? false;
+}
 
 function linkLiveGroup(liveId, stableId) {
     const prevLiveId = liveIdByStableId.get(stableId);
@@ -47,7 +77,6 @@ function linkLiveGroup(liveId, stableId) {
 
     liveIdByStableId.set(stableId, liveId);
     stableIdByLiveId.set(liveId, stableId);
-    materializedSubGroupIds.add(stableId);
 }
 
 function unlinkLiveGroup(liveId) {
@@ -116,7 +145,7 @@ function withWindowGate(windowId, operation) {
             gatedWindows.delete(windowId);
 
             if (gate.dirty) {
-                mirrorBatch.add(windowId, windowId);
+                scheduleMirrorWindow(windowId);
             }
         }
     });
@@ -199,8 +228,35 @@ const mirrorBatch = new BatchProcessor((_windowIds, windowId) => {
     return mirrorWindow(windowId).catch(logger.onCatch(['mirrorWindow failed', windowId], false));
 }, 150);
 
+// the mirror reads only settled states: while a composite operation is in flight, every trigger
+// parks its window here and one pass per window runs on idle. Without this the mirror observes
+// transient mid-operation states (tabs visible and ungrouped a moment before hide) and honestly
+// records them as user actions
+const deferredWindows = new Set;
+
+Operations.onIdle(function mirrorDeferredWindows() {
+    for (const windowId of deferredWindows) {
+        mirrorBatch.add(windowId, windowId);
+    }
+
+    deferredWindows.clear();
+});
+
+function deferMirror(windowId) {
+    if (Operations.isBusy()) {
+        deferredWindows.add(windowId);
+        return true;
+    }
+
+    return false;
+}
+
 export function scheduleMirrorWindow(windowId) {
     if (!windowId) {
+        return;
+    }
+
+    if (deferMirror(windowId)) {
         return;
     }
 
@@ -219,6 +275,11 @@ function mirrorWindow(windowId) {
 
 async function mirrorWindowNow(windowId) {
     const log = logger.start(mirrorWindowNow, windowId);
+
+    if (deferMirror(windowId)) {
+        log.stop('deferred, operations are busy (1/3)');
+        return;
+    }
 
     const [winTabs, liveGroups] = await Promise.all([
         browser.tabs.query({windowId, pinned: false, hidden: false}),
@@ -242,25 +303,42 @@ async function mirrorWindowNow(windowId) {
         const stableId = stableIdByLiveId.get(groupNative.id)
             ?? adoptLiveGroup(groupNative.id, memberTabsByLiveId.get(groupNative.id));
 
+        markMaterialized(windowId, stableId);
+
         return toEntry(stableId, groupNative);
     });
 
-    // sessions: the live state wins, except ids the browser never materialized (pending imports)
+    // an operation that started while we were reading makes every conclusion below stale
+    if (deferMirror(windowId)) {
+        log.stop('deferred, operations are busy (2/3)');
+        return;
+    }
+
+    // sessions: live membership wins immediately; a visible tab OUT of every live group is only
+    // NOMINATED to lose its session - the erase happens in a settled re-check
+    // (clearWindowSessionsNow), so a transient mid-gesture or crashed-flow state costs nothing
     let sessionsChanged = false;
+    const clearCandidates = new Map; // tabId → sessionId at nomination time
 
     await Promise.allSettled(winTabs.map(tab => {
         const liveId = liveIdByTabId.get(tab.id);
         const sessionId = Cache.getTabNativeGroupId(tab.id);
 
-        const stableId = liveId
-            ? stableIdByLiveId.get(liveId)
-            : (sessionId && !materializedSubGroupIds.has(sessionId) ? sessionId : undefined);
+        if (liveId) {
+            const stableId = stableIdByLiveId.get(liveId);
 
-        if (stableId !== sessionId) {
-            sessionsChanged = true;
-            return Cache.setTabNativeGroupId(tab.id, stableId);
+            if (stableId !== sessionId) {
+                sessionsChanged = true;
+                return Cache.setTabNativeGroupId(tab.id, stableId);
+            }
+        } else if (sessionId && isMaterialized(windowId, sessionId)) {
+            clearCandidates.set(tab.id, sessionId);
         }
     }));
+
+    if (clearCandidates.size) {
+        scheduleClearWindow(windowId, clearCandidates);
+    }
 
     const groupId = Cache.getWindowGroup(windowId);
 
@@ -292,12 +370,118 @@ async function mirrorWindowNow(windowId) {
         }
     }
 
+    if (deferMirror(windowId)) {
+        log.stop('deferred, operations are busy (3/3)');
+        return;
+    }
+
     if (isSameGroupsNative(group.groupsNative, groupsNative)) {
         log.stop('no metadata changes');
     } else {
         await Groups.update(groupId, {groupsNative});
         log.stop('updated, count:', groupsNative.length);
     }
+}
+
+// deferred erasing: the mirror only nominates, the session is removed by this second settled
+// pass - the tab must still be visible, still out of every live group and still carry the same
+// id. Anything that changed in between (rehidden, regrouped, moved away, session rewritten)
+// silently drops the candidate; a still-real pull-out is re-nominated by any next mirror pass
+const clearCandidatesByWindow = new Map; // windowId → Map(tabId → sessionId)
+const deferredClearWindows = new Set;
+
+const clearBatch = new BatchProcessor((_windowIds, windowId) => {
+    return clearWindowSessions(windowId).catch(logger.onCatch(['clearWindowSessions failed', windowId], false));
+}, 150);
+
+Operations.onIdle(function clearDeferredWindows() {
+    for (const windowId of deferredClearWindows) {
+        clearBatch.add(windowId, windowId);
+    }
+
+    deferredClearWindows.clear();
+});
+
+function scheduleClearWindow(windowId, candidates) {
+    const pending = clearCandidatesByWindow.getOrInsertComputed(windowId, () => new Map);
+
+    for (const [tabId, sessionId] of candidates) {
+        pending.set(tabId, sessionId);
+    }
+
+    clearBatch.add(windowId, windowId);
+}
+
+function clearWindowSessions(windowId) {
+    return withWindowGate(windowId, () => clearWindowSessionsNow(windowId));
+}
+
+async function clearWindowSessionsNow(windowId) {
+    if (Operations.isBusy()) {
+        deferredClearWindows.add(windowId);
+        return;
+    }
+
+    const pending = clearCandidatesByWindow.get(windowId);
+
+    if (!pending?.size) {
+        return;
+    }
+
+    clearCandidatesByWindow.delete(windowId);
+
+    const winTabs = await browser.tabs.query({windowId, pinned: false, hidden: false});
+
+    // an operation that started while we were reading makes the nomination stale - put it back
+    if (Operations.isBusy()) {
+        clearCandidatesByWindow.set(windowId, pending);
+        deferredClearWindows.add(windowId);
+        return;
+    }
+
+    const log = logger.start(clearWindowSessionsNow, windowId, 'candidates:', pending.size);
+
+    let cleared = 0;
+
+    for (const tab of winTabs) {
+        const sessionId = pending.get(tab.id);
+
+        if (!sessionId || tab.groupId !== TAB_GROUP_ID_NONE) {
+            continue;
+        }
+
+        if (Cache.getTabNativeGroupId(tab.id) !== sessionId) {
+            continue;
+        }
+
+        cleared++;
+        await Cache.removeTabNativeGroupId(tab.id).catch(() => {});
+    }
+
+    if (!cleared) {
+        log.stop('nothing confirmed');
+        return;
+    }
+
+    const groupId = Cache.getWindowGroup(windowId);
+
+    if (groupId) {
+        // membership lives on the tabs - the UI has to refetch them
+        Tabs.sendUpdatedGroup(groupId);
+    }
+
+    // the freed metadata entries are garbage collected by the next mirror pass
+    scheduleMirrorWindow(windowId);
+
+    log.stop('cleared:', cleared);
+}
+
+// the window is gone - its per-window bookkeeping goes with it
+export function forgetWindow(windowId) {
+    materializedByWindow.delete(windowId);
+    clearCandidatesByWindow.delete(windowId);
+    deferredClearWindows.delete(windowId);
+    deferredWindows.delete(windowId);
 }
 
 // check for apply(): live window state already matches the group - nothing to recreate
@@ -397,6 +581,7 @@ async function applyNow(windowId, group) {
             });
 
             linkLiveGroup(liveId, entry.id);
+            markMaterialized(windowId, entry.id);
             appliedGroupsNative.push(entry);
         } catch (e) {
             // the members still reference entry.id in the sessions, next apply retries
@@ -413,48 +598,67 @@ async function applyNow(windowId, group) {
     log.stop();
 }
 
-// the only way to hide tabs: a hidden tab must not stay in a live native group, the group's
-// header would remain in the tab bar (docs/TABGROUPS-BEHAVIOR.md §4). The sessions keep the
-// membership, so the sub-groups are recreated on the next apply.
-// clearMembership=true - the sub-groups are consciously destroyed (unsync tabs policy)
-export function hideTabs(tabs, {clearMembership = false, skipTrackingFlag = false} = {}) {
+// detach tabs from LIVE native groups; the membership sessions stay untouched, so the sub-groups
+// are recreated on the next apply. Mandatory before Tabs.hide of a tab that can sit in a live
+// group: the header of a group whose tabs are all hidden stays in the tab bar
+// (docs/TABGROUPS-BEHAVIOR.md §4). Works on hidden members too (§12)
+export async function ungroup(tabs) {
     tabs = Array.isArray(tabs) ? tabs : [tabs];
 
-    // tabs may be an array of ids - then there is no window to gate,
-    // the mirror will just resync after the fact
-    const windowId = tabs.find(tab => tab.windowId)?.windowId;
-
-    const operation = () => hideTabsNow(tabs, clearMembership, skipTrackingFlag);
-
-    return windowId ? withWindowGate(windowId, operation) : operation();
-}
-
-async function hideTabsNow(tabs, clearMembership, skipTrackingFlag) {
-    const log = logger.start(hideTabsNow, 'count:', tabs.length, {clearMembership, skipTrackingFlag});
+    const log = logger.start(ungroup, 'count:', tabs.length);
 
     if (!tabs.length) {
         log.stop('tabs are empty');
         return;
     }
 
-    await Tabs.ungroup(tabs, true);
-    await Tabs.hideNative(tabs, skipTrackingFlag);
+    const tabsByWindow = new Map;
+    const noWindowTabs = [];
 
-    if (clearMembership) {
-        await Promise.allSettled(tabs.map(tab => {
-            delete tab.groupNativeId;
-            return Cache.removeTabNativeGroupId(Tabs.extractId(tab));
-        }));
+    for (const tab of tabs) {
+        if (tab.windowId) {
+            tabsByWindow.getOrInsert(tab.windowId, []).push(tab);
+        } else {
+            // bare ids carry no window to gate - the mirror will resync after the fact
+            noWindowTabs.push(tab);
+        }
     }
+
+    await Promise.all([
+        ...[...tabsByWindow].map(([windowId, windowTabs]) => {
+            return withWindowGate(windowId, () => Tabs.ungroup(windowTabs, true));
+        }),
+        noWindowTabs.length ? Tabs.ungroup(noWindowTabs, true) : null,
+    ]);
 
     log.stop();
 }
 
-// SNAPSHOT/RESTORE: tabs moved between STG groups carry their sub-group with them - the stable id
-// in the session travels with the tab. Snapshot the metadata before the move: tabId → meta.
-// Meta comes from any group's groupsNative, or from the live browser group (unsync tabs in a
-// window without an active group).
-export async function snapshotMembership(tabs, groups) {
+// the sub-groups are consciously destroyed for these tabs (unsync tabs policy)
+export function clearMembership(tabs) {
+    logger.log(clearMembership, 'count:', tabs.length);
+
+    return Promise.allSettled(tabs.map(tab => {
+        delete tab.groupNativeId;
+        return Cache.removeTabNativeGroupId(Tabs.extractId(tab));
+    }));
+}
+
+// SNAPSHOT/RESTORE: what a move by the addon means for the movers' sub-groups. The census of a
+// sub-group is its sessions - visible, hidden and unsync tabs alike. A sub-group whose every
+// member is in the moved set travels as itself: same stable id, wherever it goes - the addon's
+// counterpart of the browser's header drag, which STG's UI does not have. A partial move within
+// the sub-group's own STG group follows the browser rule - the movers lose it; a partial move
+// to ANOTHER group follows the cloneSubGroupsWhenMovingTabs setting - off: the movers lose it,
+// on: the sub-group is CLONED into the target under a fresh stable id. Landing inside another
+// sub-group's span wins over all of this (the browser's placement / destGroupNativeId). Meta
+// comes from any group's groupsNative, or from the live browser group (unsync tabs in a window
+// without an active group).
+export async function snapshotMembership(movedTabs, groups, targetGroupId) {
+    if (!movedTabs.length) {
+        return null;
+    }
+
     const metaById = new Map;
 
     for (const group of groups) {
@@ -463,26 +667,62 @@ export async function snapshotMembership(tabs, groups) {
         }
     }
 
-    const snapshot = new Map; // tabId → source sub-group meta
+    const allTabs = await browser.tabs.query({pinned: false});
 
-    for (const tab of tabs) {
+    await Promise.allSettled(allTabs.map(tab => Cache.loadTabNativeGroupId(tab.id)));
+
+    const memberIdsByStableId = new Map;
+
+    for (const tab of allTabs) {
         const stableId = Cache.getTabNativeGroupId(tab.id);
+        stableId && memberIdsByStableId.getOrInsert(stableId, new Set).add(tab.id);
+    }
 
-        if (!stableId) {
-            continue;
-        }
+    const movedIds = new Set(movedTabs.map(tab => tab.id));
 
+    async function resolveCarriedMeta(stableId, sameGroup) {
         let meta = metaById.get(stableId);
 
         if (!meta) {
             const liveId = liveIdByStableId.get(stableId);
             const live = liveId ? await browser.tabGroups.get(liveId).catch(() => null) : null;
 
-            if (live) {
-                meta = toEntry(stableId, live);
-                metaById.set(stableId, meta);
+            if (!live) {
+                return null;
             }
+
+            meta = toEntry(stableId, live);
         }
+
+        const memberIds = memberIdsByStableId.get(stableId) ?? movedIds;
+        const wholeMove = [...memberIds].every(id => movedIds.has(id));
+
+        if (wholeMove) {
+            return meta;
+        }
+
+        if (sameGroup) {
+            return null; // the browser rule; there is no cloning inside one group
+        }
+
+        return settings.cloneSubGroupsWhenMovingTabs ? {...meta, id: createSubGroupId()} : null;
+    }
+
+    const carriedMeta = new Map; // source stable id → meta in the target, null = the movers lose it
+    const snapshot = new Map; // tabId → sub-group meta in the target
+
+    for (const tab of movedTabs) {
+        const stableId = Cache.getTabNativeGroupId(tab.id);
+
+        if (!stableId) {
+            continue;
+        }
+
+        if (!carriedMeta.has(stableId)) {
+            carriedMeta.set(stableId, await resolveCarriedMeta(stableId, tab.groupId === targetGroupId));
+        }
+
+        const meta = carriedMeta.get(stableId);
 
         if (meta) {
             snapshot.set(tab.id, meta);
@@ -492,9 +732,11 @@ export async function snapshotMembership(tabs, groups) {
     return snapshot.size ? snapshot : null;
 }
 
-// restore the carried membership after the move: the session already holds the sub-group id,
-// so only the metadata entry and (for a loaded group) the live group need to be ensured.
-// The browser's own placement wins: a tab that landed inside another native span keeps it.
+// restore the carried membership after the move: write the (possibly cloned) sub-group id into
+// the sessions, ensure the metadata entry and (for a loaded group) the live group. A mover that
+// carried nothing loses its stale session - its sub-group stayed behind or was dropped by the
+// snapshot rules. The browser's own placement wins: a tab that landed inside another native
+// span keeps it.
 export async function restoreMembership(group, movedTabs, snapshot = null) {
     snapshot ??= new Map;
 
@@ -502,11 +744,6 @@ export async function restoreMembership(group, movedTabs, snapshot = null) {
     const log = logger.start(restoreMembership, 'group:', group.id, {windowId}, 'carried:', snapshot.size);
 
     if (windowId) {
-        if (!snapshot.size) {
-            log.stop('nothing to restore');
-            return;
-        }
-
         await withWindowGate(windowId, async () => {
             const [winTabs, liveGroups] = await Promise.all([
                 browser.tabs.query({windowId, pinned: false, hidden: false}),
@@ -520,13 +757,30 @@ export async function restoreMembership(group, movedTabs, snapshot = null) {
             for (const tab of movedTabs) {
                 const meta = snapshot.get(tab.id);
 
-                if (meta && liveIdByTabId.get(tab.id) === TAB_GROUP_ID_NONE) {
+                if (liveIdByTabId.get(tab.id) !== TAB_GROUP_ID_NONE) {
+                    continue;
+                }
+
+                if (meta) {
                     memberTabsByMeta.getOrInsert(meta, []).push(tab);
+                } else if (Cache.getTabNativeGroupId(tab.id)) {
+                    // the moved tab objects come from moveNative with the session keys
+                    // stripped - ask the cache, not the object
+                    delete tab.groupNativeId;
+                    await Cache.removeTabNativeGroupId(tab.id);
                 }
             }
 
             for (const [meta, memberTabs] of memberTabsByMeta) {
                 try {
+                    for (const tab of memberTabs) {
+                        if (Cache.getTabNativeGroupId(tab.id) !== meta.id) {
+                            // a clone travels under its fresh id
+                            tab.groupNativeId = meta.id;
+                            await Cache.setTabNativeGroupId(tab.id, meta.id);
+                        }
+                    }
+
                     // the sub-group was carried here earlier and is still live - join it
                     const existingLiveId = liveIdByStableId.get(meta.id);
                     const joinLiveId = liveIdsInWindow.has(existingLiveId) ? existingLiveId : null;
@@ -541,6 +795,7 @@ export async function restoreMembership(group, movedTabs, snapshot = null) {
                         });
 
                         linkLiveGroup(liveId, meta.id);
+                        markMaterialized(windowId, meta.id);
                     }
                 } catch (e) {
                     log.logError(['cant restore native group', meta], e);
@@ -555,21 +810,25 @@ export async function restoreMembership(group, movedTabs, snapshot = null) {
         const knownIds = new Set(groupsNative.map(entry => entry.id));
         let groupsNativeChanged = false;
 
-        await Promise.allSettled(movedTabs.map(tab => {
+        await Promise.allSettled(movedTabs.map(async tab => {
             const meta = snapshot.get(tab.id);
 
             if (!meta) {
-                // moved out of its sub-group (same-group reorder), or a carried id without
-                // metadata anywhere - drop the membership. The moved tab objects come from
-                // moveNative with the session keys stripped - ask the cache, not the object
+                // the moved tab objects come from moveNative with the session keys
+                // stripped - ask the cache, not the object
                 if (Cache.getTabNativeGroupId(tab.id)) {
                     delete tab.groupNativeId;
-                    return Cache.removeTabNativeGroupId(tab.id);
+                    await Cache.removeTabNativeGroupId(tab.id);
                 }
                 return;
             }
 
-            // the session already holds meta.id - only the metadata entry has to follow the tab
+            if (Cache.getTabNativeGroupId(tab.id) !== meta.id) {
+                // a clone travels under its fresh id
+                tab.groupNativeId = meta.id;
+                await Cache.setTabNativeGroupId(tab.id, meta.id);
+            }
+
             if (!knownIds.has(meta.id)) {
                 knownIds.add(meta.id);
                 groupsNative.push({...meta});

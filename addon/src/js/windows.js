@@ -14,6 +14,7 @@ import * as Constants from './constants.js';
 import * as Tabs from './tabs.js';
 import * as Groups from './groups.js';
 import * as GroupsNative from './groups-native.js';
+import * as Operations from './operations.js';
 import * as Utils from './utils.js';
 import * as Cache from './cache.js';
 import * as MenusMain from '/js/menus-main.js';
@@ -82,7 +83,11 @@ function enqueueGrandRestore(windowId) {
     };
 }
 
-async function runGrandRestore(restoredWindowIds) {
+function runGrandRestore(...args) {
+    return Operations.run('grand-restore', () => runGrandRestoreNow(...args));
+}
+
+async function runGrandRestoreNow(restoredWindowIds) {
     const log = logger.start(runGrandRestore, Array.from(restoredWindowIds));
 
     const allWindowsMap = await load(true).then(windows => new Map(windows.map(win => [win.id, win])));
@@ -361,6 +366,7 @@ async function runGrandRestore(restoredWindowIds) {
             }
         } else {
             log.log('hiding group tabs, group', groupToKeep.id, 'in window', groupToKeep.window.id);
+            await GroupsNative.ungroup(groupToKeep.tabs);
             await Tabs.hide(groupToKeep.tabs);
         }
     }
@@ -502,6 +508,7 @@ async function onRemoved(windowId) {
     const groupId = Cache.getWindowGroup(windowId);
 
     Cache.removeWindow(windowId);
+    GroupsNative.forgetWindow(windowId);
 
     createdBatch.delete(windowId);
     grandRestoreBatch.delete(windowId);
@@ -570,8 +577,12 @@ export async function get(windowId = browser.windows.WINDOW_ID_CURRENT) {
     return win;
 }
 
-export async function create(groupId, activeTabId) {
-    const log = logger.start(create, {groupId, activeTabId});
+export function create(...args) {
+    return Operations.run('create-window', () => createNow(...args));
+}
+
+async function createNow(groupId, activeTabId) {
+    const log = logger.start(createNow, {groupId, activeTabId});
 
     if (!groupId) {
         log.throwError('No group id');
@@ -700,7 +711,11 @@ async function getTabsToRestore() {
     return normalizedTabsToRestore;
 }
 
-export async function tryRestoreMissedTabs(actionLoading = true) {
+export function tryRestoreMissedTabs(...args) {
+    return Operations.run('restore-missed-tabs', () => tryRestoreMissedTabsNow(...args));
+}
+
+async function tryRestoreMissedTabsNow(actionLoading = true) {
     const log = logger.start(['info', tryRestoreMissedTabs]);
 
     const tabsToRestore = await getTabsToRestore();
@@ -765,6 +780,7 @@ export async function tryRestoreMissedTabs(actionLoading = true) {
     const tabsToHide = createdTabs.filter(tab => !loadedGroupIds.includes(tab.groupId));
 
     log.log('hide tabs count:', tabsToHide.length);
+    // appended at the end of the strip - they can't be in a live group (docs/TABGROUPS-BEHAVIOR.md §10)
     await Tabs.hide(tabsToHide, true);
 
     log.log('filtering and saving tabs that have already been restored');
@@ -791,7 +807,11 @@ export async function tryRestoreMissedTabs(actionLoading = true) {
     log.stop();
 }
 
-export async function initializeGroups(groups, afterRestoring = false) {
+export function initializeGroups(...args) {
+    return Operations.run('initialize-groups', () => initializeGroupsNow(...args));
+}
+
+async function initializeGroupsNow(groups, afterRestoring = false) {
     const log = logger.start(initializeGroups, {afterRestoring});
 
     const EXTENSION_START_TIME = await getExtensionStartTime();
@@ -896,6 +916,7 @@ export async function initializeGroups(groups, afterRestoring = false) {
             }
         }
 
+        await GroupsNative.ungroup([...tabsToHide]);
         await Tabs.hide([...tabsToHide], true);
 
         log.log('tabsToHide count', tabsToHide.size);

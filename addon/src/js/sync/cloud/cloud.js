@@ -6,6 +6,7 @@ import * as Cache from '/js/cache.js';
 import * as Tabs from '/js/tabs.js';
 import * as Groups from '/js/groups.js';
 import * as GroupsNative from '/js/groups-native.js';
+import * as Operations from '/js/operations.js';
 import * as MenusMain from '/js/menus-main.js';
 import * as Extensions from '/js/extensions.js';
 import * as Utils from '/js/utils.js';
@@ -101,11 +102,11 @@ export async function synchronization(trust = null, revision = null) {
 
         send('sync-start');
 
-        const syncRes = await sync(trust, revision, progress => {
+        const syncRes = await Operations.run('cloud-sync', () => sync(trust, revision, progress => {
             lastProgress = progress;
             log.log('progress', progress);
             send('sync-progress', {progress});
-        });
+        }));
 
         syncResult.ok = true;
         syncResult.progress = 100;
@@ -348,7 +349,9 @@ async function sync(trust = null, revision = null, progressFunc = null) {
                 // the live state still matches
                 await GroupsNative.apply(groupWindowId, group);
             } else {
-                // hide the group's tabs (the browser skips the ones already hidden)
+                // the sort above can drop hidden tabs onto live-member slots (docs/TABGROUPS-BEHAVIOR.md §11),
+                // ungroup works on hidden members too (§12); the browser skips the already hidden on hide
+                await GroupsNative.ungroup(group.tabs);
                 await Tabs.hide(group.tabs, true);
             }
         }

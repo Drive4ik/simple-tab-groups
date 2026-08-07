@@ -13,11 +13,15 @@ const dropRun = () => localStorage.removeItem(RUN_KEY);
 const loadRound = round => import(`${browser.runtime.getURL(`tests/${round}.js`)}?v=${Date.now()}`);
 
 async function openResults() {
-    const tab = await browser.tabs.create({url: browser.runtime.getURL('results.html'), active: true});
+    const url = browser.runtime.getURL('results.html');
 
-    await browser.windows.update(tab.windowId, {focused: true});
-
-    return tab;
+    try {
+        const tab = await browser.tabs.create({url, active: true});
+        await browser.windows.update(tab.windowId, {focused: true});
+        return tab;
+    } catch {
+        return browser.windows.create({url});
+    }
 }
 
 async function askUser(test, question) {
