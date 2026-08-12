@@ -105,6 +105,9 @@ Every fact carries the run that produced it:
 - **`E<n>`** — legacy marker from the runs made before this harness existed. Those runs are not
   reproducible and their tables carry raw tab ids. Every `E<n>` fact is being re-verified; the
   marker is replaced with an `R` one as that happens. Do not mint new `E` numbers.
+- **`L<n>`** — a lifecycle fact from `LIFECYCLE-BEHAVIOR.md`, produced by the throwaway stand
+  described inside that document (§7 here). The evidence is the recorded session log kept in the
+  document; re-verifying means rebuilding the stand from its description and replaying the action.
 
 A statement with neither marker is not a fact and does not belong in these docs.
 
@@ -177,3 +180,20 @@ API sees it and the question, and waits for `T.visualAnswer('…')`. The answer 
 under its own question. A test may act again after an answer and ask about the next frame — each
 question is answered while its own state is on screen, so several visual facts can live in one
 test.
+
+## 7. Lifecycle facts
+
+Facts about the extension's own lifecycle — `runtime.onInstalled`, updates, enable/disable,
+uninstall, what each storage survives — cannot be produced by `test-addon/`: the addon under test
+is killed by the very actions being measured. They come from a throwaway stand of two addons (the
+addon under test plus a log collector) that lives outside the repo and is rebuilt from its
+description when a fact is disputed.
+
+Their document keeps the same rules as the rest (§5), with these deviations:
+
+- The table maps **actions to outcomes**, not tab indices to states — there is no window scene.
+- The evidence marker is `L<n>` (§4). Next to each fact stand the **session ids** of the recorded
+  log that produced it; the condensed log itself is an appendix of the document.
+- The document must carry a description of the stand precise enough to rebuild it, and the
+  environment of the recorded run (browser version, signed/unsigned installs, Firefox account
+  state) — lifecycle behavior depends on all of it.

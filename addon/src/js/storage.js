@@ -2,7 +2,6 @@
 import * as Constants from './constants.js';
 import * as StorageUtils from './storage-utils.js';
 import Logger from './logger.js';
-import JSON from './json.js';
 
 export * from './storage-utils.js';
 
@@ -20,15 +19,10 @@ export async function get(keys, defaultData = Constants.DEFAULT_OPTIONS) {
     return result;
 }
 
-export async function getForMigrate() {
-    const log = logger.start('getForMigrate');
+export async function getRaw() {
+    const log = logger.start('getRaw');
 
-    const storageData = await StorageUtils.nativeGet('local', null, log);
-
-    const result = {
-        ...JSON.clone(Constants.DEFAULT_OPTIONS),
-        ...storageData,
-    };
+    const result = await StorageUtils.nativeGet('local', null, log);
 
     log.stop();
 

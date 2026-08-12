@@ -17,7 +17,7 @@ import GithubGist from './githubgist.js';
 import * as CloudBroadcast from '/js/broadcast.js?channel=cloud';
 import * as SyncStorage from '../sync-storage.js';
 import * as Storage from '/js/storage.js';
-import Migration from '/js/migration.js';
+import Migration, {stampVersion} from '/js/migration.js';
 import backgroundSelf from '/js/background.js';
 // export {
 //     default as GithubGist,
@@ -157,9 +157,17 @@ async function sync(trust = null, revision = null, progressFunc = null) {
 
     progressFunc?.(1);
 
-    const syncOptions = syncOptionsLocation === Constants.SYNC_STORAGE_FSYNC
-        ? await SyncStorage.get()
-        : await Storage.get(null, Constants.DEFAULT_SYNC_OPTIONS);
+    let syncOptions;
+
+    try {
+        syncOptions = syncOptionsLocation === Constants.SYNC_STORAGE_FSYNC
+            ? await SyncStorage.get()
+            : await Storage.get(null, Constants.DEFAULT_SYNC_OPTIONS);
+    } catch (error) {
+        const cloudError = new CloudError(error.message, {cause: error});
+        storage.lastError = String(cloudError);
+        log.throwError('get sync options', cloudError);
+    }
 
     progressFunc?.(10);
 
@@ -209,6 +217,7 @@ async function sync(trust = null, revision = null, progressFunc = null) {
 
     const localData = await Promise.all([Storage.get(), Groups.load(null, true)])
         .then(([data, {groups}]) => {
+            stampVersion(data);
             data.groups = groups;
             data.containers = Containers.getToExport(data);
             // map cookie-store-id to Firefox browser

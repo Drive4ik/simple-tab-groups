@@ -33,7 +33,7 @@ import Notification from '/js/notification.js?add-listeners';
 import JSON from '/js/json.js';
 import BatchProcessor from '/js/batch-processor.js';
 import Lang from '/js/lang.js';
-import Migration from '/js/migration.js';
+import {initLocalData, stampVersion} from '/js/migration.js';
 // import * as Broadcast from '/js/broadcast.js';
 import * as Containers from '/js/containers.js?add-listeners';
 import * as Storage from '/js/storage.js';
@@ -1122,7 +1122,7 @@ async function saveOptions(_options) {
     for (const [key, value] of Object.entries(_options)) {
         if (Constants.ALL_OPTION_KEYS.includes(key)) {
             optionsToSave[key] = Utils.isPrimitive(value) ? value : JSON.clone(value);
-        } else if (Constants.DEFAULT_OPTIONS[key] === undefined) {
+        } else if (!Constants.NON_OPTION_KEYS.includes(key)) {
             log.throwError(`option key "${key}" is unknown`);
         }
     }
@@ -1236,7 +1236,7 @@ async function resetAlarm(
 async function createBackup(includeTabFavIcons, includeTabThumbnails, isAutoBackup = false) {
     const log = logger.start('createBackup', {includeTabFavIcons, includeTabThumbnails, isAutoBackup});
 
-    const data = await Storage.get();
+    const data = stampVersion(await Storage.get());
     const {groups} = await Groups.load(null, true, includeTabFavIcons, includeTabThumbnails);
 
     if (isAutoBackup && (!groups.length || groups.filter(gr => !gr.isArchive).every(gr => !gr.tabs.length))) {
@@ -1599,23 +1599,6 @@ self.removeListenerOnBeforeRequest = removeListenerOnBeforeRequest;
 Listeners.runtime.onInstalled.add(async ({reason, previousVersion, temporary}) => {
     const log = logger.start('runtime.onInstalled', {reason, previousVersion, temporary});
 
-    if (!temporary) {
-        if (reason === browser.runtime.OnInstalledReason.UPDATE) {
-            const {version} = await Storage.get('version', {});
-
-            if (version !== previousVersion) {
-                log.log('update old version in storage:', version, 'to:', previousVersion);
-                await Storage.set({
-                    version: previousVersion,
-                });
-            }
-        } else if (reason === browser.runtime.OnInstalledReason.INSTALL) {
-            await Storage.set({
-                version: Constants.MANIFEST.version,
-            });
-        }
-    }
-
     if (temporary) {
         storage.IS_TEMPORARY = true;
         log.log('addon is temp');
@@ -1640,20 +1623,14 @@ async function init() {
     const log = logger.start(['info', '[init]']);
 
     try {
-        let data = await Storage.getForMigrate();
+        const {data, error} = await initLocalData();
 
-        const dataChanged = new Set;
-
-        const resultMigrate = await Migration(data, true);
-
-        if (resultMigrate.migrated) {
-            data = resultMigrate.data;
-            dataChanged.add(true);
-            log.log('Migration finish');
-        } else if (resultMigrate.error) {
-            Notification(resultMigrate.error);
+        if (error) {
+            Notification(error);
             throw '';
         }
+
+        const dataChanged = new Set;
 
         Utils.assignKeys(options, data, Constants.ALL_OPTION_KEYS);
 
@@ -1679,13 +1656,6 @@ async function init() {
         if (dataChanged.has(true)) {
             log.log('data was changed, saving data');
             await Storage.set(data);
-        }
-
-        // only after the migrated data is committed - a crash before this point leaves the
-        // legacy keys in place for the repeated migration run
-        if (resultMigrate.keysToRemove.length) {
-            log.log('removing migrated keys from storage:', resultMigrate.keysToRemove);
-            await Storage.remove(...resultMigrate.keysToRemove);
         }
 
         let windows = await Windows.load();

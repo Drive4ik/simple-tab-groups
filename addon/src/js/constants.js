@@ -440,7 +440,6 @@ export const GIT_GIST_FILE_NAME_PARTS = Object.freeze({
 });
 
 export const DEFAULT_SYNC_OPTIONS = Object.freeze({
-    version: MANIFEST.version,
     githubGistToken: '',
     githubGistFileName: GIT_GIST_FILE_NAME_PARTS.start + 'backup' + GIT_GIST_FILE_NAME_PARTS.end,
 });
@@ -458,7 +457,6 @@ export const SYNC_STORAGE_FSYNC = 'ff-sync';
 export const SYNC_STORAGE_LOCAL = 'local';
 
 export const DEFAULT_OPTIONS = Object.freeze({
-    version: MANIFEST.version,
     groups: [],
 
     // options

@@ -115,7 +115,13 @@ export default {
         // SYNC
         async loadSyncOptions() {
             if (!this.sync.disabled) {
-                Object.assign(this.sync.options, await SyncStorage.get());
+                try {
+                    Object.assign(this.sync.options, await SyncStorage.get());
+                } catch ({message}) {
+                    this.syncCloudErrorMessage = String(new Cloud.CloudError(message));
+                    return;
+                }
+
                 this.sync.optionsBackup = {...this.sync.options};
                 await this.loadGistInfo(this.sync);
             }
