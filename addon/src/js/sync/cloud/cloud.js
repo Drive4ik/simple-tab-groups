@@ -133,6 +133,14 @@ export async function synchronization(trust = null, revision = null) {
     return syncResult;
 }
 
+export function isLastSyncedGist(gist, {githubGistFileName}) {
+    const lastSyncGist = storage.gist;
+
+    return Boolean(gist) &&
+        gist.id === lastSyncGist?.id &&
+        githubGistFileName === lastSyncGist?.fileName;
+}
+
 async function sync(trust = null, revision = null, progressFunc = null) {
     const isRestoring = !!revision;
 
@@ -205,7 +213,7 @@ async function sync(trust = null, revision = null, progressFunc = null) {
     try {
         [cloudData, cloudInfo] = await Cloud.getContent(revision, true, createCloudProgress(10, 40));
     } catch (error) {
-        if (error.message === 'githubNotFound') {
+        if (error.message === 'githubNotFound' && !isRestoring) {
             //
         } else {
             const cloudError = new CloudError(error.message, {cause: error});
@@ -231,7 +239,11 @@ async function sync(trust = null, revision = null, progressFunc = null) {
 
     progressFunc?.(45);
 
-    const localLastUpdate = new Date(localData.syncLastUpdate).getTime();
+    const sameGist = isLastSyncedGist(cloudInfo, syncOptions);
+
+    const isFirstLocalSync = !trust && !sameGist;
+
+    const localLastUpdate = sameGist ? new Date(storage.gist.lastUpdate).getTime() : 0;
     const cloudLastUpdate = new Date(cloudInfo?.lastUpdate ?? 0).getTime();
 
     const sourceOfTruth =
@@ -245,13 +257,11 @@ async function sync(trust = null, revision = null, progressFunc = null) {
 
     cloudData ??= JSON.clone(localData);
 
-    localData.syncId = localLastUpdate;
-    cloudData.syncId = cloudLastUpdate;
+    cloudData.syncId = trust === TRUST_CLOUD ? cloudLastUpdate : localLastUpdate;
 
-    const syncResult = await syncData(localData, cloudData, sourceOfTruth, newCloudGroupIds, createCloudProgress(45, 55))
+    const syncResult = await syncData(localData, cloudData, sourceOfTruth, newCloudGroupIds, isFirstLocalSync, createCloudProgress(45, 55))
         .catch(log.onCatch('cant sync'));
 
-    delete syncResult.localData.syncId;
     delete syncResult.cloudData.syncId;
 
     // log.log('changes1', {
@@ -259,8 +269,8 @@ async function sync(trust = null, revision = null, progressFunc = null) {
     //     local: syncResult.changes.local,
     //     cloud: syncResult.changes.cloud,
 
-    //     localUpdate: localData.syncLastUpdate,
-    //     cloudUpdate: cloudInfo.lastUpdate,
+    //     localLastUpdate,
+    //     cloudLastUpdate,
     // });
 
     if (!hasCloudData || isRestoring) {
@@ -312,7 +322,6 @@ async function sync(trust = null, revision = null, progressFunc = null) {
     progressFunc?.(95);
 
     // set last-update before call saveOptions, saveOptions will reset alarm and it depends on last-update time
-    storage.githubGistFileName = syncOptions.githubGistFileName;
     mainStorage.autoSyncLastTimeStamp = Utils.unixNow();
 
     if (syncResult.changes.local) {
@@ -369,13 +378,17 @@ async function sync(trust = null, revision = null, progressFunc = null) {
             }
         }
 
-        syncResult.localData.syncLastUpdate = cloudInfo.lastUpdate;
-
         await backgroundSelf.saveOptions(syncResult.localData);
         await Groups.save(syncResult.localData.groups);
 
         await MenusMain.groupsUpdated(syncResult.localData.groups);
     }
+
+    storage.gist = {
+        id: cloudInfo.id,
+        lastUpdate: cloudInfo.lastUpdate,
+        fileName: syncOptions.githubGistFileName,
+    };
 
     progressFunc?.(100);
 
@@ -391,7 +404,7 @@ async function sync(trust = null, revision = null, progressFunc = null) {
     return syncResult;
 }
 
-async function syncData(localData, cloudData, sourceOfTruth, newCloudGroupIds, progressFunc = null) {
+async function syncData(localData, cloudData, sourceOfTruth, newCloudGroupIds, isFirstLocalSync, progressFunc = null) {
     const log = logger.start('syncData', {
         localVersion: localData.version,
         cloudVersion: cloudData.version,
@@ -424,7 +437,7 @@ async function syncData(localData, cloudData, sourceOfTruth, newCloudGroupIds, p
 
     progressFunc?.(30);
 
-    await syncGroups(localData, cloudData, sourceOfTruth, changes, newCloudGroupIds);
+    await syncGroups(localData, cloudData, sourceOfTruth, changes, newCloudGroupIds, isFirstLocalSync);
 
     progressFunc?.(70);
 
@@ -445,7 +458,7 @@ async function syncData(localData, cloudData, sourceOfTruth, newCloudGroupIds, p
     };
 }
 
-async function syncGroups(localData, cloudData, sourceOfTruth, changes, newCloudGroupIds) {
+async function syncGroups(localData, cloudData, sourceOfTruth, changes, newCloudGroupIds, isFirstLocalSync) {
     const log = logger.start('syncGroups');
 
     const localGroups = localData.groups;
@@ -525,8 +538,6 @@ async function syncGroups(localData, cloudData, sourceOfTruth, changes, newCloud
         }
 
     } else if (sourceOfTruth === TRUST_CLOUD) {
-
-        const isFirstLocalSync = localData.syncId === new Date(Constants.DEFAULT_OPTIONS.syncLastUpdate).getTime();
 
         for (const cloudGroup of cloudGroups) {
             // find local group
@@ -669,6 +680,9 @@ async function syncGroups(localData, cloudData, sourceOfTruth, changes, newCloud
                             changes.cloud = true;
                             return true;
                         }
+
+                        changes.local = true;
+                        return false;
                     }
                 );
 
@@ -704,6 +718,9 @@ async function syncGroups(localData, cloudData, sourceOfTruth, changes, newCloud
                             changes.cloud = true;
                             return true;
                         }
+
+                        changes.local = true;
+                        return false;
                     }
                 );
 
@@ -735,12 +752,12 @@ async function syncGroups(localData, cloudData, sourceOfTruth, changes, newCloud
 
                             changes.cloud = true;
                             return true;
-                        } else {
-                            // delete old tab, which doesn't exist in cloud, that means it was deleted into another computer
-                            changes.tabsToRemove.add(localTab);
-                            changes.local = true;
-                            return false;
                         }
+
+                        // delete old tab, which doesn't exist in cloud, that means it was deleted into another computer
+                        changes.tabsToRemove.add(localTab);
+                        changes.local = true;
+                        return false;
                     }
                 );
             }
@@ -780,6 +797,10 @@ async function syncGroups(localData, cloudData, sourceOfTruth, changes, newCloud
                 changes.groupsToRemove.add(localGroup);
                 changes.local = true;
             }
+        }
+
+        if (!changes.local) {
+            changes.local = localGroups.some((group, index) => group.id !== resultLocalGroups[index]?.id);
         }
     }
 

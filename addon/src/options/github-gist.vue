@@ -3,7 +3,6 @@
 import popup from '../components/popup.vue';
 import GithubGistFields from './github-gist-fields.vue';
 
-import '/js/prefixed-storage.js';
 import * as Constants from '/js/constants.js';
 // import Logger from '/js/logger.js';
 import Lang from '/js/lang.js';
@@ -14,8 +13,6 @@ import * as Cloud from '/js/sync/cloud/cloud.js';
 import GithubGist from '/js/sync/cloud/githubgist.js';
 
 import syncCloudMixin from '/js/mixins/sync-cloud.mixin.js';
-
-const storage = localStorage.create(Constants.MODULES.CLOUD);
 
 export default {
     name: 'github-gist',
@@ -82,16 +79,11 @@ export default {
             return this.isLoadingSyncButton || this.area.disabled || this.area.loadingGist;
         },
         showTrustSyncButtons() {
-            if (
-                !this.isDisableSyncButton &&
-                this.area.gist &&
-                storage.githubGistFileName &&
-                storage.githubGistFileName !== this.area.optionsBackup.githubGistFileName
-            ) {
-                return true;
+            if (this.isDisableSyncButton || !this.area.gist) {
+                return false;
             }
 
-            return false;
+            return !Cloud.isLastSyncedGist(this.area.gist, this.area.optionsBackup);
         },
         isCredentialsChanged() {
             return this.area.options.githubGistToken !== this.area.optionsBackup.githubGistToken ||
@@ -180,9 +172,11 @@ export default {
                     return item;
                 });
 
-                const lastUpdate = new Date(gist.updated_at);
+                const lastUpdate = new Date(gist.lastUpdate);
 
                 area.gist = {
+                    id: gist.id,
+                    lastUpdate: gist.lastUpdate,
                     breadcrumb: [
                         {
                             url: gist.html_url.slice(0, gist.html_url.indexOf(gist.owner.login) + gist.owner.login.length),
@@ -348,7 +342,7 @@ export default {
                                     class="button is-ghost"
                                     aria-haspopup="true"
                                     aria-controls="restore-dropdown-menu"
-                                    :disabled="isCredentialsChanged"
+                                    :disabled="isCredentialsChanged || isDisableSyncButton"
                                     >
                                     <span v-text="lang('restoreBackup')"></span>
                                     <span class="icon">

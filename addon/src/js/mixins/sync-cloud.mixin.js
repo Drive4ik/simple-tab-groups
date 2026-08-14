@@ -47,16 +47,18 @@ export default {
             this.syncCloudErrorMessage = String(objectToNativeError(e));
         }));
 
-        list.add(Cloud.on('sync-finish', ({ok}) => {
+        list.add(Cloud.on('sync-finish', syncResult => {
             this.syncCloudProgressTimer = setTimeout(() => {
                 this.syncCloudProgress = 0;
-            }, ok ? 600 : 5000);
+            }, syncResult.ok ? 600 : 5000);
 
             this.syncCloudInProgressTimer = setTimeout(() => {
                 this.syncCloudInProgress = false;
             }, 500);
 
             this.syncCloudUpdateInfo();
+
+            this.$emit('sync-finish', syncResult);
         }));
     },
     beforeDestroy() {
