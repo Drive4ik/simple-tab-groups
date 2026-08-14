@@ -21,6 +21,7 @@ import * as GroupsNative from './groups-native.js';
 import * as Operations from './operations.js';
 import * as Windows from './windows.js';
 import * as Utils from './utils.js';
+import * as NewCloudGroups from './sync/new-cloud-groups.js';
 import GroupsHistory from './groups-history.js';
 
 export {on, off} from './broadcast.js?channel=groups';
@@ -528,6 +529,8 @@ async function addNow(windowId, tabIds = [], title = null) {
 
     newGroup.title = Utils.format(newGroup.title, {index: groups.length});
 
+    NewCloudGroups.add(newGroup.id);
+
     await save(groups);
 
     if (windowId) {
@@ -591,6 +594,8 @@ async function removeNow(groupId) {
     });
 
     await save(groups);
+
+    NewCloudGroups.remove(group.id);
 
     if (defaultGroupProps.moveToGroupIfNoneCatchTabRules === group.id) {
         log.log('remove moveToGroupIfNoneCatchTabRules from default group props');
@@ -680,6 +685,8 @@ async function restoreNow(groupId) {
 
     const tabs = group.tabs;
 
+    NewCloudGroups.add(group.id);
+
     await save(groups);
 
     if (tabs.length && !group.isArchive) {
@@ -736,6 +743,10 @@ async function updateNow(groupId, updateData) {
         const {defaultGroupProps} = await getDefaults();
         updateData.title = createTitle(updateData.title, groupId, defaultGroupProps).slice(0, 256);
         updateData.title = Utils.format(updateData.title, {index: groupIndex + 1});
+    }
+
+    if (group.dontUploadToCloud && updateData.dontUploadToCloud === false) {
+        NewCloudGroups.add(group.id);
     }
 
     Object.assign(group, updateData);

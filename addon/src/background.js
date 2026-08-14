@@ -54,6 +54,7 @@ import * as Bookmarks from '/js/bookmarks.js';
 import * as Permissions from '/js/permissions.js';
 import * as BrowserSettings from '/js/browser-settings.js';
 import * as Cloud from '/js/sync/cloud/cloud.js?can-do-synchronization';
+import * as NewCloudGroups from '/js/sync/new-cloud-groups.js';
 
 const storage = localStorage.create(Constants.MODULES.BACKGROUND);
 
@@ -1399,6 +1400,8 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
         return newGroup;
     });
 
+    const restoredGroupIds = data.groups.map(group => group.id);
+
     data.groups = [...currentData.groups, ...data.groups];
     data.hotkeys = [...currentData.hotkeys, ...data.hotkeys];
 
@@ -1465,6 +1468,8 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
     } else {
         result = data;
     }
+
+    NewCloudGroups.add(restoredGroupIds);
 
     await Storage.set(result);
 
@@ -1633,6 +1638,8 @@ async function init() {
         const dataChanged = new Set;
 
         Utils.assignKeys(options, data, Constants.ALL_OPTION_KEYS);
+
+        NewCloudGroups.keepOnly(data.groups.map(group => group.id));
 
         if (await BrowserSettings.hasPermission()) {
             await BrowserSettings.set(options.browserSettings);

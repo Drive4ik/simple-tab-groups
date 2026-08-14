@@ -16,6 +16,7 @@ import Logger, {nativeErrorToObject, objectToNativeError} from '/js/logger.js';
 import GithubGist from './githubgist.js';
 import * as CloudBroadcast from '/js/broadcast.js?channel=cloud';
 import * as SyncStorage from '../sync-storage.js';
+import * as NewCloudGroups from '../new-cloud-groups.js';
 import * as Storage from '/js/storage.js';
 import Migration, {stampVersion} from '/js/migration.js';
 import backgroundSelf from '/js/background.js';
@@ -225,6 +226,9 @@ async function sync(trust = null, revision = null, progressFunc = null) {
             return data;
         });
 
+    const localGroupIds = new Set(localData.groups.map(group => group.id));
+    const newCloudGroupIds = NewCloudGroups.getIds().intersection(localGroupIds);
+
     progressFunc?.(45);
 
     const localLastUpdate = new Date(localData.syncLastUpdate).getTime();
@@ -244,7 +248,7 @@ async function sync(trust = null, revision = null, progressFunc = null) {
     localData.syncId = localLastUpdate;
     cloudData.syncId = cloudLastUpdate;
 
-    const syncResult = await syncData(localData, cloudData, sourceOfTruth, createCloudProgress(45, 55))
+    const syncResult = await syncData(localData, cloudData, sourceOfTruth, newCloudGroupIds, createCloudProgress(45, 55))
         .catch(log.onCatch('cant sync'));
 
     delete syncResult.localData.syncId;
@@ -375,6 +379,8 @@ async function sync(trust = null, revision = null, progressFunc = null) {
 
     progressFunc?.(100);
 
+    NewCloudGroups.remove(newCloudGroupIds);
+
     log.stop();
 
     delete storage.lastError;
@@ -385,7 +391,7 @@ async function sync(trust = null, revision = null, progressFunc = null) {
     return syncResult;
 }
 
-async function syncData(localData, cloudData, sourceOfTruth, progressFunc = null) {
+async function syncData(localData, cloudData, sourceOfTruth, newCloudGroupIds, progressFunc = null) {
     const log = logger.start('syncData', {
         localVersion: localData.version,
         cloudVersion: cloudData.version,
@@ -418,7 +424,7 @@ async function syncData(localData, cloudData, sourceOfTruth, progressFunc = null
 
     progressFunc?.(30);
 
-    await syncGroups(localData, cloudData, sourceOfTruth, changes);
+    await syncGroups(localData, cloudData, sourceOfTruth, changes, newCloudGroupIds);
 
     progressFunc?.(70);
 
@@ -439,7 +445,7 @@ async function syncData(localData, cloudData, sourceOfTruth, progressFunc = null
     };
 }
 
-async function syncGroups(localData, cloudData, sourceOfTruth, changes) {
+async function syncGroups(localData, cloudData, sourceOfTruth, changes, newCloudGroupIds) {
     const log = logger.start('syncGroups');
 
     const localGroups = localData.groups;
@@ -487,23 +493,26 @@ async function syncGroups(localData, cloudData, sourceOfTruth, changes) {
         return Tabs.prepareForSave(tabs, {includeGroupNativeId: true, includeFavIconUrl, includeId, includeLastAccessed});
     }
 
+    function prepareCloudGroup(localGroup) {
+        const cloudGroup = JSON.clone(localGroup);
+
+        // the cloud gets only sub-groups that still have member tabs
+        if (!localGroup.isArchive) {
+            cloudGroup.groupsNative = GroupsNative.referencedGroupsNative(localGroup);
+        }
+
+        cloudGroup.tabs = prepareForSaveTabs(localGroup.tabs, TRUST_CLOUD, cloudGroup.isArchive);
+
+        return cloudGroup;
+    }
+
     if (sourceOfTruth === TRUST_LOCAL) {
         for (const localGroup of localGroups) {
-            const resultLocalGroup = localGroup;
-            const resultCloudGroup = {...localGroup}; // unlink tabs key
-
-            if (resultLocalGroup.dontUploadToCloud) {
-                resultLocalGroups.push(resultLocalGroup);
+            if (localGroup.dontUploadToCloud) {
+                resultLocalGroups.push(localGroup);
             } else {
-                // the cloud gets only sub-groups that still have member tabs
-                if (!resultLocalGroup.isArchive) {
-                    resultCloudGroup.groupsNative = GroupsNative.referencedGroupsNative(resultLocalGroup);
-                }
-
-                resultCloudGroup.tabs = prepareForSaveTabs(resultLocalGroup.tabs, TRUST_CLOUD, resultCloudGroup.isArchive);
-
-                resultLocalGroups.push(resultLocalGroup);
-                resultCloudGroups.push(resultCloudGroup);
+                resultLocalGroups.push(localGroup);
+                resultCloudGroups.push(prepareCloudGroup(localGroup));
             }
         }
 
@@ -754,25 +763,14 @@ async function syncGroups(localData, cloudData, sourceOfTruth, changes) {
             if (localGroup.dontUploadToCloud) {
                 log.log('skip upload local group to cloud:', localGroup.id);
 
-                // changes.local = true;
                 resultLocalGroups.splice(localIndex, 0, localGroup); // leave group in local and don't add it to the cloud
-                // resultLocalGroups.push(localGroup); // leave group in local and don't add it to the cloud
-            } else if (isFirstLocalSync) {
-                // don't remove group because it must be synced with another computer
+            } else if (isFirstLocalSync || newCloudGroupIds.has(localGroup.id)) {
+                // the cloud has never seen this group - it must be uploaded, not removed
                 log.log('add local group to cloud:', localGroup.id);
 
-                const cloudGroup = JSON.clone(localGroup);
-
-                // the cloud gets only sub-groups that still have member tabs
-                if (!localGroup.isArchive) {
-                    cloudGroup.groupsNative = GroupsNative.referencedGroupsNative(localGroup);
-                }
-
-                cloudGroup.tabs = prepareForSaveTabs(localGroup.tabs, TRUST_CLOUD, cloudGroup.isArchive);
-
-                // changes.local = true;
+                changes.cloud = true;
                 resultLocalGroups.push(localGroup);
-                resultCloudGroups.push(cloudGroup);
+                resultCloudGroups.push(prepareCloudGroup(localGroup));
             } else {
                 // local group is skipped and deleted...
                 log.log('remove local group:', localGroup.id);
