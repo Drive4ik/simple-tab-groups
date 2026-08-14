@@ -725,6 +725,8 @@ async function syncGroups(localData, cloudData, sourceOfTruth, changes, newCloud
                         return localTab;
                     },
                     (localTab, localTabIndex, resultLocalTabs, resultCloudTabs) => {
+                        localTab.lastAccessed ??= cloudData.syncId + 1;
+
                         if (localTab.lastAccessed > cloudData.syncId) {
                             resultLocalTabs.splice(localTabIndex, 0, localTab);
 

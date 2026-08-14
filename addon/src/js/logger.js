@@ -269,7 +269,7 @@ function getIndentAndRemoveScope(indentCount, args) {
 
 const Errors = {
     get() {
-        return storage.errors ?? [];
+        return JSON.clone(storage.errors) ?? [];
     },
     add(error) {
         const errors = Errors.get();

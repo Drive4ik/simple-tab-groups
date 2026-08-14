@@ -2,13 +2,17 @@
 /*
 const main = sessionStorage.create('main');
 main.mainKey = {};
-main.mainKey.mainKeyIncludes = {}
+main.mainKey.mainKeyIncludes = {};
 main.mainKey.mainKeyIncludes.dynamicKey = 'dynamic-value';
 
 sessionStorage:
-"main/mainKey": "{}"
-"main/mainKey/mainKeyIncludes": "{}"
-"main/mainKey/mainKeyIncludes/dynamicKey": '"dynamic-value"'
+"main/mainKey": '{"mainKeyIncludes":{"dynamicKey":"dynamic-value"}}'
+
+const sub = main.create('sub');
+sub.subKey = 'sub-value';
+
+sessionStorage:
+"main/sub/subKey": '"sub-value"'
 */
 
 Storage.prototype.create = function(prefix, delimiter) {
@@ -50,7 +54,13 @@ function createProxy(storage, prefix, delimiter = '/') {
                 prop = getKey(prop);
                 const storageValue = Reflect.get(target, prop, receiver);
                 if (storageValue) {
-                    return JSON.parse(storageValue);
+                    const value = JSON.parse(storageValue);
+
+                    if (value && typeof value === 'object') {
+                        return liveValue(value, () => Reflect.set(target, prop, JSON.stringify(value, getCircularReplacer()), receiver));
+                    }
+
+                    return value;
                 }
             } catch { }
         },
@@ -86,6 +96,30 @@ function createProxy(storage, prefix, delimiter = '/') {
     };
 
     return new Proxy(storage, handler);
+}
+
+function liveValue(value, commit) {
+    return new Proxy(value, {
+        get(target, prop, receiver) {
+            const propValue = Reflect.get(target, prop, receiver);
+
+            if (propValue && typeof propValue === 'object') {
+                return liveValue(propValue, commit);
+            }
+
+            return propValue;
+        },
+        set(target, prop, propValue, receiver) {
+            const result = Reflect.set(target, prop, propValue, receiver);
+            commit();
+            return result;
+        },
+        deleteProperty(target, prop) {
+            const result = Reflect.deleteProperty(target, prop);
+            commit();
+            return result;
+        },
+    });
 }
 
 function getCircularReplacer() {
