@@ -105,9 +105,8 @@ async function applyNow(windowId, groupId, activeTabId, applyFromHistory = false
                 throw '';
             }
 
-            if (groupToHide?.tabs.some(Tabs.isCanNotBeHidden)) { // TODO refactor to pin
-                Notification('notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera');
-                throw '';
+            if (groupToHide) {
+                await beforeUnload(groupToHide);
             }
 
             await Browser.actionLoading();
@@ -586,24 +585,78 @@ async function removeNow(groupId) {
 
     groups.splice(groupIndex, 1);
 
-    groups.forEach(gr => {
+    const defaultGroupPropsChanged = removeRefs(group, groups, defaultGroupProps);
+
+    await save(groups);
+
+    if (defaultGroupPropsChanged) {
+        await saveDefault(defaultGroupProps);
+    }
+
+    await removeFinish(group);
+
+    sendRemoved(groupId, groupWindowId);
+
+    log.stop();
+}
+
+export async function removeMultiple(groupsToRemove, groups, defaultGroupProps, removeTabs = true) {
+    const log = logger.start(removeMultiple, groupsToRemove.map(group => group.id), {removeTabs});
+
+    const tabsToRemove = [];
+
+    for (const group of groupsToRemove) {
+        if (isLoaded(group.id)) {
+            await unload(group.id);
+
+            // beforeUnload pinned such tabs and detached them - the caller's tab list is an older snapshot
+            group.tabs = group.tabs.filter(tab => !Tabs.isCanNotBeHidden(tab));
+        }
+
+        if (!removeTabs && !group.isArchive) {
+            tabsToRemove.push(...group.tabs);
+        }
+
+        // saving the changed groups and defaultGroupProps is done by cloud.js, the only caller of removeMultiple
+        removeRefs(group, groups, defaultGroupProps);
+
+        await removeFinish(group, removeTabs);
+    }
+
+    log.stop();
+
+    return tabsToRemove;
+}
+
+function removeRefs(group, groups, defaultGroupProps) {
+    const log = logger.start(removeRefs, group.id);
+
+    for (const gr of groups) {
         if (gr.moveToGroupIfNoneCatchTabRules === group.id) {
             gr.moveToGroupIfNoneCatchTabRules = null;
             log.log('remove moveToGroupIfNoneCatchTabRules from group', gr.id);
         }
-    });
+    }
 
-    await save(groups);
-
-    NewCloudGroups.remove(group.id);
+    let defaultGroupPropsChanged = false;
 
     if (defaultGroupProps.moveToGroupIfNoneCatchTabRules === group.id) {
         log.log('remove moveToGroupIfNoneCatchTabRules from default group props');
         delete defaultGroupProps.moveToGroupIfNoneCatchTabRules;
-        await saveDefault(defaultGroupProps);
+        defaultGroupPropsChanged = true;
     }
 
-    if (!group.isArchive) {
+    log.stop();
+
+    return defaultGroupPropsChanged;
+}
+
+async function removeFinish(group, removeTabs = true) {
+    const log = logger.start(removeFinish, group.id, {removeTabs});
+
+    NewCloudGroups.remove(group.id);
+
+    if (removeTabs && !group.isArchive) {
         log.log('removing group tabs...');
         await Tabs.remove(group.tabs, true);
     }
@@ -613,8 +666,6 @@ async function removeNow(groupId) {
     await addUndoRemove(group);
 
     await Bookmarks.removeGroup(group).catch(log.onCatch('cant remove bookmark', false));
-
-    sendRemoved(groupId, groupWindowId);
 
     log.stop();
 }
@@ -834,6 +885,35 @@ export function isLoaded(groupId) {
     return true;
 }
 
+async function beforeUnload(group) {
+    const tabsToPin = group.tabs.filter(Tabs.isCanNotBeHidden);
+
+    if (!tabsToPin.length) {
+        return;
+    }
+
+    const log = logger.start(beforeUnload, group.id, tabsToPin.map(Tabs.extractId));
+
+    // pinning strips the native membership itself (docs/TABGROUPS-BEHAVIOR.md §19)
+    await Tabs.pin(tabsToPin, true);
+
+    await Promise.allSettled(tabsToPin.flatMap(tab => [
+        Cache.removeTabGroup(tab.id),
+        Cache.removeTabNativeGroupId(tab.id),
+    ]));
+
+    group.tabs = group.tabs.filter(tab => !tabsToPin.includes(tab));
+
+    let showNotif = mainStorage.thisTabsWerePinned ?? 0;
+
+    if (showNotif < 3) {
+        mainStorage.thisTabsWerePinned = ++showNotif;
+        Notification(['thisTabsWerePinned', tabsToPin.map(tab => Tabs.getTitle(tab, false, 20)).join(', ')]);
+    }
+
+    log.stop();
+}
+
 export function unload(...args) {
     return Operations.run('unload-group', () => unloadNow(...args));
 }
@@ -869,11 +949,7 @@ async function unloadNow(groupId) {
         return false;
     }
 
-    if (group.tabs.some(Tabs.isCanNotBeHidden)) {
-        Notification('notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera');
-        log.stopError('some Tab Can Not Be Hidden');
-        return false;
-    }
+    await beforeUnload(group);
 
     log.log('windowId', windowId);
 

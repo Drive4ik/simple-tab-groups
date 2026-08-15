@@ -393,10 +393,6 @@
         "message": "Απόρριψη των tabs μετά την απόκρυψη (εξοικονόμηση μνήμης)",
         "description": "Unload tabs from memory after closing a group"
     },
-    "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
-        "message": "Δεν είναι δυνατόν να αλλάξετε το group, γιατί ένα από τα ανοικτά tabs χρησιμοποιούν το μικρόφωνο ή την camera",
-        "description": "It is not possible to change the group because one of the opened tabs share microphone or camera"
-    },
     "foundHiddenUnSyncTabsDescription": {
         "message": "Υπάρχουν κρυμένα μη-συγχρονισμένα tabs. Κάντε click στο tab για να το εμφανίσετε στο τρέχον group/παράθυρο ή:",
         "description": "Found hidden unsynchronized tabs. Click on tab to show it into current group/window or:"

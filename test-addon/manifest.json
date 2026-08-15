@@ -19,7 +19,8 @@
         "tabGroups",
         "tabHide",
         "sessions",
-        "browserSettings"
+        "browserSettings",
+        "https://example.com/*"
     ],
 
     "background": {

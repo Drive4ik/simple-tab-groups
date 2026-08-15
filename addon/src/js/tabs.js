@@ -1473,6 +1473,10 @@ export async function discard(tabs, skipTrackingFlag = false) {
     return await tabsAction({action: 'discard', skipTrackingFlag}, tabs);
 }
 
+export async function pin(tabs, skipTrackingFlag = false) {
+    return await tabsAction({action: 'update', skipTrackingFlag}, tabs, {pinned: true});
+}
+
 export async function group(tabs, windowId, skipTrackingFlag = false, joinLiveGroupId = null) {
     const tabIds = tabs.map(extractId);
     const options = joinLiveGroupId

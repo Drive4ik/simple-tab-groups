@@ -70,8 +70,8 @@ A cell is a tab. Always a **meaningful name**, never a real `tab.id`:
   in creation order. No square = no group (`TAB_GROUP_ID_NONE`).
 - **➕ prefix** — the tab was created by the action under test, not by the scene setup. Makes new
   arrivals obvious in the `after` row.
-- **Suffixes** are plain text on purpose: `*` active, `(h)` hidden. Text and emoji are instantly
-  told apart; two emoji next to each other are not.
+- **Suffixes** are plain text on purpose: `*` active, `(h)` hidden, `(p)` pinned. Text and emoji
+  are instantly told apart; two emoji next to each other are not.
 
 Emoji are for the two things you scan for — which group a tab is in, and what is new. Everything
 else stays text. Adding a third emoji axis makes the table noise again, which is exactly what this
@@ -130,7 +130,8 @@ means the same run.
   groups behaves differently from what CREATE-TABS/MOVE-TABS themselves document — such a deviation
   is recorded in both documents, with cross-references, and both copies are kept in sync. Overlaps
   with no groups involved (create vs move) are duplicated the same way.
-- **No pinned tabs.** STG does not work with them, so they are outside the scope of these tests.
+- **No pinned tabs in a scene**, except in tests whose subject is pinning itself. STG never
+  groups pinned tabs — they stay outside every other test's scene.
 
 ## 6. How a test is written
 
@@ -138,8 +139,10 @@ The add-on itself is disposable and lives outside the repo; these constraints ar
 test that breaks one of them produces a table that looks like a fact and is not one.
 
 **Environment.** A clean profile, no other add-ons, `test-addon/` loaded through about:debugging
-with `tabs`, `tabGroups`, `tabHide` and `browserSettings` permissions. Progress goes to
-`console.debug`; the report itself opens in a tab at the end of the run.
+with the permissions its manifest lists (`tabs`, `tabGroups`, `tabHide`, `sessions`,
+`browserSettings`, and the `example.com` host permission — the page an injected script asks for
+the microphone on). Progress goes to `console.debug`; the report itself opens in a tab at the end
+of the run.
 
 **Isolation.** One test = one window it opens itself = one table. Tests never share a window and
 never depend on the order they ran in. Cleanliness is the harness's job, not the test's: before

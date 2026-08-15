@@ -405,10 +405,6 @@
         "message": "Sesli sekmeleri hariç tut",
         "description": "Exclude tabs with sound"
     },
-    "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
-        "message": "Açık sekmelerden biri mikrofonu veya kamerayı paylaştığı için grubu değiştirmek mümkün değildir",
-        "description": "It is not possible to change the group because one of the opened tabs share microphone or camera"
-    },
     "foundHiddenUnSyncTabsDescription": {
         "message": "Senkronize edilmemiş gizli sekmeler bulundu. Geçerli grup/pencerede göstermek için sekmeye tıklayın veya:",
         "description": "Found hidden unsynchronized tabs. Click on tab to show it into current group/window or:"

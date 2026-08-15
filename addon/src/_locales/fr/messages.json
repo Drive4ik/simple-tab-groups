@@ -425,10 +425,6 @@
         "message": "Exclure les onglet avec du son",
         "description": "Exclude tabs with sound"
     },
-    "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
-        "message": "Il n'est pas possible de changer de groupe car un des onglets ouverts partage le micro ou la caméra",
-        "description": "It is not possible to change the group because one of the opened tabs share microphone or camera"
-    },
     "foundHiddenUnSyncTabsDescription": {
         "message": "Des onglet non synchronisés ont été trouvés. Cliquez sur l'onglet pour l'ouvrir dans le groupe ou la fenêtre courante ou:",
         "description": "Found hidden unsynchronized tabs. Click on tab to show it into current group/window or:"

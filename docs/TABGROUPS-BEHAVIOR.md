@@ -1,8 +1,9 @@
 # Reference: Firefox behavior with native tab groups (tabGroups)
 
 Verified live on Firefox 154 (August 2026) with a throwaway test add-on, in a clean profile with no
-other add-ons. All tests — without pinned tabs. Every fact here is one browser build on one machine;
-a claim is as strong as the runs cited next to it, and no stronger.
+other add-ons. All tests — without pinned tabs; the one exception is §19, whose subject is pinning.
+Every fact here is one browser build on one machine; a claim is as strong as the runs cited next to
+it, and no stronger.
 
 Only facts confirmed by an actual test run belong here — never assumptions about how the browser
 "probably" works. Tab-creation facts (`tabs.create`, `index`, newTabPosition) live in
@@ -454,6 +455,49 @@ Scene closed with the window's X button, restored with Ctrl+Shift+N — came bac
   `unknown1`/`unknown2` are resHid1/resHid2 under their fresh ids — the harness had not learned
   their names yet at event time; the final state confirms exactly those two tabs are hidden.
 
+## 19. Pinning a member (`tabs.update({pinned})`)
+
+**Pinning a grouped tab is a clean detach: the browser itself strips the membership.** The tab
+moves into the pinned zone and loses its group in one operation — `tabs.onMoved` first, then
+`tabs.onUpdated {groupId: -1}`, then `tabs.onUpdated {pinned: true}`. The group survives while it
+still has members. (R10.01)
+
+| tab index | 0 | 1 | 2 | 3 |
+| - | - | - | - | - |
+| before | keep1* | 🟥 gr1 | 🟥 gr2 | 🟥 gr3 |
+| `tabs.update(gr2, {pinned: true})` settled 260 ms | | | | |
+| after | gr2(p) | keep1* | 🟥 gr1 | 🟥 gr3 |
+| `tabs.update(gr2, {pinned: false})` settled 259 ms | | | | |
+| after 2 | gr2 | keep1* | 🟥 gr1 | 🟥 gr3 |
+
+```text
+    3ms  tabs.onMoved          gr2  2 → 0
+    3ms  tabs.onUpdated        gr2  {groupId: -1}
+    3ms  tabs.onUpdated        gr2  {pinned: true}
+    1ms  tabs.onUpdated        gr2  {pinned: false}
+```
+
+- **Unpinning does NOT restore the membership and does not move the tab** — it stays where the
+  pinned zone ends, as the window's first normal tab, ungrouped; the only event is
+  `tabs.onUpdated {pinned: false}`. (R10.01)
+- **Pinning the LAST member destroys the group** — `tabGroups.onRemoved` fires between the move
+  and the `{groupId: -1}` event. A pinned active tab stays active. (R10.02)
+
+  ```text
+      3ms  tabs.onMoved          gr1  1 → 0
+      3ms  tabGroups.onRemoved   🟥  title:"G" collapsed:false
+      4ms  tabs.onUpdated        gr1  {groupId: -1}
+      4ms  tabs.onUpdated        gr1  {pinned: true}
+  ```
+
+- **`sessions` values survive both pin and unpin** — a value set before the pin reads back
+  unchanged after each step. (R10.01)
+- **`tabs.hide` silently SKIPS a tab sharing the microphone** — the call resolves with `[]`, no
+  error, the tab stays visible. Same shape as the active-tab skip (§9). (R10.03)
+- **Pinning works on a sharing tab**: `tabs.update({pinned: true})` on a tab with a live
+  microphone resolves normally, the tab is pinned, the microphone and its tab-bar indicator stay
+  live — behavior identical to a plain tab (👁️). (R10.03)
+
 ## Implications for STG code
 
 1. **Do not move tabs as an array to `{index: -1}`/`{index: 0}` if their native groups must be
@@ -492,3 +536,6 @@ Scene closed with the window's X button, restored with Ctrl+Shift+N — came bac
 11. **The browser reveals hidden tabs it moves between windows silently** — no `{hidden}` event
     at all (§17). Hidden-state bookkeeping driven by `tabs.onUpdated` misses the transition;
     re-read the tab.
+12. **Pin-and-detach is one call**: pinning strips the native membership itself (§19) — no
+    ungroup needed first; unpin does not bring the group back, and session values ride through
+    both, so state for a later return can live in the session.

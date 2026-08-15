@@ -425,10 +425,6 @@
         "message": "Tabs mit Ton ausschließen",
         "description": "Exclude tabs with sound"
     },
-    "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
-        "message": "Es ist nicht möglich die Gruppe zu wechseln, da einer der offenen Tabs auf das Mikrofon oder die Kamera zugreift",
-        "description": "It is not possible to change the group because one of the opened tabs share microphone or camera"
-    },
     "foundHiddenUnSyncTabsDescription": {
         "message": "Versteckte unsynchronisierte Tabs gefunden. Klicke auf den Tab, um ihn in der aktuellen Gruppe bzw. im aktuellen Fenster anzuzeigen oder:",
         "description": "Found hidden unsynchronized tabs. Click on tab to show it into current group/window or:"

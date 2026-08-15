@@ -441,9 +441,15 @@
         "message": "Исключить вкладки со звуком",
         "description": "Exclude tabs with sound"
     },
-    "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
-        "message": "Невозможно изменить группу, потому что на одной из вкладок используется микрофон или камера",
-        "description": "It is not possible to change the group because one of the opened tabs share microphone or camera"
+    "thisTabsWerePinned": {
+        "message": "Эти вкладки закреплены, потому что используют микрофон, камеру или демонстрацию экрана: \"$titles$\"",
+        "description": "These tabs were pinned because they are using a microphone, camera or shared screen: \"$titles$\"",
+        "placeholders": {
+            "titles": {
+                "content": "$1",
+                "example": "some titles"
+            }
+        }
     },
     "foundHiddenUnSyncTabsDescription": {
         "message": "Найдены скрытые не синхронизированные вкладки. Нажмите на вкладку, чтобы отобразить ее в текущей группе/окне или:",

@@ -425,10 +425,6 @@
         "message": "サウンド付きタブを除く",
         "description": "Exclude tabs with sound"
     },
-    "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
-        "message": "開いているタブの中にマイクかカメラを使用しているものがあるためグループを変更できません",
-        "description": "It is not possible to change the group because one of the opened tabs share microphone or camera"
-    },
     "foundHiddenUnSyncTabsDescription": {
         "message": "同期されていない隠れたタブが見つかりました。タブをクリックして現在のグループ/ウィンドウに表示するか、または:",
         "description": "Found hidden unsynchronized tabs. Click on tab to show it into current group/window or:"

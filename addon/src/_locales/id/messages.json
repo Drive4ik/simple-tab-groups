@@ -409,10 +409,6 @@
         "message": "Kecualikan tab dengan suara",
         "description": "Exclude tabs with sound"
     },
-    "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
-        "message": "Tidak mungkin mengubah grup karena salah satu tab yang terbuka membagikan mikrofon atau kamera",
-        "description": "It is not possible to change the group because one of the opened tabs share microphone or camera"
-    },
     "foundHiddenUnSyncTabsDescription": {
         "message": "Ditemukan tab tersembunyi yang tidak disinkronkan. Klik pada tab untuk menampilkannya ke grup/jendela saat ini atau:",
         "description": "Found hidden unsynchronized tabs. Click on tab to show it into current group/window or:"

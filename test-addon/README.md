@@ -62,6 +62,7 @@ writes into the report whatever it had to clean up.
 | `round-07` | the `hidden` flag on what `tabs.move` resolves with, ungroup/hide of an active member, membership at creation next to a span, array move onto a member slot, ungroup of a hidden member |
 | `round-08` | MANUAL: mouse and menu gestures on native groups — which events each gesture emits. Fully attended: every test waits for a gesture and a `T.visualAnswer('done')` |
 | `round-09` | MANUAL: windows born from moved tabs (move group to new window, drag out, `windows.create({tabId})`) and undo-close restore — `windows.onCreated` vs the attaches, the initial tab, fresh ids, hidden tabs on both trips |
+| `round-10` | API pinning: what `tabs.update({pinned})` does to native-group membership, session values and the active state; R10.03 is MANUAL — needs a microphone permission grant |
 
 ## Files
 

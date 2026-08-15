@@ -397,10 +397,6 @@
         "message": "소리가 있는 탭 제외",
         "description": "Exclude tabs with sound"
     },
-    "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
-        "message": "열린 탭 중 하나가 마이크 또는 카메라를 공유하기 때문에 그룹을 변경할 수 없습니다.",
-        "description": "It is not possible to change the group because one of the opened tabs share microphone or camera"
-    },
     "foundHiddenUnSyncTabsDescription": {
         "message": "숨겨진 동기화도지ㅣ 않은 탭을 찾았습니다. 탭을 글릭하여 현재 그룹/창에 표시하거나:",
         "description": "Found hidden unsynchronized tabs. Click on tab to show it into current group/window or:"

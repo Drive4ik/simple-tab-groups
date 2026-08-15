@@ -295,20 +295,17 @@ async function sync(trust = null, revision = null, progressFunc = null) {
     progressFunc?.(85);
 
     // remove unnecessary groups
-    for (const groupToRemove of syncResult.changes.groupsToRemove) {
+    if (syncResult.changes.groupsToRemove.size) {
         syncResult.changes.local = true;
 
-        if (Groups.isLoaded(groupToRemove.id)) {
-            // remove group from windows
-            await Groups.unload(groupToRemove.id);
+        const removedTabs = await Groups.removeMultiple(
+            [...syncResult.changes.groupsToRemove],
+            syncResult.localData.groups,
+            syncResult.localData.defaultGroupProps,
+            false
+        );
 
-            // remove tabs
-            if (!groupToRemove.isArchive) {
-                for (const tabToRemove of groupToRemove.tabs) {
-                    syncResult.changes.tabsToRemove.add(tabToRemove);
-                }
-            }
-        }
+        removedTabs.forEach(tabToRemove => syncResult.changes.tabsToRemove.add(tabToRemove));
     }
 
     progressFunc?.(90);
