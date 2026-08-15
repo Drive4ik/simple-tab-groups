@@ -1649,8 +1649,6 @@ export default {
         <edit-group
             ref="editDefaultGroup"
             :group-to-edit="defaultGroup"
-            :is-default-group="true"
-            :group-to-compare="defaultCleanGroup"
             @changes="saveDefaultGroup"></edit-group>
     </popup>
 

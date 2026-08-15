@@ -9,10 +9,7 @@ export default {
     },
     methods: {
         async openDefaultGroup() {
-            ({
-                defaultGroup: this.defaultGroup,
-                defaultCleanGroup: this.defaultCleanGroup,
-            } = await Groups.getDefaults());
+            ({defaultGroup: this.defaultGroup} = await Groups.getDefaults());
 
             this.openEditDefaultGroup = true;
         },

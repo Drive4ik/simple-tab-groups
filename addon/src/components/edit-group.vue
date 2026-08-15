@@ -27,18 +27,6 @@ export default {
             type: Object,
             required: true,
         },
-        groupToCompare: {
-            type: Object,
-            required: true,
-        },
-        isDefaultGroup: {
-            type: Boolean,
-            default: false,
-        },
-        canLoadFile: {
-            type: Boolean,
-            default: true,
-        },
     },
     components: {
         popup: popup,
@@ -46,6 +34,7 @@ export default {
         'context-menu': contextMenu,
     },
     data() {
+        this.PAGES = Constants.PAGES;
         this.DEFAULT_CONTAINER = Containers.DEFAULT;
         this.TEMPORARY_CONTAINER = Containers.TEMPORARY;
         this.GROUP_ICON_VIEW_TYPES = Constants.GROUP_ICON_VIEW_TYPES;
@@ -81,6 +70,12 @@ export default {
         },
     },
     computed: {
+        isDefaultGroup() {
+            return !this.groupToEdit.id;
+        },
+        isDisabledExportToBookmarks() {
+            return this.PAGES.isPopup && !this.permissions.bookmarks;
+        },
         iconUrlToDisplay() {
             return Groups.getIconUrl({
                 title: this.group.title,
@@ -130,18 +125,25 @@ export default {
 
         const {groups} = await Storage.get('groups');
 
-        const newGroup = {...this.groupToEdit};
+        const groupToEdit = {...this.groupToEdit};
 
-        delete newGroup.tabs;
-        delete newGroup.filteredTabs;
+        delete groupToEdit.tabs;
+        delete groupToEdit.filteredTabs;
 
-        if (newGroup.exportToBookmarks) {
-            newGroup.exportToBookmarks = this.permissions.bookmarks;
+        if (this.isDefaultGroup) {
+            const {defaultCleanGroup} = await Groups.getDefaults();
+            this.groupToCompare = defaultCleanGroup;
+        } else {
+            this.groupToCompare = JSON.clone(groupToEdit);
+        }
+
+        if (groupToEdit.exportToBookmarks) {
+            groupToEdit.exportToBookmarks = this.permissions.bookmarks;
         }
 
         this.TITLE_VARIABLES.index = String(groups.length);
 
-        this.$set(this, 'group', JSON.clone(newGroup));
+        this.$set(this, 'group', JSON.clone(groupToEdit));
 
         // TODO исключить перемещение в текущую группу
         // и обязательно сделать перемещение независимо от липкости группы
@@ -232,7 +234,7 @@ export default {
         },
 
         async selectUserGroupIcon() {
-            if (!this.canLoadFile) { // maybe temporary solution
+            if (this.PAGES.isPopup) {
                 this.showMessageCantLoadFile = true;
                 return;
             }
@@ -246,7 +248,7 @@ export default {
         async setPermissionsBookmarks(event, groupOptionKey) {
             if (!this.permissions.bookmarks && event.target.checked) {
                 this.permissions.bookmarks = await Bookmarks.requestPermission();
-                this[groupOptionKey] = this.permissions.bookmarks;
+                this.group[groupOptionKey] = this.permissions.bookmarks;
             }
         },
 
@@ -399,9 +401,14 @@ export default {
             <input type="checkbox" v-model="group.dontUploadToCloud" />
             <span v-text="lang('dontUploadToCloud')"></span>
         </label>
-        <label class="checkbox">
-            <input type="checkbox" v-model="group.exportToBookmarks" @click="$event => setPermissionsBookmarks($event, 'exportToBookmarks')" />
-            <span v-text="lang('exportGroupToBookmarks')"></span>
+        <label class="checkbox" :disabled="isDisabledExportToBookmarks">
+            <input type="checkbox" v-model="group.exportToBookmarks" :disabled="isDisabledExportToBookmarks" @click="$event => setPermissionsBookmarks($event, 'exportToBookmarks')" />
+            <span class="icon-text">
+                <span v-text="lang('exportGroupToBookmarks')"></span>
+                <figure v-if="isDisabledExportToBookmarks" class="icon image is-16x16 cursor-help" :title="lang('noAccessToBookmarks')">
+                    <img src="/icons/help.svg" />
+                </figure>
+            </span>
         </label>
     </div>
 
@@ -516,7 +523,7 @@ export default {
     <div class="field">
         <div class="control">
             <textarea class="textarea is-family-monospace"
-                :rows="canLoadFile ? false : 2"
+                :rows="PAGES.isPopup ? 2 : false"
                 @keydown.stop
                 @keyup.stop
                 v-model.trim="group.catchTabRules"

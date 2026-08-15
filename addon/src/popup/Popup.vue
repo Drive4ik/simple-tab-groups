@@ -27,8 +27,7 @@ import popupHelpersMixin from '/js/mixins/popup-helpers.mixin.js';
 import syncCloudMixin from '/js/mixins/sync-cloud.mixin.js';
 import tabGroupsMixin from '/js/mixins/tab-groups.mixin.js';
 
-const isSidebar = '#sidebar' === window.location.hash;
-const MODULE_NAME = isSidebar ? Constants.MODULES.SIDEBAR : Constants.MODULES.POPUP;
+const MODULE_NAME = Constants.PAGES.isSidebar ? Constants.MODULES.SIDEBAR : Constants.MODULES.POPUP;
 
 window.logger = new Logger(MODULE_NAME);
 Vue.config.errorHandler = errorEventHandler.bind(window.logger);
@@ -52,8 +51,6 @@ export default {
     ],
     data() {
         return {
-            isSidebar,
-
             extraAvailableTabKeys: ['lastAccessed', 'audible', 'mutedInfo'],
             optionsWatchKeys: Constants.POPUP_SETTINGS_MENU_ITEMS
                 .map(item => item.optionsCheckbox && item.key)
@@ -115,7 +112,7 @@ export default {
             document.getElementById('loading').classList.toggle('is-hidden', !this.isLoading);
         },
         'options.fullPopupWidth'(fullPopupWidth) {
-            if (!this.isSidebar) {
+            if (!this.PAGES.isSidebar) {
                 document.documentElement.classList.toggle('full-popup-width', fullPopupWidth);
             }
         },
@@ -394,7 +391,7 @@ export default {
         },
 
         closeWindow() {
-            if (!this.isSidebar) {
+            if (!this.PAGES.isSidebar) {
                 window.close();
             }
         },
@@ -408,7 +405,7 @@ export default {
 
             let isCurrentGroup = group === this.currentGroup;
 
-            if (this.isSidebar && closePopup) {
+            if (this.PAGES.isSidebar && closePopup) {
                 this.showSectionGroupTabs(group);
             }
 
@@ -437,7 +434,7 @@ export default {
                     tabId: tab?.id,
                 });
 
-                if (!this.isSidebar && this.options.closePopupAfterSelectTab && tab) {
+                if (!this.PAGES.isSidebar && this.options.closePopupAfterSelectTab && tab) {
                     this.someGroupAreLoading = false;
                     this.closeWindow();
                     return;
@@ -699,7 +696,7 @@ export default {
 <template>
 <div
     id="stg-popup"
-    :class="['no-outline', {'edit-group-popup': !!groupToEdit || openEditDefaultGroup, 'is-sidebar': isSidebar}]"
+    :class="['no-outline', {'edit-group-popup': !!groupToEdit || openEditDefaultGroup, 'is-sidebar': PAGES.isSidebar}]"
     @contextmenu="mainContextMenu"
     @click="multipleTabIds = []"
     @wheel.ctrl.prevent
@@ -1273,8 +1270,6 @@ export default {
         <edit-group
             ref="editGroup"
             :group-to-edit="groupToEdit.$data"
-            :group-to-compare="groupToEdit.$data"
-            :can-load-file="isSidebar"
             @changes="changes => saveEditedGroup(groupToEdit.id, changes)"
             @open-manage-groups="openManageGroups"></edit-group>
     </edit-group-popup>
@@ -1298,9 +1293,6 @@ export default {
         <edit-group
             ref="editDefaultGroup"
             :group-to-edit="defaultGroup"
-            :is-default-group="true"
-            :group-to-compare="defaultCleanGroup"
-            :can-load-file="isSidebar"
             @changes="saveDefaultGroup"
             @open-manage-groups="openManageGroups"></edit-group>
     </edit-group-popup>

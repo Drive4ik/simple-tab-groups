@@ -77,6 +77,12 @@ export const PAGES = Object.freeze({
     DOC: {
         UNSUPPORTED_URL: 'https://developer.mozilla.org/docs/Mozilla/Add-ons/WebExtensions/Content_scripts',
     },
+    isPopup: location.href === MANIFEST.browser_action.default_popup,
+    isSidebar: location.href === MANIFEST.sidebar_action.default_panel,
+    get isManage() {
+        return location.href.startsWith(PAGES.MANAGE);
+    },
+    isOptions: location.href.startsWith(MANIFEST.options_ui.page),
 });
 
 // permission "<all_urls>" need for tab thumbnails and webRequestBlocking

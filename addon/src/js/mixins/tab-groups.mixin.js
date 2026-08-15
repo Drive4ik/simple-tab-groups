@@ -11,11 +11,10 @@ import * as Windows from '/js/windows.js';
 import * as Cloud from '/js/sync/cloud/cloud.js';
 
 const mainStorage = localStorage.create(Constants.MODULES.BACKGROUND);
-const isManage = location.href.startsWith(Constants.PAGES.MANAGE);
 
 export default {
     data() {
-        this.isManage = isManage;
+        this.PAGES = Constants.PAGES;
 
         return {
             enableDebug: mainStorage.enableDebug,
@@ -59,7 +58,7 @@ export default {
     },
     computed: {
         includeTabThumbnails() {
-            return this.isManage && this.options.showTabsWithThumbnailsInManageGroups;
+            return this.PAGES.isManage && this.options.showTabsWithThumbnailsInManageGroups;
         },
         availableTabKeys() {
             return [...this.defaultAvailableTabKeys, ...this.extraAvailableTabKeys ?? []];
@@ -85,7 +84,7 @@ export default {
         },
     },
     created() {
-        this.startUpDataPromise = this.sendMessage('get-startup-data', {isManage});
+        this.startUpDataPromise = this.sendMessage('get-startup-data', {isManage: Constants.PAGES.isManage});
         this.containers = this.getContainers();
 
         this.$root.$on('lock-addon', () => {
@@ -104,7 +103,7 @@ export default {
             await this.loadGroups(startUpData);
         },
 
-        async tabGroupsLoad(startUpDataPromise = this.sendMessage('get-startup-data', {isManage})) {
+        async tabGroupsLoad(startUpDataPromise = this.sendMessage('get-startup-data', {isManage: Constants.PAGES.isManage})) {
             const startUpData = await startUpDataPromise;
 
             await this.loadWindowsAndGroups(startUpData);
@@ -291,7 +290,7 @@ export default {
 
             tab = this.mapTabContainer(tab);
 
-            if (this.isManage) {
+            if (this.PAGES.isManage) {
                 tab.thumbnail ??= null;
             }
 

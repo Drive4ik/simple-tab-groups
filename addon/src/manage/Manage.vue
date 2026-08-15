@@ -759,8 +759,6 @@ export default {
         <edit-group
             ref="editDefaultGroup"
             :group-to-edit="defaultGroup"
-            :is-default-group="true"
-            :group-to-compare="defaultCleanGroup"
             @changes="saveDefaultGroup"></edit-group>
     </popup>
 
@@ -783,7 +781,6 @@ export default {
         <edit-group
             ref="editGroup"
             :group-to-edit="groupToEdit.$data"
-            :group-to-compare="groupToEdit.$data"
             @changes="changes => saveEditedGroup(groupToEdit.id, changes)"></edit-group>
     </popup>
 
