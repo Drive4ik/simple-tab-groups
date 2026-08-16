@@ -52,6 +52,7 @@ import * as Bookmarks from '/js/bookmarks.js';
 import * as Permissions from '/js/permissions.js';
 import * as BrowserSettings from '/js/browser-settings.js';
 import * as Cloud from '/js/sync/cloud/cloud.js?can-do-synchronization';
+import {syncErrorMessage} from '/js/sync/cloud/cloud-helpers.js';
 import {deltaSynchronization, resetSyncState} from '/js/sync/delta/delta-sync.js';
 import * as DeltaCapture from '/js/sync/delta/delta-capture.js';
 import * as OfflineRemove from '/js/sync/delta/offline-remove.js';
@@ -1671,7 +1672,7 @@ async function cloudSync({
     }
 
     if (await Cloud.shouldShowSyncErrorNotification(syncResult, trigger)) {
-        Notification(objectToNativeError(syncResult), {
+        Notification(syncErrorMessage(syncResult), {
             id: Cloud.ERROR_NOTIFICATION_ID,
             module: ['tabs', 'createUrlOnce', Constants.PAGES.SETTINGS + '#backup/sync'],
             expires: trigger === Cloud.TRIGGER_MANUAL ? undefined : Cloud.NETWORK_RETRY_DELAY_MINUTES * 60,
@@ -1713,7 +1714,7 @@ async function cloudBackup(trust, revision = null) {
     }
 
     if (!result.ok && result.langId !== 'githubInvalidToken') {
-        Notification(objectToNativeError(result), {
+        Notification(syncErrorMessage(result), {
             id: Cloud.ERROR_NOTIFICATION_ID,
             module: ['tabs', 'createUrlOnce', Constants.PAGES.SETTINGS + '#backup/backup'],
         });

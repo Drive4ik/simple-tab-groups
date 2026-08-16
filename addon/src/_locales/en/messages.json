@@ -1749,6 +1749,10 @@
         "message": "Your GitHub token doesn't have the right access.",
         "description": "Your GitHub token doesn't have the right access."
     },
+    "githubNotFound": {
+        "message": "The synchronization gist was not found. It may have been deleted or renamed, or your token doesn't have access to it.\nPlease check your synchronization settings.",
+        "description": "The gist used for synchronization does not exist or is not accessible with the current token"
+    },
     "githubRateLimit": {
         "message": "The GitHub API speed limit has been exceeded.\nThe limit will be reset $relativeTime$.",
         "description": "The GitHub API rate limit has been exceeded",
@@ -1802,6 +1806,16 @@
     "syncDeltaLogCannotDrain": {
         "message": "Synchronization can't upload recent changes, so its change log keeps growing. This usually means the browser is offline, the access token is invalid, or the cloud storage is full. Check your connection and synchronization settings.",
         "description": "The per-device delta log exceeded its cap and cannot drain because un-synced changes can't be pushed to the cloud"
+    },
+    "syncDeltaLogCannotDrainReason": {
+        "message": "Last synchronization error: $reason$",
+        "description": "Concrete reason appended to the delta-log drain-broken error",
+        "placeholders": {
+            "reason": {
+                "content": "$1",
+                "example": "Your GitHub token is invalid"
+            }
+        }
     },
     "or": {
         "message": "or",
