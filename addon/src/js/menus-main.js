@@ -23,6 +23,8 @@ const logger = new Logger(MODULE_NAME);
 export async function create(withExtra = true) {
     const log = logger.start(create, {withExtra});
 
+    await Menus.removeAll();
+
     await MenusBookmark.create(withExtra);
     await MenusTab.create(withExtra);
     await MenusLink.create(withExtra);

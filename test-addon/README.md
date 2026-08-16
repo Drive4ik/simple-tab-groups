@@ -63,6 +63,7 @@ writes into the report whatever it had to clean up.
 | `round-08` | MANUAL: mouse and menu gestures on native groups — which events each gesture emits. Fully attended: every test waits for a gesture and a `T.visualAnswer('done')` |
 | `round-09` | MANUAL: windows born from moved tabs (move group to new window, drag out, `windows.create({tabId})`) and undo-close restore — `windows.onCreated` vs the attaches, the initial tab, fresh ids, hidden tabs on both trips |
 | `round-10` | API pinning: what `tabs.update({pinned})` does to native-group membership, session values and the active state; R10.03 is MANUAL — needs a microphone permission grant |
+| `round-11` | `browser.menus` registration lifecycle: duplicate ids, cascade removal, `removeAll`, bookmark context vs the optional `bookmarks` permission; R11.06 is MANUAL — permission grants and 👁️ looks at a bookmark's context menu |
 
 ## Files
 
@@ -71,6 +72,8 @@ writes into the report whatever it had to clean up.
 | `constants.js` | every constant and timing |
 | `test.js` | `class Test` — the table, notes, questions, events, `expect`, the report. Knows nothing about tabs |
 | `tabs.js` | `class TabsTest extends Test` — windows, tabs, groups, and the `tabs.*` / `tabGroups.*` event formatters |
+| `menus.js` | `class MenusTest extends Test` — `browser.menus` wrappers that return `{ok, error}`, existence probing, the `bookmarks` permission helpers |
+| `grant.html` + `grant.js` | the page R11.06 opens — a button that calls `permissions.request` from a real user click |
 | `harness.js` | the runner, checkpoints, `globalThis.T` |
 | `tab.html` + `tab.js` | the page every scene tab loads — it names itself from `?tab=` so the tab strip shows the tab's test name |
 | `results.html` + `results.js` | the report page — it reads the last run out of `localStorage` itself |

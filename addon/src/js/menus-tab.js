@@ -40,18 +40,16 @@ export async function create(withExtra = true) {
 
 export async function remove(withExtra = true) {
     const log = logger.start(remove, {withExtra});
-    const settings = await loadSettings();
 
-    if (settings.showContextMenuOnTabs) {
-        const withReal = await Menus.has(PARENT_ID);
-        await removeMenus(withReal);
+    if (await Menus.has(PARENT_ID)) {
+        await removeMenus();
     }
 
     if (withExtra) {
         // there are no extra menus
     }
 
-    log.stop(settings);
+    log.stop();
 }
 
 async function createMenus(settings = null) {
@@ -100,8 +98,8 @@ async function createMenus(settings = null) {
 
 }
 
-async function removeMenus(withReal) {
-    await Menus.remove(PARENT_ID, withReal);
+async function removeMenus() {
+    await Menus.remove(PARENT_ID);
 }
 
 export async function updateGroup(group, settings = null) {

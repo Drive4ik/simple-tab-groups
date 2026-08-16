@@ -55,6 +55,14 @@ async function saveAll(menus) {
     await browser.storage.session.set({[STORAGE_KEY]: menus});
 }
 
+let writeQueue = Promise.resolve();
+
+function queueWrite(fn) {
+    const turn = writeQueue.then(fn);
+    writeQueue = turn.catch(() => {});
+    return turn;
+}
+
 function collectDescendantIds(menus, parentId) {
     const ids = [];
 
@@ -73,7 +81,11 @@ export async function has(id) {
     return id in menus;
 }
 
-export async function create(createProperties) {
+export function create(createProperties) {
+    return queueWrite(() => createNow(createProperties));
+}
+
+async function createNow(createProperties) {
     const id = createProperties.id ??= crypto.randomUUID();
 
     const log = logger.start('create', createProperties);
@@ -126,7 +138,11 @@ export async function createSeparator(parentId) {
     });
 }
 
-export async function update(id, updateProperties) {
+export function update(id, updateProperties) {
+    return queueWrite(() => updateNow(id, updateProperties));
+}
+
+async function updateNow(id, updateProperties) {
     const log = logger.start('update', id, updateProperties);
 
     const menus = await loadAll();
@@ -164,8 +180,12 @@ export async function update(id, updateProperties) {
     log.stop();
 }
 
-export async function remove(id, withReal = true) {
-    const log = logger.start('remove', id, {withReal});
+export function remove(id) {
+    return queueWrite(() => removeNow(id));
+}
+
+async function removeNow(id) {
+    const log = logger.start('remove', id);
 
     const menus = await loadAll();
 
@@ -173,9 +193,7 @@ export async function remove(id, withReal = true) {
         log.throwError([id, "doesn't exist"]);
     }
 
-    if (withReal) {
-        await browser.menus.remove(id).catch(log.onCatch(["can't remove", id]));
-    }
+    await browser.menus.remove(id).catch(log.onCatch(["can't remove", id]));
 
     const descendantIds = collectDescendantIds(menus, id);
 
@@ -190,7 +208,11 @@ export async function remove(id, withReal = true) {
     log.stop();
 }
 
-export async function removeChildren(parentId) {
+export function removeChildren(parentId) {
+    return queueWrite(() => removeChildrenNow(parentId));
+}
+
+async function removeChildrenNow(parentId) {
     const log = logger.start('removeChildren', parentId);
 
     const menus = await loadAll();
@@ -211,7 +233,11 @@ export async function removeChildren(parentId) {
     log.stop();
 }
 
-export async function removeAll() {
+export function removeAll() {
+    return queueWrite(removeAllNow);
+}
+
+async function removeAllNow() {
     const log = logger.start('removeAll');
 
     await browser.menus.removeAll().catch(log.onCatch("can't remove all"));

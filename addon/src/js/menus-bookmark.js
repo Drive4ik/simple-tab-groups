@@ -49,11 +49,9 @@ export async function create(withExtra = true) {
 
 export async function remove(withExtra = true) {
     const log = logger.start(remove, {withExtra});
-    const hasPermission = await Bookmarks.hasPermission();
 
-    if (hasPermission) {
-        const withReal = await Menus.has(PARENT_ID);
-        await removeMenus(withReal);
+    if (await Menus.has(PARENT_ID)) {
+        await removeMenus();
     }
 
     if (withExtra) {
@@ -62,7 +60,7 @@ export async function remove(withExtra = true) {
         }
     }
 
-    log.stop({hasPermission});
+    log.stop();
 }
 
 async function createMenus() {
@@ -102,8 +100,8 @@ async function createMenus() {
     });
 }
 
-async function removeMenus(withReal) {
-    await Menus.remove(PARENT_ID, withReal);
+async function removeMenus() {
+    await Menus.remove(PARENT_ID);
 }
 
 export async function updateGroup(group, settings = null, hasPermission = null) {
@@ -163,11 +161,12 @@ export function removeListeners() {
 async function onPermissionsChanged(permissions) {
     if (Permissions.hasAny(permissions, Permissions.BOOKMARKS)) {
         const hasPermission = await Bookmarks.hasPermission();
+        const hasMenus = await Menus.has(PARENT_ID);
 
-        if (hasPermission) {
+        if (hasPermission && !hasMenus) {
             await createMenus();
-        } else {
-            await removeMenus(false);
+        } else if (!hasPermission && hasMenus) {
+            await removeMenus();
         }
 
         await Menus.update(EXPORT_ALL_GROUPS_ID, {

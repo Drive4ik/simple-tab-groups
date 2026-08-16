@@ -20,7 +20,12 @@
         "tabHide",
         "sessions",
         "browserSettings",
+        "menus",
         "https://example.com/*"
+    ],
+
+    "optional_permissions": [
+        "bookmarks"
     ],
 
     "background": {

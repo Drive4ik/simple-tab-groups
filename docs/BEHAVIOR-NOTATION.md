@@ -140,8 +140,9 @@ test that breaks one of them produces a table that looks like a fact and is not 
 
 **Environment.** A clean profile, no other add-ons, `test-addon/` loaded through about:debugging
 with the permissions its manifest lists (`tabs`, `tabGroups`, `tabHide`, `sessions`,
-`browserSettings`, and the `example.com` host permission — the page an injected script asks for
-the microphone on). Progress goes to `console.debug`; the report itself opens in a tab at the end
+`browserSettings`, `menus`, the `example.com` host permission — the page an injected script asks
+for the microphone on — and the optional `bookmarks` permission, granted by hand where a test
+asks for it). Progress goes to `console.debug`; the report itself opens in a tab at the end
 of the run.
 
 **Isolation.** One test = one window it opens itself = one table. Tests never share a window and
