@@ -11,6 +11,8 @@ const FAVICON_MAP_PREFIX = 'deltaFavIconMap:';
 export const PRE_APPLY_BACKUP_SLOTS = 5;
 export const PRE_APPLY_BACKUP_SLOT_KEY = 'deltaPreApplyBackupSlot';
 
+export const lastSyncErrorKey = 'deltaLastSyncError';
+
 export function preApplyBackupFilePath(template, slot) {
     return template.replaceAll('{slot}', String(slot));
 }

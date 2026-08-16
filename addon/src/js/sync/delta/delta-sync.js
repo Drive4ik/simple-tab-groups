@@ -3,6 +3,7 @@ import * as Storage from '/js/storage.js';
 import * as Groups from '/js/groups.js';
 import * as MenusMain from '/js/menus-main.js';
 import Logger, {nativeErrorToObject} from '/js/logger.js';
+import Lang from '/js/lang.js';
 import {createCloudProvider} from '../cloud/provider.js';
 import * as SyncStorage from '../sync-storage.js';
 import {CloudError, send} from '../cloud/cloud.js?can-do-synchronization';
@@ -37,6 +38,7 @@ import {
     resetPendingKey,
     pendingTruncateKey,
     favIconMapKey,
+    lastSyncErrorKey,
     maxSeq,
     saveBaseline,
 } from './sync-marks.js';
@@ -69,8 +71,12 @@ DeltaLog.onOverflow(droppedThroughSeq => {
 
 DeltaLog.onDrainBroken(excess => {
     const error = new CloudError('syncDeltaLogCannotDrain');
-    storage.lastError = error.message;
-    send('sync-error', {ok: false, langId: error.langId, ...nativeErrorToObject(error), drainBroken: true, excess});
+    const cause = storage[lastSyncErrorKey];
+    const message = cause
+        ? `${error.message}\n\n${Lang('syncDeltaLogCannotDrainReason', [cause])}`
+        : error.message;
+    storage.lastError = message;
+    send('sync-error', {ok: false, langId: error.langId, ...nativeErrorToObject(error), message, drainBroken: true, excess});
     logger.warn('delta log cannot drain: un-synced events exceed the cap; surfaced sync-error', {excess});
 });
 
@@ -132,6 +138,7 @@ export async function resetSyncState() {
         delete storage[lastPushedSeqKey(selfDeviceId)];
         delete storage[pendingTruncateKey(selfDeviceId)];
         delete storage[favIconMapKey(selfDeviceId)];
+        delete storage[lastSyncErrorKey];
 
         await DeltaLog.clear();
 
@@ -534,6 +541,7 @@ export async function deltaSynchronization() {
         syncResult.langId = e.langId;
         syncResult.progress = lastProgress;
         Object.assign(syncResult, nativeErrorToObject(e));
+        storage[lastSyncErrorKey] = syncResult.message;
 
         send('sync-error', syncResult);
         log.logError('cant delta sync', e);
@@ -542,6 +550,9 @@ export async function deltaSynchronization() {
         if (lockAcquired && Cloud?.releaseLock) {
             await Cloud.releaseLock().catch(e =>
                 log.warn('cant release advisory lock; TTL will reclaim it', String(e)));
+        }
+        if (syncResult.ok) {
+            delete storage[lastSyncErrorKey];
         }
         inProgress = false;
         send('sync-finish', syncResult);

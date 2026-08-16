@@ -1807,6 +1807,16 @@
         "message": "Synchronization can't upload recent changes, so its change log keeps growing. This usually means the browser is offline, the access token is invalid, or the cloud storage is full. Check your connection and synchronization settings.",
         "description": "The per-device delta log exceeded its cap and cannot drain because un-synced changes can't be pushed to the cloud"
     },
+    "syncDeltaLogCannotDrainReason": {
+        "message": "Last synchronization error: $reason$",
+        "description": "Concrete reason appended to the delta-log drain-broken error",
+        "placeholders": {
+            "reason": {
+                "content": "$1",
+                "example": "Your GitHub token is invalid"
+            }
+        }
+    },
     "or": {
         "message": "or",
         "description": "one or the other"
