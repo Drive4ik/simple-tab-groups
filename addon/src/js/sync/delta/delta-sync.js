@@ -553,6 +553,7 @@ export async function deltaSynchronization() {
         }
         if (syncResult.ok) {
             delete storage[lastSyncErrorKey];
+            delete storage.lastError;
         }
         inProgress = false;
         send('sync-finish', syncResult);
