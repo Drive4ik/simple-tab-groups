@@ -1,6 +1,6 @@
 import {ACTION_WAIT, POLL_WAIT, SETTLE_TIMEOUT, TAB_GROUP_ID_NONE} from '../constants.js';
 import {wait} from '../test.js';
-import {TabsTest, sceneUrl, nameFromUrl, openedWindows} from '../tabs.js';
+import {TabsTest, nameFromUrl, openedWindows} from '../tabs.js';
 
 export const note = `Round 09 — MANUAL: windows born from moved tabs and windows restored from close.
 Every fact so far watched only tabs.* / tabGroups.* — this round adds windows.onCreated/onRemoved
@@ -67,12 +67,6 @@ class WindowsTest extends TabsTest {
             'tabs.onActivated': ([info]) => {
                 return () => `${this.known(info.tabId)}  previous:${info.previousTabId ? this.known(info.previousTabId) : '-'}${this.winTag(info.windowId)}`;
             },
-            'tabs.onDetached': ([tabId, info]) => {
-                return `${this.known(tabId)}  from index:${info.oldPosition}${this.winTag(info.oldWindowId)}`;
-            },
-            'tabs.onAttached': ([tabId, info]) => {
-                return `${this.known(tabId)}  to index:${info.newPosition}${this.winTag(info.newWindowId)}`;
-            },
             'tabs.onUpdated': ([tabId, changeInfo, tab], {updatedKeys}) => {
                 const keys = Object.keys(changeInfo).filter(key => updatedKeys.includes(key));
 
@@ -112,49 +106,6 @@ class WindowsTest extends TabsTest {
         }
 
         return tabs;
-    }
-
-    async buildWindow(names) {
-        const win = await browser.windows.create({url: sceneUrl(names[0])});
-
-        openedWindows.add(win.id);
-
-        const first = win.tabs?.length ? win.tabs : await browser.tabs.query({windowId: win.id});
-
-        this.bind(first[0].id, names[0]);
-
-        for (let index = 1; index < names.length; index++) {
-            const tab = await browser.tabs.create({
-                windowId: win.id,
-                url: sceneUrl(names[index]),
-                index,
-                active: false,
-            });
-
-            this.bind(tab.id, names[index]);
-        }
-
-        await this.waitWindowLoaded(win.id, names);
-
-        return win.id;
-    }
-
-    async waitWindowLoaded(windowId, names) {
-        const started = Date.now();
-
-        while (Date.now() - started < SETTLE_TIMEOUT) {
-            const tabs = await browser.tabs.query({windowId}).catch(() => []);
-            const loaded = names.filter(name => tabs.some(tab => nameFromUrl(tab.url) === name));
-
-            if (loaded.length === names.length) {
-                return tabs.sort((a, b) => a.index - b.index);
-            }
-
-            await wait(POLL_WAIT);
-        }
-
-        this.note(`window ${this.winName(windowId)}: not all tabs loaded after ${SETTLE_TIMEOUT} ms`);
-        return null;
     }
 
     async findWindowWith(names) {

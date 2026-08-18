@@ -250,12 +250,12 @@
         "description": "Set random color"
     },
     "catchTabContainers": {
-        "message": "Konteynır içeren sekmeleri yakalayıp bu gruba taşı",
-        "description": "Catch and move tabs with containers to this group"
+        "message": "Konteynırlardaki sekmeleri yakala",
+        "description": "Catch tabs from containers"
     },
     "regexpForTabsTitle": {
-        "message": "Yakalanacak sekmeler için kurallı ifade",
-        "description": "Regular expressions for catch tabs"
+        "message": "Sekmeleri kurallı ifadelerle yakala",
+        "description": "Catch tabs by regular expressions"
     },
     "regexpForTabsPlaceholder": {
         "message": "Kurallı ifade",
@@ -405,17 +405,13 @@
         "message": "Sesli sekmeleri hariç tut",
         "description": "Exclude tabs with sound"
     },
-    "foundHiddenUnSyncTabsDescription": {
-        "message": "Senkronize edilmemiş gizli sekmeler bulundu. Geçerli grup/pencerede göstermek için sekmeye tıklayın veya:",
-        "description": "Found hidden unsynchronized tabs. Click on tab to show it into current group/window or:"
+    "tabsWithoutGroups": {
+        "message": "Grupsuz sekmeler",
+        "description": "Tabs without groups"
     },
     "actionHiddenUnSyncTabsMoveAllTabsToCurrentGroup": {
-        "message": "Tüm bu sekmeleri mevcut gruba/pencereye taşı",
-        "description": "Move all of these tabs into current group/window"
-    },
-    "actionHiddenUnSyncWindowTabsCreateGroup": {
-        "message": "Yalnızca mevcut pencerede bulunan sekmelerle yeni grup oluştur",
-        "description": "Create new group with tabs only from the current window"
+        "message": "Tüm bu sekmeleri mevcut gruba taşı",
+        "description": "Move all of these tabs into current group"
     },
     "actionHiddenUnSyncTabsCreateGroup": {
         "message": "Tüm bu sekmelerle yeni grup oluştur",
@@ -440,6 +436,22 @@
     "openGroupInNewWindow": {
         "message": "Grubu yeni pencerede aç",
         "description": "Open group in new window"
+    },
+    "autoMoveIntoGroupTitle": {
+        "message": "Sekmeleri bu gruba otomatik olarak taşı",
+        "description": "Automatically move tabs into this group"
+    },
+    "afterAutoMoveShowTab": {
+        "message": "Taşınan sekmeyi göster",
+        "description": "Show the moved tab"
+    },
+    "afterAutoMoveShowOnlyActiveTab": {
+        "message": "Yalnızca etkin sekme taşındıysa",
+        "description": "Only if the active tab has been moved"
+    },
+    "afterAutoMoveShowNotification": {
+        "message": "Bildirim göster",
+        "description": "Show a notification"
     },
     "extendedTabSearch": {
         "message": "Genişletilmiş arama",

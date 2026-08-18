@@ -250,8 +250,12 @@
         "description": "Set random color"
     },
     "catchTabContainers": {
-        "message": "컨테이너가 있는 탭을 끌어 이 그룹으로 이동",
-        "description": "Catch and move tabs with containers to this group"
+        "message": "컨테이너에서 탭 잡기",
+        "description": "Catch tabs from containers"
+    },
+    "regexpForTabsTitle": {
+        "message": "정규식으로 탭 잡기",
+        "description": "Catch tabs by regular expressions"
     },
     "regexpForTabsHelp": {
         "message": "여기에 웹 주소에 대한 정규식을 삽입하십시오. 일치하는 탭은 자동으로 이 그룹으로 이동됩니다.\n규칙당 한 줄을 사용합니다. 원하는 만큼 사용할 수 있습니다.\n예:\ngithub\\.com/drive4ik/simple-tab-groups - 애드온 저장소의 모든 페이지를 캐치\nbugzilla\\.mozilla\\.org - Firefox 버그 보고서를 캐치\n(facebook|twitter|youtube)\\.com - 모든 소셜 페이지",
@@ -397,17 +401,9 @@
         "message": "소리가 있는 탭 제외",
         "description": "Exclude tabs with sound"
     },
-    "foundHiddenUnSyncTabsDescription": {
-        "message": "숨겨진 동기화도지ㅣ 않은 탭을 찾았습니다. 탭을 글릭하여 현재 그룹/창에 표시하거나:",
-        "description": "Found hidden unsynchronized tabs. Click on tab to show it into current group/window or:"
-    },
     "actionHiddenUnSyncTabsMoveAllTabsToCurrentGroup": {
-        "message": "이 모든 탭을 현재 그룹/창으로 이동",
-        "description": "Move all of these tabs into current group/window"
-    },
-    "actionHiddenUnSyncWindowTabsCreateGroup": {
-        "message": "현재 창에서만 탭이 있는 새 그룹 만들기",
-        "description": "Create new group with tabs only from the current window"
+        "message": "이 모든 탭을 현재 그룹으로 이동",
+        "description": "Move all of these tabs into current group"
     },
     "actionHiddenUnSyncTabsCreateGroup": {
         "message": "이 모든 탭으로 새 그룹 만들기",
@@ -437,9 +433,21 @@
         "message": "그룹이 닫힐 때 탭 음소거 및 열릴 때 복원",
         "description": "Mute tabs when group close and restore when open"
     },
-    "showTabAfterMovingItIntoThisGroup": {
-        "message": "이 그룹으로 자동 이동한 후 탭 표시",
-        "description": "Show the tab after auto-moving it into this group"
+    "autoMoveIntoGroupTitle": {
+        "message": "탭을 이 그룹으로 자동 이동",
+        "description": "Automatically move tabs into this group"
+    },
+    "afterAutoMoveShowTab": {
+        "message": "이동된 탭 표시",
+        "description": "Show the moved tab"
+    },
+    "afterAutoMoveShowOnlyActiveTab": {
+        "message": "활성 탭이 이동된 경우에만",
+        "description": "Only if the active tab has been moved"
+    },
+    "afterAutoMoveShowNotification": {
+        "message": "알림 표시",
+        "description": "Show a notification"
     },
     "tabMoving": {
         "message": "탭 이동",
@@ -634,6 +642,10 @@
     "groupWithoutTabs": {
         "message": "이 그룹에는 탭이 없습니다.",
         "description": "This group has no tabs"
+    },
+    "tabsWithoutGroups": {
+        "message": "그룹 없는 탭",
+        "description": "Tabs without groups"
     },
     "exportAllGroupsToBookmarks": {
         "message": "모든 그룹을 북마크로 내보내기",

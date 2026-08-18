@@ -258,12 +258,12 @@
         "description": "Set random color"
     },
     "catchTabContainers": {
-        "message": "Verschiebe Tabs mit Containern automatisch in diese Gruppe",
-        "description": "Catch and move tabs with containers to this group"
+        "message": "Erfasse Tabs aus Containern",
+        "description": "Catch tabs from containers"
     },
     "regexpForTabsTitle": {
-        "message": "Reguläre Ausdrücke zum automatischen Verschieben der Tabs",
-        "description": "Regular expressions for catch tabs"
+        "message": "Erfasse Tabs mit regulären Ausdrücken",
+        "description": "Catch tabs by regular expressions"
     },
     "regexpForTabsPlaceholder": {
         "message": "Reguläre Ausdrücke",
@@ -425,17 +425,9 @@
         "message": "Tabs mit Ton ausschließen",
         "description": "Exclude tabs with sound"
     },
-    "foundHiddenUnSyncTabsDescription": {
-        "message": "Versteckte unsynchronisierte Tabs gefunden. Klicke auf den Tab, um ihn in der aktuellen Gruppe bzw. im aktuellen Fenster anzuzeigen oder:",
-        "description": "Found hidden unsynchronized tabs. Click on tab to show it into current group/window or:"
-    },
     "actionHiddenUnSyncTabsMoveAllTabsToCurrentGroup": {
-        "message": "Verschiebe alle dieser Tabs in die derzeitige Gruppe bzw. ins derzeitige Fenster",
-        "description": "Move all of these tabs into current group/window"
-    },
-    "actionHiddenUnSyncWindowTabsCreateGroup": {
-        "message": "Erstelle eine neue Gruppe mit den Tabs des aktuellen Fensters",
-        "description": "Create new group with tabs only from the current window"
+        "message": "Verschiebe alle dieser Tabs in die derzeitige Gruppe",
+        "description": "Move all of these tabs into current group"
     },
     "actionHiddenUnSyncTabsCreateGroup": {
         "message": "Erstelle eine neue Gruppe mit diesen Tabs",
@@ -465,17 +457,21 @@
         "message": "Tabs stummschalten, wenn die Gruppe geschlossen wird und wiederherstellen, wenn sie geöffnet wird",
         "description": "Mute tabs when group close and restore when open"
     },
-    "showTabAfterMovingItIntoThisGroup": {
-        "message": "Zeige Tab, nachdem er automatisch in diese Gruppe verschoben wurde",
-        "description": "Show the tab after auto-moving it into this group"
+    "autoMoveIntoGroupTitle": {
+        "message": "Tabs automatisch in diese Gruppe verschieben",
+        "description": "Automatically move tabs into this group"
     },
-    "showOnlyActiveTabAfterMovingItIntoThisGroup": {
-        "message": "Nur wenn der aktive Tab bewegt wurde",
+    "afterAutoMoveShowTab": {
+        "message": "Zeige den verschobenen Tab",
+        "description": "Show the moved tab"
+    },
+    "afterAutoMoveShowOnlyActiveTab": {
+        "message": "Nur wenn der aktive Tab verschoben wurde",
         "description": "Only if the active tab has been moved"
     },
-    "showNotificationAfterMovingTabIntoThisGroup": {
-        "message": "Zeige eine Benachrichtigung, wenn Tabs in diese Gruppe bewegt werden",
-        "description": "Show a notification when tabs are moved to this group"
+    "afterAutoMoveShowNotification": {
+        "message": "Zeige eine Benachrichtigung",
+        "description": "Show a notification"
     },
     "tabMoving": {
         "message": "Tab verschieben",
@@ -670,6 +666,10 @@
     "groupWithoutTabs": {
         "message": "Diese Gruppe hat keine Tabs",
         "description": "This group has no tabs"
+    },
+    "tabsWithoutGroups": {
+        "message": "Tabs ohne Gruppen",
+        "description": "Tabs without groups"
     },
     "exportAllGroupsToBookmarks": {
         "message": "Alle Gruppen als Lesezeichen exportieren",

@@ -16,10 +16,6 @@ const WATCH_ALL = [
 ];
 
 class GestureTest extends TabsTest {
-    winTag(windowId) {
-        return windowId === undefined || windowId === this.win ? '' : '  [other window]';
-    }
-
     eventFormatters() {
         return {
             ...super.eventFormatters(),
@@ -28,12 +24,6 @@ class GestureTest extends TabsTest {
             },
             'tabs.onRemoved': ([tabId, info]) => {
                 return `${this.known(tabId)}  isWindowClosing:${info.isWindowClosing}${this.winTag(info.windowId)}`;
-            },
-            'tabs.onDetached': ([tabId, info]) => {
-                return `${this.known(tabId)}  from index:${info.oldPosition}${this.winTag(info.oldWindowId)}`;
-            },
-            'tabs.onAttached': ([tabId, info]) => {
-                return `${this.known(tabId)}  to index:${info.newPosition}${this.winTag(info.newWindowId)}`;
             },
             'tabs.onUpdated': ([tabId, changeInfo, tab], {updatedKeys}) => {
                 const keys = Object.keys(changeInfo).filter(key => {

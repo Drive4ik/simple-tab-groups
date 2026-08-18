@@ -82,6 +82,9 @@ export default {
         allTabsArray() {
             return Object.values(this.allTabs);
         },
+        unSyncTabIds() {
+            return this.unSyncTabs.map(Tabs.extractId);
+        },
     },
     created() {
         this.startUpDataPromise = this.sendMessage('get-startup-data', {isManage: Constants.PAGES.isManage});
@@ -389,10 +392,10 @@ export default {
 
             this.sendMessageModule('Tabs.discard', tabsToDiscard.map(Tabs.extractId));
         },
-        async moveTabs(tabId, groupId, loadUnsync = false, showTabAfterMovingItIntoThisGroup, discardTabs) {
+        async moveTabs(tabId, groupId, loadUnsync = false, showTab, discardTabs) {
             const tabIds = this.getTabIdsForMove(tabId);
 
-            await this.sendMessageModule('Tabs.move', tabIds, groupId, {showTabAfterMovingItIntoThisGroup});
+            await this.sendMessageModule('Tabs.move', tabIds, groupId, {showTab});
 
             if (discardTabs) {
                 this.sendMessageModule('Tabs.discard', tabIds);

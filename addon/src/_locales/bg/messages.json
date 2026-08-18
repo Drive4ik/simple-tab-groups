@@ -258,12 +258,12 @@
         "description": "Set random color"
     },
     "catchTabContainers": {
-        "message": "Преместване на разделите от групата в изолатори",
-        "description": "Catch and move tabs with containers to this group"
+        "message": "Прихващане на раздели от изолатори",
+        "description": "Catch tabs from containers"
     },
     "regexpForTabsTitle": {
-        "message": "Регулярен израз за преместване на раздели",
-        "description": "Regular expressions for catch tabs"
+        "message": "Прихващане на раздели чрез регулярни изрази",
+        "description": "Catch tabs by regular expressions"
     },
     "regexpForTabsPlaceholder": {
         "message": "Регулярни изрази",
@@ -425,17 +425,9 @@
         "message": "С изключение на разделите със звук",
         "description": "Exclude tabs with sound"
     },
-    "foundHiddenUnSyncTabsDescription": {
-        "message": "Скрити несинхронизирани раздели. Изберете раздел, за да го добавите в текущата група/прозорец или изберете",
-        "description": "Found hidden unsynchronized tabs. Click on tab to show it into current group/window or:"
-    },
     "actionHiddenUnSyncTabsMoveAllTabsToCurrentGroup": {
-        "message": "Преместване на всички в текущата група/прозорец",
-        "description": "Move all of these tabs into current group/window"
-    },
-    "actionHiddenUnSyncWindowTabsCreateGroup": {
-        "message": "Създаване на група с разделите само от този прозорец",
-        "description": "Create new group with tabs only from the current window"
+        "message": "Преместване на всички в текущата група",
+        "description": "Move all of these tabs into current group"
     },
     "actionHiddenUnSyncTabsCreateGroup": {
         "message": "Създаване на група с всички",
@@ -465,17 +457,21 @@
         "message": "Заглушаване на разделите при затваряне на групата",
         "description": "Mute tabs when group close and restore when open"
     },
-    "showTabAfterMovingItIntoThisGroup": {
-        "message": "Отваряне на раздела след автоматично преместване",
-        "description": "Show the tab after auto-moving it into this group"
+    "autoMoveIntoGroupTitle": {
+        "message": "Автоматично преместване на раздели в тази група",
+        "description": "Automatically move tabs into this group"
     },
-    "showOnlyActiveTabAfterMovingItIntoThisGroup": {
-        "message": "Само ако текущият раздел е преместван",
+    "afterAutoMoveShowTab": {
+        "message": "Показване на преместения раздел",
+        "description": "Show the moved tab"
+    },
+    "afterAutoMoveShowOnlyActiveTab": {
+        "message": "Само ако е бил преместен активният раздел",
         "description": "Only if the active tab has been moved"
     },
-    "showNotificationAfterMovingTabIntoThisGroup": {
-        "message": "Показване на известие, когато раздели биват преместени в тази група",
-        "description": "Show a notification when tabs are moved to this group"
+    "afterAutoMoveShowNotification": {
+        "message": "Показване на известие",
+        "description": "Show a notification"
     },
     "tabMoving": {
         "message": "Преместване на раздели",
@@ -670,6 +666,10 @@
     "groupWithoutTabs": {
         "message": "Групата не съдържа раздели",
         "description": "This group has no tabs"
+    },
+    "tabsWithoutGroups": {
+        "message": "Раздели без групи",
+        "description": "Tabs without groups"
     },
     "exportAllGroupsToBookmarks": {
         "message": "Изнасяне на групите в отметките",

@@ -258,12 +258,12 @@
         "description": "Set random color"
     },
     "catchTabContainers": {
-        "message": "Agarrá y mové pestañas con contenedores a este grupo",
-        "description": "Catch and move tabs with containers to this group"
+        "message": "Agarrar pestañas de contenedores",
+        "description": "Catch tabs from containers"
     },
     "regexpForTabsTitle": {
-        "message": "Expresiones regulares para encontrar pestañas",
-        "description": "Regular expressions for catch tabs"
+        "message": "Agarrar pestañas con expresiones regulares",
+        "description": "Catch tabs by regular expressions"
     },
     "regexpForTabsPlaceholder": {
         "message": "Expresiones regulares",
@@ -425,17 +425,9 @@
         "message": "Excluir pestañas con sonido",
         "description": "Exclude tabs with sound"
     },
-    "foundHiddenUnSyncTabsDescription": {
-        "message": "Encontrar pestañas ocultas desincronizadas. Hacé clic en una pestaña para mostrarla en el grupo/ventana actual o:",
-        "description": "Found hidden unsynchronized tabs. Click on tab to show it into current group/window or:"
-    },
     "actionHiddenUnSyncTabsMoveAllTabsToCurrentGroup": {
-        "message": "Mover todas estas pestañas al grupo/ventana actual",
-        "description": "Move all of these tabs into current group/window"
-    },
-    "actionHiddenUnSyncWindowTabsCreateGroup": {
-        "message": "Crear nuevo grupo solamente con las pestañas de la ventana actual",
-        "description": "Create new group with tabs only from the current window"
+        "message": "Mover todas estas pestañas al grupo actual",
+        "description": "Move all of these tabs into current group"
     },
     "actionHiddenUnSyncTabsCreateGroup": {
         "message": "Crear nuevo grupo con todas estas pestañas",
@@ -465,17 +457,21 @@
         "message": "Mutear pestañas cuando se cierre el grupo y restaurar cuando se abra",
         "description": "Mute tabs when group close and restore when open"
     },
-    "showTabAfterMovingItIntoThisGroup": {
-        "message": "Mostrar la pestaña después de que se mueva automáticamente a este grupo",
-        "description": "Show the tab after auto-moving it into this group"
+    "autoMoveIntoGroupTitle": {
+        "message": "Mover pestañas automáticamente a este grupo",
+        "description": "Automatically move tabs into this group"
     },
-    "showOnlyActiveTabAfterMovingItIntoThisGroup": {
+    "afterAutoMoveShowTab": {
+        "message": "Mostrar la pestaña movida",
+        "description": "Show the moved tab"
+    },
+    "afterAutoMoveShowOnlyActiveTab": {
         "message": "Solamente si la pestaña activa fue movida",
         "description": "Only if the active tab has been moved"
     },
-    "showNotificationAfterMovingTabIntoThisGroup": {
-        "message": "Mostrar una notificación cuando se muevan pestañas a este grupo",
-        "description": "Show a notification when tabs are moved to this group"
+    "afterAutoMoveShowNotification": {
+        "message": "Mostrar una notificación",
+        "description": "Show a notification"
     },
     "tabMoving": {
         "message": "Movimiento de pestaña",
@@ -670,6 +666,10 @@
     "groupWithoutTabs": {
         "message": "Este grupo no tiene pestañas",
         "description": "This group has no tabs"
+    },
+    "tabsWithoutGroups": {
+        "message": "Pestañas sin grupos",
+        "description": "Tabs without groups"
     },
     "exportAllGroupsToBookmarks": {
         "message": "Exportar todos los grupos  a los marcadores",

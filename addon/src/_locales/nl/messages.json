@@ -258,12 +258,12 @@
         "description": "Set random color"
     },
     "catchTabContainers": {
-        "message": "Vang containertabbladen en verplaats ze naar deze groep",
-        "description": "Catch and move tabs with containers to this group"
+        "message": "Vang tabbladen uit containers",
+        "description": "Catch tabs from containers"
     },
     "regexpForTabsTitle": {
-        "message": "Reguliere expressies voor het vangen van tabbladen",
-        "description": "Regular expressions for catch tabs"
+        "message": "Vang tabbladen met reguliere expressies",
+        "description": "Catch tabs by regular expressions"
     },
     "regexpForTabsPlaceholder": {
         "message": "Reguliere expressies",
@@ -425,17 +425,9 @@
         "message": "Tabbladen met geluid uitsluiten",
         "description": "Exclude tabs with sound"
     },
-    "foundHiddenUnSyncTabsDescription": {
-        "message": "Verborgen, niet-gesynchroniseerde tabs gevonden. Klik op de tab om deze in de huidige groep/venster te tonen, of:",
-        "description": "Found hidden unsynchronized tabs. Click on tab to show it into current group/window or:"
-    },
     "actionHiddenUnSyncTabsMoveAllTabsToCurrentGroup": {
-        "message": "Verplaats al deze tabs naar de huidige groep/venster",
-        "description": "Move all of these tabs into current group/window"
-    },
-    "actionHiddenUnSyncWindowTabsCreateGroup": {
-        "message": "Maak een nieuwe groep aan met enkel tabs van het huidige venster",
-        "description": "Create new group with tabs only from the current window"
+        "message": "Verplaats al deze tabs naar de huidige groep",
+        "description": "Move all of these tabs into current group"
     },
     "actionHiddenUnSyncTabsCreateGroup": {
         "message": "Maak een nieuwe groep aan met al deze tabs",
@@ -465,17 +457,21 @@
         "message": "Tabs dempen bij het sluiten van de groep en herstellen bij het openen ervan",
         "description": "Mute tabs when group close and restore when open"
     },
-    "showTabAfterMovingItIntoThisGroup": {
-        "message": "Toon de tab na het automatisch verplaatsen ervan naar deze groep",
-        "description": "Show the tab after auto-moving it into this group"
+    "autoMoveIntoGroupTitle": {
+        "message": "Tabbladen automatisch naar deze groep verplaatsen",
+        "description": "Automatically move tabs into this group"
     },
-    "showOnlyActiveTabAfterMovingItIntoThisGroup": {
+    "afterAutoMoveShowTab": {
+        "message": "Toon het verplaatste tabblad",
+        "description": "Show the moved tab"
+    },
+    "afterAutoMoveShowOnlyActiveTab": {
         "message": "Alleen als het actieve tabblad verplaatst werd",
         "description": "Only if the active tab has been moved"
     },
-    "showNotificationAfterMovingTabIntoThisGroup": {
-        "message": "Toon een notificatie wanneer tabbladen naar deze groep verplaatst worden",
-        "description": "Show a notification when tabs are moved to this group"
+    "afterAutoMoveShowNotification": {
+        "message": "Toon een notificatie",
+        "description": "Show a notification"
     },
     "tabMoving": {
         "message": "Tabblad wordt verplaatst",
@@ -670,6 +666,10 @@
     "groupWithoutTabs": {
         "message": "Deze groep heeft geen tabs",
         "description": "This group has no tabs"
+    },
+    "tabsWithoutGroups": {
+        "message": "Tabs zonder groep",
+        "description": "Tabs without groups"
     },
     "exportAllGroupsToBookmarks": {
         "message": "Exporteer alle groepen naar bladwijzers",

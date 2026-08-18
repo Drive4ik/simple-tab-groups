@@ -602,6 +602,11 @@ async function applyNow(windowId, group) {
 // are recreated on the next apply. Mandatory before Tabs.hide of a tab that can sit in a live
 // group: the header of a group whose tabs are all hidden stays in the tab bar
 // (docs/TABGROUPS-BEHAVIOR.md §4). Works on hidden members too (§12)
+export async function hasLiveGroups(windowId) {
+    const liveGroups = await browser.tabGroups.query({windowId});
+    return liveGroups.length > 0;
+}
+
 export async function ungroup(tabs) {
     tabs = Array.isArray(tabs) ? tabs : [tabs];
 

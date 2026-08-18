@@ -267,7 +267,7 @@ export async function moveToGroup(groupId, info, tab) {
     const tabIds = await Tabs.getHighlightedIds(tab.windowId, tab);
 
     await Tabs.move(tabIds, groupId, {
-        showTabAfterMovingItIntoThisGroup: info.button.RIGHT,
+        showTab: info.button.RIGHT,
     });
 
     if (!info.button.RIGHT && Menus.isControlPressed(info)) {

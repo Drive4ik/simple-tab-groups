@@ -258,12 +258,12 @@
         "description": "Set random color"
     },
     "catchTabContainers": {
-        "message": "Capturar e mover abas com 'containers' para este grupo",
-        "description": "Catch and move tabs with containers to this group"
+        "message": "Capturar abas de contêineres",
+        "description": "Catch tabs from containers"
     },
     "regexpForTabsTitle": {
-        "message": "Expressões regulares para pegar abas",
-        "description": "Regular expressions for catch tabs"
+        "message": "Capturar abas com expressões regulares",
+        "description": "Catch tabs by regular expressions"
     },
     "regexpForTabsPlaceholder": {
         "message": "Expressões regulares",
@@ -425,17 +425,9 @@
         "message": "Excluir abas com som",
         "description": "Exclude tabs with sound"
     },
-    "foundHiddenUnSyncTabsDescription": {
-        "message": "Foram encontradas abas escondidas dessincronizadas. Clique na aba para mostrar no grupo/janela atual ou:",
-        "description": "Found hidden unsynchronized tabs. Click on tab to show it into current group/window or:"
-    },
     "actionHiddenUnSyncTabsMoveAllTabsToCurrentGroup": {
-        "message": "Mover todas estas abas para o grupo/janela atual",
-        "description": "Move all of these tabs into current group/window"
-    },
-    "actionHiddenUnSyncWindowTabsCreateGroup": {
-        "message": "Criar novo grupo apenas com abas da janela atual",
-        "description": "Create new group with tabs only from the current window"
+        "message": "Mover todas estas abas para o grupo atual",
+        "description": "Move all of these tabs into current group"
     },
     "actionHiddenUnSyncTabsCreateGroup": {
         "message": "Criar novo grupo com estas abas",
@@ -465,17 +457,21 @@
         "message": "Silenciar abas quando o grupo fecha e restaurar quando abre",
         "description": "Mute tabs when group close and restore when open"
     },
-    "showTabAfterMovingItIntoThisGroup": {
-        "message": "Exibir a aba depois de movê-la automaticamente para este grupo",
-        "description": "Show the tab after auto-moving it into this group"
+    "autoMoveIntoGroupTitle": {
+        "message": "Mover abas automaticamente para este grupo",
+        "description": "Automatically move tabs into this group"
     },
-    "showOnlyActiveTabAfterMovingItIntoThisGroup": {
-        "message": "Somente se a aba ativa foi removida",
+    "afterAutoMoveShowTab": {
+        "message": "Exibir a aba movida",
+        "description": "Show the moved tab"
+    },
+    "afterAutoMoveShowOnlyActiveTab": {
+        "message": "Somente se a aba ativa foi movida",
         "description": "Only if the active tab has been moved"
     },
-    "showNotificationAfterMovingTabIntoThisGroup": {
-        "message": "Mostre uma notificação quando abas forem movidas para esse grupo",
-        "description": "Show a notification when tabs are moved to this group"
+    "afterAutoMoveShowNotification": {
+        "message": "Mostrar uma notificação",
+        "description": "Show a notification"
     },
     "tabMoving": {
         "message": "Movendo aba",
@@ -670,6 +666,10 @@
     "groupWithoutTabs": {
         "message": "Este grupo não tem abas",
         "description": "This group has no tabs"
+    },
+    "tabsWithoutGroups": {
+        "message": "Abas sem grupos",
+        "description": "Tabs without groups"
     },
     "exportAllGroupsToBookmarks": {
         "message": "Exportar todos os grupos para os favoritos",

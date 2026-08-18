@@ -7,6 +7,7 @@ import contextMenu from '../components/context-menu.vue';
 import 'vue-swatches/dist/vue-swatches.css';
 
 // import backgroundSelf from '/js/background.js';
+import '/js/prefixed-storage.js';
 import * as Constants from '/js/constants.js';
 import * as Containers from '/js/containers.js';
 import * as Storage from '/js/storage.js';
@@ -19,6 +20,8 @@ import * as Bookmarks from '/js/bookmarks.js';
 import * as Groups from '/js/groups.js';
 import * as Utils from '/js/utils.js';
 import JSON from '/js/json.js';
+
+const mainStorage = localStorage.create(Constants.MODULES.BACKGROUND);
 
 export default {
     name: 'edit-group',
@@ -47,6 +50,8 @@ export default {
         return {
             show: false,
 
+            expandedAfterMoveBlock: mainStorage.isExpandedAfterMoveBlock ?? false,
+
             containers: Containers.query(),
 
             disabledContainers: {},
@@ -70,6 +75,15 @@ export default {
         },
     },
     computed: {
+        isExpandedAfterMoveBlock: {
+            get() {
+                return this.expandedAfterMoveBlock;
+            },
+            set(value) {
+                this.expandedAfterMoveBlock = value;
+                mainStorage.isExpandedAfterMoveBlock = value;
+            },
+        },
         isDefaultGroup() {
             return !this.groupToEdit.id;
         },
@@ -468,90 +482,101 @@ export default {
                 </figure>
             </span>
         </label>
-        <label class="checkbox">
-            <input type="checkbox" v-model="group.showTabAfterMovingItIntoThisGroup" />
-            <span v-text="lang('showTabAfterMovingItIntoThisGroup')"></span>
-        </label>
-        <label class="checkbox ml-3" :disabled="!group.showTabAfterMovingItIntoThisGroup">
-            <input type="checkbox" :disabled="!group.showTabAfterMovingItIntoThisGroup" v-model="group.showOnlyActiveTabAfterMovingItIntoThisGroup" />
-            <span v-text="lang('showOnlyActiveTabAfterMovingItIntoThisGroup')"></span>
-        </label>
-        <label class="checkbox">
-            <input type="checkbox" v-model="group.showNotificationAfterMovingTabIntoThisGroup" />
-            <span v-text="lang('showNotificationAfterMovingTabIntoThisGroup')"></span>
-        </label>
     </div>
 
-    <div class="field">
-        <label class="label colon" v-text="lang('catchTabContainers')"></label>
-        <div class="checkboxes as-column containers">
-            <label v-for="container in {DEFAULT_CONTAINER, ...containers}" :key="container.cookieStoreId" class="checkbox" :disabled="isDisabledContainer(container.cookieStoreId)">
-                <input type="checkbox" v-model="group.catchTabContainers" :value="container.cookieStoreId" :disabled="isDisabledContainer(container.cookieStoreId)" />
+    <details class="auto-move" :open="isExpandedAfterMoveBlock" @toggle="isExpandedAfterMoveBlock = $event.target.open">
+        <summary v-text="lang('autoMoveIntoGroupTitle')"></summary>
+
+        <div class="field">
+            <label class="label colon" v-text="lang('catchTabContainers')"></label>
+            <div class="checkboxes as-column containers">
+                <label v-for="container in {DEFAULT_CONTAINER, ...containers}" :key="container.cookieStoreId" class="checkbox" :disabled="isDisabledContainer(container.cookieStoreId)">
+                    <input type="checkbox" v-model="group.catchTabContainers" :value="container.cookieStoreId" :disabled="isDisabledContainer(container.cookieStoreId)" />
+                    <span class="icon-text">
+                        <figure v-if="container.iconUrl" :class="`icon image is-16x16 userContext-icon identity-icon-${container.icon} identity-color-${container.color}`"></figure>
+                        <span class="word-break-word" v-text="container.name"></span>
+                    </span>
+                    <em class="brackets-round word-break-word hidden-empty" v-text="disabledContainers[container.cookieStoreId] ?? ''"></em>
+                </label>
+            </div>
+        </div>
+
+        <div class="field">
+            <label class="label">
                 <span class="icon-text">
-                    <figure v-if="container.iconUrl" :class="`icon image is-16x16 userContext-icon identity-icon-${container.icon} identity-color-${container.color}`"></figure>
-                    <span class="word-break-word" v-text="container.name"></span>
+                    <span v-text="lang('regexpForTabsTitle')"></span>
+                    <figure class="icon image is-16x16 cursor-help" :title="lang('regexpForTabsHelp')">
+                        <img src="/icons/help.svg" />
+                    </figure>
                 </span>
-                <em class="brackets-round word-break-word hidden-empty" v-text="disabledContainers[container.cookieStoreId] ?? ''"></em>
             </label>
         </div>
-    </div>
 
-    <div class="field">
-        <label class="label">
-            <span class="icon-text">
-                <span v-text="lang('regexpForTabsTitle')"></span>
-                <figure class="icon image is-16x16 cursor-help" :title="lang('regexpForTabsHelp')">
-                    <img src="/icons/help.svg" />
-                </figure>
-            </span>
-        </label>
-    </div>
-
-    <div v-if="currentDomainRegexp || currentDomainWithSubdomainsRegexp" class="field is-grouped">
-        <div v-if="currentDomainRegexp" class="control">
-            <button class="button is-link is-small" @click="addCurrentDomain(currentDomainRegexp)">
-                <span v-text="currentDomainRegexp"></span>
-            </button>
-        </div>
-        <div v-if="currentDomainWithSubdomainsRegexp" class="control">
-            <button class="button is-link is-small" @click="addCurrentDomain(currentDomainWithSubdomainsRegexp)">
-                <span v-text="currentDomainWithSubdomainsRegexp"></span>
-            </button>
-        </div>
-    </div>
-
-    <div class="field">
-        <div class="control">
-            <textarea class="textarea is-family-monospace"
-                :rows="PAGES.isPopup ? 2 : false"
-                @keydown.stop
-                @keyup.stop
-                v-model.trim="group.catchTabRules"
-                :disabled="isDefaultGroup"
-                :placeholder="lang('regexpForTabsPlaceholder')"></textarea>
-        </div>
-    </div>
-
-    <div class="field">
-        <label class="label colon" v-text="lang('moveToGroupIfNoneCatchTabRules')"></label>
-        <div class="control" :class="{'has-icons-left': group.moveToGroupIfNoneCatchTabRules}">
-            <div class="select is-fullwidth">
-                <select v-model="group.moveToGroupIfNoneCatchTabRules">
-                    <option :value="null" v-text="lang('dontMove')"></option>
-                    <option
-                        v-for="group in groupsMoveToIfNoneCatchTabRules"
-                        :key="group.id + 'catch'"
-                        :value="group.id"
-                        v-text="group.isArchive ? lang('groupArchivedTitle', group.titleToView) : group.titleToView"></option>
-                </select>
+        <div v-if="currentDomainRegexp || currentDomainWithSubdomainsRegexp" class="field is-grouped">
+            <div v-if="currentDomainRegexp" class="control">
+                <button class="button is-link is-small" @click="addCurrentDomain(currentDomainRegexp)">
+                    <span v-text="currentDomainRegexp"></span>
+                </button>
             </div>
-            <span v-if="group.moveToGroupIfNoneCatchTabRules" class="icon is-left">
-                <figure class="image is-16x16">
-                    <img class="no-fill" :src="selectedMoveGroupToImage" />
-                </figure>
-            </span>
+            <div v-if="currentDomainWithSubdomainsRegexp" class="control">
+                <button class="button is-link is-small" @click="addCurrentDomain(currentDomainWithSubdomainsRegexp)">
+                    <span v-text="currentDomainWithSubdomainsRegexp"></span>
+                </button>
+            </div>
         </div>
-    </div>
+
+        <div class="field">
+            <div class="control">
+                <textarea class="textarea is-family-monospace"
+                    :rows="PAGES.isPopup ? 2 : false"
+                    @keydown.stop
+                    @keyup.stop
+                    v-model.trim="group.catchTabRules"
+                    :disabled="isDefaultGroup"
+                    :placeholder="lang('regexpForTabsPlaceholder')"></textarea>
+            </div>
+        </div>
+
+        <hr>
+
+        <div class="field">
+            <label class="label colon" v-text="lang('moveToGroupIfNoneCatchTabRules')"></label>
+            <div class="control" :class="{'has-icons-left': group.moveToGroupIfNoneCatchTabRules}">
+                <div class="select is-fullwidth">
+                    <select v-model="group.moveToGroupIfNoneCatchTabRules">
+                        <option :value="null" v-text="lang('dontMove')"></option>
+                        <option
+                            v-for="group in groupsMoveToIfNoneCatchTabRules"
+                            :key="group.id + 'catch'"
+                            :value="group.id"
+                            v-text="group.isArchive ? lang('groupArchivedTitle', group.titleToView) : group.titleToView"></option>
+                    </select>
+                </div>
+                <span v-if="group.moveToGroupIfNoneCatchTabRules" class="icon is-left">
+                    <figure class="image is-16x16">
+                        <img class="no-fill" :src="selectedMoveGroupToImage" />
+                    </figure>
+                </span>
+            </div>
+        </div>
+
+        <hr>
+
+        <div class="checkboxes as-column">
+            <label class="checkbox">
+                <input type="checkbox" v-model="group.afterAutoMoveShowTab" />
+                <span v-text="lang('afterAutoMoveShowTab')"></span>
+            </label>
+            <label class="checkbox ml-3" :disabled="!group.afterAutoMoveShowTab">
+                <input type="checkbox" :disabled="!group.afterAutoMoveShowTab" v-model="group.afterAutoMoveShowOnlyActiveTab" />
+                <span v-text="lang('afterAutoMoveShowOnlyActiveTab')"></span>
+            </label>
+            <label class="checkbox">
+                <input type="checkbox" v-model="group.afterAutoMoveShowNotification" />
+                <span v-text="lang('afterAutoMoveShowNotification')"></span>
+            </label>
+        </div>
+    </details>
 
     <popup
         v-if="showMessageCantLoadFile"
@@ -574,6 +599,20 @@ export default {
 
 <style>
 .edit-group {
+    details.auto-move {
+        border: 1px solid var(--bulma-border);
+        border-radius: var(--bulma-radius);
+        padding: calc(var(--bulma-block-spacing) / 2) var(--bulma-block-spacing);
+
+        summary {
+            cursor: pointer;
+        }
+
+        &[open] > summary {
+            margin-block-end: calc(var(--bulma-block-spacing) / 2);
+        }
+    }
+
     .checkboxes.containers {
         max-height: calc((var(--bulma-body-font-size) + 1em) * 6 + .5em);
         overflow-x: auto;

@@ -258,12 +258,12 @@
         "description": "Set random color"
     },
     "catchTabContainers": {
-        "message": "Złap i przenieś karty z kontekstem do tej grupy",
-        "description": "Catch and move tabs with containers to this group"
+        "message": "Łap karty z kontenerów",
+        "description": "Catch tabs from containers"
     },
     "regexpForTabsTitle": {
-        "message": "Dopasuj karty za pomocą wyrażenia regularnego",
-        "description": "Regular expressions for catch tabs"
+        "message": "Łap karty za pomocą wyrażeń regularnych",
+        "description": "Catch tabs by regular expressions"
     },
     "regexpForTabsPlaceholder": {
         "message": "Wyrażenie regularne",
@@ -425,17 +425,9 @@
         "message": "Wyklucz zakładki odtwarzające dźwięki",
         "description": "Exclude tabs with sound"
     },
-    "foundHiddenUnSyncTabsDescription": {
-        "message": "Znaleziono ukryte niezsynchronizowane karty. Kliknij zakładkę, aby wyświetlić ją w bieżącej grupie / oknie lub:",
-        "description": "Found hidden unsynchronized tabs. Click on tab to show it into current group/window or:"
-    },
     "actionHiddenUnSyncTabsMoveAllTabsToCurrentGroup": {
-        "message": "Przenieś wszystkie te karty do bieżącej grupy / okna",
-        "description": "Move all of these tabs into current group/window"
-    },
-    "actionHiddenUnSyncWindowTabsCreateGroup": {
-        "message": "Utwórz nową grupę z zakładkami tylko z aktualnego okna",
-        "description": "Create new group with tabs only from the current window"
+        "message": "Przenieś wszystkie te karty do bieżącej grupy",
+        "description": "Move all of these tabs into current group"
     },
     "actionHiddenUnSyncTabsCreateGroup": {
         "message": "Utwórz nową grupę z tymi kartami",
@@ -465,17 +457,21 @@
         "message": "Wycisz karty podczas zamykania całej grupy oraz przywróć gdy będzie otwierana",
         "description": "Mute tabs when group close and restore when open"
     },
-    "showTabAfterMovingItIntoThisGroup": {
-        "message": "Pokaż kartę po auto-przeniesieniu jej do nowej grupy",
-        "description": "Show the tab after auto-moving it into this group"
+    "autoMoveIntoGroupTitle": {
+        "message": "Automatyczne przenoszenie kart do tej grupy",
+        "description": "Automatically move tabs into this group"
     },
-    "showOnlyActiveTabAfterMovingItIntoThisGroup": {
-        "message": "Tylko gdy aktywna zakładka została przesunięta",
+    "afterAutoMoveShowTab": {
+        "message": "Pokaż przeniesioną kartę",
+        "description": "Show the moved tab"
+    },
+    "afterAutoMoveShowOnlyActiveTab": {
+        "message": "Tylko jeśli przeniesiona została aktywna karta",
         "description": "Only if the active tab has been moved"
     },
-    "showNotificationAfterMovingTabIntoThisGroup": {
-        "message": "Pokazuj powiadomienia gdy zakłady zostały przeniesione do tej grupy",
-        "description": "Show a notification when tabs are moved to this group"
+    "afterAutoMoveShowNotification": {
+        "message": "Pokaż powiadomienie",
+        "description": "Show a notification"
     },
     "tabMoving": {
         "message": "Przenoszenie kart",
@@ -670,6 +666,10 @@
     "groupWithoutTabs": {
         "message": "Ta grupa nie zawiera żadnych kart",
         "description": "This group has no tabs"
+    },
+    "tabsWithoutGroups": {
+        "message": "Karty bez grup",
+        "description": "Tabs without groups"
     },
     "exportAllGroupsToBookmarks": {
         "message": "Eksportuj wszystkie grupy do zakładek",

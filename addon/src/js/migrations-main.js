@@ -142,6 +142,21 @@ export default [{
 
         // groups, by data shape
 
+        const autoMovePropsRenames = [
+            ['showTabAfterMovingItIntoThisGroup', 'afterAutoMoveShowTab'],
+            ['showOnlyActiveTabAfterMovingItIntoThisGroup', 'afterAutoMoveShowOnlyActiveTab'],
+            ['showNotificationAfterMovingTabIntoThisGroup', 'afterAutoMoveShowNotification'],
+        ];
+
+        function renameAutoMoveProps(obj) {
+            for (const [oldKey, newKey] of autoMovePropsRenames) {
+                if (Object.hasOwn(obj, oldKey)) {
+                    obj[newKey] = obj[oldKey];
+                    delete obj[oldKey];
+                }
+            }
+        }
+
         // the 6.0-era group defaults, frozen: the live Groups.create defaults will drift in future versions
         const exampleGroup = {
             iconUrl: null,
@@ -160,9 +175,9 @@ export default [{
             catchTabRules: '',
             moveToGroupIfNoneCatchTabRules: null,
             muteTabsWhenGroupCloseAndRestoreWhenOpen: false,
-            showTabAfterMovingItIntoThisGroup: false,
-            showOnlyActiveTabAfterMovingItIntoThisGroup: false,
-            showNotificationAfterMovingTabIntoThisGroup: true,
+            afterAutoMoveShowTab: false,
+            afterAutoMoveShowOnlyActiveTab: false,
+            afterAutoMoveShowNotification: true,
             groupsNative: [],
         };
 
@@ -221,8 +236,10 @@ export default [{
                 group.exportToBookmarksWhenAutoBackup = !!data.autoBackupGroupsToBookmarks;
             }
 
-            if (Object.hasOwn(data, 'showNotificationAfterMoveTab') && !Object.hasOwn(group, 'showNotificationAfterMovingTabIntoThisGroup')) {
-                group.showNotificationAfterMovingTabIntoThisGroup = data.showNotificationAfterMoveTab;
+            renameAutoMoveProps(group);
+
+            if (Object.hasOwn(data, 'showNotificationAfterMoveTab') && !Object.hasOwn(group, 'afterAutoMoveShowNotification')) {
+                group.afterAutoMoveShowNotification = data.showNotificationAfterMoveTab;
             }
 
             group.tabs = group.tabs.filter(Boolean);
@@ -262,6 +279,8 @@ export default [{
 
         // defaultGroupProps, by data shape
         data.defaultGroupProps ??= {};
+
+        renameAutoMoveProps(data.defaultGroupProps);
 
         if (data.defaultGroupIconViewType && data.defaultGroupIconViewType !== 'main-squares') {
             data.defaultGroupProps.iconViewType ??= data.defaultGroupIconViewType;

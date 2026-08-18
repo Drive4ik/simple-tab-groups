@@ -250,12 +250,12 @@
         "description": "Set random color"
     },
     "catchTabContainers": {
-        "message": "Tangkap dan pindahkan tab dengan wadah ke grup ini",
-        "description": "Catch and move tabs with containers to this group"
+        "message": "Tangkap tab dari wadah",
+        "description": "Catch tabs from containers"
     },
     "regexpForTabsTitle": {
-        "message": "Ekspresi reguler untuk tab tangkap",
-        "description": "Regular expressions for catch tabs"
+        "message": "Tangkap tab dengan ekspresi reguler",
+        "description": "Catch tabs by regular expressions"
     },
     "regexpForTabsPlaceholder": {
         "message": "Ekspresi reguler",
@@ -409,17 +409,9 @@
         "message": "Kecualikan tab dengan suara",
         "description": "Exclude tabs with sound"
     },
-    "foundHiddenUnSyncTabsDescription": {
-        "message": "Ditemukan tab tersembunyi yang tidak disinkronkan. Klik pada tab untuk menampilkannya ke grup/jendela saat ini atau:",
-        "description": "Found hidden unsynchronized tabs. Click on tab to show it into current group/window or:"
-    },
     "actionHiddenUnSyncTabsMoveAllTabsToCurrentGroup": {
-        "message": "Pindahkan semua tab ini ke grup/jendela saat ini",
-        "description": "Move all of these tabs into current group/window"
-    },
-    "actionHiddenUnSyncWindowTabsCreateGroup": {
-        "message": "Buat grup baru dengan tab hanya dari jendela saat ini",
-        "description": "Create new group with tabs only from the current window"
+        "message": "Pindahkan semua tab ini ke grup saat ini",
+        "description": "Move all of these tabs into current group"
     },
     "actionHiddenUnSyncTabsCreateGroup": {
         "message": "Buat grup baru dengan semua tab ini",
@@ -449,9 +441,21 @@
         "message": "Bisukan tab saat grup ditutup dan pulihkan saat dibuka",
         "description": "Mute tabs when group close and restore when open"
     },
-    "showTabAfterMovingItIntoThisGroup": {
-        "message": "Tampilkan tab setelah memindahkannya secara otomatis ke grup ini",
-        "description": "Show the tab after auto-moving it into this group"
+    "autoMoveIntoGroupTitle": {
+        "message": "Pindahkan tab secara otomatis ke grup ini",
+        "description": "Automatically move tabs into this group"
+    },
+    "afterAutoMoveShowTab": {
+        "message": "Tampilkan tab yang dipindahkan",
+        "description": "Show the moved tab"
+    },
+    "afterAutoMoveShowOnlyActiveTab": {
+        "message": "Hanya jika tab aktif telah dipindahkan",
+        "description": "Only if the active tab has been moved"
+    },
+    "afterAutoMoveShowNotification": {
+        "message": "Tampilkan notifikasi",
+        "description": "Show a notification"
     },
     "tabMoving": {
         "message": "Perpindahan tab",
@@ -646,6 +650,10 @@
     "groupWithoutTabs": {
         "message": "Grup ini tidak memiliki tab",
         "description": "This group has no tabs"
+    },
+    "tabsWithoutGroups": {
+        "message": "Tab tanpa grup",
+        "description": "Tabs without groups"
     },
     "exportAllGroupsToBookmarks": {
         "message": "Ekspor semua grup ke bookmark",

@@ -258,12 +258,12 @@
         "description": "Set random color"
     },
     "catchTabContainers": {
-        "message": "捕捉並將有容器的分頁移到此群組",
-        "description": "Catch and move tabs with containers to this group"
+        "message": "捕捉容器分頁",
+        "description": "Catch tabs from containers"
     },
     "regexpForTabsTitle": {
-        "message": "捕捉分頁的正規表示式",
-        "description": "Regular expressions for catch tabs"
+        "message": "用正規表示式捕捉分頁",
+        "description": "Catch tabs by regular expressions"
     },
     "regexpForTabsPlaceholder": {
         "message": "正規表示式",
@@ -425,17 +425,9 @@
         "message": "排除發出聲音的分頁",
         "description": "Exclude tabs with sound"
     },
-    "foundHiddenUnSyncTabsDescription": {
-        "message": "發現隱藏的未同步分頁。點選分頁將其顯示於目前群組/視窗或：",
-        "description": "Found hidden unsynchronized tabs. Click on tab to show it into current group/window or:"
-    },
     "actionHiddenUnSyncTabsMoveAllTabsToCurrentGroup": {
-        "message": "將所有分頁移至目前群組/視窗",
-        "description": "Move all of these tabs into current group/window"
-    },
-    "actionHiddenUnSyncWindowTabsCreateGroup": {
-        "message": "將本視窗所有分頁建立為新的群組",
-        "description": "Create new group with tabs only from the current window"
+        "message": "將所有分頁移至目前群組",
+        "description": "Move all of these tabs into current group"
     },
     "actionHiddenUnSyncTabsCreateGroup": {
         "message": "建立新群組並將這些分頁移入",
@@ -465,17 +457,21 @@
         "message": "當群組關閉的時候，將全數分頁靜音，且在重開該群組時解除靜音",
         "description": "Mute tabs when group close and restore when open"
     },
-    "showTabAfterMovingItIntoThisGroup": {
-        "message": "分頁自動移至此群組後，顯示此分頁",
-        "description": "Show the tab after auto-moving it into this group"
+    "autoMoveIntoGroupTitle": {
+        "message": "自動將分頁移至此群組",
+        "description": "Automatically move tabs into this group"
     },
-    "showOnlyActiveTabAfterMovingItIntoThisGroup": {
+    "afterAutoMoveShowTab": {
+        "message": "顯示被移動的分頁",
+        "description": "Show the moved tab"
+    },
+    "afterAutoMoveShowOnlyActiveTab": {
         "message": "活動中分頁被移動才顯示",
         "description": "Only if the active tab has been moved"
     },
-    "showNotificationAfterMovingTabIntoThisGroup": {
-        "message": "當分頁被移到此群組時顯示通知",
-        "description": "Show a notification when tabs are moved to this group"
+    "afterAutoMoveShowNotification": {
+        "message": "顯示通知",
+        "description": "Show a notification"
     },
     "tabMoving": {
         "message": "正在移動分頁",
@@ -670,6 +666,10 @@
     "groupWithoutTabs": {
         "message": "此群組沒有任何分頁",
         "description": "This group has no tabs"
+    },
+    "tabsWithoutGroups": {
+        "message": "無群組的分頁",
+        "description": "Tabs without groups"
     },
     "exportAllGroupsToBookmarks": {
         "message": "匯出所有群組到書籤",

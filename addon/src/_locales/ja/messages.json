@@ -258,12 +258,12 @@
         "description": "Set random color"
     },
     "catchTabContainers": {
-        "message": "Firefox のコンテナーにより分類されたタブを自動的にキャッチしてこのグループに移動します",
-        "description": "Catch and move tabs with containers to this group"
+        "message": "コンテナーからタブをキャッチする",
+        "description": "Catch tabs from containers"
     },
     "regexpForTabsTitle": {
         "message": "正規表現でタブをキャッチする",
-        "description": "Regular expressions for catch tabs"
+        "description": "Catch tabs by regular expressions"
     },
     "regexpForTabsPlaceholder": {
         "message": "正規表現を記入してください",
@@ -425,17 +425,9 @@
         "message": "サウンド付きタブを除く",
         "description": "Exclude tabs with sound"
     },
-    "foundHiddenUnSyncTabsDescription": {
-        "message": "同期されていない隠れたタブが見つかりました。タブをクリックして現在のグループ/ウィンドウに表示するか、または:",
-        "description": "Found hidden unsynchronized tabs. Click on tab to show it into current group/window or:"
-    },
     "actionHiddenUnSyncTabsMoveAllTabsToCurrentGroup": {
-        "message": "これらのタブを現在のグループ/ウィンドウに移動する",
-        "description": "Move all of these tabs into current group/window"
-    },
-    "actionHiddenUnSyncWindowTabsCreateGroup": {
-        "message": "現在のウィンドウのタブでグループを作成する",
-        "description": "Create new group with tabs only from the current window"
+        "message": "これらのタブを現在のグループに移動する",
+        "description": "Move all of these tabs into current group"
     },
     "actionHiddenUnSyncTabsCreateGroup": {
         "message": "これらのタブを使って新しいグループを作成する",
@@ -465,17 +457,21 @@
         "message": "グループを閉じるときにタブをミュートし、開くときに復元する",
         "description": "Mute tabs when group close and restore when open"
     },
-    "showTabAfterMovingItIntoThisGroup": {
-        "message": "このグループにタブが自動的に移動した場合そのタブを表示する",
-        "description": "Show the tab after auto-moving it into this group"
+    "autoMoveIntoGroupTitle": {
+        "message": "タブをこのグループへ自動的に移動する",
+        "description": "Automatically move tabs into this group"
     },
-    "showOnlyActiveTabAfterMovingItIntoThisGroup": {
+    "afterAutoMoveShowTab": {
+        "message": "移動したタブを表示する",
+        "description": "Show the moved tab"
+    },
+    "afterAutoMoveShowOnlyActiveTab": {
         "message": "アクティブなタブが移動した場合のみ",
         "description": "Only if the active tab has been moved"
     },
-    "showNotificationAfterMovingTabIntoThisGroup": {
-        "message": "タブがこのグループに移動したときに通知を表示する",
-        "description": "Show a notification when tabs are moved to this group"
+    "afterAutoMoveShowNotification": {
+        "message": "通知を表示する",
+        "description": "Show a notification"
     },
     "tabMoving": {
         "message": "タブ移動",
@@ -670,6 +666,10 @@
     "groupWithoutTabs": {
         "message": "このグループにはタブがありません",
         "description": "This group has no tabs"
+    },
+    "tabsWithoutGroups": {
+        "message": "グループのないタブ",
+        "description": "Tabs without groups"
     },
     "exportAllGroupsToBookmarks": {
         "message": "全てのグループをブックマークへエクスポートする",

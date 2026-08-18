@@ -3,10 +3,6 @@
         "message": "Erstelle, verändere und ändere schnell Tab Gruppierungen",
         "description": "Description of the extension."
     },
-    "openSettings": {
-        "message": "Einstellungen",
-        "description": "Settings context button title"
-    },
     "manageGroupsTitle": {
         "message": "Gruppierungen verwalten",
         "description": "Manage groups"
@@ -33,43 +29,9 @@
             }
         }
     },
-    "warning": {
-        "message": "Warnung!",
-        "description": "Warning!"
-    },
-    "success": {
-        "message": "Erfolg!",
-        "description": "Success!"
-    },
-    "ok": {
-        "message": "OK",
-        "description": "OK button"
-    },
-    "save": {
-        "message": "Speichern",
-        "description": "Save"
-    },
-    "delete": {
-        "message": "Löschen",
-        "description": "Delete"
-    },
-    "cancel": {
-        "message": "Abbrechen",
-        "description": "Cancel"
-    },
     "searchPlaceholder": {
         "message": "Suchen",
         "description": "Search placeholder"
-    },
-    "invalidRegExpRuleTitle": {
-        "message": "Regel '$regexp$' ist ungültig und wird übersprungen.",
-        "description": "Invalid rule description",
-        "placeholders": {
-            "regexp": {
-                "content": "$1",
-                "example": "google\\.com"
-            }
-        }
     },
     "closePopupAfterChangeGroup": {
         "message": "Schliesse Popup nach dem Wechseln der Gruppierung",
@@ -115,10 +77,6 @@
         "message": "Gruppierungen sortieren [Z-A]",
         "description": "Sort groups [Z-A]"
     },
-    "generalTitle": {
-        "message": "Allgemein",
-        "description": "General"
-    },
     "groupSettings": {
         "message": "Gruppierungseinstellungen",
         "description": "Group settings"
@@ -126,30 +84,6 @@
     "deleteGroup": {
         "message": "Lösche Gruppierung",
         "description": "Delete group"
-    },
-    "groupTabsCount": {
-        "message": "$count$ Tabs",
-        "description": "Group tabs count",
-        "placeholders": {
-            "count": {
-                "content": "$1",
-                "example": "4"
-            }
-        }
-    },
-    "groupTabsCountActive": {
-        "message": "$active$/$count$ Tabs aktiv",
-        "description": "Group tabs count active",
-        "placeholders": {
-            "active": {
-                "content": "$1",
-                "example": "2"
-            },
-            "count": {
-                "content": "$2",
-                "example": "4"
-            }
-        }
     },
     "deleteTab": {
         "message": "Lösche Tab",
@@ -163,17 +97,9 @@
         "message": "Erstelle neue Gruppierung",
         "description": "Create new group"
     },
-    "goBackButtonTitle": {
-        "message": "Zurück",
-        "description": "Go back"
-    },
     "goBackToGroupsButtonTitle": {
         "message": "Zurück zu Gruppierungen",
         "description": "Go back to groups"
-    },
-    "title": {
-        "message": "Titel",
-        "description": "Title"
     },
     "iconColor": {
         "message": "Icon Farbe",

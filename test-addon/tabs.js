@@ -1,5 +1,5 @@
-import {SCENE_URL, SQUARES, TAB_GROUP_ID_NONE, NOISY_UPDATE_KEYS} from './constants.js';
-import {Test} from './test.js';
+import {SCENE_URL, SQUARES, TAB_GROUP_ID_NONE, NOISY_UPDATE_KEYS, POLL_WAIT, SETTLE_TIMEOUT} from './constants.js';
+import {Test, wait} from './test.js';
 
 export const sceneUrl = (name, base = SCENE_URL) => `${base}?tab=${encodeURIComponent(name)}`;
 export const nameFromUrl = url => {
@@ -28,6 +28,18 @@ const windowOf = args => {
     return undefined;
 };
 
+// closing a window with live groups makes the browser save them into its global saved-groups
+// list ("Recent tab groups") with no way for an extension to remove them; ungroup leaves no
+// record anywhere, so every harness window is ungrouped before it is closed
+export async function ungroupWindow(windowId) {
+    const tabs = await browser.tabs.query({windowId}).catch(() => []);
+    const grouped = tabs.filter(tab => tab.groupId !== TAB_GROUP_ID_NONE).map(tab => tab.id);
+
+    if (grouped.length) {
+        await browser.tabs.ungroup(grouped).catch(() => {});
+    }
+}
+
 export async function closeHarnessWindows() {
     const closed = [];
 
@@ -36,6 +48,7 @@ export async function closeHarnessWindows() {
         const ours = openedWindows.has(win.id) || (tabs.length > 0 && tabs.every(tab => nameFromUrl(tab.url)));
 
         if (ours) {
+            await ungroupWindow(win.id);
             await browser.windows.remove(win.id).catch(() => {});
             openedWindows.delete(win.id);
             closed.push(win.id);
@@ -254,6 +267,56 @@ export class TabsTest extends Test {
         return this;
     }
 
+    async buildWindow(names) {
+        const win = await browser.windows.create({url: this.tabUrl(names[0])});
+
+        openedWindows.add(win.id);
+
+        const first = win.tabs?.length ? win.tabs : await browser.tabs.query({windowId: win.id});
+
+        this.bind(first[0].id, names[0]);
+
+        for (let index = 1; index < names.length; index++) {
+            const tab = await browser.tabs.create({
+                windowId: win.id,
+                url: this.tabUrl(names[index]),
+                index,
+                active: false,
+            });
+
+            this.bind(tab.id, names[index]);
+        }
+
+        const tabs = await this.waitWindowLoaded(win.id, names);
+        const actual = (tabs ?? []).map(tab => nameFromUrl(tab.url) ?? '?');
+
+        this.require(
+            'extra window built as requested',
+            actual.join(',') === names.join(','),
+            `requested [${names.join(', ')}], got [${actual.join(', ')}]`,
+        );
+
+        return win.id;
+    }
+
+    async waitWindowLoaded(windowId, names) {
+        const started = Date.now();
+
+        while (Date.now() - started < SETTLE_TIMEOUT) {
+            const tabs = await browser.tabs.query({windowId}).catch(() => []);
+            const loaded = names.filter(name => tabs.some(tab => nameFromUrl(tab.url) === name));
+
+            if (loaded.length === names.length) {
+                return tabs.sort((a, b) => a.index - b.index);
+            }
+
+            await wait(POLL_WAIT);
+        }
+
+        this.note(`window [${names.join(', ')}]: not all tabs loaded after ${SETTLE_TIMEOUT} ms`);
+        return null;
+    }
+
     async reattach() {
         const names = this.data.scene;
         let best = null;
@@ -392,10 +455,20 @@ export class TabsTest extends Test {
         return created.map(({tab}) => tab);
     }
 
+    winTag(windowId) {
+        return windowId === undefined || windowId === this.win ? '' : '  [other window]';
+    }
+
     eventFormatters() {
         return {
             'tabs.onMoved': ([tabId, info]) => {
                 return info.windowId === this.win ? `${this.known(tabId)}  ${info.fromIndex} → ${info.toIndex}` : null;
+            },
+            'tabs.onDetached': ([tabId, info]) => {
+                return `${this.known(tabId)}  from index:${info.oldPosition}${this.winTag(info.oldWindowId)}`;
+            },
+            'tabs.onAttached': ([tabId, info]) => {
+                return `${this.known(tabId)}  to index:${info.newPosition}${this.winTag(info.newWindowId)}`;
             },
             'tabs.onUpdated': ([tabId, changeInfo, tab], {updatedKeys}) => {
                 if (tab.windowId !== this.win) {
@@ -460,6 +533,7 @@ export class TabsTest extends Test {
     async close() {
         if (this.win !== null) {
             openedWindows.delete(this.win);
+            await ungroupWindow(this.win);
             await browser.windows.remove(this.win).catch(() => {});
             this.win = null;
         }

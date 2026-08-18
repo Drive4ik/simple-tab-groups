@@ -258,12 +258,12 @@
         "description": "Set random color"
     },
     "catchTabContainers": {
-        "message": "Panely otevřené ve vybraných kontejnerech budou přesouvány do této skupiny",
-        "description": "Catch and move tabs with containers to this group"
+        "message": "Zachytávat panely z kontejnerů",
+        "description": "Catch tabs from containers"
     },
     "regexpForTabsTitle": {
-        "message": "Pravidla pro automatický přesun panelů",
-        "description": "Regular expressions for catch tabs"
+        "message": "Zachytávat panely podle regulárních výrazů",
+        "description": "Catch tabs by regular expressions"
     },
     "regexpForTabsPlaceholder": {
         "message": "Pravidlo",
@@ -425,17 +425,9 @@
         "message": "Vynechat záložky se zvukem",
         "description": "Exclude tabs with sound"
     },
-    "foundHiddenUnSyncTabsDescription": {
-        "message": "Nalezeny skryté nesynchronizované panely. Kliknutím na panel ho zobrazíte v aktulání skupině/okně nebo:",
-        "description": "Found hidden unsynchronized tabs. Click on tab to show it into current group/window or:"
-    },
     "actionHiddenUnSyncTabsMoveAllTabsToCurrentGroup": {
-        "message": "Přesunout všechny tyto panely do aktuální skupiny/okna.",
-        "description": "Move all of these tabs into current group/window"
-    },
-    "actionHiddenUnSyncWindowTabsCreateGroup": {
-        "message": "Vytvořit novou skupinu z panelů otevřeného okna",
-        "description": "Create new group with tabs only from the current window"
+        "message": "Přesunout všechny tyto panely do aktuální skupiny.",
+        "description": "Move all of these tabs into current group"
     },
     "actionHiddenUnSyncTabsCreateGroup": {
         "message": "Vytvořit novou skupinu se všemi těmito panely",
@@ -465,17 +457,21 @@
         "message": "Ztlumit panely, pokud je skupina neaktivní",
         "description": "Mute tabs when group close and restore when open"
     },
-    "showTabAfterMovingItIntoThisGroup": {
-        "message": "Zobrazit panel po automatickém přesunu do této skupiny",
-        "description": "Show the tab after auto-moving it into this group"
+    "autoMoveIntoGroupTitle": {
+        "message": "Automaticky přesouvat panely do této skupiny",
+        "description": "Automatically move tabs into this group"
     },
-    "showOnlyActiveTabAfterMovingItIntoThisGroup": {
-        "message": "Pouze pokud byla aktivní záložka posunuta",
+    "afterAutoMoveShowTab": {
+        "message": "Zobrazit přesunutý panel",
+        "description": "Show the moved tab"
+    },
+    "afterAutoMoveShowOnlyActiveTab": {
+        "message": "Pouze pokud byl přesunut aktivní panel",
         "description": "Only if the active tab has been moved"
     },
-    "showNotificationAfterMovingTabIntoThisGroup": {
-        "message": "Upozornit když jsou záložky přesunuty do této skupiny",
-        "description": "Show a notification when tabs are moved to this group"
+    "afterAutoMoveShowNotification": {
+        "message": "Zobrazit oznámení",
+        "description": "Show a notification"
     },
     "tabMoving": {
         "message": "Přesun panelu",
@@ -670,6 +666,10 @@
     "groupWithoutTabs": {
         "message": "V této skupině se nenachází žádné panely",
         "description": "This group has no tabs"
+    },
+    "tabsWithoutGroups": {
+        "message": "Panely bez skupin",
+        "description": "Tabs without groups"
     },
     "exportAllGroupsToBookmarks": {
         "message": "Exportovat všechny skupiny do záložek",

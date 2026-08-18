@@ -163,12 +163,6 @@ export default {
 
             return filteredGroups;
         },
-        unSyncWindowTabs() {
-            return this.currentWindow ? this.unSyncTabs.filter(tab => tab.windowId === this.currentWindow.id) : [];
-        },
-        countWindowsUnSyncTabs() {
-            return this.unSyncTabs.map(tab => tab.windowId).filter(Utils.onlyUniqueFilter).length;
-        },
         syncTitle() {
             let result = this.lang('syncStart');
 
@@ -219,9 +213,6 @@ export default {
 
                     this.sendMessageModule('Tabs.move', tabIds, to.data.group.id, {
                         newTabIndex,
-                        showTabAfterMovingItIntoThisGroup: false,
-                        showOnlyActiveTabAfterMovingItIntoThisGroup: false,
-                        showNotificationAfterMovingTabIntoThisGroup: false,
                     });
                 })
                 .$on('drag-moving', (item, isMoving) => item.isMoving = isMoving)
@@ -308,6 +299,8 @@ export default {
             if (applyGroupWithTabId) {
                 this.applyGroup(newGroup, {id: applyGroupWithTabId});
             }
+
+            return newGroup;
         },
 
         async renameGroup(group) {
@@ -456,42 +449,32 @@ export default {
             }
         },
         async unsyncHiddenTabsMoveToCurrentGroup() {
-            let tabsIds = this.unSyncTabs.map(Tabs.extractId);
-
-            if (this.currentGroup) {
-                this.unSyncTabs = [];
-
-                await this.sendMessageModule('Tabs.move', tabsIds, this.currentGroup.id);
-            } else {
-                await this.sendMessageModule('Tabs.moveNative', tabsIds, {
-                    windowId: this.currentWindow.id,
-                    index: -1,
-                });
-
-                await this.sendMessageModule('Tabs.show', tabsIds);
-            }
-
-            this.loadGroups();
-        },
-        async unsyncHiddenWindowTabsCreateNewGroup() {
-            await this.createNewGroup(this.unSyncWindowTabs.map(Tabs.extractId), Utils.getLastActiveTab(this.unSyncWindowTabs).title);
+            await this.sendMessageModule('Tabs.move', this.unSyncTabIds, this.currentGroup.id);
 
             this.loadUnsyncedTabs();
+            this.loadGroups();
         },
         async unsyncHiddenTabsCreateNewGroupAll() {
-            await this.createNewGroup(this.unSyncTabs.map(Tabs.extractId), Utils.getLastActiveTab(this.unSyncTabs).title);
+            const newGroup = await this.createNewGroup(this.unSyncTabIds, Utils.getLastActiveTab(this.unSyncTabs).title);
 
-            this.unSyncTabs = [];
+            if (newGroup) {
+                this.loadUnsyncedTabs();
+            }
         },
         unsyncHiddenTabsCloseAll() {
-            this.sendMessageModule('Tabs.remove', this.unSyncTabs.map(Tabs.extractId));
+            this.sendMessageModule('Tabs.remove', this.unSyncTabIds);
 
-            this.unSyncTabs = [];
+            this.loadUnsyncedTabs();
         },
         async unsyncHiddenTabsShowTabIntoCurrentWindow(tab) {
             if (this.currentGroup) {
                 await this.sendMessageModule('Tabs.move', [tab.id], this.currentGroup.id);
+            } else {
+                await this.sendMessageModule('Tabs.show', tab.id);
+                await this.sendMessageModule('Tabs.setActive', tab.id);
             }
+
+            this.loadUnsyncedTabs();
         },
 
         openGroupInNewWindow(group, tab) {
@@ -524,9 +507,9 @@ export default {
             }
         },
         async moveTabToNewGroup(tabId, loadUnsync, doApplyGroup) {
-            await this.createNewGroup(this.getTabIdsForMove(tabId), undefined, doApplyGroup ? tabId : false);
+            const newGroup = await this.createNewGroup(this.getTabIdsForMove(tabId), undefined, doApplyGroup ? tabId : false);
 
-            if (loadUnsync) {
+            if (newGroup && loadUnsync) {
                 this.loadUnsyncedTabs();
             }
         },
@@ -960,13 +943,10 @@ export default {
             <div v-if="unSyncTabs.length && showUnSyncTabs" class="not-sync-tabs">
                 <hr class="is-display-block" />
                 <p class="mb-3">
-                    <span v-text="lang('foundHiddenUnSyncTabsDescription')"></span>
+                    <span class="colon" v-text="lang('tabsWithoutGroups')"></span>
                     <ul>
-                        <li>
+                        <li v-if="currentGroup">
                             <a tabindex="0" @click="unsyncHiddenTabsMoveToCurrentGroup" @keydown.enter="unsyncHiddenTabsMoveToCurrentGroup" v-text="lang('actionHiddenUnSyncTabsMoveAllTabsToCurrentGroup')"></a>
-                        </li>
-                        <li v-if="unSyncWindowTabs.length && countWindowsUnSyncTabs > 1">
-                            <a tabindex="0" @click="unsyncHiddenWindowTabsCreateNewGroup" @keydown.enter="unsyncHiddenWindowTabsCreateNewGroup" v-text="lang('actionHiddenUnSyncWindowTabsCreateGroup')"></a>
                         </li>
                         <li>
                             <a tabindex="0" @click="unsyncHiddenTabsCreateNewGroupAll" @keydown.enter="unsyncHiddenTabsCreateNewGroupAll" v-text="lang('actionHiddenUnSyncTabsCreateGroup')"></a>

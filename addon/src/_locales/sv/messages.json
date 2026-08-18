@@ -232,12 +232,12 @@
         "description": "Set random color"
     },
     "catchTabContainers": {
-        "message": "Fånga och flytta flikar i behållare till den här gruppen",
-        "description": "Catch and move tabs with containers to this group"
+        "message": "Fånga flikar från behållare",
+        "description": "Catch tabs from containers"
     },
     "regexpForTabsTitle": {
-        "message": "Reguljärt uttryck för att fånga nya flikar",
-        "description": "Regular expressions for catch tabs"
+        "message": "Fånga flikar med reguljära uttryck",
+        "description": "Catch tabs by regular expressions"
     },
     "regexpForTabsPlaceholder": {
         "message": "Reguljärt uttryck",
@@ -343,13 +343,13 @@
         "message": "Ikonstil",
         "description": "Icon style"
     },
-    "foundHiddenUnSyncTabsDescription": {
-        "message": "Hittade gömda och osynkroniserade flikar. Klicka på en flik för att öppna den i nuvarande grupp eller fönster, eller:",
-        "description": "Found hidden unsynchronized tabs. Click on tab to show it into current group/window or:"
+    "tabsWithoutGroups": {
+        "message": "Flikar utan grupp",
+        "description": "Tabs without groups"
     },
     "actionHiddenUnSyncTabsMoveAllTabsToCurrentGroup": {
-        "message": "Flytta alla dessa flikar till nuvarande flikgrupp/fönster",
-        "description": "Move all of these tabs into current group/window"
+        "message": "Flytta alla dessa flikar till nuvarande flikgrupp",
+        "description": "Move all of these tabs into current group"
     },
     "actionHiddenUnSyncTabsCreateGroup": {
         "message": "Skapa en ny grupp med alla dessa flikar",
@@ -379,9 +379,21 @@
         "message": "Stäng av ljudet för alla flikar då flikgruppen göms och återställ då den öppnas igen",
         "description": "Mute tabs when group close and restore when open"
     },
-    "showTabAfterMovingItIntoThisGroup": {
-        "message": "Visa fliken efter att den automatiskt flyttats till den här gruppen",
-        "description": "Show the tab after auto-moving it into this group"
+    "autoMoveIntoGroupTitle": {
+        "message": "Flytta flikar automatiskt till den här gruppen",
+        "description": "Automatically move tabs into this group"
+    },
+    "afterAutoMoveShowTab": {
+        "message": "Visa den flyttade fliken",
+        "description": "Show the moved tab"
+    },
+    "afterAutoMoveShowOnlyActiveTab": {
+        "message": "Endast om den aktiva fliken har flyttats",
+        "description": "Only if the active tab has been moved"
+    },
+    "afterAutoMoveShowNotification": {
+        "message": "Visa en avisering",
+        "description": "Show a notification"
     },
     "tabMoving": {
         "message": "Flikflytt",

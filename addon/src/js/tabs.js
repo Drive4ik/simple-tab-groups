@@ -792,11 +792,11 @@ export async function getNewTabIndex(tabs) {
         const {newTabPosition: {value: newTabPosition}} = await BrowserSettings.get();
 
         if (newTabPosition === 'afterCurrent') {
-            return tabs.toSorted(Utils.sortBy('lastAccessed')).pop()?.index + 1 || null;
+            return tabs.toSorted(Utils.sortBy('lastAccessed')).at(-1).index + 1;
         }
     }
 
-    return tabs.slice().pop()?.index + 1 || null;
+    return tabs.at(-1).index + 1;
 }
 
 export async function getHighlightedIds(windowId = browser.windows.WINDOW_ID_CURRENT, clickedTab = null, pinned = false) {
@@ -1019,9 +1019,11 @@ async function moveNow(tabIds, groupId, params = {}) {
     log.log('vars', {groupWindowId, windowId});
     log.log('filter active');
 
-    params.showTabAfterMovingItIntoThisGroup ??= group.showTabAfterMovingItIntoThisGroup;
-    params.showOnlyActiveTabAfterMovingItIntoThisGroup ??= group.showOnlyActiveTabAfterMovingItIntoThisGroup;
-    params.showNotificationAfterMovingTabIntoThisGroup ??= group.showNotificationAfterMovingTabIntoThisGroup;
+    if (params.auto) {
+        params.showTab ??= group.afterAutoMoveShowTab;
+        params.showOnlyActiveTab ??= group.afterAutoMoveShowOnlyActiveTab;
+        params.showNotification ??= group.afterAutoMoveShowNotification;
+    }
 
     let showPinnedMessage = false;
 
@@ -1050,61 +1052,9 @@ async function moveNow(tabIds, groupId, params = {}) {
     log.log('active tabs', activeTabs, 'tabs to move COUNT:', tabs.length);
 
     if (tabs.length) {
-        const excludeMovingTabs = tab => !tabs.some(t => t.id === tab.id);
+        const destGroupNativeId = resolveDestSubGroupId(group, groupWindowId, tabs, params.newTabIndex);
 
-        // dropping onto a tab of an UNLOADED group: the moved tabs inherit its native sub-group
-        let destGroupNativeId;
-
-        if (!groupWindowId && params.newTabIndex != null) {
-            const movingTabIds = new Set(tabs.map(extractId));
-            const targetTab = group.tabs.find(tab => !movingTabIds.has(tab.id) && tab.index === params.newTabIndex);
-
-            if (group.groupsNative.some(entry => entry.id === targetTab?.groupNativeId)) {
-                destGroupNativeId = targetTab.groupNativeId;
-            }
-        }
-
-        await Promise.all(activeTabs.map(async function(activeTab) {
-            let allTabsInActiveTabWindow = await get(activeTab.windowId, null, null),
-                tabsToActive = allTabsInActiveTabWindow.filter(tab => !tab.hidden && excludeMovingTabs(tab));
-
-            if (tabsToActive.length) {
-                log.log('set active some other');
-                await setActive(undefined, tabsToActive);
-            } else { // if not found other visible (include pinned) tabs in window
-                let differentWindows = activeTab.windowId !== windowId,
-                    otherHiddenAndVisibleTabsInActiveTabWindow = allTabsInActiveTabWindow.filter(excludeMovingTabs),
-                    activeTabIsLastInSrcGroup = false,
-                    activeTabIsInLoadedGroup = false,
-                    activeTabNotInGroup = false;
-
-                if (activeTab.groupId) {
-                    activeTabIsLastInSrcGroup = !otherHiddenAndVisibleTabsInActiveTabWindow
-                        .some(tab => tab.groupId === activeTab.groupId);
-
-                    activeTabIsInLoadedGroup = activeTab.groupId === Cache.getWindowGroup(activeTab.windowId);
-                } else {
-                    activeTabNotInGroup = !Cache.getWindowGroup(activeTab.windowId);
-                }
-
-                log.log('create condition', {
-                    differentWindows,
-                    otherHiddenAndVisibleTabsInActiveTabWindow,
-                    activeTabIsLastInSrcGroup,
-                    activeTabIsInLoadedGroup,
-                    activeTabNotInGroup,
-                });
-
-                if (
-                    (differentWindows && !otherHiddenAndVisibleTabsInActiveTabWindow.length) ||
-                    (activeTabIsLastInSrcGroup && activeTabIsInLoadedGroup) ||
-                    (activeTabNotInGroup)
-                ) {
-                    log.log('create temp')
-                    await createTempActiveTab(activeTab.windowId, false);
-                }
-            }
-        }));
+        await activateOtherTabs(activeTabs, tabs, windowId, log);
         activeTabs.length = 0; // reset active tabs
 
         // the movers' sub-group fate is decided on the ORIGINAL tabs (a drop onto a sub-group
@@ -1115,64 +1065,20 @@ async function moveNow(tabIds, groupId, params = {}) {
             ? null
             : await GroupsNative.snapshotMembership(tabs, groups, groupId);
 
-        let tabIdsToRemove = [],
-            newTabParams = Groups.getNewTabParams(group);
-
-        tabs = await Promise.all(tabs.map(async function(tab) {
-            let newTabContainer = getNewTabContainer(tab, group);
-
-            if (tab.cookieStoreId === newTabContainer) {
-                if (tab.active) {
-                    activeTabs.push(tab);
-                }
-                return tab;
-            } else {
-                tab.cookieStoreId = newTabContainer;
-            }
-
-            log.log('create new tab with newTabContainer', newTabContainer);
-
-            tabIdsToRemove.push(tab.id);
-
-            const newTab = await create({
-                ...tab,
-                ...Cache.getTabSession(tab.id), // apply session, because we can move tab from onBeforeTabRequest
-                active: false,
-                openerTabId: null,
-                windowId,
-                ...newTabParams,
-            }, true);
-
-            skipTracking([newTab], skippedTabs);
-
-            if (membershipSnapshot?.has(tab.id)) {
-                membershipSnapshot.set(newTab.id, membershipSnapshot.get(tab.id));
-                membershipSnapshot.delete(tab.id);
-            }
-
-            if (tab.active) {
-                activeTabs.push({...newTab, active: true});
-            }
-
-            return newTab;
-        }));
-
-        await remove(tabIdsToRemove, true);
+        tabs = await recreateTabsForContainer(tabs, group, windowId, activeTabs, membershipSnapshot, skippedTabs, log);
 
         tabs = await moveNative(tabs, {
-            // an array moved to -1 breaks native groups (docs/TABGROUPS-BEHAVIOR.md §2) - when the
-            // tabs are already in the target window, reorder to the first tab's index instead
-            index: params.newTabIndex ?? (tabs.every(tab => tab.windowId === windowId) ? tabs[0].index : -1),
+            index: params.newTabIndex ?? await resolveMoveIndex(groupId, windowId, tabs),
             windowId,
         });
 
         if (groupWindowId) {
             await show(tabs.filter(tab => tab.hidden));
         } else {
-            // the move can have dropped them onto live-member slots (docs/TABGROUPS-BEHAVIOR.md §1, §11)
-            const tabsToHide = tabs.filter(tab => !tab.hidden);
-            await GroupsNative.ungroup(tabsToHide);
-            await hide(tabsToHide);
+            // the anchor can drop any mover, hidden ones included, onto a live-member slot
+            // (docs/TABGROUPS-BEHAVIOR.md §1, §4 R2.14, §11, §20) - strip the whole set
+            await GroupsNative.ungroup(tabs);
+            await hide(tabs.filter(tab => !tab.hidden));
         }
 
         await Promise.all(tabs.map(tab => Cache.setTabGroup(tab.id, groupId)));
@@ -1209,35 +1115,178 @@ async function moveNow(tabIds, groupId, params = {}) {
         return [];
     }
 
+    return applyGroupAndNotify(group, groupId, windowId, tabs, activeTabs, params, log);
+}
+
+// no explicit index - the movers line up at the group's tail (or after its last-accessed tab,
+// per newTabPosition), keeping the group's tabs contiguous. Membership follows the occupant
+// rule: cross-window arrivals at the tail join nothing, same-window movers can be swallowed
+// by a live span - a loaded group keeps the browser's placement, an unloaded one strips the
+// movers before hiding (docs/TABGROUPS-BEHAVIOR.md §1, §11, §20). An empty group: arrivals
+// from other windows append at the end of the strip; movers already in the window gather at
+// the first mover's own slot, their live membership stripped first - a member as the first
+// mover swallows the whole block (§21), and the snapshot taken before carries the sub-groups
+export async function resolveMoveIndex(groupId, windowId, movingTabs) {
+    const movingIds = new Set(movingTabs.map(extractId));
+    const groupTabs = (await get(windowId, false, null)).filter(tab => !movingIds.has(tab.id) && tab.groupId === groupId);
+    const anchor = await getNewTabIndex(groupTabs);
+
+    if (anchor != null) {
+        return anchor;
+    }
+
+    if (movingTabs.every(tab => tab.windowId === windowId)) {
+        // live groups, not sessions: the mirror is deferred while an operation runs, so a span
+        // the user has just made may not be in the sessions yet
+        if (!await GroupsNative.hasLiveGroups(windowId)) {
+            return movingTabs[0].index;
+        }
+
+        await GroupsNative.ungroup(movingTabs);
+        return (await getOne(movingTabs[0].id))?.index ?? movingTabs[0].index;
+    }
+
+    return (await browser.tabs.query({windowId})).length;
+}
+
+// dropping onto a tab of an UNLOADED group: the moved tabs inherit its native sub-group
+function resolveDestSubGroupId(group, groupWindowId, tabs, newTabIndex) {
+    if (groupWindowId || newTabIndex == null) {
+        return;
+    }
+
+    const movingTabIds = new Set(tabs.map(extractId));
+    const targetTab = group.tabs.find(tab => !movingTabIds.has(tab.id) && tab.index === newTabIndex);
+
+    if (group.groupsNative.some(entry => entry.id === targetTab?.groupNativeId)) {
+        return targetTab.groupNativeId;
+    }
+}
+
+async function activateOtherTabs(activeTabs, movingTabs, windowId, log) {
+    const excludeMovingTabs = tab => !movingTabs.some(t => t.id === tab.id);
+
+    await Promise.all(activeTabs.map(async activeTab => {
+        const allTabsInActiveTabWindow = await get(activeTab.windowId, null, null);
+        const tabsToActive = allTabsInActiveTabWindow.filter(tab => !tab.hidden && excludeMovingTabs(tab));
+
+        if (tabsToActive.length) {
+            log.log('set active some other');
+            await setActive(undefined, tabsToActive);
+        } else { // if not found other visible (include pinned) tabs in window
+            const differentWindows = activeTab.windowId !== windowId;
+            const otherHiddenAndVisibleTabsInActiveTabWindow = allTabsInActiveTabWindow.filter(excludeMovingTabs);
+            let activeTabIsLastInSrcGroup = false;
+            let activeTabIsInLoadedGroup = false;
+            let activeTabNotInGroup = false;
+
+            if (activeTab.groupId) {
+                activeTabIsLastInSrcGroup = !otherHiddenAndVisibleTabsInActiveTabWindow
+                    .some(tab => tab.groupId === activeTab.groupId);
+
+                activeTabIsInLoadedGroup = activeTab.groupId === Cache.getWindowGroup(activeTab.windowId);
+            } else {
+                activeTabNotInGroup = !Cache.getWindowGroup(activeTab.windowId);
+            }
+
+            log.log('create condition', {
+                differentWindows,
+                otherHiddenAndVisibleTabsInActiveTabWindow,
+                activeTabIsLastInSrcGroup,
+                activeTabIsInLoadedGroup,
+                activeTabNotInGroup,
+            });
+
+            if (
+                (differentWindows && !otherHiddenAndVisibleTabsInActiveTabWindow.length) ||
+                (activeTabIsLastInSrcGroup && activeTabIsInLoadedGroup) ||
+                (activeTabNotInGroup)
+            ) {
+                log.log('create temp')
+                await createTempActiveTab(activeTab.windowId, false);
+            }
+        }
+    }));
+}
+
+async function recreateTabsForContainer(tabs, group, windowId, activeTabs, membershipSnapshot, skippedTabs, log) {
+    const tabIdsToRemove = [];
+    const newTabParams = Groups.getNewTabParams(group);
+
+    tabs = await Promise.all(tabs.map(async tab => {
+        const newTabContainer = getNewTabContainer(tab, group);
+
+        if (tab.cookieStoreId === newTabContainer) {
+            if (tab.active) {
+                activeTabs.push(tab);
+            }
+            return tab;
+        } else {
+            tab.cookieStoreId = newTabContainer;
+        }
+
+        log.log('create new tab with newTabContainer', newTabContainer);
+
+        tabIdsToRemove.push(tab.id);
+
+        const newTab = await create({
+            ...tab,
+            ...Cache.getTabSession(tab.id), // apply session, because we can move tab from onBeforeTabRequest
+            active: false,
+            openerTabId: null,
+            windowId,
+            ...newTabParams,
+        }, true);
+
+        skipTracking([newTab], skippedTabs);
+
+        if (membershipSnapshot?.has(tab.id)) {
+            membershipSnapshot.set(newTab.id, membershipSnapshot.get(tab.id));
+            membershipSnapshot.delete(tab.id);
+        }
+
+        if (tab.active) {
+            activeTabs.push({...newTab, active: true});
+        }
+
+        return newTab;
+    }));
+
+    await remove(tabIdsToRemove, true);
+
+    return tabs;
+}
+
+async function applyGroupAndNotify(group, groupId, windowId, tabs, activeTabs, params, log) {
     let [firstTab] = activeTabs.length ? activeTabs : tabs;
 
-    if (params.showTabAfterMovingItIntoThisGroup) {
-        if (params.showOnlyActiveTabAfterMovingItIntoThisGroup) {
+    if (params.showTab) {
+        if (params.showOnlyActiveTab) {
             if (activeTabs.length) {
                 log.log('apply group [1]', windowId, groupId, firstTab.id)
                 await Groups.apply(windowId, groupId, firstTab.id);
-                params.showNotificationAfterMovingTabIntoThisGroup = false;
+                params.showNotification = false;
             }
         } else {
             log.log('apply group [2]', windowId, groupId, firstTab.id)
             await Groups.apply(windowId, groupId, firstTab.id);
-            params.showNotificationAfterMovingTabIntoThisGroup = false;
+            params.showNotification = false;
         }
     }
 
-    if (!params.showNotificationAfterMovingTabIntoThisGroup) {
+    if (!params.showNotification) {
         log.stop('no notify, count:', tabs.length);
         return tabs;
     }
 
-    let message = [],
-        iconUrl = null;
+    let message = [];
+    let iconUrl = null;
 
     if (tabs.length > 1) {
         message = ['moveMultipleTabsToGroupMessage', tabs.length];
         iconUrl = Groups.getIconUrl(group);
     } else {
-        let tabTitle = getTitle(firstTab, false, 50);
+        const tabTitle = getTitle(firstTab, false, 50);
         message = ['moveTabToGroupMessage', group.title, tabTitle];
         firstTab = normalizeFavIcon(firstTab);
         iconUrl = firstTab.favIconUrl;

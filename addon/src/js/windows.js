@@ -347,9 +347,13 @@ async function runGrandRestoreNow(restoredWindowIds) {
         // native membership travels with the tabs in sessions (restored for discarded tabs by
         // moveNative's fixSessionAfterMove) - no bookkeeping is needed here
 
+        // the whole group gathers as one block at its own first tab in this window (strays
+        // arrive without joining anyone - docs/TABGROUPS-BEHAVIOR.md §20, §21)
+        const anchorTab = groupToKeep.tabs.find(tab => tab.windowId === groupToKeep.window.id);
+
         groupToKeep.tabs = await Tabs.moveNative(groupToKeep.tabs, {
             windowId: groupToKeep.window.id,
-            index: -1,
+            index: anchorTab?.index ?? await Tabs.resolveMoveIndex(groupToKeep.id, groupToKeep.window.id, groupToKeep.tabs),
         });
 
         if (isLoadedGroup) {
@@ -877,7 +881,8 @@ async function initializeGroupsNow(groups, afterRestoring = false) {
 
     for (const [windowId, tabs] of moveTabsToWin) {
         await Tabs.moveNative(tabs, {
-            index: -1,
+            // the arrivals line up at their group's tail instead of the end of the strip
+            index: await Tabs.resolveMoveIndex(tabs[0].groupId, windowId, tabs),
             windowId,
         });
 

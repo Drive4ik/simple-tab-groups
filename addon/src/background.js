@@ -101,7 +101,7 @@ function sendExternalMessage(...args) {
 const moveTabsBatch = new BatchProcessor(async (tabIds, groupId) => {
     tabIds = Array.from(tabIds);
     const log = logger.start('moveTabsBatch', {tabIds, groupId});
-    await Tabs.move(tabIds, groupId).catch(log.onCatch('Tabs.move'));
+    await Tabs.move(tabIds, groupId, {auto: true}).catch(log.onCatch('Tabs.move'));
     log.stop();
 });
 

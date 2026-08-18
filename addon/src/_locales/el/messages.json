@@ -250,12 +250,12 @@
         "description": "Set random color"
     },
     "catchTabContainers": {
-        "message": "Μετακίνηση όλων των tabs με containers σε αυτό το group",
-        "description": "Catch and move tabs with containers to this group"
+        "message": "Σύλληψη tabs από containers",
+        "description": "Catch tabs from containers"
     },
     "regexpForTabsTitle": {
-        "message": "Regular expressions για tabs",
-        "description": "Regular expressions for catch tabs"
+        "message": "Σύλληψη tabs με regular expressions",
+        "description": "Catch tabs by regular expressions"
     },
     "regexpForTabsPlaceholder": {
         "message": "Regular expressions",
@@ -393,13 +393,13 @@
         "message": "Απόρριψη των tabs μετά την απόκρυψη (εξοικονόμηση μνήμης)",
         "description": "Unload tabs from memory after closing a group"
     },
-    "foundHiddenUnSyncTabsDescription": {
-        "message": "Υπάρχουν κρυμένα μη-συγχρονισμένα tabs. Κάντε click στο tab για να το εμφανίσετε στο τρέχον group/παράθυρο ή:",
-        "description": "Found hidden unsynchronized tabs. Click on tab to show it into current group/window or:"
+    "tabsWithoutGroups": {
+        "message": "Καρτέλες χωρίς ομάδες",
+        "description": "Tabs without groups"
     },
     "actionHiddenUnSyncTabsMoveAllTabsToCurrentGroup": {
-        "message": "Μετακινείστε όλα αυτά τα tabs στο τρέχον group/παράθυρο",
-        "description": "Move all of these tabs into current group/window"
+        "message": "Μετακινείστε όλα αυτά τα tabs στο τρέχον group",
+        "description": "Move all of these tabs into current group"
     },
     "actionHiddenUnSyncTabsCreateGroup": {
         "message": "Δημιουργείστε group με όλα αυτά τα tabs",
@@ -429,9 +429,21 @@
         "message": "Σίγαση των tabs όταν το group κλείσει και επαναφορά όταν ανοίξει",
         "description": "Mute tabs when group close and restore when open"
     },
-    "showTabAfterMovingItIntoThisGroup": {
-        "message": "Εμφάνιση του tab μετά την αυτόματη μετακίνησή του στο group",
-        "description": "Show the tab after auto-moving it into this group"
+    "autoMoveIntoGroupTitle": {
+        "message": "Αυτόματη μετακίνηση tabs σε αυτό το group",
+        "description": "Automatically move tabs into this group"
+    },
+    "afterAutoMoveShowTab": {
+        "message": "Εμφάνιση του μετακινημένου tab",
+        "description": "Show the moved tab"
+    },
+    "afterAutoMoveShowOnlyActiveTab": {
+        "message": "Μόνο αν έχει μετακινηθεί το ενεργό tab",
+        "description": "Only if the active tab has been moved"
+    },
+    "afterAutoMoveShowNotification": {
+        "message": "Εμφάνιση ειδοποίησης",
+        "description": "Show a notification"
     },
     "tabMoving": {
         "message": "Μετακίνηση tab",

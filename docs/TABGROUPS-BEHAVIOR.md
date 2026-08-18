@@ -498,6 +498,78 @@ still has members. (R10.01)
   microphone resolves normally, the tab is pinned, the microphone and its tab-bar indicator stay
   live — behavior identical to a plain tab (👁️). (R10.03)
 
+## 20. Moving an array to the end of the strip, and cross-window index moves
+
+- **Same window: outsiders moved to the end of a strip that ends with a span → the movers JOIN
+  the group.** An explicit index equal to the tabs count (R1.14) and `{index: -1}` (R1.20)
+  behave identically: the call is accepted, the tabs land at the end, `tabs.onUpdated {groupId}`
+  fires for each. Same family as the all-tabs `{index: -1}` bug of §2.
+
+  | tab index | 0 | 1 | 2 | 3 | 4 | 5 |
+  | - | - | - | - | - | - | - |
+  | before | m1* | m2 | keep1 | 🟥 gr1 | 🟥 gr2 | 🟥 gr3 |
+  | `tabs.move([m1, m2], {index: 6})  — index === tabs count` | | | | | | |
+  | after | keep1 | 🟥 gr1 | 🟥 gr2 | 🟥 gr3 | 🟥 m1* | 🟥 m2 |
+
+- **Cross-window: an array arriving past the end does NOT join the trailing span** — neither with
+  an explicit index equal to the target's tabs count (R1.15) nor with `{index: -1}` (R1.18). The
+  end of the strip is membership-safe only for arrivals from another window.
+
+  | tab index | 0 | 1 | 2 | 3 | 4 | 5 |
+  | - | - | - | - | - | - | - |
+  | before (source window) | src1* | m1 | m2 | | | |
+  | before (target window) | keep1* | 🟥 gr1 | 🟥 gr2 | 🟥 gr3 | | |
+  | `tabs.move([m1, m2], {windowId: target, index: 4})` | | | | | | |
+  | after (target window) | keep1* | 🟥 gr1 | 🟥 gr2 | 🟥 gr3 | m1 | m2 |
+  | after (source window) | src1* | | | | | |
+
+- **Cross-window arrivals at an inner index obey the §1/§11 occupant rule**: a MEMBER's slot joins
+  the group, in array order (R1.16); the outsider slot right after the span joins nothing (R1.17).
+  **The cross-window join is SILENT**: only `tabs.onDetached`/`tabs.onAttached` fire per tab — no
+  `tabs.onUpdated {groupId}`, unlike the same-window moves of §1/§11 and R1.14 above. (R1.16)
+
+  | tab index | 0 | 1 | 2 | 3 | 4 | 5 | 6 |
+  | - | - | - | - | - | - | - | - |
+  | before (source window) | src1* | m1 | m2 | | | | |
+  | before (target window) | keep1* | 🟥 gr1 | 🟥 gr2 | 🟥 gr3 | keep2 | | |
+  | `tabs.move([m1, m2], {windowId: target, index: 2})` | | | | | | | |
+  | after (target window) | keep1* | 🟥 gr1 | 🟥 m1 | 🟥 m2 | 🟥 gr2 | 🟥 gr3 | keep2 |
+  | after (source window) | src1* | | | | | | |
+
+  ```text
+   10ms  tabs.onDetached       m1  from index:1  [other window]
+   10ms  tabs.onAttached       m1  to index:2
+   10ms  tabs.onDetached       m2  from index:1  [other window]
+   10ms  tabs.onAttached       m2  to index:3
+  ```
+
+## 21. An array moves as a block
+
+- **The array lands as one contiguous block in array order, starting at the requested index** —
+  not tab-by-tab. Movers taken from beyond the target index would come out reversed under a
+  one-by-one model; the real result keeps the array order. (R1.19; the §11 landing agrees.)
+
+- **A block that lands between the members of a live span is swallowed whole.** The first mover —
+  the span's own first member — was "moved" to its own slot; the free tabs of the block slid in
+  after it, before the span's second member, and every mover reported the span's `groupId`. The
+  displaced member keeps its membership. Gathering an in-window set at its first tab's slot is
+  therefore membership-neutral ONLY when the first tab is span-free. (R1.19)
+
+  | tab index | 0 | 1 | 2 | 3 |
+  | - | - | - | - | - |
+  | before | 🟥 m1* | 🟥 s2 | free1 | free2 |
+  | `tabs.move([m1, free1, free2], {index: 0})  — index of m1 itself` | | | | |
+  | after | 🟥 m1* | 🟥 free1 | 🟥 free2 | 🟥 s2 |
+
+  events:
+
+  ```text
+    2ms  tabs.onMoved          free1  2 → 1
+    2ms  tabs.onMoved          free2  3 → 2
+    2ms  tabs.onUpdated        free1  {groupId: 🟥}
+    2ms  tabs.onUpdated        free2  {groupId: 🟥}
+  ```
+
 ## Implications for STG code
 
 1. **Do not move tabs as an array to `{index: -1}`/`{index: 0}` if their native groups must be
@@ -539,3 +611,13 @@ still has members. (R10.01)
 12. **Pin-and-detach is one call**: pinning strips the native membership itself (§19) — no
     ungroup needed first; unpin does not bring the group back, and session values ride through
     both, so state for a later return can live in the session.
+13. **The end of the strip is membership-safe only for arrivals from another window** (§20):
+    a same-window move to the end joins a trailing span, a cross-window arrival joins nothing —
+    explicit past-the-end index and `{index: -1}` alike, on both sides. Same-window tabs can be
+    placed after a span only onto an outsider slot — or need an ungroup afterwards.
+14. **A cross-window arrival that joins by the occupant rule joins SILENTLY** — only
+    `tabs.onDetached`/`tabs.onAttached`, no `tabs.onUpdated {groupId}` (§20). Membership after
+    a cross-window move must be re-read from the tabs, never derived from events.
+15. **Gathering an in-window array at its first tab's slot is not membership-neutral** (§21):
+    a first mover inside a live span swallows the whole set. A same-window gather is safe only
+    with a span-free first mover and final positions equal to the initial ones (§2).

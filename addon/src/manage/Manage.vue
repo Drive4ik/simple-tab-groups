@@ -129,9 +129,6 @@ export default {
 
                         this.sendMessageModule('Tabs.move', tabIds, groupId, {
                             newTabIndex,
-                            showTabAfterMovingItIntoThisGroup: false,
-                            showOnlyActiveTabAfterMovingItIntoThisGroup: false,
-                            showNotificationAfterMovingTabIntoThisGroup: false,
                         });
                     }
                 })
@@ -160,7 +157,7 @@ export default {
             }
         },
 
-        async moveTabToNewGroup(tabId, loadUnsync, showTabAfterMovingItIntoThisGroup) {
+        async moveTabToNewGroup(tabId, loadUnsync, doApplyGroup) {
             const tabIds = this.getTabIdsForMove(tabId);
 
             let newGroupTitle = '';
@@ -175,10 +172,10 @@ export default {
                 }
             }
 
-            const newGroupWindowId = showTabAfterMovingItIntoThisGroup ? this.currentWindow.id : undefined;
+            const newGroupWindowId = doApplyGroup ? this.currentWindow.id : undefined;
             const newGroup = await this.sendMessageModule('Groups.add', newGroupWindowId, tabIds, newGroupTitle);
 
-            if (showTabAfterMovingItIntoThisGroup) {
+            if (doApplyGroup) {
                 this.applyGroup(newGroup, {id: tabId});
             }
 
@@ -251,12 +248,12 @@ export default {
             } else if (group) {
                 this.applyGroup(group, tab);
             } else if (this.isCurrentWindowIsNormal) {
-                await this.sendMessageModule('Tabs.moveNative', [tab.id], {
-                    windowId: this.currentWindow.id,
-                    index: -1,
-                });
-
-                await this.sendMessageModule('Tabs.show', tab.id);
+                if (this.currentGroup) {
+                    await this.sendMessageModule('Tabs.move', [tab.id], this.currentGroup.id);
+                } else {
+                    await this.sendMessageModule('Tabs.show', tab.id);
+                    await this.sendMessageModule('Tabs.setActive', tab.id);
+                }
 
                 this.loadUnsyncedTabs();
             }

@@ -53,7 +53,7 @@ writes into the report whatever it had to clean up.
 
 | round | what it establishes |
 | - | - |
-| `round-01` | API/event self-check, TABGROUPS §1 and §2 |
+| `round-01` | API/event self-check, TABGROUPS §1 and §2, explicit-index array moves past the end and cross-window, the array-as-a-block rule |
 | `round-02` | the membership rule on `tabs.move`, then §3 and §4 |
 | `round-03` | group id immutability, collapsed, the hidden-tab header, groups across a restart |
 | `round-04` | collapsed seen from the tab bar, hidden tabs across a restart |

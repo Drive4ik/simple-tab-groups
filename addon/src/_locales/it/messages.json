@@ -258,12 +258,12 @@
         "description": "Set random color"
     },
     "catchTabContainers": {
-        "message": "Individua le schede con contenitori e spostale in questo gruppo",
-        "description": "Catch and move tabs with containers to this group"
+        "message": "Individua le schede dai contenitori",
+        "description": "Catch tabs from containers"
     },
     "regexpForTabsTitle": {
-        "message": "Espressioni regolari per individuare le schede",
-        "description": "Regular expressions for catch tabs"
+        "message": "Individua le schede con espressioni regolari",
+        "description": "Catch tabs by regular expressions"
     },
     "regexpForTabsPlaceholder": {
         "message": "Espressioni regolari",
@@ -425,17 +425,9 @@
         "message": "Escludi schede con suono",
         "description": "Exclude tabs with sound"
     },
-    "foundHiddenUnSyncTabsDescription": {
-        "message": "Trovate delle schede nascoste che non sono sincronizzate. Clicca qui per mostrarle all'interno del gruppo o della finestra corrente",
-        "description": "Found hidden unsynchronized tabs. Click on tab to show it into current group/window or:"
-    },
     "actionHiddenUnSyncTabsMoveAllTabsToCurrentGroup": {
-        "message": "Sposta tutte queste schede nel gruppo o nella finestra corrente",
-        "description": "Move all of these tabs into current group/window"
-    },
-    "actionHiddenUnSyncWindowTabsCreateGroup": {
-        "message": "Crea un nuovo gruppo con le schede della finestra corrente",
-        "description": "Create new group with tabs only from the current window"
+        "message": "Sposta tutte queste schede nel gruppo corrente",
+        "description": "Move all of these tabs into current group"
     },
     "actionHiddenUnSyncTabsCreateGroup": {
         "message": "Crea un nuovo gruppo a partire da queste schede",
@@ -465,17 +457,21 @@
         "message": "Silenzia le schede quando il gruppo viene chiuso e ripristina l'audio quando il gruppo viene riaperto",
         "description": "Mute tabs when group close and restore when open"
     },
-    "showTabAfterMovingItIntoThisGroup": {
-        "message": "Mostra la scheda dopo che è stata spostata all'interno di questo gruppo",
-        "description": "Show the tab after auto-moving it into this group"
+    "autoMoveIntoGroupTitle": {
+        "message": "Sposta automaticamente le schede in questo gruppo",
+        "description": "Automatically move tabs into this group"
     },
-    "showOnlyActiveTabAfterMovingItIntoThisGroup": {
+    "afterAutoMoveShowTab": {
+        "message": "Mostra la scheda spostata",
+        "description": "Show the moved tab"
+    },
+    "afterAutoMoveShowOnlyActiveTab": {
         "message": "Solo se la scheda attiva è stata spostata",
         "description": "Only if the active tab has been moved"
     },
-    "showNotificationAfterMovingTabIntoThisGroup": {
-        "message": "Mostra una notifica quando le schede vengono spostate in questo gruppo",
-        "description": "Show a notification when tabs are moved to this group"
+    "afterAutoMoveShowNotification": {
+        "message": "Mostra una notifica",
+        "description": "Show a notification"
     },
     "tabMoving": {
         "message": "Spostamento scheda",
@@ -670,6 +666,10 @@
     "groupWithoutTabs": {
         "message": "Questo gruppo non ha nessuna scheda",
         "description": "This group has no tabs"
+    },
+    "tabsWithoutGroups": {
+        "message": "Schede senza gruppi",
+        "description": "Tabs without groups"
     },
     "exportAllGroupsToBookmarks": {
         "message": "Esporta tutti i gruppi nei segnalibri",

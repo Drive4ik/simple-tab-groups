@@ -114,8 +114,14 @@ async function applyNow(windowId, groupId, activeTabId, applyFromHistory = false
             // show tabs
             if (groupToShow.tabs.length) {
                 if (groupToShow.tabs.some(tab => tab.windowId !== windowId)) {
+                    // the whole group gathers as one block at its own first tab in this window:
+                    // strays arrive without joining anyone, the in-window part can be swallowed
+                    // by a live span (docs/TABGROUPS-BEHAVIOR.md §20, §21) - GroupsNative.apply
+                    // below rebuilds the sub-groups either way
+                    const anchorTab = groupToShow.tabs.find(tab => tab.windowId === windowId);
+
                     groupToShow.tabs = await Tabs.moveNative(groupToShow.tabs, {
-                        index: -1,
+                        index: anchorTab?.index ?? await Tabs.resolveMoveIndex(groupToShow.id, windowId, groupToShow.tabs),
                         windowId: windowId,
                     }, true);
                 }
@@ -449,9 +455,9 @@ export function create(id, title, defaultGroupProps = {}) {
         catchTabRules: '',
         moveToGroupIfNoneCatchTabRules: null,
         muteTabsWhenGroupCloseAndRestoreWhenOpen: false,
-        showTabAfterMovingItIntoThisGroup: false,
-        showOnlyActiveTabAfterMovingItIntoThisGroup: false,
-        showNotificationAfterMovingTabIntoThisGroup: true,
+        afterAutoMoveShowTab: false,
+        afterAutoMoveShowOnlyActiveTab: false,
+        afterAutoMoveShowNotification: true,
         groupsNative: [],
 
         ...defaultGroupProps,
@@ -542,9 +548,7 @@ async function addNow(windowId, tabIds = [], title = null) {
     }
 
     if (tabIds.length) {
-        newGroup.tabs = await Tabs.move(tabIds, newGroup.id, {
-            showNotificationAfterMovingTabIntoThisGroup: false,
-        });
+        newGroup.tabs = await Tabs.move(tabIds, newGroup.id);
     }
 
     sendAdded(newGroup, windowId);

@@ -312,6 +312,8 @@ async function sync(trust = null, revision = null, progressFunc = null) {
 
     // remove unnecessary tabs
     if (syncResult.changes.tabsToRemove.size) {
+        // a whole live span closed in one call would be saved by the browser into its saved groups
+        await GroupsNative.ungroup(Array.from(syncResult.changes.tabsToRemove));
         // if has local changes - do silent remove. "Cloud.sync-end" event will trigger "Groups.updated.all" event and reload all groups with tabs
         await Tabs.remove(Array.from(syncResult.changes.tabsToRemove), syncResult.changes.local);
     }

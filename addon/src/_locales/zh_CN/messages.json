@@ -258,12 +258,12 @@
         "description": "Set random color"
     },
     "catchTabContainers": {
-        "message": "捕捉并移动Firefox身份标签页到该群组",
-        "description": "Catch and move tabs with containers to this group"
+        "message": "捕捉身份标签页",
+        "description": "Catch tabs from containers"
     },
     "regexpForTabsTitle": {
-        "message": "用来捕捉标签页的正则表达式",
-        "description": "Regular expressions for catch tabs"
+        "message": "用正则表达式捕捉标签页",
+        "description": "Catch tabs by regular expressions"
     },
     "regexpForTabsPlaceholder": {
         "message": "正则表达式",
@@ -425,17 +425,9 @@
         "message": "排除有声标签页",
         "description": "Exclude tabs with sound"
     },
-    "foundHiddenUnSyncTabsDescription": {
-        "message": "发现隐藏的未同步标签页。在标签页上点击以在当前群组或窗口中显示，或者：",
-        "description": "Found hidden unsynchronized tabs. Click on tab to show it into current group/window or:"
-    },
     "actionHiddenUnSyncTabsMoveAllTabsToCurrentGroup": {
-        "message": "将这些标签页移动到当前群组或窗口中",
-        "description": "Move all of these tabs into current group/window"
-    },
-    "actionHiddenUnSyncWindowTabsCreateGroup": {
-        "message": "仅在当前窗口创建新标签页群组",
-        "description": "Create new group with tabs only from the current window"
+        "message": "将这些标签页移动到当前群组中",
+        "description": "Move all of these tabs into current group"
     },
     "actionHiddenUnSyncTabsCreateGroup": {
         "message": "为这些标签页创建新群组",
@@ -465,17 +457,21 @@
         "message": "当群组关闭和恢复时静音标签页",
         "description": "Mute tabs when group close and restore when open"
     },
-    "showTabAfterMovingItIntoThisGroup": {
-        "message": "标签页自动移动到该群组后，显示该标签页",
-        "description": "Show the tab after auto-moving it into this group"
+    "autoMoveIntoGroupTitle": {
+        "message": "自动将标签页移动到该群组",
+        "description": "Automatically move tabs into this group"
     },
-    "showOnlyActiveTabAfterMovingItIntoThisGroup": {
-        "message": "仅在活动标签面移动后",
+    "afterAutoMoveShowTab": {
+        "message": "显示被移动的标签页",
+        "description": "Show the moved tab"
+    },
+    "afterAutoMoveShowOnlyActiveTab": {
+        "message": "仅在活动标签页被移动后",
         "description": "Only if the active tab has been moved"
     },
-    "showNotificationAfterMovingTabIntoThisGroup": {
-        "message": "当标签页移动到该群组时显示通知",
-        "description": "Show a notification when tabs are moved to this group"
+    "afterAutoMoveShowNotification": {
+        "message": "显示通知",
+        "description": "Show a notification"
     },
     "tabMoving": {
         "message": "标签页移动",
@@ -670,6 +666,10 @@
     "groupWithoutTabs": {
         "message": "该群组没有标签页",
         "description": "This group has no tabs"
+    },
+    "tabsWithoutGroups": {
+        "message": "无群组的标签页",
+        "description": "Tabs without groups"
     },
     "exportAllGroupsToBookmarks": {
         "message": "导出所有群组到书签",

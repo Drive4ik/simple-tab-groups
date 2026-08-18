@@ -274,12 +274,12 @@
         "description": "Set random color"
     },
     "catchTabContainers": {
-        "message": "Захоплювати і переміщати вкладки з контейнерами в цю групу",
-        "description": "Catch and move tabs with containers to this group"
+        "message": "Захоплювати вкладки з контейнерів",
+        "description": "Catch tabs from containers"
     },
     "regexpForTabsTitle": {
-        "message": "Регулярні вирази для захоплення вкладок",
-        "description": "Regular expressions for catch tabs"
+        "message": "Захоплювати вкладки за регулярними виразами",
+        "description": "Catch tabs by regular expressions"
     },
     "regexpForTabsPlaceholder": {
         "message": "Регулярні вирази",
@@ -451,17 +451,9 @@
             }
         }
     },
-    "foundHiddenUnSyncTabsDescription": {
-        "message": "Знайдено приховані не синхронізовані вкладки. Натисніть на вкладку, щоб відобразити її в поточній групі/вікні або: ",
-        "description": "Found hidden unsynchronized tabs. Click on tab to show it into current group/window or:"
-    },
     "actionHiddenUnSyncTabsMoveAllTabsToCurrentGroup": {
-        "message": "Перемістити всі ці вкладки в поточну групу/вікно",
-        "description": "Move all of these tabs into current group/window"
-    },
-    "actionHiddenUnSyncWindowTabsCreateGroup": {
-        "message": "Створити нову групу з вкладками тільки з цього вікна",
-        "description": "Create new group with tabs only from the current window"
+        "message": "Перемістити всі ці вкладки в поточну групу",
+        "description": "Move all of these tabs into current group"
     },
     "actionHiddenUnSyncTabsCreateGroup": {
         "message": "Створити нову групу з усіма цими вкладками",
@@ -491,17 +483,21 @@
         "message": "Відключати звук у вкладках при закритті групи і відновлювати при відкритті",
         "description": "Mute tabs when group close and restore when open"
     },
-    "showTabAfterMovingItIntoThisGroup": {
-        "message": "Перемикатися на вкладку після авто-переміщення її в цю групу",
-        "description": "Show the tab after auto-moving it into this group"
+    "autoMoveIntoGroupTitle": {
+        "message": "Автоматичне перенесення вкладок у цю групу",
+        "description": "Automatically move tabs into this group"
     },
-    "showOnlyActiveTabAfterMovingItIntoThisGroup": {
+    "afterAutoMoveShowTab": {
+        "message": "Перемикатися на перенесену вкладку",
+        "description": "Show the moved tab"
+    },
+    "afterAutoMoveShowOnlyActiveTab": {
         "message": "Тільки якщо була переміщена активна вкладка",
         "description": "Only if the active tab has been moved"
     },
-    "showNotificationAfterMovingTabIntoThisGroup": {
-        "message": "Показувати сповіщення при переміщенні вкладок до цієї групи",
-        "description": "Show a notification when tabs are moved to this group"
+    "afterAutoMoveShowNotification": {
+        "message": "Показувати сповіщення",
+        "description": "Show a notification"
     },
     "tabMoving": {
         "message": "Переміщення вкладок",
@@ -748,6 +744,10 @@
     "groupWithoutTabs": {
         "message": "В цій групі нема вкладок",
         "description": "This group has no tabs"
+    },
+    "tabsWithoutGroups": {
+        "message": "Вкладки без груп",
+        "description": "Tabs without groups"
     },
     "exportAllGroupsToBookmarks": {
         "message": "Експорт всіх груп в закладки",
