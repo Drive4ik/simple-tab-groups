@@ -1054,10 +1054,15 @@ async function onBackgroundMessage(message, sender) {
                     throw new Error('invalid groupId or cookieStoreId');
                 }
 
-                if (!group.excludeContainersForReOpen.includes(data.cookieStoreId)) {
-                    group.excludeContainersForReOpen.push(data.cookieStoreId);
-                    await Groups.save(groups);
-                }
+                await Groups.update(data.groupId, group => {
+                    if (group.excludeContainersForReOpen.includes(data.cookieStoreId)) {
+                        return {};
+                    }
+
+                    return {
+                        excludeContainersForReOpen: [...group.excludeContainersForReOpen, data.cookieStoreId],
+                    };
+                });
 
                 result.ok = true;
 

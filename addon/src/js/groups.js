@@ -347,11 +347,15 @@ Containers.onChanged(async () => {
     }
 
     const log = logger.start('Containers.onChanged listener');
-    const {groups} = await load();
 
-    if (normalizeContainersInGroups(groups)) {
-        await save(groups);
-    }
+    await enqueue(async () => {
+        const {groups} = await load();
+
+        if (normalizeContainersInGroups(groups)) {
+            await saveNow(groups);
+        }
+    });
+
     log.stop();
 });
 
@@ -400,7 +404,21 @@ export async function load(groupId = null, withTabs = false, includeFavIconUrl, 
     };
 }
 
-export async function save(groups, withMessage = false) {
+// every load-modify-save of the groups array funnels here - the mirrors of different windows,
+// composite operations, sync and UI edits must not interleave (lost update)
+let writeQueue = Promise.resolve();
+
+function enqueue(fn) {
+    const turn = writeQueue.then(fn);
+    writeQueue = turn.catch(() => {});
+    return turn;
+}
+
+export function save(groups, withMessage = false) {
+    return enqueue(() => saveNow(groups, withMessage));
+}
+
+async function saveNow(groups, withMessage = false) {
     const log = logger.start('save', {withMessage});
 
     if (!Array.isArray(groups)) {
@@ -525,18 +543,22 @@ async function addNow(windowId, tabIds = [], title = null) {
         }
     }
 
-    const {groups} = await load();
-    const {defaultGroupProps} = await getDefaults();
+    const newGroup = await enqueue(async () => {
+        const {groups} = await load();
+        const {defaultGroupProps} = await getDefaults();
 
-    const newGroup = create(createId(), title, defaultGroupProps);
+        const newGroup = create(createId(), title, defaultGroupProps);
 
-    groups.push(newGroup);
+        groups.push(newGroup);
 
-    newGroup.title = Utils.format(newGroup.title, {index: groups.length});
+        newGroup.title = Utils.format(newGroup.title, {index: groups.length});
 
-    NewCloudGroups.add(newGroup.id);
+        NewCloudGroups.add(newGroup.id);
 
-    await save(groups);
+        await saveNow(groups);
+
+        return newGroup;
+    });
 
     if (windowId) {
         await Cache.setWindowGroup(windowId, newGroup.id);
@@ -579,22 +601,30 @@ async function removeNow(groupId) {
         }
     }
 
-    const {group, groups, groupIndex} = await load(groupId, true);
-    const {defaultGroupProps} = await getDefaults();
+    const group = await enqueue(async () => {
+        const {group, groups, groupIndex} = await load(groupId, true);
+        const {defaultGroupProps} = await getDefaults();
+
+        if (!group) {
+            return;
+        }
+
+        groups.splice(groupIndex, 1);
+
+        const defaultGroupPropsChanged = removeRefs(group, groups, defaultGroupProps);
+
+        await saveNow(groups);
+
+        if (defaultGroupPropsChanged) {
+            await saveDefault(defaultGroupProps);
+        }
+
+        return group;
+    });
 
     if (!group) {
         log.stopError('groupId', groupId, 'not found');
         return;
-    }
-
-    groups.splice(groupIndex, 1);
-
-    const defaultGroupPropsChanged = removeRefs(group, groups, defaultGroupProps);
-
-    await save(groups);
-
-    if (defaultGroupPropsChanged) {
-        await saveDefault(defaultGroupProps);
     }
 
     await removeFinish(group);
@@ -732,17 +762,19 @@ async function restoreNow(groupId) {
 
     await browser.storage.session.remove(restoreId);
 
-    const {groups} = await load();
+    await enqueue(async () => {
+        const {groups} = await load();
 
-    groups.push(group);
+        groups.push(group);
 
-    normalizeContainersInGroups(groups);
+        normalizeContainersInGroups(groups);
+
+        NewCloudGroups.add(group.id);
+
+        await saveNow(groups);
+    });
 
     const tabs = group.tabs;
-
-    NewCloudGroups.add(group.id);
-
-    await save(groups);
 
     if (tabs.length && !group.isArchive) {
         await Browser.actionLoading();
@@ -759,18 +791,22 @@ async function restoreNow(groupId) {
     log.stop('success restored', group.id);
 }
 
-// the mirrors of different windows, restoreMembership and UI edits all funnel here -
-// the load-modify-save of the groups array must not interleave (lost update)
-let updateQueue = Promise.resolve();
-
 export function update(groupId, updateData) {
-    const turn = updateQueue.then(() => updateNow(groupId, updateData));
-    updateQueue = turn.catch(() => {});
-    return turn;
+    return enqueue(() => updateNow(groupId, updateData));
 }
 
 async function updateNow(groupId, updateData) {
     const log = logger.start('update', {groupId, updateData});
+
+    const {group, groupIndex, groups} = await load(groupId);
+
+    if (!group) {
+        log.throwError(['group', groupId, 'not found for update it']);
+    }
+
+    if (typeof updateData === 'function') {
+        updateData = updateData(group);
+    }
 
     if (updateData.iconUrl?.startsWith('chrome:')) {
         // Notification('Icon not supported');
@@ -786,12 +822,6 @@ async function updateNow(groupId, updateData) {
 
     log.log('update keys:', [...updateDataKeys]);
 
-    const {group, groupIndex, groups} = await load(groupId);
-
-    if (!group) {
-        log.throwError(['group', groupId, 'not found for update it']);
-    }
-
     // updateData = JSON.clone(updateData); // clone need for fix bug: dead object after close tab which create object
 
     if (updateDataKeys.has('title')) {
@@ -806,7 +836,7 @@ async function updateNow(groupId, updateData) {
 
     Object.assign(group, updateData);
 
-    await save(groups);
+    await saveNow(groups);
 
     sendUpdated({
         id: groupId,
@@ -837,11 +867,15 @@ async function updateNow(groupId, updateData) {
 export async function move(groupId, newGroupIndex) {
     const log = logger.start('move', {groupId, newGroupIndex});
 
-    const {groups, groupIndex} = await load(groupId);
+    const groups = await enqueue(async () => {
+        const {groups, groupIndex} = await load(groupId);
 
-    groups.splice(newGroupIndex, 0, groups.splice(groupIndex, 1)[0]);
+        groups.splice(newGroupIndex, 0, groups.splice(groupIndex, 1)[0]);
 
-    await save(groups, true);
+        await saveNow(groups, true);
+
+        return groups;
+    });
 
     await MenusMain.groupsUpdated(groups);
 
@@ -855,15 +889,19 @@ export async function sort(vector = 'asc') {
         log.throwError(`invalid sort vector: ${vector}`);
     }
 
-    const {groups} = await load();
+    const groups = await enqueue(async () => {
+        const {groups} = await load();
 
-    if ('asc' === vector) {
-        groups.sort(Utils.sortBy('title'));
-    } else {
-        groups.sort(Utils.sortBy('title', undefined, true));
-    }
+        if ('asc' === vector) {
+            groups.sort(Utils.sortBy('title'));
+        } else {
+            groups.sort(Utils.sortBy('title', undefined, true));
+        }
 
-    await save(groups, true);
+        await saveNow(groups, true);
+
+        return groups;
+    });
 
     await MenusMain.groupsUpdated(groups);
 
@@ -1007,51 +1045,55 @@ async function archiveToggleNow(groupId) {
 
     await Browser.actionLoading();
 
-    let {group, groups} = await load(groupId, true),
-        tabsToRemove = [],
-        needUpdateTabs = false;
+    if (Cache.getWindowId(groupId)) {
+        const result = await unload(groupId);
 
-    log.log('group.isArchive', group.isArchive, '=>', !group.isArchive);
-
-    if (group.isArchive) {
-        group.isArchive = false;
-
-        Extensions.tabsToUUID(group.tabs);
-
-        // the archived tabs carry their groupNativeId - Tabs.create writes it back into sessions
-        const createdTabs = await Tabs.createMultiple(setNewTabsParams(group.tabs, group), true);
-
-        // appended at the end of the strip - they can't be in a live group (docs/TABGROUPS-BEHAVIOR.md §10)
-        await Tabs.hide(createdTabs, true);
-
-        group.tabs = [];
-        needUpdateTabs = true;
-    } else {
-        if (Cache.getWindowId(groupId)) {
-            const result = await unload(groupId);
-
-            if (!result) {
-                log.stopError('cant unload group');
-                return null;
-            }
-
-            ({group, groups} = await load(groupId, true));
+        if (!result) {
+            await Browser.actionLoading(false);
+            log.stopError('cant unload group');
+            return null;
         }
-
-        Extensions.tabsToId(group.tabs);
-
-        tabsToRemove = group.tabs;
-
-        group.isArchive = true;
-        group.groupsNative = GroupsNative.referencedGroupsNative(group);
-        group.tabs = Tabs.prepareForSave(group.tabs, {
-            includeGroupNativeId: true,
-            includeFavIconUrl: true,
-            includeThumbnail: true,
-        });
     }
 
-    await save(groups);
+    const {group, tabsToRemove, needUpdateTabs} = await enqueue(async () => {
+        const {group, groups} = await load(groupId, true);
+
+        let tabsToRemove = [],
+            needUpdateTabs = false;
+
+        log.log('group.isArchive', group.isArchive, '=>', !group.isArchive);
+
+        if (group.isArchive) {
+            group.isArchive = false;
+
+            Extensions.tabsToUUID(group.tabs);
+
+            // the archived tabs carry their groupNativeId - Tabs.create writes it back into sessions
+            const createdTabs = await Tabs.createMultiple(setNewTabsParams(group.tabs, group), true);
+
+            // appended at the end of the strip - they can't be in a live group (docs/TABGROUPS-BEHAVIOR.md §10)
+            await Tabs.hide(createdTabs, true);
+
+            group.tabs = [];
+            needUpdateTabs = true;
+        } else {
+            Extensions.tabsToId(group.tabs);
+
+            tabsToRemove = group.tabs;
+
+            group.isArchive = true;
+            group.groupsNative = GroupsNative.referencedGroupsNative(group);
+            group.tabs = Tabs.prepareForSave(group.tabs, {
+                includeGroupNativeId: true,
+                includeFavIconUrl: true,
+                includeThumbnail: true,
+            });
+        }
+
+        await saveNow(groups);
+
+        return {group, tabsToRemove, needUpdateTabs};
+    });
 
     await Tabs.remove(tabsToRemove, true);
 
