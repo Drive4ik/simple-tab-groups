@@ -1570,7 +1570,7 @@ async function cloudSync({
         Notification(objectToNativeError(syncResult), {
             id: Cloud.ERROR_NOTIFICATION_ID,
             module: ['tabs', 'createUrlOnce', Constants.PAGES.SETTINGS + '#backup/sync'],
-            expires: trigger === Cloud.TRIGGER_MANUAL ? undefined : Cloud.NETWORK_RETRY_DELAY_MINUTES * 60,
+            expires: trigger === Cloud.TRIGGER_MANUAL ? undefined : Cloud.RETRY_DELAY_MINUTES * 60,
         });
     }
 

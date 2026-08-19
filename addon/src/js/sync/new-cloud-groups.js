@@ -12,11 +12,12 @@ A mark whose group never got saved (orphan) is swept by keepOnly on addon start.
 */
 
 import '/js/prefixed-storage.js';
+import * as Utils from '/js/utils.js';
 
 const storage = localStorage.create('NewCloudGroups');
 
 export function add(...groupIds) {
-    for (const groupId of flatIds(groupIds)) {
+    for (const groupId of Utils.toSet(groupIds)) {
         storage[groupId] = true;
     }
 }
@@ -26,22 +27,17 @@ export function getIds() {
 }
 
 export function remove(...groupIds) {
-    for (const groupId of flatIds(groupIds)) {
+    for (const groupId of Utils.toSet(groupIds)) {
         delete storage[groupId];
     }
 }
 
 export function keepOnly(...groupIds) {
-    const alive = new Set(flatIds(groupIds));
+    const alive = Utils.toSet(groupIds);
 
     for (const groupId of Object.keys(storage)) {
         if (!alive.has(groupId)) {
             delete storage[groupId];
         }
     }
-}
-
-// Array.from would explode an id string into characters - flatten only iterables
-function flatIds(groupIds) {
-    return groupIds.flatMap(groupId => typeof groupId === 'string' ? groupId : Array.from(groupId));
 }

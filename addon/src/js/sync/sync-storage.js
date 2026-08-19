@@ -4,6 +4,7 @@ import * as StorageUtils from '../storage-utils.js';
 import {migrateSyncData, isDataVersionNewer, stampVersion} from '../migration.js';
 import Logger from '../logger.js';
 import JSON from '../json.js';
+import CloudError from './cloud/error.js';
 
 const logger = new Logger('SyncStorage');
 
@@ -22,7 +23,7 @@ export async function get() {
 
     if (result.error) {
         log.stopError(result.error);
-        throw new Error(result.error);
+        throw new CloudError(result.error);
     }
 
     if (result.migrated) {

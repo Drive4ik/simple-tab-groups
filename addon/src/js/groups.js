@@ -415,7 +415,17 @@ function enqueue(fn) {
 }
 
 export function save(groups, withMessage = false) {
-    return enqueue(() => saveNow(groups, withMessage));
+    return enqueue(async () => {
+        if (typeof groups === 'function') {
+            groups = await groups();
+
+            if (!groups) {
+                return groups;
+            }
+        }
+
+        return saveNow(groups, withMessage);
+    });
 }
 
 async function saveNow(groups, withMessage = false) {
@@ -585,81 +595,72 @@ export function remove(...args) {
     return Operations.run('remove-group', () => removeNow(...args));
 }
 
-async function removeNow(groupId) {
-    const log = logger.start(removeNow, groupId);
+async function removeNow(groupIds) {
+    const log = logger.start(removeNow, groupIds);
 
-    const groupWindowId = Cache.getWindowId(groupId);
+    const idsToRemove = Utils.toSet(groupIds);
+    const windowIdByGroupId = new Map;
 
-    log.log('groupWindowId', groupWindowId);
+    for (const groupId of idsToRemove) {
+        const windowId = Cache.getWindowId(groupId);
 
-    if (groupWindowId) {
-        const result = await unload(groupId);
+        if (!windowId) {
+            continue;
+        }
 
-        if (!result) {
-            log.stopError('cant unload');
-            return;
+        if (await unload(groupId)) {
+            windowIdByGroupId.set(groupId, windowId);
+        } else {
+            log.warn('cant unload, skip removing group', groupId);
+            idsToRemove.delete(groupId);
         }
     }
 
-    const group = await enqueue(async () => {
-        const {group, groups, groupIndex} = await load(groupId, true);
+    const removedGroups = await enqueue(async () => {
+        const {groups} = await load(null, true);
         const {defaultGroupProps} = await getDefaults();
 
-        if (!group) {
-            return;
+        const groupsToRemove = groups.filter(group => idsToRemove.has(group.id));
+
+        if (!groupsToRemove.length) {
+            return groupsToRemove;
         }
 
-        groups.splice(groupIndex, 1);
+        const restGroups = groups.filter(group => !idsToRemove.has(group.id));
 
-        const defaultGroupPropsChanged = removeRefs(group, groups, defaultGroupProps);
+        // the tabs close before the storage cut: an abort in between leaves an empty group,
+        // never hidden orphan tabs whose group is already gone
+        await Tabs.remove(groupsToRemove.flatMap(group => group.isArchive ? [] : group.tabs), true);
 
-        await saveNow(groups);
+        let defaultGroupPropsChanged = false;
+
+        for (const group of groupsToRemove) {
+            if (removeRefs(group, restGroups, defaultGroupProps)) {
+                defaultGroupPropsChanged = true;
+            }
+        }
+
+        await saveNow(restGroups);
 
         if (defaultGroupPropsChanged) {
             await saveDefault(defaultGroupProps);
         }
 
-        return group;
+        return groupsToRemove;
     });
 
-    if (!group) {
-        log.stopError('groupId', groupId, 'not found');
+    if (!removedGroups.length) {
+        log.stopError('groups', groupIds, 'not found');
         return;
     }
 
-    await removeFinish(group);
+    for (const group of removedGroups) {
+        await removeFinish(group);
 
-    sendRemoved(groupId, groupWindowId);
-
-    log.stop();
-}
-
-export async function removeMultiple(groupsToRemove, groups, defaultGroupProps, removeTabs = true) {
-    const log = logger.start(removeMultiple, groupsToRemove.map(group => group.id), {removeTabs});
-
-    const tabsToRemove = [];
-
-    for (const group of groupsToRemove) {
-        if (isLoaded(group.id)) {
-            await unload(group.id);
-
-            // beforeUnload pinned such tabs and detached them - the caller's tab list is an older snapshot
-            group.tabs = group.tabs.filter(tab => !Tabs.isCanNotBeHidden(tab));
-        }
-
-        if (!removeTabs && !group.isArchive) {
-            tabsToRemove.push(...group.tabs);
-        }
-
-        // saving the changed groups and defaultGroupProps is done by cloud.js, the only caller of removeMultiple
-        removeRefs(group, groups, defaultGroupProps);
-
-        await removeFinish(group, removeTabs);
+        sendRemoved(group.id, windowIdByGroupId.get(group.id));
     }
 
     log.stop();
-
-    return tabsToRemove;
 }
 
 function removeRefs(group, groups, defaultGroupProps) {
@@ -685,15 +686,10 @@ function removeRefs(group, groups, defaultGroupProps) {
     return defaultGroupPropsChanged;
 }
 
-async function removeFinish(group, removeTabs = true) {
-    const log = logger.start(removeFinish, group.id, {removeTabs});
+async function removeFinish(group) {
+    const log = logger.start(removeFinish, group.id);
 
     NewCloudGroups.remove(group.id);
-
-    if (removeTabs && !group.isArchive) {
-        log.log('removing group tabs...');
-        await Tabs.remove(group.tabs, true);
-    }
 
     await MenusMain.groupRemoved(group).catch(log.onCatch('cant remove menus', false));
 

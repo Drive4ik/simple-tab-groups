@@ -575,6 +575,25 @@ export function onlyUniqueFilterLast(value, index, self) {
     return self.lastIndexOf(value) === index;
 }
 
+// a string must stay one value, not explode into characters; a Map gives its keys
+export function toSet(values) {
+    return new Set([values].flat().flatMap(value => {
+        if (typeof value === 'string') {
+            return value;
+        }
+
+        if (value instanceof Map) {
+            return [...value.keys()];
+        }
+
+        if (value?.[Symbol.iterator]) {
+            return [...value];
+        }
+
+        return value;
+    }));
+}
+
 export function assignKeys(toObj, fromObj, keys) {
     for (const key of keys) {
         toObj[key] = fromObj[key];

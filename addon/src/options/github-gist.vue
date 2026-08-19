@@ -109,8 +109,8 @@ export default {
             if (!this.sync.disabled) {
                 try {
                     Object.assign(this.sync.options, await SyncStorage.get());
-                } catch ({message}) {
-                    this.syncCloudErrorMessage = String(new Cloud.CloudError(message));
+                } catch (e) {
+                    this.syncCloudErrorMessage = String(e);
                     return;
                 }
 
@@ -212,8 +212,8 @@ export default {
 
                 await area.save();
                 await area.load();
-            } catch ({message}) {
-                this.syncCloudErrorMessage = String(new Cloud.CloudError(message));
+            } catch (e) {
+                this.syncCloudErrorMessage = String(e);
             } finally {
                 area.loadingOptions = false;
             }

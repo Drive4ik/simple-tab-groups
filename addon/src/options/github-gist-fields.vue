@@ -2,7 +2,6 @@
 
 import * as Constants from '/js/constants.js';
 import Lang from '/js/lang.js';
-import {CloudError} from '/js/sync/cloud/cloud.js';
 import GithubGist from '/js/sync/cloud/githubgist.js';
 
 export default {
@@ -66,9 +65,9 @@ export default {
                 await new GithubGist(this.token, 'check-token').checkToken();
 
                 this.tokenCheched = true;
-            } catch ({message}) {
+            } catch (e) {
                 this.tokenCheched = false;
-                this.$emit('update:errorMessage', String(new CloudError(message)));
+                this.$emit('update:errorMessage', String(e));
             } finally {
                 this.tokenLoading = false;
             }

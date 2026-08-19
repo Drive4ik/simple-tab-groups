@@ -2,8 +2,15 @@
 import '/js/prefixed-storage.js';
 import * as Constants from '/js/constants.js';
 import * as Utils from '/js/utils.js';
+import CloudError from './error.js';
 
 const storage = localStorage.create(Constants.MODULES.CLOUD);
+
+// the whole semantics of a GitHub response lives in #request: it classifies the statuses
+// and headers and throws these, ready to show - translated, with temporary and retryAfter
+export class GithubError extends CloudError {
+    name = 'GithubError';
+}
 
 export default class GithubGist {
     #token = null;
@@ -14,11 +21,11 @@ export default class GithubGist {
 
     constructor(token, fileName, perPage = 30) {
         if (!token) {
-            throw new Error('githubInvalidToken', {cause: {isEmpty: true}});
+            throw new GithubError('githubInvalidToken', {cause: {isEmpty: true}});
         } else if (!fileName) {
-            throw new Error('githubInvalidFileName');
+            throw new GithubError('githubInvalidFileName');
         } else if (perPage < 1 || perPage > 100) {
-            throw new Error('githubInvalidPerPage');
+            throw new GithubError('githubInvalidPerPage');
         }
 
         this.#token = token;
@@ -93,7 +100,7 @@ export default class GithubGist {
         this.hasGist || await this.#findGist();
 
         if (!this.hasGist) {
-            throw new Error('githubNotFound');
+            throw new GithubError('githubNotFound');
         }
 
         let gistUrl = this.#gistUrl;
@@ -128,7 +135,7 @@ export default class GithubGist {
             return withInfo ? [content, gist] : content;
         } catch (e) {
             if (e instanceof SyntaxError) {
-                throw new Error('githubInvalidGistContent', {cause: e});
+                throw new GithubError('githubInvalidGistContent', {cause: e});
             }
 
             throw e;
@@ -168,7 +175,7 @@ export default class GithubGist {
         this.hasGist || await this.#findGist();
 
         if (!this.hasGist) {
-            throw new Error('githubNotFound');
+            throw new GithubError('githubNotFound');
         }
 
         const gist = await this.#request('PATCH', this.#gistUrl, {
@@ -209,7 +216,17 @@ export default class GithubGist {
             options.headers['Content-Type'] = 'application/json';
         }
 
-        const response = await this.#progressFetch(url, options, progressFunc);
+        let response;
+
+        try {
+            response = await this.#progressFetch(url, options, progressFunc);
+        } catch (error) {
+            throw new GithubError(null, {
+                message: String(error?.message ?? error),
+                temporary: true,
+                cause: error,
+            });
+        }
 
         if (response.ok) {
             return response.json();
@@ -218,30 +235,40 @@ export default class GithubGist {
         if (isApi) {
             const classicScopes = response.headers.get('x-oauth-scopes');
             if (classicScopes && !classicScopes.includes('gist')) {
-                throw new Error('githubTokenNoAccess');
+                throw new GithubError('githubTokenNoAccess');
             }
 
             // const personalScopes = response.headers.get('x-accepted-github-permissions');
             // if (personalScopes && !personalScopes.includes('gists=write')) {
-            //     throw new Error('githubTokenNoAccess');
+            //     throw new GithubError('githubTokenNoAccess');
             // }
         }
 
         if (response.status === 401) {
-            throw new Error('githubInvalidToken');
+            throw new GithubError('githubInvalidToken');
+        }
+
+        const isRateLimit = response.status === 429 ||
+            (response.status === 403 && response.headers.get('x-ratelimit-remaining') === '0');
+
+        if (isRateLimit) {
+            const retryAfterSeconds = Number(response.headers.get('retry-after')) || 0;
+            const resetTime = Number(response.headers.get('x-ratelimit-reset')) * 1000 || 0;
+            const retryAfter = (retryAfterSeconds ? Date.now() + retryAfterSeconds * 1000 : resetTime) || null;
+
+            throw new GithubError('githubRateLimit', {
+                langArgs: [Utils.relativeTime(retryAfter ?? Date.now())],
+                temporary: true,
+                retryAfter,
+            });
         }
 
         if (response.status === 403) {
-            if (response.headers.get('x-ratelimit-remaining') === '0') {
-                const unix = response.headers.get('x-ratelimit-reset');
-                throw new Error(`githubRateLimit:${unix}000`);
-            }
-
-            throw new Error('githubTokenNoAccess');
+            throw new GithubError('githubTokenNoAccess');
         }
 
         if (response.status === 404) {
-            throw new Error('githubNotFound');
+            throw new GithubError('githubNotFound');
         }
 
         const result = await response.clone().json();
@@ -254,11 +281,17 @@ export default class GithubGist {
                     .map(file => Utils.encodeToBytes(file.content).length)
                     .reduce((acc, fSize) => acc + fSize, 0);
 
-                throw new Error(`githubContentsTooLarge:${bytes}`);
+                throw new GithubError('githubContentsTooLarge', {
+                    langArgs: [Utils.formatBytes(bytes, 0)],
+                });
             }
         }
 
-        throw new Error(`${response.status}: ${result.message}${errorsMessage}`, {cause: response});
+        throw new GithubError(null, {
+            message: `${response.status}: ${result.message}${errorsMessage}`,
+            temporary: response.status >= 500,
+            cause: response,
+        });
     }
 
     #createProgress(currentProgress, progressDuration, progressFunc = null) {

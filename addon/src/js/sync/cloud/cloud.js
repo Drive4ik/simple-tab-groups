@@ -14,6 +14,7 @@ import Lang from '/js/lang.js';
 import JSON from '/js/json.js';
 import Logger, {nativeErrorToObject, objectToNativeError} from '/js/logger.js';
 import GithubGist from './githubgist.js';
+import CloudError from './error.js';
 import * as CloudBroadcast from '/js/broadcast.js?channel=cloud';
 import * as SyncStorage from '../sync-storage.js';
 import * as NewCloudGroups from '../new-cloud-groups.js';
@@ -45,36 +46,12 @@ export const TRIGGER_MANUAL = 'cloud-trigger-manual';
 export const TRIGGER_AUTO = 'cloud-trigger-auto';
 export const TRIGGER_RETRY = 'cloud-trigger-retry';
 
-export const NETWORK_RETRY_DELAY_MINUTES = 3;
-const MAX_NETWORK_RETRY_ATTEMPTS = 3;
+export const RETRY_DELAY_MINUTES = 3;
+const MAX_RETRY_ATTEMPTS = 3;
 
 let inProgress = false;
 
 Listeners.extension.onStart.add(() => syncStorage.clear());
-
-// ! Be careful: "instanceof" doesn't work in different contexts (cloud.js?can-do-synchronization)
-export class CloudError extends Error {
-    constructor(langId, ...args) {
-        logger.error('CloudError:', langId);
-
-        let message;
-
-        if (langId.startsWith('githubRateLimit')) {
-            const relativeTime = Utils.relativeTime(Number(langId.split(':').pop()));
-            message = Lang(['githubRateLimit', relativeTime]);
-        } else if (langId.startsWith('githubContentsTooLarge')) {
-            const size = Utils.formatBytes(Number(langId.split(':').pop()), 0);
-            message = Lang(['githubContentsTooLarge', size]);
-        } else {
-            message = Lang(langId) || langId;
-        }
-
-        super(message, ...args);
-
-        this.langId = langId === message ? null : langId;
-        this.name = 'CloudError';
-    }
-}
 
 function send(action, data = {}) {
     CloudBroadcast.send({action, ...data});
@@ -113,13 +90,19 @@ export async function synchronization(trust = null, revision = null) {
         syncResult.progress = 100;
         Object.assign(syncResult, syncRes);
 
+        delete storage.lastError;
+
         send('sync-end', syncResult);
 
         log.stop();
     } catch (e) {
         syncResult.langId = e.langId;
+        syncResult.temporary = e.temporary ?? false;
+        syncResult.retryAfter = e.retryAfter ?? null;
         syncResult.progress = lastProgress;
         Object.assign(syncResult, nativeErrorToObject(e));
+
+        storage.lastError = String(e);
 
         send('sync-error', syncResult);
 
@@ -158,9 +141,7 @@ async function sync(trust = null, revision = null, progressFunc = null) {
 
     if (syncOptionsLocation === Constants.SYNC_STORAGE_FSYNC) {
         if (!SyncStorage.IS_AVAILABLE) {
-            const error = new CloudError('ffSyncNotSupported');
-            storage.lastError = String(error);
-            log.throwError('sync not supported', error);
+            log.throwError('sync not supported', new CloudError('ffSyncNotSupported'));
         }
     }
 
@@ -173,9 +154,7 @@ async function sync(trust = null, revision = null, progressFunc = null) {
             ? await SyncStorage.get()
             : await Storage.get(null, Constants.DEFAULT_SYNC_OPTIONS);
     } catch (error) {
-        const cloudError = new CloudError(error.message, {cause: error});
-        storage.lastError = String(cloudError);
-        log.throwError('get sync options', cloudError);
+        log.throwError('get sync options', error);
     }
 
     progressFunc?.(10);
@@ -188,9 +167,7 @@ async function sync(trust = null, revision = null, progressFunc = null) {
             syncOptions.githubGistFileName
         );
     } catch (error) {
-        const cloudError = new CloudError(error.message, {cause: error});
-        storage.lastError = String(cloudError);
-        log.throwError('create GithubGist instance', cloudError);
+        log.throwError('create GithubGist instance', error);
     }
 
     const Cloud = cloudInstance;
@@ -213,31 +190,14 @@ async function sync(trust = null, revision = null, progressFunc = null) {
     try {
         [cloudData, cloudInfo] = await Cloud.getContent(revision, true, createCloudProgress(10, 40));
     } catch (error) {
-        if (error.message === 'githubNotFound' && !isRestoring) {
+        if (error.langId === 'githubNotFound' && !isRestoring) {
             //
         } else {
-            const cloudError = new CloudError(error.message, {cause: error});
-            storage.lastError = String(cloudError);
-            log.throwError('get GithubGist content', cloudError);
+            log.throwError('get GithubGist content', error);
         }
     }
 
     progressFunc?.(40);
-
-    const localData = await Promise.all([Storage.get(), Groups.load(null, true)])
-        .then(([data, {groups}]) => {
-            stampVersion(data);
-            data.groups = groups;
-            data.containers = Containers.getToExport(data);
-            // map cookie-store-id to Firefox browser
-            Containers.mapDefaultContainer(data, Constants.DEFAULT_COOKIE_STORE_ID_FIREFOX);
-            return data;
-        });
-
-    const localGroupIds = new Set(localData.groups.map(group => group.id));
-    const newCloudGroupIds = NewCloudGroups.getIds().intersection(localGroupIds);
-
-    progressFunc?.(45);
 
     const sameGist = isLastSyncedGist(cloudInfo, syncOptions);
 
@@ -255,27 +215,63 @@ async function sync(trust = null, revision = null, progressFunc = null) {
 
     const hasCloudData = Boolean(cloudData);
 
-    cloudData ??= JSON.clone(localData);
+    let syncResult, newCloudGroupIds;
 
-    cloudData.syncId = trust === TRUST_CLOUD ? cloudLastUpdate : localLastUpdate;
+    // the snapshot, the merge and the local save are one queue turn: edits made while the
+    // sync uploads to the gist and applies tabs land after the turn and win - nothing is
+    // rolled back by a stale snapshot
+    await Groups.save(async () => {
+        const localData = await Promise.all([Storage.get(), Groups.load(null, true)])
+            .then(([data, {groups}]) => {
+                stampVersion(data);
+                data.groups = groups;
+                data.containers = Containers.getToExport(data);
+                // map cookie-store-id to Firefox browser
+                Containers.mapDefaultContainer(data, Constants.DEFAULT_COOKIE_STORE_ID_FIREFOX);
+                return data;
+            });
 
-    const syncResult = await syncData(localData, cloudData, sourceOfTruth, newCloudGroupIds, isFirstLocalSync, createCloudProgress(45, 55))
-        .catch(log.onCatch('cant sync'));
+        const localGroupIds = new Set(localData.groups.map(group => group.id));
+        newCloudGroupIds = NewCloudGroups.getIds().intersection(localGroupIds);
 
-    delete syncResult.cloudData.syncId;
+        progressFunc?.(45);
 
-    // log.log('changes1', {
-    //     hasCloudData,
-    //     local: syncResult.changes.local,
-    //     cloud: syncResult.changes.cloud,
+        cloudData ??= JSON.clone(localData);
 
-    //     localLastUpdate,
-    //     cloudLastUpdate,
-    // });
+        cloudData.syncId = trust === TRUST_CLOUD ? cloudLastUpdate : localLastUpdate;
 
-    if (!hasCloudData || isRestoring) {
-        syncResult.changes.cloud = true;
-    }
+        syncResult = await syncData(localData, cloudData, sourceOfTruth, newCloudGroupIds, isFirstLocalSync, createCloudProgress(45, 55))
+            .catch(log.onCatch('cant sync'));
+
+        delete syncResult.cloudData.syncId;
+
+        if (!hasCloudData || isRestoring) {
+            syncResult.changes.cloud = true;
+        }
+
+        if (syncResult.changes.cloud) {
+            syncResult.changes.local = true; // sync date must be equal in cloud and local
+        }
+
+        if (syncResult.changes.groupsToRemove.size) {
+            syncResult.changes.local = true;
+        }
+
+        // set last-update before call saveOptions, saveOptions will reset alarm and it depends on last-update time
+        mainStorage.autoSyncLastTimeStamp = Utils.unixNow();
+
+        if (!syncResult.changes.local) {
+            return null;
+        }
+
+        // map cookie-store-id to gecko browser
+        Containers.mapDefaultContainer(syncResult.localData, Constants.DEFAULT_COOKIE_STORE_ID);
+
+        await backgroundSelf.saveOptions(syncResult.localData);
+
+        // the groups doomed by the cloud stay in storage until Groups.remove closes their tabs below
+        return [...syncResult.localData.groups, ...syncResult.changes.groupsToRemove.values()];
+    });
 
     progressFunc?.(55);
 
@@ -284,28 +280,15 @@ async function sync(trust = null, revision = null, progressFunc = null) {
             const description = Lang('githubGistBackupDescription');
             cloudInfo = await Cloud.setContent(syncResult.cloudData, description, createCloudProgress(55, 85));
         } catch (error) {
-            const cloudError = new CloudError(error.message, {cause: error});
-            storage.lastError = String(cloudError);
-            log.throwError('set GithubGist content', cloudError);
+            log.throwError('set GithubGist content', error);
         }
-
-        syncResult.changes.local = true; // sync date must be equal in cloud and local
     }
 
     progressFunc?.(85);
 
     // remove unnecessary groups
     if (syncResult.changes.groupsToRemove.size) {
-        syncResult.changes.local = true;
-
-        const removedTabs = await Groups.removeMultiple(
-            [...syncResult.changes.groupsToRemove],
-            syncResult.localData.groups,
-            syncResult.localData.defaultGroupProps,
-            false
-        );
-
-        removedTabs.forEach(tabToRemove => syncResult.changes.tabsToRemove.add(tabToRemove));
+        await Groups.remove(syncResult.changes.groupsToRemove);
     }
 
     progressFunc?.(90);
@@ -320,13 +303,7 @@ async function sync(trust = null, revision = null, progressFunc = null) {
 
     progressFunc?.(95);
 
-    // set last-update before call saveOptions, saveOptions will reset alarm and it depends on last-update time
-    mainStorage.autoSyncLastTimeStamp = Utils.unixNow();
-
     if (syncResult.changes.local) {
-        // map cookie-store-id to gecko browser
-        Containers.mapDefaultContainer(syncResult.localData, Constants.DEFAULT_COOKIE_STORE_ID);
-
         // the native-group mirror is gated inside GroupsNative.apply itself,
         // and apply makes the browser match the synced state - no extra reconcile pass is needed
         // sync changes with current profile
@@ -377,10 +354,8 @@ async function sync(trust = null, revision = null, progressFunc = null) {
             }
         }
 
-        await backgroundSelf.saveOptions(syncResult.localData);
-        await Groups.save(syncResult.localData.groups);
-
-        await MenusMain.groupsUpdated(syncResult.localData.groups);
+        const {groups} = await Groups.load();
+        await MenusMain.groupsUpdated(groups);
     }
 
     storage.gist = {
@@ -394,8 +369,6 @@ async function sync(trust = null, revision = null, progressFunc = null) {
     NewCloudGroups.remove(newCloudGroupIds);
 
     log.stop();
-
-    delete storage.lastError;
 
     delete syncResult.localData;
     delete syncResult.cloudData;
@@ -418,13 +391,11 @@ async function syncData(localData, cloudData, sourceOfTruth, newCloudGroupIds, i
     if (resultMigrate.migrated) {
         cloudData = resultMigrate.data;
     } else if (resultMigrate.error) {
-        const error = new CloudError(resultMigrate.error);
-        storage.lastError = String(error);
-        log.throwError('migrate data', error);
+        log.throwError('migrate data', new CloudError(resultMigrate.error));
     }
 
     const changes = {
-        groupsToRemove: new Set,
+        groupsToRemove: new Map,
         tabsToRemove: new Set,
         local: false,
         cloud: false,
@@ -793,7 +764,7 @@ async function syncGroups(localData, cloudData, sourceOfTruth, changes, newCloud
                 // local group is skipped and deleted...
                 log.log('remove local group:', localGroup.id);
 
-                changes.groupsToRemove.add(localGroup);
+                changes.groupsToRemove.set(localGroup.id, localGroup);
                 changes.local = true;
             }
         }
@@ -1119,6 +1090,13 @@ function isNetworkError(error) {
     return isNetErr;
 }
 
+// a temporary error heals itself - the sync is worth retrying; everything else
+// (invalid token, no access, not found, too large) needs the user. The github errors carry
+// the flag themselves, isNetworkError is the fallback for the non-github sources
+function isTemporaryError(syncResult) {
+    return Boolean(syncResult.temporary) || isNetworkError(objectToNativeError(syncResult));
+}
+
 export function onSyncUiRequestListener() {
     return CloudBroadcast.on('sync-ui-request', () => send('sync-ui-response'));
 }
@@ -1147,28 +1125,36 @@ export async function shouldShowSyncErrorNotification(syncResult, trigger) {
         return result;
     }
 
-    if (trigger === TRIGGER_AUTO && !isNetworkError(objectToNativeError(syncResult))) {
+    if (trigger === TRIGGER_AUTO && !isTemporaryError(syncResult)) {
         return true;
     }
 
-    return syncStorage.networkRetryAttempt === MAX_NETWORK_RETRY_ATTEMPTS;
+    return syncStorage.retryAttempt === MAX_RETRY_ATTEMPTS;
 }
 
 export async function getSyncRetryDelayInMinutes(syncResult, trigger) {
     if (syncResult.ok || trigger === TRIGGER_MANUAL) {
-        delete syncStorage.networkRetryAttempt;
+        delete syncStorage.retryAttempt;
         return 0;
     }
 
-    if (isNetworkError(objectToNativeError(syncResult))) {
-        const networkRetryAttempt = (syncStorage.networkRetryAttempt ?? 0) + 1;
+    if (isTemporaryError(syncResult)) {
+        const retryAttempt = (syncStorage.retryAttempt ?? 0) + 1;
 
-        if (networkRetryAttempt <= MAX_NETWORK_RETRY_ATTEMPTS) {
-            syncStorage.networkRetryAttempt = networkRetryAttempt;
-            return networkRetryAttempt * NETWORK_RETRY_DELAY_MINUTES;
+        if (retryAttempt <= MAX_RETRY_ATTEMPTS) {
+            syncStorage.retryAttempt = retryAttempt;
+
+            const delayInMinutes = retryAttempt * RETRY_DELAY_MINUTES;
+
+            if (syncResult.retryAfter) {
+                const minutesToRetry = Math.ceil((syncResult.retryAfter - Date.now()) / 60_000) + 1;
+                return Math.max(delayInMinutes, minutesToRetry);
+            }
+
+            return delayInMinutes;
         }
     }
 
-    delete syncStorage.networkRetryAttempt;
+    delete syncStorage.retryAttempt;
     return 0;
 }
