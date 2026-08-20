@@ -893,8 +893,10 @@ export async function createTempActiveTab(windowId, createPinnedTab = true, newT
             url: createPinnedTab ? (newTabUrl || 'about:blank') : (newTabUrl || 'about:newtab'),
             pinned: createPinnedTab,
             active: true,
+            index: 0, // never joins a span there (docs/TABGROUPS-BEHAVIOR.md §7, R7.12/R7.13)
             windowId: windowId,
         }, true);
+
         log.stop('created temp tab', tempTab);
         return tempTab;
     }

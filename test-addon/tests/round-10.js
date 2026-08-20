@@ -153,4 +153,40 @@ export const tests = [
     },
 },
 
+{
+    id: 'R10.04',
+    title: 'tabs.create with an index INSIDE the pinned block — where an unpinned tab lands',
+    async run(t) {
+        await t.scene(['p1', 'p2', 'a', 'b']);
+        await browser.tabs.update(t.id('p1'), {pinned: true});
+        await browser.tabs.update(t.id('p2'), {pinned: true});
+        await t.settled();
+
+        const pinned = await Promise.all(t.ids(['p1', 'p2']).map(id => browser.tabs.get(id)));
+        t.require(
+            'setup: p1 and p2 are pinned at 0 and 1',
+            pinned.every(tab => tab.pinned) && pinned.map(tab => tab.index).join(',') === '0,1',
+            pinned.map(tab => `${t.nameOf(tab)}: pinned:${tab.pinned} index:${tab.index}`).join(', '),
+        );
+
+        t.watch(['tabs.onCreated', 'tabs.onMoved', 'tabs.onUpdated'], {updatedKeys: UPDATED_KEYS});
+        await t.snap('before');
+
+        const n0 = await t.step('tabs.create(n0, {index: 0})  — the slot of pinned p1', () => t.create('n0', {index: 0}));
+        t.note(`n0 resolved: index:${n0.index} pinned:${n0.pinned}`);
+        const fresh0 = await browser.tabs.get(n0.id);
+        t.note(`n0 fresh: index:${fresh0.index} pinned:${fresh0.pinned}`);
+
+        t.expectRow('after', ['p1*(p)', 'p2(p)', '➕n0', 'a', 'b']);
+
+        const n1 = await t.step('tabs.create(n1, {index: 1})  — the slot of pinned p2', () => t.create('n1', {index: 1}));
+        t.note(`n1 resolved: index:${n1.index} pinned:${n1.pinned}`);
+        const fresh1 = await browser.tabs.get(n1.id);
+        t.note(`n1 fresh: index:${fresh1.index} pinned:${fresh1.pinned}`);
+
+        t.expectRow('after 2', ['p1*(p)', 'p2(p)', '➕n1', '➕n0', 'a', 'b']);
+        t.expect('both clamp to the first unpinned slot, staying unpinned', [fresh0.index, fresh0.pinned, fresh1.index, fresh1.pinned], [2, false, 2, false]);
+    },
+},
+
 ];

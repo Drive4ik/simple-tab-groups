@@ -1,8 +1,9 @@
 # Reference: creating tabs and the newTabPosition setting (`tabs.create`)
 
-Verified live on Firefox 154 (August 2026) with a throwaway test add-on, in a clean profile with no
-other add-ons. All tests — without pinned tabs. Every fact here is one browser build on one machine;
-a claim is as strong as the runs cited next to it, and no stronger.
+Verified live on Firefox 154–155 (August 2026) with a throwaway test add-on, in a clean profile
+with no other add-ons. All tests — without pinned tabs; the one exception is §13, whose subject is
+the pinned block itself. Every fact here is one browser build on one machine; a claim is as strong
+as the runs cited next to it, and no stronger.
 
 Only facts confirmed by an actual test run belong in "Verified facts" — never assumptions about how
 the browser "probably" works. Native tab group facts — including the membership of created tabs —
@@ -201,6 +202,23 @@ immediately after — whatever the url was. How long it stays blank is what diff
 
 When within those 2 s the network page's url arrived was not measured. Any code that filters tabs by
 url has to wait, and must not take the local timing as the general case.
+
+### 13. An explicit index inside the PINNED block clamps to the first unpinned slot (R10.04)
+
+An unpinned tab cannot be created before pinned tabs: with `p1`, `p2` pinned at 0 and 1, both
+`tabs.create({index: 0})` and `tabs.create({index: 1})` landed at **index 2** — the first unpinned
+slot, not "requested + 1". The resolved Tab object, a fresh `tabs.get` and `tabs.onCreated` all
+report the final index right away; no `tabs.onMoved` follows.
+
+| tab index | 0 | 1 | 2 | 3 | 4 | 5 |
+| - | - | - | - | - | - | - |
+| before | p1*(p) | p2(p) | a | b | | |
+| `tabs.create(n0, {index: 0})` — the slot of pinned p1 | | | | | | |
+| after | p1*(p) | p2(p) | ➕n0 | a | b | |
+| `tabs.create(n1, {index: 1})` — the slot of pinned p2 | | | | | | |
+| after 2 | p1*(p) | p2(p) | ➕n1 | ➕n0 | a | b |
+
+The run lives in the pinning round (`round-10`) — the one exception to "no pinned tabs in a scene".
 
 ---
 

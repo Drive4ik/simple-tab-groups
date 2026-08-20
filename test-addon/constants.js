@@ -15,7 +15,7 @@ export const BATCH_GAP = 1500;
 
 export const NOISY_UPDATE_KEYS = ['status', 'url', 'title', 'favIconUrl', 'isArticle', 'audible', 'attention'];
 
-export const ROUNDS = ['round-01', 'round-02', 'round-03', 'round-04', 'round-05', 'round-06', 'round-07', 'round-08', 'round-09', 'round-10', 'round-11', 'round-12'];
+export const ROUNDS = ['round-01', 'round-02', 'round-03', 'round-04', 'round-05', 'round-06', 'round-07', 'round-08', 'round-09', 'round-10', 'round-11', 'round-12', 'round-13'];
 
 export const RUN_KEY = 'testRun';
 export const LOGS_KEY = 'testLogs';

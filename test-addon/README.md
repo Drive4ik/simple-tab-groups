@@ -62,9 +62,10 @@ writes into the report whatever it had to clean up.
 | `round-07` | the `hidden` flag on what `tabs.move` resolves with, ungroup/hide of an active member, membership at creation next to a span, array move onto a member slot, ungroup of a hidden member |
 | `round-08` | MANUAL: mouse and menu gestures on native groups — which events each gesture emits. Fully attended: every test waits for a gesture and a `T.visualAnswer('done')` |
 | `round-09` | MANUAL: windows born from moved tabs (move group to new window, drag out, `windows.create({tabId})`) and undo-close restore — `windows.onCreated` vs the attaches, the initial tab, fresh ids, hidden tabs on both trips |
-| `round-10` | API pinning: what `tabs.update({pinned})` does to native-group membership, session values and the active state; R10.03 is MANUAL — needs a microphone permission grant |
+| `round-10` | API pinning: what `tabs.update({pinned})` does to native-group membership, session values and the active state; where `tabs.create` with an index inside the pinned block lands; R10.03 is MANUAL — needs a microphone permission grant |
 | `round-11` | `browser.menus` registration lifecycle: duplicate ids, cascade removal, `removeAll`, bookmark context vs the optional `bookmarks` permission; R11.06 is MANUAL — permission grants and 👁️ looks at a bookmark's context menu |
 | `round-12` | delivery timing of `tabs.onAttached`/`onDetached` against the `tabs.move()` resolve: paced and rapid cross-window ping-pong, hidden and discarded arrays, a move-then-show chain |
+| `round-13` | removing the last VISIBLE tabs of a window that still holds hidden ones: does the window survive, which hidden tab is revealed, which events announce it; pinned and discarded variants |
 
 ## Files
 

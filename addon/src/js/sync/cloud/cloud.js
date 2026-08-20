@@ -273,6 +273,17 @@ async function sync(trust = null, revision = null, progressFunc = null) {
         return [...syncResult.localData.groups, ...syncResult.changes.groupsToRemove.values()];
     });
 
+    // unlink loaded archived groups
+    for (const group of syncResult.localData.groups) {
+        if (group.isArchive) {
+            const windowId = Cache.getWindowId(group.id);
+
+            if (windowId) {
+                await Cache.removeWindowSession(windowId);
+            }
+        }
+    }
+
     progressFunc?.(55);
 
     if (syncResult.changes.cloud) {
@@ -295,6 +306,7 @@ async function sync(trust = null, revision = null, progressFunc = null) {
 
     // remove unnecessary tabs
     if (syncResult.changes.tabsToRemove.size) {
+        await keepWindowsAlive(syncResult.changes.tabsToRemove);
         // a whole live span closed in one call would be saved by the browser into its saved groups
         await GroupsNative.ungroup(Array.from(syncResult.changes.tabsToRemove));
         // if has local changes - do silent remove. "Cloud.sync-end" event will trigger "Groups.updated.all" event and reload all groups with tabs
@@ -374,6 +386,20 @@ async function sync(trust = null, revision = null, progressFunc = null) {
     delete syncResult.cloudData;
 
     return syncResult;
+}
+
+// removing all visible tabs closes the window with its hidden tabs (REMOVE-TABS-BEHAVIOR.md §1) -
+// give it a temp tab first; the state is read live, the snapshot is stale after the gist upload
+async function keepWindowsAlive(tabsToRemove) {
+    const removedIds = new Set(Array.from(tabsToRemove, tab => tab.id));
+    const visibleTabs = await browser.tabs.query({hidden: false}).catch(() => []);
+
+    for (const [windowId, windowTabs] of Map.groupBy(visibleTabs, tab => tab.windowId)) {
+        if (windowTabs.every(tab => removedIds.has(tab.id))) {
+            await Tabs.createTempActiveTab(windowId, false)
+                .catch(logger.onCatch(['cant create temp tab in window', windowId], false));
+        }
+    }
 }
 
 async function syncData(localData, cloudData, sourceOfTruth, newCloudGroupIds, isFirstLocalSync, progressFunc = null) {
