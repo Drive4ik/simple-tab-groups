@@ -64,6 +64,7 @@ writes into the report whatever it had to clean up.
 | `round-09` | MANUAL: windows born from moved tabs (move group to new window, drag out, `windows.create({tabId})`) and undo-close restore — `windows.onCreated` vs the attaches, the initial tab, fresh ids, hidden tabs on both trips |
 | `round-10` | API pinning: what `tabs.update({pinned})` does to native-group membership, session values and the active state; R10.03 is MANUAL — needs a microphone permission grant |
 | `round-11` | `browser.menus` registration lifecycle: duplicate ids, cascade removal, `removeAll`, bookmark context vs the optional `bookmarks` permission; R11.06 is MANUAL — permission grants and 👁️ looks at a bookmark's context menu |
+| `round-12` | delivery timing of `tabs.onAttached`/`onDetached` against the `tabs.move()` resolve: paced and rapid cross-window ping-pong, hidden and discarded arrays, a move-then-show chain |
 
 ## Files
 
@@ -117,6 +118,13 @@ to read its url does not change the stand. A test that needs a real site instead
 itself (`{id: 'R8.01', url: 'https://example.com/', …}`) or the whole round sets the default above;
 either way the name still travels in `?tab=` and everything else works unchanged.
 
+- **A test goes into the round it shares its logic with** — an existing round that fits, or a new
+  one when none does. The assistant decides the placement on its own, without asking.
+- **The assistant also designs the tests on its own** — which scenes, states and events to cover —
+  without asking the developer. To run a round, the assistant hands the developer just the bare
+  command (`T.start('round-12')`) — the developer knows the setup, no need to re-explain it — and
+  the developer sends back the report; the facts it establishes are then written into
+  `docs/*-BEHAVIOR.md`.
 - **The id is written, never computed.** Docs point at ids; a counter would shift every marker below
   an inserted test.
 - **No timings and no urls spelled out.** Everything shared comes from `constants.js`, and `t.step`
@@ -165,6 +173,7 @@ Imported by a round from `../constants.js`:
 | `NEW_TAB_POSITIONS` | all three `newTabPosition` values |
 | `QUIET_WAIT` 200 | how long nothing may happen before a step counts as settled |
 | `POLL_WAIT` 250 | how often the harness re-checks while waiting |
+| `TIGHT_POLL_WAIT` 25 | how often a stress loop re-checks while draining its own events |
 | `ACTION_WAIT` 500 | the old fixed pause, for a step that wants a number |
 | `LOAD_WAIT` 2000 | a real page load, where the number is the fact |
 | `SETTING_WAIT` 100 | a `browserSettings` write to land |
