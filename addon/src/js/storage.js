@@ -32,7 +32,14 @@ export async function getRaw() {
 export async function set(data) {
     const log = logger.start('set', Object.keys(data));
 
-    data.groups?.forEach(group => !group.isArchive && (group.tabs = []));
+    // the tabs of non-archived groups live in the browser, not in storage - strip them
+    // from the persisted copy only, never by mutating the caller's objects
+    if (data.groups) {
+        data = {
+            ...data,
+            groups: data.groups.map(group => group.isArchive ? group : {...group, tabs: []}),
+        };
+    }
 
     const result = await browser.storage.local.set(data);
 
