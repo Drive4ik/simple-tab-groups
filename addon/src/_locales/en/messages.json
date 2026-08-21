@@ -1387,6 +1387,10 @@
         "message": "Last update",
         "description": "Last update/active relative time"
     },
+    "cloudHasChanges": {
+        "message": "Cloud has changes",
+        "description": "Shown when the cloud content differs from the last synchronization of this device"
+    },
     "syncIsDisabled": {
         "message": "Synchronization is disabled",
         "description": "Synchronization is disabled"

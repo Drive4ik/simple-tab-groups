@@ -1106,9 +1106,8 @@ async function archiveToggleNow(groupId) {
     log.stop();
 }
 
-// a live tab whose session points to an archived group is a leftover of an archiving
-// interrupted between the storage commit and the tab removal - its copy already lives
-// in the archive, close it
+// live tabs whose sessions point to an archived group are leftovers of an interrupted
+// archiving - their copies already live in the archive, close them
 export async function removeArchivedGroupsTabs(groups) {
     const archivedGroupIds = new Set(groups.filter(group => group.isArchive).map(group => group.id));
 

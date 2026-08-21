@@ -170,6 +170,10 @@ export default {
                 result += ' (' + this.lang('lastUpdate') + `: ${this.syncCloudLastUpdateAgo})`;
             }
 
+            if (this.syncCloudHasChanges) {
+                result += '\n' + this.lang('cloudHasChanges');
+            }
+
             if (this.syncCloudErrorMessage) {
                 result += '\n' + this.syncCloudErrorMessage;
             }

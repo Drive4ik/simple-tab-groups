@@ -52,7 +52,12 @@ export default class GithubGist {
     }
 
     #processInfo(gist) {
-        storage.lastUpdate = gist.lastUpdate = gist.updated_at;
+        gist.lastUpdate = gist.updated_at;
+        // the file blob sha from raw_url is the only content marker present in every
+        // response flavor: equal sha = equal file content
+        gist.contentSha = gist.files?.[this.#fileName]?.raw_url?.match(/\/raw\/([0-9a-f]{40})\//)?.[1] ?? null;
+        // the commit sha of the same revision - present only when the response carries history
+        gist.commitSha = gist.history?.[0]?.version ?? null;
         return gist;
     }
 
@@ -112,6 +117,11 @@ export default class GithubGist {
         const gist = await this.#request('GET', gistUrl, undefined, undefined, progressFunc);
 
         return this.#processInfo(gist);
+    }
+
+    async getLatestCommitSha() {
+        const commits = await this.#request('GET', `${this.#gistUrl}/commits`, {per_page: 1});
+        return commits[0]?.version ?? null;
     }
 
     async getContent(revision, withInfo = false, progressFunc = null) {

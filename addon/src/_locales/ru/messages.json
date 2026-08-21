@@ -1375,6 +1375,10 @@
         "message": "Последнее обновление",
         "description": "Last update/active relative time"
     },
+    "cloudHasChanges": {
+        "message": "В облаке есть изменения",
+        "description": "Shown when the cloud content differs from the last synchronization of this device"
+    },
     "syncIsDisabled": {
         "message": "Синхронизация отключена",
         "description": "Synchronization is disabled"

@@ -24,6 +24,11 @@ export default {
         this.browserName = `${Constants.BROWSER_FULL_NAME} v${Constants.BROWSER.version}`;
         this.helpLink = Constants.PAGES.HELP.HOWTO_GITHUB_GIST;
 
+        this.localDefaultOptions = {
+            ...Constants.DEFAULT_SYNC_OPTIONS,
+            syncOptionsLocation: Constants.DEFAULT_OPTIONS.syncOptionsLocation,
+        };
+
         return {
             confirmRestoreBackupItem: null,
 
@@ -48,7 +53,7 @@ export default {
                 disabled: false,
                 loadingOptions: false,
                 value: Constants.SYNC_STORAGE_LOCAL,
-                options: {...Constants.DEFAULT_SYNC_OPTIONS, syncOptionsLocation: Constants.DEFAULT_OPTIONS.syncOptionsLocation},
+                options: {...this.localDefaultOptions},
                 optionsBackup: {},
                 load: this.loadLocalOptions.bind(this),
                 save: this.saveLocalOptions.bind(this),
@@ -89,6 +94,9 @@ export default {
             return this.area.options.githubGistToken !== this.area.optionsBackup.githubGistToken ||
                 this.area.options.githubGistFileName !== this.area.optionsBackup.githubGistFileName;
         },
+        syncCloudLastUpdateFull() {
+            return this.syncCloudLastUpdate ? this.formatDate(new Date(this.syncCloudLastUpdate), {dateStyle: 'full'}) : null;
+        },
     },
     created() {
         this.sync.load();
@@ -125,7 +133,7 @@ export default {
 
         // LOCAL
         async loadLocalOptions() {
-            Object.assign(this.local.options, await Storage.get(this.local.options));
+            Object.assign(this.local.options, await Storage.get(this.localDefaultOptions));
             this.local.optionsBackup = {...this.local.options};
             await this.loadGistInfo(this.local);
         },
@@ -172,11 +180,11 @@ export default {
                     return item;
                 });
 
-                const lastUpdate = new Date(gist.lastUpdate);
+                Cloud.updateHasChanges(gist, area.options);
+                this.syncCloudUpdateInfo();
 
                 area.gist = {
                     id: gist.id,
-                    lastUpdate: gist.lastUpdate,
                     breadcrumb: [
                         {
                             url: gist.html_url.slice(0, gist.html_url.indexOf(gist.owner.login) + gist.owner.login.length),
@@ -189,9 +197,6 @@ export default {
                             // isBold: true,
                         },
                     ],
-                    lastUpdateAgo: Utils.relativeTime(lastUpdate),
-                    lastUpdateFull: this.formatDate(lastUpdate, {dateStyle: 'full'}),
-                    lastUpdateISO: lastUpdate.toISOString(),
                     history,
                 };
             } catch {
@@ -331,10 +336,11 @@ export default {
                             </ul>
                         </div>
                         <span class="tag is-rounded" v-text="lang('githubSecretTitle')"></span>
-                        <span>
+                        <span v-if="syncCloudLastUpdate">
                             <span class="colon" v-text="lang('lastUpdate')"></span>
-                            <time class="is-underline-dotted" :title="area.gist.lastUpdateFull" :datetime="area.gist.lastUpdateISO" v-text="area.gist.lastUpdateAgo"></time>
+                            <time class="is-underline-dotted" :title="syncCloudLastUpdateFull" :datetime="syncCloudLastUpdate" v-text="syncCloudLastUpdateAgo"></time>
                         </span>
+                        <span v-if="syncCloudHasChanges" class="tag is-info" v-text="lang('cloudHasChanges')"></span>
                         <div v-if="area.gist.history.length" class="dropdown focus-within">
                             <div class="dropdown-trigger">
                                 <button

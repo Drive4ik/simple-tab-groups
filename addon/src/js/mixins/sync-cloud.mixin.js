@@ -13,7 +13,9 @@ const storage = localStorage.create(Constants.MODULES.CLOUD);
 export default {
     data() {
         return {
+            syncCloudLastUpdate: null,
             syncCloudLastUpdateAgo: null,
+            syncCloudHasChanges: false,
 
             syncCloudInProgress: false,
             syncCloudProgress: 0,
@@ -76,9 +78,15 @@ export default {
             return await this.sendMessageModule('BG.cloudSync', {trust, revision});
         },
         syncCloudUpdateInfo() {
-            if (storage.lastUpdate) {
-                this.syncCloudLastUpdateAgo = Utils.relativeTime(storage.lastUpdate);
+            clearTimeout(this.syncCloudUpdateInfoTimer);
+
+            this.syncCloudLastUpdate = storage.gist?.lastUpdate ?? null;
+
+            if (this.syncCloudLastUpdate) {
+                this.syncCloudLastUpdateAgo = Utils.relativeTime(this.syncCloudLastUpdate);
             }
+
+            this.syncCloudHasChanges = Boolean(storage.hasChanges);
 
             this.syncCloudErrorMessage = storage.lastError || '';
 

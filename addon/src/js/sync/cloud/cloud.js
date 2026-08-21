@@ -124,6 +124,14 @@ export function isLastSyncedGist(gist, {githubGistFileName}) {
         githubGistFileName === lastSyncGist?.fileName;
 }
 
+// a freshly fetched gist info teaches us whether the cloud differs from the last sync;
+// info about any other gist teaches nothing - the flag is left untouched
+export function updateHasChanges(gist, syncOptions) {
+    if (isLastSyncedGist(gist, syncOptions)) {
+        storage.hasChanges = gist.contentSha !== storage.gist.contentSha;
+    }
+}
+
 async function sync(trust = null, revision = null, progressFunc = null) {
     const isRestoring = !!revision;
 
@@ -203,13 +211,19 @@ async function sync(trust = null, revision = null, progressFunc = null) {
 
     const isFirstLocalSync = !trust && !sameGist;
 
+    // the timestamps only feed cloudData.syncId (the lastAccessed cutoff for tabs);
+    // the trust choice goes by content identity, immune to clocks and same-second updates
     const localLastUpdate = sameGist ? new Date(storage.gist.lastUpdate).getTime() : 0;
     const cloudLastUpdate = new Date(cloudInfo?.lastUpdate ?? 0).getTime();
+
+    updateHasChanges(cloudInfo, syncOptions);
+
+    const cloudUnchanged = sameGist && !storage.hasChanges;
 
     const sourceOfTruth =
         trust
         ? trust
-        : cloudLastUpdate > localLastUpdate ? TRUST_CLOUD : TRUST_LOCAL;
+        : !cloudInfo || cloudUnchanged ? TRUST_LOCAL : TRUST_CLOUD;
 
     log.info('sourceOfTruth:', sourceOfTruth);
 
@@ -363,10 +377,23 @@ async function sync(trust = null, revision = null, progressFunc = null) {
 
     progressFunc?.(55);
 
-    // the upload goes last: all local work is already done, so a failed network call leaves the
-    // local state consistent; storage.gist keeps the old stamp and the next sync repeats the
-    // same choice of trust and re-uploads
+    // the upload goes last: a failed network call leaves the local state consistent,
+    // storage.gist keeps the old stamp and the next sync repeats the same choice of trust
     if (syncResult.changes.cloud) {
+        // somebody may have uploaded while the local work ran - abort, the retry re-syncs
+        // on top of the fresh cloud; a restore replaces the cloud deliberately - no check
+        if (!isRestoring && hasCloudData) {
+            const latestCommitSha = await Cloud.getLatestCommitSha()
+                .catch(log.onCatch('get latest commit sha'));
+
+            if (latestCommitSha !== cloudInfo.commitSha) {
+                log.throwError('gist changed during sync', new CloudError(null, {
+                    message: 'the cloud was updated from another device during synchronization',
+                    temporary: true,
+                }));
+            }
+        }
+
         try {
             const description = Lang('githubGistBackupDescription');
             cloudInfo = await Cloud.setContent(syncResult.cloudData, description, createCloudProgress(55, 100));
@@ -379,7 +406,10 @@ async function sync(trust = null, revision = null, progressFunc = null) {
         id: cloudInfo.id,
         lastUpdate: cloudInfo.lastUpdate,
         fileName: syncOptions.githubGistFileName,
+        contentSha: cloudInfo.contentSha,
     };
+
+    storage.hasChanges = false;
 
     progressFunc?.(100);
 
