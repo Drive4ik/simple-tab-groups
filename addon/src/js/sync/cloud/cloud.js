@@ -188,7 +188,7 @@ async function sync(trust = null, revision = null, progressFunc = null) {
     let cloudData, cloudInfo;
 
     try {
-        [cloudData, cloudInfo] = await Cloud.getContent(revision, true, createCloudProgress(10, 40));
+        [cloudData, cloudInfo] = await Cloud.getContent(revision, true, createCloudProgress(10, 45));
     } catch (error) {
         if (error.langId === 'githubNotFound' && !isRestoring) {
             //
@@ -197,7 +197,7 @@ async function sync(trust = null, revision = null, progressFunc = null) {
         }
     }
 
-    progressFunc?.(40);
+    progressFunc?.(45);
 
     const sameGist = isLastSyncedGist(cloudInfo, syncOptions);
 
@@ -218,7 +218,7 @@ async function sync(trust = null, revision = null, progressFunc = null) {
     let syncResult, newCloudGroupIds;
 
     // the snapshot, the merge and the local save are one queue turn: edits made while the
-    // sync uploads to the gist and applies tabs land after the turn and win - nothing is
+    // sync applies tabs and uploads to the gist land after the turn and win - nothing is
     // rolled back by a stale snapshot
     await Groups.save(async () => {
         const localData = await Promise.all([Storage.get(), Groups.load(null, true)])
@@ -234,13 +234,13 @@ async function sync(trust = null, revision = null, progressFunc = null) {
         const localGroupIds = new Set(localData.groups.map(group => group.id));
         newCloudGroupIds = NewCloudGroups.getIds().intersection(localGroupIds);
 
-        progressFunc?.(45);
+        progressFunc?.(46);
 
         cloudData ??= JSON.clone(localData);
 
         cloudData.syncId = trust === TRUST_CLOUD ? cloudLastUpdate : localLastUpdate;
 
-        syncResult = await syncData(localData, cloudData, sourceOfTruth, newCloudGroupIds, isFirstLocalSync, createCloudProgress(45, 55))
+        syncResult = await syncData(localData, cloudData, sourceOfTruth, newCloudGroupIds, isFirstLocalSync, createCloudProgress(46, 48))
             .catch(log.onCatch('cant sync'));
 
         delete syncResult.cloudData.syncId;
@@ -284,36 +284,27 @@ async function sync(trust = null, revision = null, progressFunc = null) {
         }
     }
 
-    progressFunc?.(55);
-
-    if (syncResult.changes.cloud) {
-        try {
-            const description = Lang('githubGistBackupDescription');
-            cloudInfo = await Cloud.setContent(syncResult.cloudData, description, createCloudProgress(55, 85));
-        } catch (error) {
-            log.throwError('set GithubGist content', error);
-        }
-    }
-
-    progressFunc?.(85);
+    progressFunc?.(48);
 
     // remove unnecessary groups
     if (syncResult.changes.groupsToRemove.size) {
         await Groups.remove(syncResult.changes.groupsToRemove);
     }
 
-    progressFunc?.(90);
+    progressFunc?.(50);
 
     // remove unnecessary tabs
     if (syncResult.changes.tabsToRemove.size) {
-        await keepWindowsAlive(syncResult.changes.tabsToRemove);
+        await Tabs.keepWindowsAlive(syncResult.changes.tabsToRemove);
         // a whole live span closed in one call would be saved by the browser into its saved groups
         await GroupsNative.ungroup(Array.from(syncResult.changes.tabsToRemove));
         // if has local changes - do silent remove. "Cloud.sync-end" event will trigger "Groups.updated.all" event and reload all groups with tabs
         await Tabs.remove(Array.from(syncResult.changes.tabsToRemove), syncResult.changes.local);
     }
 
-    progressFunc?.(95);
+    await Groups.removeArchivedGroupsTabs(syncResult.localData.groups);
+
+    progressFunc?.(52);
 
     if (syncResult.changes.local) {
         // the native-group mirror is gated inside GroupsNative.apply itself,
@@ -370,6 +361,20 @@ async function sync(trust = null, revision = null, progressFunc = null) {
         await MenusMain.groupsUpdated(groups);
     }
 
+    progressFunc?.(55);
+
+    // the upload goes last: all local work is already done, so a failed network call leaves the
+    // local state consistent; storage.gist keeps the old stamp and the next sync repeats the
+    // same choice of trust and re-uploads
+    if (syncResult.changes.cloud) {
+        try {
+            const description = Lang('githubGistBackupDescription');
+            cloudInfo = await Cloud.setContent(syncResult.cloudData, description, createCloudProgress(55, 100));
+        } catch (error) {
+            log.throwError('set GithubGist content', error);
+        }
+    }
+
     storage.gist = {
         id: cloudInfo.id,
         lastUpdate: cloudInfo.lastUpdate,
@@ -386,20 +391,6 @@ async function sync(trust = null, revision = null, progressFunc = null) {
     delete syncResult.cloudData;
 
     return syncResult;
-}
-
-// removing all visible tabs closes the window with its hidden tabs (REMOVE-TABS-BEHAVIOR.md §1) -
-// give it a temp tab first; the state is read live, the snapshot is stale after the gist upload
-async function keepWindowsAlive(tabsToRemove) {
-    const removedIds = new Set(Array.from(tabsToRemove, tab => tab.id));
-    const visibleTabs = await browser.tabs.query({hidden: false}).catch(() => []);
-
-    for (const [windowId, windowTabs] of Map.groupBy(visibleTabs, tab => tab.windowId)) {
-        if (windowTabs.every(tab => removedIds.has(tab.id))) {
-            await Tabs.createTempActiveTab(windowId, false)
-                .catch(logger.onCatch(['cant create temp tab in window', windowId], false));
-        }
-    }
 }
 
 async function syncData(localData, cloudData, sourceOfTruth, newCloudGroupIds, isFirstLocalSync, progressFunc = null) {

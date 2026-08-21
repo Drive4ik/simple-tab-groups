@@ -820,6 +820,12 @@ async function initializeGroupsNow(groups, afterRestoring = false) {
 
     const EXTENSION_START_TIME = await getExtensionStartTime();
 
+    // not after a backup restore: the restored archives hold no copies
+    // of the pre-restore live tabs, those tabs are unlinked below instead
+    if (!afterRestoring) {
+        await Groups.removeArchivedGroupsTabs(groups);
+    }
+
     let windows = await load(true);
 
     const currentGroupIdsSet = new Set(groups.filter(g => !g.isArchive).map(g => g.id));

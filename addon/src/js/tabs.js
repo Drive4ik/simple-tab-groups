@@ -1555,6 +1555,20 @@ export async function setMute(tabs, muted) {
     return await tabsAction({action: 'update'}, tabs, {muted});
 }
 
+// removing all visible tabs closes the window with its hidden tabs (REMOVE-TABS-BEHAVIOR.md §1) -
+// give it a temp tab first; the state is read live, the caller's snapshot may be stale
+export async function keepWindowsAlive(tabsToRemove) {
+    const removedIds = new Set(Array.from(tabsToRemove, tab => tab.id));
+    const visibleTabs = await browser.tabs.query({hidden: false}).catch(() => []);
+
+    for (const [windowId, windowTabs] of Map.groupBy(visibleTabs, tab => tab.windowId)) {
+        if (windowTabs.every(tab => removedIds.has(tab.id))) {
+            await createTempActiveTab(windowId, false)
+                .catch(logger.onCatch(['cant create temp tab in window', windowId], false));
+        }
+    }
+}
+
 export async function remove(tabs, silentRemove = false) {
     return await tabsAction({action: 'remove', silentRemove}, tabs);
 }

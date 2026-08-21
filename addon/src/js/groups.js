@@ -1106,6 +1106,33 @@ async function archiveToggleNow(groupId) {
     log.stop();
 }
 
+// a live tab whose session points to an archived group is a leftover of an archiving
+// interrupted between the storage commit and the tab removal - its copy already lives
+// in the archive, close it
+export async function removeArchivedGroupsTabs(groups) {
+    const archivedGroupIds = new Set(groups.filter(group => group.isArchive).map(group => group.id));
+
+    if (!archivedGroupIds.size) {
+        return;
+    }
+
+    const tabsToRemove = await Tabs.get(null, false, null)
+        .then(tabs => tabs.filter(tab => archivedGroupIds.has(tab.groupId)));
+
+    if (!tabsToRemove.length) {
+        return;
+    }
+
+    const log = logger.start('removeArchivedGroupsTabs', tabsToRemove.map(tab => tab.id));
+
+    await Tabs.keepWindowsAlive(tabsToRemove);
+    // a whole live span closed in one call would be saved by the browser into its saved groups
+    await GroupsNative.ungroup(tabsToRemove);
+    await Tabs.remove(tabsToRemove, true);
+
+    log.stop();
+}
+
 export function mapForExternalExtension(group) {
     return {
         id: group.id,
