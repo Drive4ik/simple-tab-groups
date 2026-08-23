@@ -1363,9 +1363,13 @@
         "message": "Шлях до файлу",
         "description": "File path"
     },
-    "dontUploadToCloud": {
-        "message": "Не завантажувати в хмару",
-        "description": "Don't upload to the cloud, leave it local only"
+    "uploadToCloud": {
+        "message": "Вивантажувати в хмару",
+        "description": "Sync the group through the cloud. Unchecked: the group stays on this device only; the other devices keep their own copies"
+    },
+    "uploadToCloudTitle": {
+        "message": "Увімкнено — група синхронізується через хмару як зазвичай.\nВимкнено — група залишається на цьому пристрої; її копії на інших пристроях стають незалежними й більше не впливають одна на одну.\nУвімкнено знову — налаштування саме цієї групи вивантажуються в хмару, а вкладки всіх копій об'єднуються.",
+        "description": "Help for the 'Upload to the cloud' group option: checked - usual sync; unchecked - the copies on the devices become independent; checked again - this group's settings go to the cloud, the tabs are merged"
     },
     "helpTitle": {
         "message": "Допомога",

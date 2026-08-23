@@ -209,6 +209,12 @@ async function sync(trust = null, revision = null, progressFunc = null) {
 
     const sameGist = isLastSyncedGist(cloudInfo, syncOptions);
 
+    const lastSync = {
+        uploadedGroupIds: new Set(sameGist ? storage.gist.uploadedGroupIds : []),
+        localOnlyGroupIds: new Set(sameGist ? storage.gist.localOnlyGroupIds : []),
+        stubGroupIds: new Set(sameGist ? storage.gist.stubGroupIds : []),
+    };
+
     const isFirstLocalSync = !trust && !sameGist;
 
     // the timestamps only feed cloudData.syncId (the lastAccessed cutoff for tabs);
@@ -250,11 +256,14 @@ async function sync(trust = null, revision = null, progressFunc = null) {
 
         progressFunc?.(46);
 
-        cloudData ??= JSON.clone(localData);
+        if (!cloudData) {
+            cloudData = JSON.clone(localData);
+            cloudData.groups = cloudData.groups.filter(group => group.uploadToCloud);
+        }
 
         cloudData.syncId = trust === TRUST_CLOUD ? cloudLastUpdate : localLastUpdate;
 
-        syncResult = await syncData(localData, cloudData, sourceOfTruth, newCloudGroupIds, isFirstLocalSync, createCloudProgress(46, 48))
+        syncResult = await syncData(localData, cloudData, sourceOfTruth, newCloudGroupIds, isFirstLocalSync, lastSync, createCloudProgress(46, 48))
             .catch(log.onCatch('cant sync'));
 
         delete syncResult.cloudData.syncId;
@@ -407,13 +416,17 @@ async function sync(trust = null, revision = null, progressFunc = null) {
         lastUpdate: cloudInfo.lastUpdate,
         fileName: syncOptions.githubGistFileName,
         contentSha: cloudInfo.contentSha,
+        uploadedGroupIds: syncResult.localData.groups.filter(group => group.uploadToCloud).map(group => group.id),
+        localOnlyGroupIds: syncResult.localData.groups.filter(group => !group.uploadToCloud).map(group => group.id),
+        stubGroupIds: syncResult.cloudData.groups.filter(group => !group.uploadToCloud).map(group => group.id),
     };
 
     storage.hasChanges = false;
 
     progressFunc?.(100);
 
-    NewCloudGroups.remove(newCloudGroupIds);
+    const uploadedGroupIds = new Set(syncResult.cloudData.groups.filter(group => group.uploadToCloud).map(group => group.id));
+    NewCloudGroups.remove(newCloudGroupIds.intersection(uploadedGroupIds));
 
     log.stop();
 
@@ -423,7 +436,7 @@ async function sync(trust = null, revision = null, progressFunc = null) {
     return syncResult;
 }
 
-async function syncData(localData, cloudData, sourceOfTruth, newCloudGroupIds, isFirstLocalSync, progressFunc = null) {
+async function syncData(localData, cloudData, sourceOfTruth, newCloudGroupIds, isFirstLocalSync, lastSync, progressFunc = null) {
     const log = logger.start('syncData', {
         localVersion: localData.version,
         cloudVersion: cloudData.version,
@@ -454,7 +467,7 @@ async function syncData(localData, cloudData, sourceOfTruth, newCloudGroupIds, i
 
     progressFunc?.(30);
 
-    await syncGroups(localData, cloudData, sourceOfTruth, changes, newCloudGroupIds, isFirstLocalSync);
+    await syncGroups(localData, cloudData, sourceOfTruth, changes, newCloudGroupIds, isFirstLocalSync, lastSync);
 
     progressFunc?.(70);
 
@@ -475,7 +488,7 @@ async function syncData(localData, cloudData, sourceOfTruth, newCloudGroupIds, i
     };
 }
 
-async function syncGroups(localData, cloudData, sourceOfTruth, changes, newCloudGroupIds, isFirstLocalSync) {
+async function syncGroups(localData, cloudData, sourceOfTruth, changes, newCloudGroupIds, isFirstLocalSync, lastSync) {
     const log = logger.start('syncGroups');
 
     const localGroups = localData.groups;
@@ -493,7 +506,7 @@ async function syncGroups(localData, cloudData, sourceOfTruth, changes, newCloud
     const isAvailableFavIconToSync = favIconUrl => favIconUrl?.startsWith('data:');
 
     const favIconUrlsMap = new Map;
-    for (const tab of Utils.flatTabs([...localGroups, ...cloudGroups])) {
+    for (const tab of Utils.flatTabs([...localGroups, ...cloudGroups.filter(group => group.uploadToCloud)])) {
         if (isAvailableFavIconToSync(tab.favIconUrl)) {
             favIconUrlsMap.set(tab.url, tab.favIconUrl);
         }
@@ -536,13 +549,37 @@ async function syncGroups(localData, cloudData, sourceOfTruth, changes, newCloud
         return cloudGroup;
     }
 
+    const syncUpload = (localGroup, cloudGroup) => syncGroupUpload(localGroup, cloudGroup, {sourceOfTruth, lastSync, prepareCloudGroup}, changes);
+
     if (sourceOfTruth === TRUST_LOCAL) {
+        const cloudGroupById = new Map(cloudGroups.map(cloudGroup => [cloudGroup.id, cloudGroup]));
+
         for (const localGroup of localGroups) {
-            if (localGroup.dontUploadToCloud) {
-                resultLocalGroups.push(localGroup);
-            } else {
-                resultLocalGroups.push(localGroup);
-                resultCloudGroups.push(prepareCloudGroup(localGroup));
+            const upload = syncUpload(localGroup, cloudGroupById.get(localGroup.id));
+
+            if (upload.settled) {
+                resultLocalGroups.push(upload.localGroup);
+
+                if (upload.cloudGroup) {
+                    resultCloudGroups.push(upload.cloudGroup);
+                }
+
+                continue;
+            }
+
+            resultLocalGroups.push(localGroup);
+            resultCloudGroups.push(prepareCloudGroup(localGroup));
+        }
+
+        for (const [cloudIndex, cloudGroup] of cloudGroups.entries()) {
+            if (localGroups.some(localGroup => localGroup.id === cloudGroup.id)) {
+                continue;
+            }
+
+            const upload = syncUpload(null, cloudGroup);
+
+            if (upload.settled && upload.cloudGroup) {
+                resultCloudGroups.splice(cloudIndex, 0, upload.cloudGroup);
             }
         }
 
@@ -560,12 +597,22 @@ async function syncGroups(localData, cloudData, sourceOfTruth, changes, newCloud
             // find local group
             let localGroup = localGroups.find(localGroup => localGroup.id === cloudGroup.id);
 
-            if (localGroup?.dontUploadToCloud) {
-                // leave local and cloud groups without changes
-                resultLocalGroups.push(localGroup);
-                resultCloudGroups.push(cloudGroup);
+            const upload = syncUpload(localGroup, cloudGroup);
+
+            if (upload.settled) {
+                if (upload.localGroup) {
+                    resultLocalGroups.push(upload.localGroup);
+                }
+
+                if (upload.cloudGroup) {
+                    resultCloudGroups.push(upload.cloudGroup);
+                }
+
                 continue;
             }
+
+            // a copy that lived apart keeps every tab - its absence in the cloud is not a removal on another device
+            const isLocalTabKept = localTab => upload.union || localTab.lastAccessed > cloudData.syncId;
 
             // if not found, create it
             if (!localGroup) {
@@ -687,7 +734,7 @@ async function syncGroups(localData, cloudData, sourceOfTruth, changes, newCloud
                         // if first time sync archive group (I didn't save lastAccessed key in archived group before)
                         localTab.lastAccessed ??= cloudData.syncId + 1;
 
-                        if (localTab.lastAccessed > cloudData.syncId) {
+                        if (isLocalTabKept(localTab)) {
                             // если вкладка имеет последний доступ больше чем последний syncId облака
                             // значит вкладку открывали после синка, а значит она нужна, иначе удаляем её
 
@@ -726,7 +773,7 @@ async function syncGroups(localData, cloudData, sourceOfTruth, changes, newCloud
                         // if first time sync archive group (I didn't save lastAccessed key in archived group before)
                         localTab.lastAccessed ??= cloudData.syncId + 1;
 
-                        if (localTab.lastAccessed > cloudData.syncId) {
+                        if (isLocalTabKept(localTab)) {
                             resultLocalTabs.splice(localTabIndex, 0, localTab);
 
                             const [cloudTab] = prepareForSaveTabs([localTab], TRUST_CLOUD, resultCloudGroup.isArchive);
@@ -761,7 +808,7 @@ async function syncGroups(localData, cloudData, sourceOfTruth, changes, newCloud
                     (localTab, localTabIndex, resultLocalTabs, resultCloudTabs) => {
                         localTab.lastAccessed ??= cloudData.syncId + 1;
 
-                        if (localTab.lastAccessed > cloudData.syncId) {
+                        if (isLocalTabKept(localTab)) {
                             resultLocalTabs.splice(localTabIndex, 0, localTab);
 
                             const [cloudTab] = prepareForSaveTabs([localTab], TRUST_CLOUD, resultCloudGroup.isArchive);
@@ -796,10 +843,17 @@ async function syncGroups(localData, cloudData, sourceOfTruth, changes, newCloud
 
             // localGroup is not in the cloud
 
-            if (localGroup.dontUploadToCloud) {
-                log.log('skip upload local group to cloud:', localGroup.id);
+            const upload = syncUpload(localGroup, null);
 
-                resultLocalGroups.splice(localIndex, 0, localGroup); // leave group in local and don't add it to the cloud
+            if (upload.settled) {
+                resultLocalGroups.splice(localIndex, 0, upload.localGroup);
+
+                if (upload.cloudGroup) {
+                    log.log('restore the stub of local-only group:', localGroup.id);
+                    resultCloudGroups.splice(localIndex, 0, upload.cloudGroup);
+                } else {
+                    log.log('keep local-only group out of the cloud:', localGroup.id);
+                }
             } else if (isFirstLocalSync || newCloudGroupIds.has(localGroup.id)) {
                 // the cloud has never seen this group - it must be uploaded, not removed
                 log.log('add local group to cloud:', localGroup.id);
@@ -831,6 +885,100 @@ async function syncGroups(localData, cloudData, sourceOfTruth, changes, newCloud
     cloudData.groups = resultCloudGroups;
 
     log.stop();
+}
+
+function createStub(groupId) {
+    return {
+        id: groupId,
+        uploadToCloud: false,
+    };
+}
+
+// the rows (C1-C8 trust cloud, L1-L5 trust local) are docs/UPLOAD-TO-CLOUD.md §2
+function syncGroupUpload(localGroup, cloudGroup, {sourceOfTruth, lastSync, prepareCloudGroup}, changes) {
+    const settled = (resultLocalGroup, resultCloudGroup) => ({
+        settled: true,
+        localGroup: resultLocalGroup,
+        cloudGroup: resultCloudGroup,
+    });
+    const regular = union => ({settled: false, union});
+
+    const localWins = sourceOfTruth === TRUST_LOCAL;
+    const copyWasLocal = groupId => lastSync.localOnlyGroupIds.has(groupId);
+
+    if (localGroup && cloudGroup) {
+        if (localGroup.uploadToCloud && cloudGroup.uploadToCloud) {
+            // C1 / L1: a regular group; a copy that was local until now merges by union -
+            // while it was local its tabs did not reach the cloud, their absence there is not a removal
+            return regular(copyWasLocal(localGroup.id));
+        }
+
+        if (localGroup.uploadToCloud) {
+            // the cloud holds a stub
+            const uploadTurnedOnHere = localWins || copyWasLocal(localGroup.id);
+
+            if (uploadTurnedOnHere) {
+                // C2 / L1: the upload was turned on here - the group replaces the stub
+                changes.cloud = true;
+                return settled(localGroup, prepareCloudGroup(localGroup));
+            }
+
+            // C2: the stub is new - another device turned the upload off, turn it off here too
+            localGroup.uploadToCloud = false;
+            changes.local = true;
+            return settled(localGroup, cloudGroup);
+        }
+
+        // the copy is local, the cloud holds the full group or a stub
+        if (cloudGroup.uploadToCloud) {
+            const uploadTurnedOffHere = localWins || lastSync.uploadedGroupIds.has(localGroup.id);
+
+            if (uploadTurnedOffHere) {
+                // C4 / L2: the upload was turned off here - a stub replaces the group
+                changes.cloud = true;
+                return settled(localGroup, createStub(localGroup.id));
+            }
+
+            // C4: another device turned the upload on - the regular merge brings the flag
+            // back with the other group keys, the tabs of the copy join by union
+            return regular(true);
+        }
+
+        // C5 / L2: a local copy and its stub - nothing to sync
+        return settled(localGroup, cloudGroup);
+    }
+
+    if (localGroup) {
+        if (localGroup.uploadToCloud) {
+            // C3 / L1: the group is absent in the cloud - the regular path uploads or removes it
+            return regular(false);
+        }
+
+        const stubRemovedByOtherDevice = lastSync.stubGroupIds.has(localGroup.id);
+
+        if (stubRemovedByOtherDevice) {
+            // C6 / L3: another device removed its copy together with the stub, this copy is alive - restore the stub
+            changes.cloud = true;
+            return settled(localGroup, createStub(localGroup.id));
+        }
+
+        // C6 / L3: no stub of mine to restore - the copy stays local, nothing goes to the cloud
+        return settled(localGroup, null);
+    }
+
+    if (cloudGroup.uploadToCloud) {
+        // C7 / L4: a group without a local copy - the regular path creates or drops it
+        return regular(false);
+    }
+
+    if (copyWasLocal(cloudGroup.id)) {
+        // C8 / L5: the local copy was removed here - its stub goes away
+        changes.cloud = true;
+        return settled(null, null);
+    }
+
+    // C8 / L5: a stub of another device - stays as is
+    return settled(null, cloudGroup);
 }
 
 // sub-group metadata merge after the tab merge: cloud meta wins by id, local-only sub-groups

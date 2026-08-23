@@ -165,7 +165,7 @@ export default [{
             discardTabsAfterHide: false,
             discardExcludeAudioTabs: false,
             prependTitleToWindow: false,
-            dontUploadToCloud: false,
+            uploadToCloud: true,
             exportToBookmarks: true,
             newTabContainer: Constants.DEFAULT_COOKIE_STORE_ID,
             ifDifferentContainerReOpen: false,

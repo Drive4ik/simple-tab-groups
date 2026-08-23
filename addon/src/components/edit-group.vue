@@ -412,8 +412,13 @@ export default {
             <span v-text="lang('prependTitleToWindow')"></span>
         </label>
         <label class="checkbox">
-            <input type="checkbox" v-model="group.dontUploadToCloud" />
-            <span v-text="lang('dontUploadToCloud')"></span>
+            <input type="checkbox" v-model="group.uploadToCloud" />
+            <span class="icon-text">
+                <span v-text="lang('uploadToCloud')"></span>
+                <figure class="icon image is-16x16 cursor-help" :title="lang('uploadToCloudTitle')">
+                    <img src="/icons/help.svg" />
+                </figure>
+            </span>
         </label>
         <label class="checkbox" :disabled="isDisabledExportToBookmarks">
             <input type="checkbox" v-model="group.exportToBookmarks" :disabled="isDisabledExportToBookmarks" @click="$event => setPermissionsBookmarks($event, 'exportToBookmarks')" />

@@ -14,6 +14,10 @@ run the migrations and commit data+marker in one Storage.set - the marker never
 travels without its data. Legacy storage keys are removed only after that commit:
 a crash before it leaves them in place for the repeated run.
 
+Cloud data (the gist) goes through the same main migrations; a group there can be a stub
+without tabs - {id, uploadToCloud: false} (docs/UPLOAD-TO-CLOUD.md) - and an entry that
+walks the tabs must skip it.
+
 Sync area (migrateSyncData): rules run on every read regardless of the marker -
 Firefox merges the area per-key between devices running different addon versions, so
 old-format keys can resurrect at any time; the rules are shape-guarded and

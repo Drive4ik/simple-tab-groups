@@ -473,7 +473,7 @@ export function create(id, title, defaultGroupProps = {}) {
         discardTabsAfterHide: false,
         discardExcludeAudioTabs: false,
         prependTitleToWindow: false,
-        dontUploadToCloud: false,
+        uploadToCloud: true,
         exportToBookmarks: true,
         newTabContainer: Constants.DEFAULT_COOKIE_STORE_ID,
         ifDifferentContainerReOpen: false,
@@ -826,7 +826,7 @@ async function updateNow(groupId, updateData) {
         updateData.title = Utils.format(updateData.title, {index: groupIndex + 1});
     }
 
-    if (group.dontUploadToCloud && updateData.dontUploadToCloud === false) {
+    if (!group.uploadToCloud && updateData.uploadToCloud === true) {
         NewCloudGroups.add(group.id);
     }
 
