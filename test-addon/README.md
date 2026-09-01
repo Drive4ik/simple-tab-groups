@@ -1,7 +1,7 @@
 # STG behavior test harness
 
-The add-on that produced every fact in `docs/TABGROUPS-BEHAVIOR.md`, `docs/CREATE-TABS-BEHAVIOR.md`
-and `docs/MOVE-TABS-BEHAVIOR.md`. It is committed so those facts can be re-run and disputed: a
+The add-on that produced every fact in `docs/TABGROUPS-BEHAVIOR.md`, `docs/CREATE-TABS-BEHAVIOR.md`,
+`docs/MOVE-TABS-BEHAVIOR.md` and `docs/OPENER-BEHAVIOR.md`. It is committed so those facts can be re-run and disputed: a
 marker like `R5.16` points at the test with that id in `tests/round-05.js`, and running it must
 reproduce the table printed next to the fact.
 
@@ -36,7 +36,7 @@ A run is not unattended:
   sees it, and waits. Look at the tab bar, then answer in the same console:
   `T.visualAnswer('only gr2 is visible')`. `T.visualAnswer()` with no argument records "not looked
   at" and moves on. The answer goes into the report under its question.
-- **Restarts.** R3.05 and R4.03 stop and ask for a browser restart. The scene window is left open on
+- **Restarts.** R3.05, R4.03, R14.08 and R14.10 stop and ask for a browser restart. The scene window is left open on
   purpose — keep it. Restart Firefox, load the add-on again in about:debugging, then run
   `T.continue()`: the harness finds the scene window by the names in the tab urls and finishes the
   test in the same table.
@@ -57,7 +57,7 @@ writes into the report whatever it had to clean up.
 | `round-02` | the membership rule on `tabs.move`, then §3 and §4 |
 | `round-03` | group id immutability, collapsed, the hidden-tab header, groups across a restart |
 | `round-04` | collapsed seen from the tab bar, hidden tabs across a restart |
-| `round-05` | CREATE-TABS: the newTabPosition matrix, speed, window targeting, the races |
+| `round-05` | CREATE-TABS: the newTabPosition matrix, speed, window targeting, the races; no-index creates against a hidden block at the end of the window (R5.41–R5.43) |
 | `round-06` | explicit index at restore scale, 100–300 tabs, all three settings |
 | `round-07` | the `hidden` flag on what `tabs.move` resolves with, ungroup/hide of an active member, membership at creation next to a span, array move onto a member slot, ungroup of a hidden member |
 | `round-08` | MANUAL: mouse and menu gestures on native groups — which events each gesture emits. Fully attended: every test waits for a gesture and a `T.visualAnswer('done')` |
@@ -66,6 +66,10 @@ writes into the report whatever it had to clean up.
 | `round-11` | `browser.menus` registration lifecycle: duplicate ids, cascade removal, `removeAll`, bookmark context vs the optional `bookmarks` permission; R11.06 is MANUAL — permission grants and 👁️ looks at a bookmark's context menu |
 | `round-12` | delivery timing of `tabs.onAttached`/`onDetached` against the `tabs.move()` resolve: paced and rapid cross-window ping-pong, hidden and discarded arrays, a move-then-show chain |
 | `round-13` | removing the last VISIBLE tabs of a window that still holds hidden ones: does the window survive, which hidden tab is revealed, which events announce it; pinned and discarded variants |
+| `round-14` | `tab.openerTabId`: set by `tabs.create` / `tabs.update`, cleared with `-1`, the events; what survives hide/show, discard, same-window and cross-window moves, the opener's removal, a browser restart (R14.08); an update to the opener a tab already has, and the saved links applied again after a restart (R14.09–R14.10); tabs created without an opener and linked afterwards — in parallel, one by one, in reverse, and sorted back after linking (R14.11–R14.14); a change of openerTabId alone against `tabs.onUpdated` listeners — the STG `properties` filter and no filter, and whether openerTabId is accepted as a filter value at all (R14.15); the opener leaving the window while the child stays, the child following, and what `tabs.get` reports right inside onDetached/onAttached (R14.16). Meant to be run twice — clean profile, and a profile with Tree Style Tab and no STG |
+| `round-15` | a plain array `tabs.move` to an explicit index, no native groups — the calls `Tabs.ensureSorted` makes to collect a group into a block: gathered at the first mover's own slot with the rest beyond it and a hidden outsider block in between (R15.01), a reversed set gathered at its smallest index (R15.02), movers standing before the target (R15.03) and on both sides of it (R15.04) |
+| `round-16` | what `tabs.create({openerTabId})` accepts — the opener states a recreate path meets: a hidden / hidden+discarded / discarded opener at an explicit index takes the link (R16.01), an opener in another window rejects the call in both directions (R16.02), a removed opener rejects it too (R16.03), a discarded create carries the link (R16.04); OPENER-BEHAVIOR.md §11–§13 |
+| `round-17` | a foreign `tabs.update({openerTabId: -1})` — the call STG clears a group-boundary link with: on a visible child among siblings (R17.01), on a mid-chain parent (R17.02), on a hidden child, then shown back (R17.03), and a clear followed by the same link again (R17.04). Meant to be run twice — clean profile, and a profile with Tree Style Tab and no STG |
 
 ## Files
 
@@ -74,6 +78,7 @@ writes into the report whatever it had to clean up.
 | `constants.js` | every constant and timing |
 | `test.js` | `class Test` — the table, notes, questions, events, `expect`, the report. Knows nothing about tabs |
 | `tabs.js` | `class TabsTest extends Test` — windows, tabs, groups, and the `tabs.*` / `tabGroups.*` event formatters |
+| `opener.js` | `class OpenerTest extends TabsTest` — the opener suffix in every cell (`c1→p`), opener readers and setters, `tryStep` for a call that may be refused; shared by the opener rounds |
 | `menus.js` | `class MenusTest extends Test` — `browser.menus` wrappers that return `{ok, error}`, existence probing, the `bookmarks` permission helpers |
 | `grant.html` + `grant.js` | the page R11.06 opens — a button that calls `permissions.request` from a real user click |
 | `harness.js` | the runner, checkpoints, `globalThis.T` |
@@ -110,6 +115,7 @@ export const tests = [
 
 export const note = 'preconditions…';    // optional, printed above the round
 export const gap = BATCH_GAP * 2;        // optional, ms between tests, default BATCH_GAP
+export const quiet = OTHER_ADDON_WAIT;   // optional, ms of silence before a step counts as settled, default QUIET_WAIT
 export const testClass = TabsTest;       // optional, default TabsTest
 export const url = 'https://example.com/';  // optional, what the scene tabs load
 ```
@@ -173,6 +179,7 @@ Imported by a round from `../constants.js`:
 | `SQUARES` | the group markers used in the tables |
 | `NEW_TAB_POSITIONS` | all three `newTabPosition` values |
 | `QUIET_WAIT` 200 | how long nothing may happen before a step counts as settled |
+| `OTHER_ADDON_WAIT` 2000 | the same window for a round that studies another add-on's reaction — it acts with a delay of its own (`export const quiet`) |
 | `POLL_WAIT` 250 | how often the harness re-checks while waiting |
 | `TIGHT_POLL_WAIT` 25 | how often a stress loop re-checks while draining its own events |
 | `ACTION_WAIT` 500 | the old fixed pause, for a step that wants a number |

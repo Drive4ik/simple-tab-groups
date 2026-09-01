@@ -83,8 +83,8 @@ function collect(state, test) {
     state.settings = [...new Set([...state.settings, ...test.data.settings])];
 }
 
-async function runTest(state, spec, TestClass, round, url) {
-    const test = new TestClass({id: spec.id, title: spec.title, url: spec.url ?? url, round, onQuestion: askUser});
+async function runTest(state, spec, TestClass, round, {url, quiet}) {
+    const test = new TestClass({id: spec.id, title: spec.title, url: spec.url ?? url, round, onQuestion: askUser, quiet});
     const started = Date.now();
 
     await cleanup(state, test);
@@ -134,7 +134,7 @@ async function resumeRestart(state) {
     const module = await loadRound(round);
     const spec = module.tests.find(test => test.id === data.id);
     const TestClass = module.testClass ?? TabsTest;
-    const test = new TestClass({id: data.id, title: data.title, url: spec?.url ?? module.url, round, onQuestion: askUser, data});
+    const test = new TestClass({id: data.id, title: data.title, url: spec?.url ?? module.url, round, onQuestion: askUser, data, quiet: module.quiet});
 
     try {
         await test.reattach();
@@ -207,7 +207,7 @@ async function drive(state) {
                     return finalize(state, 'stopped');
                 }
 
-                const finished = await runTest(state, tests[state.index], TestClass, round, module.url);
+                const finished = await runTest(state, tests[state.index], TestClass, round, module);
 
                 if (!finished) {
                     return;

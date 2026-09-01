@@ -141,11 +141,8 @@ export class TabsTest extends Test {
         return this.squareByGroupId.get(groupId);
     }
 
-    cell(tab) {
-        const square = this.square(tab.groupId);
-        const prefix = this.createdByAction.has(tab.id) ? '➕' : '';
-
-        let text = (square ? `${square} ` : '') + prefix + this.nameOf(tab);
+    suffix(tab) {
+        let text = '';
 
         if (tab.active) {
             text += '*';
@@ -156,6 +153,13 @@ export class TabsTest extends Test {
         }
 
         return text;
+    }
+
+    cell(tab) {
+        const square = this.square(tab.groupId);
+        const prefix = this.createdByAction.has(tab.id) ? '➕' : '';
+
+        return (square ? `${square} ` : '') + prefix + this.nameOf(tab) + this.suffix(tab);
     }
 
     async query() {

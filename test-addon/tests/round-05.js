@@ -4,7 +4,11 @@ import {sceneUrl, nameFromUrl} from '../tabs.js';
 
 export const note = `Round 05 — CREATE-TABS: what tabs.create does on its own (R5.01–R5.05), the full
 newTabPosition matrix (R5.06–R5.25), the two facts that did not reproduce, retested harder
-(R5.26–R5.27), and the afterCurrent races repeated for volume (R5.28–R5.40).
+(R5.26–R5.27), the afterCurrent races repeated for volume (R5.28–R5.40), and creates WITHOUT an
+index against a HIDDEN block at the end of the window (R5.41–R5.43): after the last visible tab,
+pushing the hidden block right, or at the real end of the strip. The created tabs there are
+inactive with an explicit windowId — the shape of STG's own create; a user-opened active tab is a
+separate question.
 
 The script sets newTabPosition itself and the harness restores it after every test.`;
 
@@ -182,6 +186,45 @@ const race = (id, {count, withIndex, activeAt, attempt}) => {
         },
     };
 };
+
+const HIDDEN_TAIL = ['h1', 'h2', 'h3'];
+
+const hiddenTailScene = async t => {
+    await t.scene(['v1', 'v2', 'v3', ...HIDDEN_TAIL]);
+    await t.hide(HIDDEN_TAIL);
+
+    const hidden = (await t.query()).filter(tab => tab.hidden).map(tab => t.nameOf(tab));
+    t.require('setup: the hidden tail is in place', hidden.join(',') === HIDDEN_TAIL.join(','), hidden.join(','));
+};
+
+const landing = async (t, names) => {
+    for (const name of names) {
+        t.note(`${name} landed at index ${(await browser.tabs.get(t.id(name))).index}`);
+    }
+};
+
+// the active tab is v1, far from the hidden block: "after the active one", "after the last
+// visible tab" and "the real end of the strip" predict three different indexes — 1, 3 and 6
+const hiddenTail = (id, setting) => ({
+    id,
+    title: `${setting} — two creates with NO index against a hidden tail: after the last visible tab, or past the hidden block`,
+    async run(t) {
+        await withSetting(t, setting);
+        await hiddenTailScene(t);
+        await t.activate('v1');
+
+        t.watch(['tabs.onCreated', 'tabs.onMoved']);
+        await t.snap('before');
+
+        await t.step('tabs.create(n1)  // no index', () => t.create('n1'), {snap: 'first created'});
+        await t.step('tabs.create(n2)  // no index, right after', () => t.create('n2'), {snap: 'second created'});
+
+        await landing(t, ['n1', 'n2']);
+
+        t.expectRow('first created', ['v1*', 'v2', 'v3', 'h1(h)', 'h2(h)', 'h3(h)', '➕n1']);
+        t.expectRow('second created', ['v1*', 'v2', 'v3', 'h1(h)', 'h2(h)', 'h3(h)', '➕n1', '➕n2']);
+    },
+});
 
 export const tests = [
 
@@ -409,5 +452,27 @@ race('R5.37', {count: 5, withIndex: false, activeAt: 2, attempt: 3}),
 race('R5.38', {count: 5, withIndex: false, attempt: 1}),
 race('R5.39', {count: 5, withIndex: false, attempt: 2}),
 race('R5.40', {count: 5, withIndex: false, attempt: 3}),
+
+hiddenTail('R5.41', 'atEnd'),
+hiddenTail('R5.42', 'relatedAfterCurrent'),
+
+{
+    id: 'R5.43',
+    title: 'afterCurrent — the active tab is the LAST visible one, the hidden block starts right after it',
+    async run(t) {
+        await withSetting(t, 'afterCurrent');
+        await hiddenTailScene(t);
+        await t.activate('v3');
+
+        t.watch(['tabs.onCreated', 'tabs.onMoved']);
+        await t.snap('before');
+
+        await t.step('tabs.create(n1)  // no index, the active v3 at index 2, the hidden block at 3-5', () => t.create('n1'));
+
+        await landing(t, ['n1']);
+
+        t.expectRow('after', ['v1', 'v2', 'v3*', 'h1(h)', 'h2(h)', 'h3(h)', '➕n1']);
+    },
+},
 
 ];

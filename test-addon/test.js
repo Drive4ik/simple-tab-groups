@@ -15,7 +15,8 @@ const same = (actual, expected) => {
 const show = value => typeof value === 'string' ? value : JSON.stringify(value);
 
 export class Test {
-    constructor({id, title, round, onQuestion, data = null}) {
+    constructor({id, title, round, onQuestion, data = null, quiet = QUIET_WAIT}) {
+        this.quietWait = quiet;
         this.onQuestion = onQuestion;
 
         this.data = data ?? {
@@ -78,6 +79,7 @@ export class Test {
 
     act(text) {
         this.t0 = Date.now();
+        this.lastEventAt = this.t0;
         this.data.rows.push({kind: 'action', label: text});
     }
 
@@ -111,7 +113,7 @@ export class Test {
         this.lastEventAt = Date.now();
 
         clearTimeout(this.quietTimer);
-        this.quietTimer = this.wake ? setTimeout(() => this.wake?.(), QUIET_WAIT) : null;
+        this.quietTimer = this.wake ? setTimeout(() => this.wake?.(), this.quietWait) : null;
     }
 
     async tick() {
@@ -133,7 +135,7 @@ export class Test {
             const state = await this.state();
             const key = this.fingerprint(state);
             const pending = this.pending(state);
-            const quiet = Date.now() - this.lastEventAt >= QUIET_WAIT;
+            const quiet = Date.now() - this.lastEventAt >= this.quietWait;
 
             if (!pending.length && quiet && key === previous && (!until || until(state))) {
                 return {ms: Date.now() - started, timedOut: false};
@@ -284,7 +286,11 @@ export class Test {
             return;
         }
 
-        this.queued.push({at: this.ms(), spec, text});
+        this.record(spec, text);
+    }
+
+    record(spec, text, at = this.ms()) {
+        this.queued.push({at, spec, text});
     }
 
     flushEvents() {
