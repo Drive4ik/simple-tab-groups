@@ -61,8 +61,9 @@ function check(name, cond, detail) {
     }
 }
 
-const {setTab, removeTab, getRealTabStateChanged, clear} = await import('./cache.js');
+const {tabs, setTab, removeTab, getRealTabStateChanged, clear} = await import('./cache.js');
 const {ON_UPDATED_TAB_PROPERTIES} = await import('./constants.js');
+const {planTabContentApply, buildTabContentCacheWrite} = await import('./sync/delta/tab-content-apply.js');
 
 const TAB_ID = 42;
 
@@ -249,6 +250,90 @@ const json = value => JSON.stringify(value);
             json(changeInfo) === json({[key]: FLIPPED[key]}),
             json(changeInfo));
     }
+}
+
+// --- 10. the sync-apply write must not report state it never observed ---------------------
+const applyWrite = (live, target) => buildTabContentCacheWrite(live, planTabContentApply(live, target), target);
+
+{
+    const write = applyWrite(baseTab(), {url: 'https://b.test/'});
+    const absent = ON_UPDATED_TAB_PROPERTIES.filter(key => !Object.hasOwn(write, key));
+
+    check('the apply write carries every property the guard compares',
+        absent.length === 0,
+        json(absent));
+}
+
+{
+    seen();
+    setTab(applyWrite(baseTab(), {url: 'https://b.test/'}));
+    const changeInfo = getRealTabStateChanged(baseTab({url: 'https://b.test/'}));
+
+    check('a settled applied navigation reports no phantom pinned/hidden/discarded/audible',
+        changeInfo === null,
+        json(changeInfo));
+}
+
+{
+    const hiddenTab = extra => baseTab({hidden: true, ...extra});
+
+    seen({hidden: true});
+    setTab(applyWrite(hiddenTab(), {url: 'https://b.test/'}));
+    const changeInfo = getRealTabStateChanged(hiddenTab({url: 'https://b.test/'}));
+
+    check('a hidden tab keeps its group: the applied navigation reports no phantom `hidden`',
+        changeInfo === null,
+        json(changeInfo));
+}
+
+{
+    seen();
+    setTab(applyWrite(baseTab(), {favIconUrl: 'https://b.test/icon.png'}));
+    const changeInfo = getRealTabStateChanged(baseTab({favIconUrl: 'https://b.test/icon.png', audible: true}));
+
+    check('a favIcon-only apply leaves nothing behind: a later sound reports only `audible`',
+        json(changeInfo) === json({audible: true}),
+        json(changeInfo));
+}
+
+{
+    seen();
+    setTab(applyWrite(baseTab(), {url: 'https://b.test/'}));
+    const changeInfo = getRealTabStateChanged(baseTab({url: 'https://b.test/', pinned: true}));
+
+    check('a genuine pin after an applied navigation still reports `pinned: true`',
+        json(changeInfo) === json({pinned: true}),
+        json(changeInfo));
+}
+
+{
+    seen({pinned: true});
+    setTab(applyWrite(baseTab({pinned: true}), {url: 'https://b.test/'}));
+    const changeInfo = getRealTabStateChanged(baseTab({url: 'https://b.test/', pinned: false}));
+
+    check('a genuine unpin after an applied navigation still reports `pinned: false`',
+        json(changeInfo) === json({pinned: false}),
+        json(changeInfo));
+}
+
+{
+    seen({discarded: true});
+    setTab(applyWrite(baseTab({discarded: true}), {url: 'https://b.test/', title: 'B'}));
+    const changeInfo = getRealTabStateChanged(baseTab({discarded: false}));
+
+    check('a refused apply on a discarded tab reports only `discarded` when the tab wakes',
+        json(changeInfo) === json({discarded: false}),
+        json(changeInfo));
+}
+
+{
+    seen();
+    setTab({...baseTab(), openerTabId: 7});
+    setTab(applyWrite({...baseTab(), openerTabId: 7}, {url: 'https://b.test/'}));
+
+    check('the apply write keeps the cached openerTabId',
+        tabs[TAB_ID].openerTabId === 7,
+        json(tabs[TAB_ID].openerTabId));
 }
 
 console.log(`\npassed: ${passed}, failed: ${failures.length}`);
