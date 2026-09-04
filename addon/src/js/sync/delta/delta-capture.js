@@ -5,7 +5,7 @@ import * as DeltaLog from './delta-log.js';
 import {syncedOptionKeys} from './option-keys.js';
 import {isUrlSyncable, unwrapStubUrl, sanitizeGroupRecordForSync} from './url-sync.js';
 import {computeGroupRelativeIndex} from './group-relative-index.js';
-import {isAppliedNavigationEcho, isAppliedNavigationLandedOffTarget, isAppliedNavigationSettled} from './applied-nav-echo.js';
+import {isAppliedNavigationEcho, isAppliedNavigationSettled, resolveAppliedNavigationSettlement} from './applied-nav-echo.js';
 import {isAppliedMoveEcho} from './applied-move-echo.js';
 import {contentMark, isSyncedContent} from './content-marks.js';
 import {forgetContentMark, loadContentMarks, rememberContentMark} from './sync-marks.js';
@@ -53,22 +53,20 @@ export function settleAppliedNavigation(tabId, observedUrl, observedStatus) {
         return false;
     }
 
-    const now = Date.now();
-
-    if (!isAppliedNavigationSettled({markExpiry: mark.expiry, observedStatus, now})) {
-        return false;
-    }
-
-    appliedNavTabs.delete(tabId);
-
-    return isAppliedNavigationLandedOffTarget({
+    const {retireMark, landedOffTarget} = resolveAppliedNavigationSettlement({
         applying: isApplying(),
         markExpiry: mark.expiry,
         markUrl: mark.url,
         observedUrl: typeof observedUrl === 'string' ? unwrapStubUrl(observedUrl) : observedUrl,
         observedStatus,
-        now,
+        now: Date.now(),
     });
+
+    if (retireMark) {
+        appliedNavTabs.delete(tabId);
+    }
+
+    return landedOffTarget;
 }
 
 const appliedMoveTabs = new Map();
@@ -94,16 +92,17 @@ export function consumeAppliedMoveEcho(tabId) {
 
 function consumeAppliedNavigationEcho(tabId, observedUrl, observedStatus) {
     const mark = appliedNavTabs.get(tabId);
+    const applying = isApplying();
     const now = Date.now();
     const echo = isAppliedNavigationEcho({
-        applying: isApplying(),
+        applying,
         markExpiry: mark?.expiry,
         markUrl: mark?.url,
         observedUrl: typeof observedUrl === 'string' ? unwrapStubUrl(observedUrl) : observedUrl,
         observedStatus,
         now,
     });
-    if (mark != null && isAppliedNavigationSettled({markExpiry: mark.expiry, observedStatus, now})) {
+    if (mark != null && isAppliedNavigationSettled({applying, markExpiry: mark.expiry, observedStatus, now})) {
         appliedNavTabs.delete(tabId);
     }
     return echo;

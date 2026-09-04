@@ -35,6 +35,13 @@
  * is built on `isAppliedNavigationSettled`, so the two cannot drift apart. A mark spent while the
  * tab was still loading past the bound would be a permanent loss: the completion that follows
  * carries only `status`, so nothing would be left to report the url the tab actually landed on.
+ *
+ * An apply pass in flight defers that whole question. `applyDepth` is global and held across a
+ * whole sync apply, so events from tabs the apply never touched routinely arrive inside it; while
+ * it is held nothing can be attributed, so no landing is reported — and therefore no mark may be
+ * spent either. `applying` enters at exactly ONE place, `isAppliedNavigationSettled`, and both the
+ * retirement and the landing verdict come out of a single `resolveAppliedNavigationSettlement`
+ * call, so a caller cannot consume a mark and receive no verdict.
  */
 
 import {
@@ -43,6 +50,7 @@ import {
     isAppliedNavigationSettled,
     NAVIGATION_COMPLETE_STATUS,
     NAVIGATION_LOADING_STATUS,
+    resolveAppliedNavigationSettlement,
 } from './applied-nav-echo.js';
 
 let passed = 0;
@@ -64,11 +72,15 @@ const LOADING = NAVIGATION_LOADING_STATUS;
 const COMPLETE = NAVIGATION_COMPLETE_STATUS;
 
 // A faithful pure model of the mark store in delta-capture.js, so mark lifecycle scenarios
-// (supersede / removal / settle) are exercised through the same predicates.
+// (supersede / removal / settle) are exercised through the same predicates. `mark` carries the
+// same guards as `markAppliedNavigation`, so the model can only reach states production reaches.
 function createMarkStore() {
     const marks = new Map();
     return {
         mark(tabId, url, now) {
+            if (!Number.isFinite(tabId) || typeof url !== 'string') {
+                return;
+            }
             marks.set(tabId, {expiry: now + SAFETY_MS, url});
         },
         clear(tabId) {
@@ -84,7 +96,7 @@ function createMarkStore() {
                 observedStatus,
                 now,
             });
-            if (mark != null && isAppliedNavigationSettled({markExpiry: mark.expiry, observedStatus, now})) {
+            if (mark != null && isAppliedNavigationSettled({applying, markExpiry: mark.expiry, observedStatus, now})) {
                 marks.delete(tabId);
             }
             return echo;
@@ -94,11 +106,7 @@ function createMarkStore() {
             if (mark == null) {
                 return false;
             }
-            if (!isAppliedNavigationSettled({markExpiry: mark.expiry, observedStatus, now})) {
-                return false;
-            }
-            marks.delete(tabId);
-            return isAppliedNavigationLandedOffTarget({
+            const {retireMark, landedOffTarget} = resolveAppliedNavigationSettlement({
                 applying,
                 markExpiry: mark.expiry,
                 markUrl: mark.url,
@@ -106,6 +114,10 @@ function createMarkStore() {
                 observedStatus,
                 now,
             });
+            if (retireMark) {
+                marks.delete(tabId);
+            }
+            return landedOffTarget;
         },
         has(tabId) {
             return marks.has(tabId);
@@ -120,6 +132,29 @@ check('in-apply wins even with an expired mark ⇒ ECHO',
     isAppliedNavigationEcho({applying: true, markExpiry: NOW - 1, now: NOW}) === true);
 check('in-apply is an echo regardless of url or status',
     isAppliedNavigationEcho({applying: true, markExpiry: NOW + SAFETY_MS, markUrl: 'http://x', observedUrl: 'http://y', observedStatus: COMPLETE, now: NOW}) === true);
+check('in-apply nothing SETTLES and nothing LANDS, whatever the status or the bound',
+    [NOW - 10_000, NOW, NOW + SAFETY_MS].every(markExpiry =>
+        [COMPLETE, LOADING, undefined, 'unloaded'].every(status =>
+            isAppliedNavigationSettled({applying: true, markExpiry, observedStatus: status, now: NOW}) === false
+            && isAppliedNavigationLandedOffTarget({applying: true, markExpiry, markUrl: 'http://x', observedUrl: 'http://y', observedStatus: status, now: NOW}) === false)));
+check('in-apply the settlement resolver retires nothing',
+    [NOW - 10_000, NOW, NOW + SAFETY_MS].every(markExpiry =>
+        [COMPLETE, LOADING, undefined, 'unloaded'].every(status => {
+            const settlement = resolveAppliedNavigationSettlement({applying: true, markExpiry, markUrl: 'http://x', observedUrl: 'http://y', observedStatus: status, now: NOW});
+            return settlement.retireMark === false && settlement.landedOffTarget === false;
+        })));
+check('the settlement resolver always pairs the retirement with the verdict it produced',
+    [true, false].flatMap(applying =>
+        [NOW - 10_000, NOW, NOW + SAFETY_MS, undefined].flatMap(markExpiry =>
+            [COMPLETE, LOADING, undefined, 'unloaded'].flatMap(status =>
+                ['http://x', 'http://y', undefined].map(observedUrl =>
+                    ({applying, markExpiry, markUrl: 'http://x', observedUrl, observedStatus: status, now: NOW})))))
+        .every(observation => {
+            const settlement = resolveAppliedNavigationSettlement(observation);
+            return settlement.retireMark === isAppliedNavigationSettled(observation)
+                && settlement.landedOffTarget === isAppliedNavigationLandedOffTarget(observation)
+                && (settlement.landedOffTarget === false || settlement.retireMark === true);
+        }));
 
 // --- in-flight: anything before completion is part of OUR navigation -----------------------
 check('in-flight, loading at the applied url ⇒ ECHO',
@@ -160,14 +195,29 @@ check('past the bound a status-less event retires the mark (not in flight)',
     isAppliedNavigationSettled({markExpiry: NOW, observedStatus: undefined, now: NOW}) === true);
 check('past the bound an unrecognised status retires the mark',
     isAppliedNavigationSettled({markExpiry: NOW, observedStatus: 'unloaded', now: NOW}) === true);
-check('retirement and the landing verdict agree on every status past the bound',
-    [COMPLETE, LOADING, undefined, 'unloaded'].every(status =>
-        isAppliedNavigationSettled({markExpiry: NOW, observedStatus: status, now: NOW})
-        === isAppliedNavigationLandedOffTarget({applying: false, markExpiry: NOW, markUrl: 'http://x', observedUrl: 'http://y', observedStatus: status, now: NOW})));
-check('retirement and the landing verdict agree on every status before the bound',
-    [COMPLETE, LOADING, undefined, 'unloaded'].every(status =>
-        isAppliedNavigationSettled({markExpiry: NOW + SAFETY_MS, observedStatus: status, now: NOW})
-        === isAppliedNavigationLandedOffTarget({applying: false, markExpiry: NOW + SAFETY_MS, markUrl: 'http://x', observedUrl: 'http://y', observedStatus: status, now: NOW})));
+// `isAppliedNavigationLandedOffTarget` is `settled && urlsDiffer` by construction, so asserting
+// that the two merely AGREE is an identity that holds for any `isAppliedNavigationSettled` — the
+// pre-81f7a6f one included. What has to be pinned is the value each of them takes per status.
+const RETIREMENT_TABLE_PAST_THE_BOUND = [
+    [COMPLETE, true],
+    [LOADING, false],
+    [undefined, true],
+    ['unloaded', true],
+];
+const RETIREMENT_TABLE_BEFORE_THE_BOUND = [
+    [COMPLETE, true],
+    [LOADING, false],
+    [undefined, false],
+    ['unloaded', false],
+];
+check('retirement and the landing verdict take the EXPECTED value on every status past the bound',
+    RETIREMENT_TABLE_PAST_THE_BOUND.every(([status, settled]) =>
+        isAppliedNavigationSettled({applying: false, markExpiry: NOW, observedStatus: status, now: NOW}) === settled
+        && isAppliedNavigationLandedOffTarget({applying: false, markExpiry: NOW, markUrl: 'http://x', observedUrl: 'http://y', observedStatus: status, now: NOW}) === settled));
+check('retirement and the landing verdict take the EXPECTED value on every status before the bound',
+    RETIREMENT_TABLE_BEFORE_THE_BOUND.every(([status, settled]) =>
+        isAppliedNavigationSettled({applying: false, markExpiry: NOW + SAFETY_MS, observedStatus: status, now: NOW}) === settled
+        && isAppliedNavigationLandedOffTarget({applying: false, markExpiry: NOW + SAFETY_MS, markUrl: 'http://x', observedUrl: 'http://y', observedStatus: status, now: NOW}) === settled));
 check('no mark, not applying ⇒ CAPTURE (genuine user navigation)',
     isAppliedNavigationEcho({applying: false, markExpiry: undefined, observedStatus: COMPLETE, now: NOW}) === false);
 check('markExpiry = NaN is treated as no mark ⇒ CAPTURE',
@@ -493,8 +543,56 @@ check('in-apply ⇒ silent (our own write, never a user landing)',
         && store.settle(15, 'http://other', COMPLETE, NOW + SAFETY_MS + 2_000) === false);
 }
 
-// --- the four rounds, re-run through the mark store now that retirement moved ------------------
-// Each round fixed a real defect; none of them may be traded for the retirement fix.
+// --- scenario: the completion arrives while a sync APPLY PASS is in flight --------------------
+// `applyDepth` is held for the whole apply pass and tabs.js `onUpdated` is not gated on it, so an
+// event from a tab the apply never touched lands inside the window. The verdict cannot be given
+// there — during an apply nothing is attributable — so the mark must survive to be decided by the
+// next event outside the pass. Spending it here is the `81f7a6f` loss all over again: the hop url
+// sits in the cache, the completing event carries only `status`, and nothing else can report it.
+{
+    const store = createMarkStore();
+    store.mark(40, 'http://target', NOW);
+    check('apply-pass settle: the hop is suppressed as part of the applied navigation',
+        store.consume(40, 'http://redirect', LOADING, NOW + 5_000) === true);
+    check('apply-pass settle: the completion inside the pass asks for nothing',
+        store.settle(40, 'http://redirect', COMPLETE, NOW + 6_000, true) === false);
+    check('apply-pass settle: and does NOT spend the mark',
+        store.has(40) === true);
+    check('apply-pass settle: the first event after the pass reports the landing',
+        store.settle(40, 'http://redirect', COMPLETE, NOW + 7_000) === true);
+    check('apply-pass settle: that landing retires the mark',
+        store.has(40) === false);
+}
+{
+    const store = createMarkStore();
+    store.mark(41, 'http://target', NOW);
+    check('apply-pass loading: a loading event inside the pass asks for nothing',
+        store.settle(41, 'http://hop', LOADING, NOW + 1_000, true) === false);
+    check('apply-pass loading: and keeps the mark',
+        store.has(41) === true);
+    check('apply-pass loading: a loading event past the bound inside the pass keeps it too',
+        store.settle(41, 'http://hop', LOADING, NOW + SAFETY_MS, true) === false
+        && store.has(41) === true);
+    check('apply-pass loading: the completion after the pass reports the landing',
+        store.settle(41, 'http://hop', COMPLETE, NOW + SAFETY_MS + 1_000) === true);
+    check('apply-pass loading: that landing retires the mark',
+        store.has(41) === false);
+}
+{
+    const store = createMarkStore();
+    store.mark(42, 'http://target', NOW);
+    check('apply-pass echo path: an event inside the pass is suppressed',
+        store.consume(42, 'http://redirect', COMPLETE, NOW + 800, true) === true);
+    check('apply-pass echo path: and does not spend the mark either',
+        store.has(42) === true);
+    check('apply-pass echo path: the completion after the pass still converges the cloud',
+        store.consume(42, 'http://redirect', COMPLETE, NOW + 1_600) === false);
+    check('apply-pass echo path: which retires the mark',
+        store.has(42) === false);
+}
+
+// --- every prior round, re-run through the mark store now that retirement moved ----------------
+// Each round fixed a real defect; none of them may be traded for the deferral fix.
 {
     const store = createMarkStore();
     store.mark(30, 'http://target', NOW);
@@ -509,10 +607,15 @@ check('in-apply ⇒ silent (our own write, never a user landing)',
     check('round fix/expired-nav-mark: an expired mark alone neither suppresses nor reports',
         store.settle(31, 'http://target', COMPLETE, NOW + SAFETY_MS) === false
         && store.consume(31, 'http://user', COMPLETE, NOW + SAFETY_MS + 1) === false);
+    // A target-less mark is not a state the store can hold: `markAppliedNavigation` early-returns
+    // without a url, so the scenario "a target-less mark reports nothing past the bound" is
+    // unreachable. The predicate's totality on a target-less observation is covered directly by
+    // `EXPIRED mark with NO recorded target url ⇒ silent` below.
     const urlless = createMarkStore();
     urlless.mark(32, undefined, NOW);
-    check('round fix/expired-nav-mark: a target-less mark reports nothing past the bound',
-        urlless.settle(32, 'http://anything', COMPLETE, NOW + SAFETY_MS) === false);
+    urlless.mark(undefined, 'http://target', NOW);
+    check('round fix/expired-nav-mark: the store never records a mark without an applied target',
+        urlless.has(32) === false && urlless.has(undefined) === false);
 }
 {
     const store = createMarkStore();
@@ -532,6 +635,15 @@ check('in-apply ⇒ silent (our own write, never a user landing)',
     const store = createMarkStore();
     check('round a211c81: with no mark at all nothing ever landed off a target',
         store.settle(35, 'http://elsewhere', COMPLETE, NOW) === false);
+}
+{
+    const store = createMarkStore();
+    store.mark(36, 'http://target', NOW);
+    check('round 81f7a6f: a mark is never spent while the tab is in flight',
+        store.settle(36, 'http://hop', LOADING, NOW + SAFETY_MS + 1_000) === false
+        && store.has(36) === true
+        && store.settle(36, 'http://hop', COMPLETE, NOW + SAFETY_MS + 2_000) === true
+        && store.has(36) === false);
 }
 
 console.log(`\n${passed} passed, ${failures.length} failed`);

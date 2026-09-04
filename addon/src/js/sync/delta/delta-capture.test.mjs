@@ -508,6 +508,59 @@ function reset() {
         globalThis.__appended.length === 0);
 }
 
+// --- 20. the completing event arrives while an apply pass is still in flight -----------
+// `applyDepth` is global and held for the whole apply pass, and tabs.js `onUpdated` is not
+// gated on it, so the completion of a redirect on an unrelated tab routinely lands inside
+// the window. No landing can be attributed during an apply — but the mark must not be spent
+// there either: the hop url is already in the cache, so the completing event carries only
+// `status` and the settle decision is the only thing that can ever push it.
+{
+    reset();
+    globalThis.__tabFacts = {27: {uid: 'u27', groupId: 1}};
+
+    markAppliedNavigation(27, 'https://target.test/');
+
+    await tabModified({id: 27, url: 'https://hop.test/', title: 'H', windowId: 1, discarded: false, status: 'loading'});
+    check('the hop is suppressed as part of the applied navigation',
+        globalThis.__appended.length === 0);
+
+    beginApply();
+    check('a completion inside the apply pass asks for no capture',
+        settleAppliedNavigation(27, 'https://hop.test/', 'complete') === false);
+    endApply();
+
+    const landedOffAppliedTarget = settleAppliedNavigation(27, 'https://hop.test/', 'complete');
+    check('the apply pass did not spend the mark, so the landing is still reported',
+        landedOffAppliedTarget === true);
+
+    if (landedOffAppliedTarget) {
+        await tabModified({id: 27, url: 'https://hop.test/', title: 'H', windowId: 1, discarded: false, status: 'complete'});
+    }
+    check('the hop url reaches the log instead of being reverted to the applied target',
+        globalThis.__appended.length === 1 && globalThis.__appended[0].tab.url === 'https://hop.test/');
+
+    check('that landing retired the mark',
+        settleAppliedNavigation(27, 'https://hop.test/', 'complete') === false);
+}
+
+// --- 21. a loading event inside an apply pass keeps the mark too -----------------------
+{
+    reset();
+    globalThis.__tabFacts = {28: {uid: 'u28', groupId: 1}};
+
+    markAppliedNavigation(28, 'https://target.test/');
+
+    beginApply();
+    check('a loading event inside the apply pass asks for no capture',
+        settleAppliedNavigation(28, 'https://hop.test/', 'loading') === false);
+    endApply();
+
+    check('the mark survives the apply pass and reports the eventual landing',
+        settleAppliedNavigation(28, 'https://hop.test/', 'complete') === true);
+    check('nothing reached the log by itself',
+        globalThis.__appended.length === 0);
+}
+
 // ---------------------------------------------------------------------------
 console.log(`\n${passed} passed, ${failures.length} failed`);
 if (failures.length) {
