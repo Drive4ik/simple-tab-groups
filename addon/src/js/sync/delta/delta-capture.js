@@ -5,7 +5,7 @@ import * as DeltaLog from './delta-log.js';
 import {syncedOptionKeys} from './option-keys.js';
 import {isUrlSyncable, unwrapStubUrl, sanitizeGroupRecordForSync} from './url-sync.js';
 import {computeGroupRelativeIndex} from './group-relative-index.js';
-import {isAppliedNavigationEcho, isAppliedNavigationSettled} from './applied-nav-echo.js';
+import {isAppliedNavigationEcho, isAppliedNavigationLandedOffTarget, isAppliedNavigationSettled} from './applied-nav-echo.js';
 import {isAppliedMoveEcho} from './applied-move-echo.js';
 import {contentMark, isSyncedContent} from './content-marks.js';
 import {forgetContentMark, loadContentMarks, rememberContentMark} from './sync-marks.js';
@@ -61,7 +61,7 @@ export function settleAppliedNavigation(tabId, observedUrl, observedStatus) {
 
     appliedNavTabs.delete(tabId);
 
-    return !isAppliedNavigationEcho({
+    return isAppliedNavigationLandedOffTarget({
         applying: isApplying(),
         markExpiry: mark.expiry,
         markUrl: mark.url,

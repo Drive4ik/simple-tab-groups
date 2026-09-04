@@ -17,6 +17,13 @@ export function isAppliedNavigationEcho({applying, markExpiry, markUrl, observed
     return observedUrl === markUrl;
 }
 
+export function isAppliedNavigationLandedOffTarget({applying, markExpiry, markUrl, observedUrl, observedStatus, now}) {
+    if (!hasLiveMark(markExpiry, now)) {
+        return false;
+    }
+    return !isAppliedNavigationEcho({applying, markExpiry, markUrl, observedUrl, observedStatus, now});
+}
+
 export function isAppliedNavigationSettled({markExpiry, observedStatus, now}) {
     return !hasLiveMark(markExpiry, now) || observedStatus === NAVIGATION_COMPLETE_STATUS;
 }
