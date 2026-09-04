@@ -20,6 +20,13 @@ import {
     didWinLock,
     makeLockStamp,
 } from './lock.js';
+import {
+    classifyLockConfirmation,
+    LOCK_CONFIRM_CONTESTED,
+    LOCK_CONFIRM_HELD,
+    LOCK_CONFIRM_UNAVAILABLE,
+} from '../cloud/gist-cycle.js';
+import {LOCK_FILE_NAME} from './layout.js';
 
 let passed = 0;
 const failures = [];
@@ -185,6 +192,171 @@ function makeGistLockModel({serverNow}) {
     const lost = g7.acquireLock('A', {onConfirmGap: () => g7.peerWrite('B')});
     check('lost race: not acquired', lost === false);
     check('lost race: the winning peer stamp is left intact (no release)', g7.raw?.deviceId === 'B');
+}
+
+// ============ confirm re-read as a CONDITIONAL request (githubgist #confirmLock) ============
+// The confirm step used to re-download the whole gist — every snapshot, delta and favicon
+// file — just to read one tiny lock file. It is now a conditional GET against the ETag of the
+// PATCH that wrote our own stamp: 304 means nothing at all changed since our write, so the
+// lock is still exactly the stamp we sent and no body needs to come back. Only a 200 (someone
+// wrote in the gap) costs a body, and that body doubles as fresh cycle state. The PURE
+// decision (classifyLockConfirmation) is imported.
+{
+    const NOW = 7_000_000;
+
+    // pure classifier
+    check('confirm: 304 ⇒ still held by us (no body needed)',
+        classifyLockConfirmation(304, null) === LOCK_CONFIRM_HELD);
+    check('confirm: 200 with a body ⇒ contested, read the lock file out of it',
+        classifyLockConfirmation(200, {files: {}}) === LOCK_CONFIRM_CONTESTED);
+    check('confirm: non-304 without a body ⇒ unavailable (transport/auth failure)',
+        classifyLockConfirmation(500, null) === LOCK_CONFIRM_UNAVAILABLE
+        && classifyLockConfirmation(404, null) === LOCK_CONFIRM_UNAVAILABLE);
+
+    // in-memory gist: files + a revision-derived ETag, exactly like the real API surface.
+    function makeGistRemote() {
+        let rev = 0;
+        const files = {'STG-sync-snapshot.json': {content: '{"groups":[]}'}};
+        const bodiesServed = [];
+
+        return {
+            files,
+            bodiesServed,
+            get etag() { return `W/"rev-${rev}"`; },
+            write(name, content) {
+                files[name] = {content: JSON.stringify(content)};
+                rev++;
+                return this.etag;
+            },
+            remove(name) {
+                delete files[name];
+                rev++;
+            },
+            condGet(ifNoneMatch) {
+                if (ifNoneMatch && ifNoneMatch === this.etag) {
+                    return {status: 304, etag: this.etag, gist: null};
+                }
+                bodiesServed.push(Object.keys(files).length);
+                return {status: 200, etag: this.etag, gist: {files: {...files}}};
+            },
+        };
+    }
+
+    // copy of githubgist.js acquireLock/#confirmLock (kept identical)
+    function makeProvider(remote, {exposeEtag = true} = {}) {
+        const cycle = {unchanged: false, gist: null, etag: null};
+
+        const readLock = () => {
+            const file = remote.files[LOCK_FILE_NAME];
+            return file ? JSON.parse(file.content) : null;
+        };
+
+        const confirmLock = (stampEtag, stamp) => {
+            const {status, etag, gist} = remote.condGet(stampEtag);
+
+            switch (classifyLockConfirmation(status, gist)) {
+                case LOCK_CONFIRM_HELD:
+                    return stamp;
+                case LOCK_CONFIRM_CONTESTED: {
+                    cycle.gist = gist;
+                    cycle.etag = etag;
+                    const file = gist.files[LOCK_FILE_NAME];
+                    return file ? JSON.parse(file.content) : null;
+                }
+                default:
+                    throw new Error('githubNotFound');
+            }
+        };
+
+        const acquireLock = (deviceId, {onConfirmGap = () => {}} = {}) => {
+            let stamped = false;
+            try {
+                const lock = readLock();
+                if (!canWriteLock(lock, deviceId, NOW)) {
+                    return false;
+                }
+
+                const stamp = makeLockStamp(deviceId, NOW);
+                const stampEtag = remote.write(LOCK_FILE_NAME, stamp);
+                stamped = true;
+
+                cycle.gist = {files: {...remote.files}};
+                cycle.etag = stampEtag;
+
+                onConfirmGap();
+
+                return didWinLock(confirmLock(exposeEtag ? stampEtag : null, stamp), deviceId);
+            } catch {
+                if (stamped) {
+                    remote.remove(LOCK_FILE_NAME);
+                }
+                return false;
+            }
+        };
+
+        return {acquireLock, cycle};
+    }
+
+    // --- uncontended: the confirm is a 304, nothing is downloaded ------------
+    {
+        const remote = makeGistRemote();
+        const p = makeProvider(remote);
+
+        check('uncontended: lock acquired', p.acquireLock('A') === true);
+        check('uncontended: the confirm downloaded NO gist body', remote.bodiesServed.length === 0);
+        check('uncontended: cycle state stays the fresh post-stamp gist',
+            p.cycle.etag === remote.etag && !!p.cycle.gist?.files['STG-sync-snapshot.json']);
+    }
+
+    // --- a peer steals the lock in the confirm gap ---------------------------
+    {
+        const remote = makeGistRemote();
+        const p = makeProvider(remote);
+
+        const won = p.acquireLock('A', {
+            onConfirmGap: () => remote.write(LOCK_FILE_NAME, makeLockStamp('B', NOW)),
+        });
+
+        check('stolen: the peer write forces a 200 and we read the real holder',
+            won === false && remote.bodiesServed.length === 1);
+        check('stolen: the winning peer stamp is left intact (no release)',
+            JSON.parse(remote.files[LOCK_FILE_NAME].content).deviceId === 'B');
+    }
+
+    // --- a peer writes DATA (not the lock) in the confirm gap ----------------
+    {
+        const remote = makeGistRemote();
+        const p = makeProvider(remote);
+
+        const won = p.acquireLock('A', {
+            onConfirmGap: () => remote.write('STG-sync-delta-B.json', {events: [1]}),
+        });
+
+        check('peer data write: 200, but the lock is still ours ⇒ acquired',
+            won === true && remote.bodiesServed.length === 1);
+        check('peer data write: the confirm body refreshes the cycle state',
+            p.cycle.etag === remote.etag && !!p.cycle.gist?.files['STG-sync-delta-B.json']);
+    }
+
+    // --- no ETag available ⇒ degrades to the old unconditional re-read -------
+    {
+        const remote = makeGistRemote();
+        const p = makeProvider(remote, {exposeEtag: false});
+
+        check('no etag: falls back to a full re-read and still confirms correctly',
+            p.acquireLock('A') === true && remote.bodiesServed.length === 1);
+    }
+
+    // --- transport failure on the confirm ⇒ stamp released, not acquired -----
+    {
+        const remote = makeGistRemote();
+        remote.condGet = () => ({status: 500, etag: null, gist: null});
+        const p = makeProvider(remote);
+
+        check('confirm failure: not acquired', p.acquireLock('A') === false);
+        check('confirm failure: our own stranded stamp is released',
+            remote.files[LOCK_FILE_NAME] === undefined);
+    }
 }
 
 // ============================ summary ========================================

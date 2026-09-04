@@ -3,6 +3,9 @@
  * tests, this is a plain `node conditional-fetch.test.mjs` script (STG has no test runner).
  *
  * The fast path is a per-sync-cycle handle (githubgist.js beginSyncCycle/commitSyncCycle):
+ *   0. That conditional GET is ALSO the gist-id lookup: the provider is rebuilt per run, so
+ *      the persisted gist id is revalidated by the same request (see the folded-lookup
+ *      section at the bottom) instead of by a preceding unconditional full download.
  *   1. ONE conditional GET per cycle decides "unchanged?" — a 304 against the marker
  *      committed by the LAST SUCCESSFUL cycle, or an identical non-lock-file content
  *      fingerprint (so peers' advisory-lock churn can't defeat the fast path). The 200
@@ -21,6 +24,12 @@
 
 import {contentFingerprint} from './fingerprint.js';
 import {LOCK_FILE_NAME} from './layout.js';
+import {
+    classifyCachedGistLookup,
+    GIST_LOOKUP_RESOLVED,
+    GIST_LOOKUP_STALE,
+    GIST_LOOKUP_UNCHANGED,
+} from '../cloud/gist-cycle.js';
 
 let passed = 0;
 const failures = [];
@@ -64,16 +73,26 @@ function makeMarkerStore() {
 // --- copy of githubgist.js beginSyncCycle / commitSyncCycle (kept identical) --
 // condGet models the single conditional GET of a cycle: takes the If-None-Match etag,
 // returns {status, etag, gist} or throws (transport error).
+function fetchCycleGist({hasGist, condGet}, store, gistId) {
+    if (!hasGist) {
+        return null;
+    }
+
+    const marker = store.getStoredSyncMarker(gistId);
+    return {...condGet(marker?.etag), marker};
+}
+
 function beginSyncCycle({hasGist, condGet}, store, gistId) {
     const cycle = {unchanged: false, gist: null, etag: null};
 
     try {
-        if (!hasGist) {
+        const fetched = fetchCycleGist({hasGist, condGet}, store, gistId);
+
+        if (!fetched) {
             return cycle;
         }
 
-        const marker = store.getStoredSyncMarker(gistId);
-        const {status, etag, gist} = condGet(marker?.etag);
+        const {status, etag, gist, marker} = fetched;
 
         if (status === 304) {
             cycle.unchanged = true;
@@ -541,6 +560,199 @@ function makeRemote() {
 
     check('raw-auth: malformed url ⇒ not authorized (fail-safe)',
         isAuthorizedHost('not a url') === false);
+}
+
+// ===== gist-id resolution folded INTO the conditional GET ======================
+// githubgist.js #conditionalGetCachedGist / #conditionalGetSyncCycleGist. The provider is
+// rebuilt per sync run (provider.js createCloudProvider), so its #gistId always starts empty.
+// Resolving it used to cost a plain, UNCONDITIONAL `GET /gists/:id` — the full body of every
+// file — from which only `id` was read; the conditional GET then ran afterwards, so its 304
+// saved nothing. The revalidation is now the conditional GET itself: an idle cycle costs one
+// request that returns 304. The PURE decision (classifyCachedGistLookup) is imported.
+{
+    const GIST_NAME = 'Simple Tab Groups';
+
+    // pure classifier
+    check('lookup: 304 ⇒ the cached id is confirmed (never re-discovered, never cleared)',
+        classifyCachedGistLookup(304, null, false) === GIST_LOOKUP_UNCHANGED);
+    check('lookup: 200 with a usable gist ⇒ resolved from the same response',
+        classifyCachedGistLookup(200, {id: 'g'}, true) === GIST_LOOKUP_RESOLVED);
+    check('lookup: 200 with an unusable gist (renamed/foreign) ⇒ stale',
+        classifyCachedGistLookup(200, {id: 'g'}, false) === GIST_LOOKUP_STALE);
+    check('lookup: 404 (gist deleted) ⇒ stale',
+        classifyCachedGistLookup(404, null, false) === GIST_LOOKUP_STALE);
+    check('lookup: 401/403 without a body ⇒ stale (falls back to discovery, which surfaces it)',
+        classifyCachedGistLookup(401, null, false) === GIST_LOOKUP_STALE);
+
+    function makeIdRemote(id, {usable = true} = {}) {
+        let rev = 0;
+        return {
+            id,
+            get etag() { return `W/"rev-${rev}"`; },
+            bump() { rev++; },
+            body() {
+                return {
+                    id,
+                    public: false,
+                    description: usable ? GIST_NAME : 'someone elses notes',
+                    files: {'STG-sync-snapshot.json': {content: '{"groups":[]}'}},
+                };
+            },
+            condGet(requestedId, ifNoneMatch) {
+                if (requestedId !== id) {
+                    return {status: 404, etag: null, gist: null};
+                }
+                if (ifNoneMatch && ifNoneMatch === this.etag) {
+                    return {status: 304, etag: this.etag, gist: null};
+                }
+                return {status: 200, etag: this.etag, gist: this.body()};
+            },
+        };
+    }
+
+    // copy of githubgist.js #conditionalGetSyncCycleGist (kept identical)
+    function makeProvider({remote, ids, markers, discover}) {
+        const requests = [];
+        let gistId = null;
+
+        const conditionalGet = (id, etag) => {
+            const result = remote.condGet(id, etag);
+            requests.push({url: `GET /gists/${id}`, conditional: !!etag, status: result.status});
+            return result;
+        };
+
+        const isUsable = gist => !!gist && !gist.public && gist.description === GIST_NAME;
+
+        const fetchCycleGist = () => {
+            if (gistId === null) {
+                const cachedId = ids[GIST_NAME] ?? null;
+
+                if (cachedId) {
+                    const marker = markers.getStoredSyncMarker(cachedId);
+                    const result = conditionalGet(cachedId, marker?.etag);
+
+                    switch (classifyCachedGistLookup(result.status, result.gist, isUsable(result.gist))) {
+                        case GIST_LOOKUP_UNCHANGED:
+                            gistId = cachedId;
+                            return {...result, marker};
+                        case GIST_LOOKUP_RESOLVED:
+                            gistId = result.gist.id;
+                            ids[GIST_NAME] = result.gist.id;
+                            return {...result, marker};
+                        default:
+                            delete ids[GIST_NAME];
+                    }
+                }
+
+                const found = discover();
+                requests.push({url: 'GET /gists', conditional: false, status: 200});
+
+                if (!found) {
+                    return null;
+                }
+
+                gistId = found.id;
+                ids[GIST_NAME] = found.id;
+            }
+
+            const marker = markers.getStoredSyncMarker(gistId);
+            return {...conditionalGet(gistId, marker?.etag), marker};
+        };
+
+        return {requests, fetchCycleGist, get gistId() { return gistId; }};
+    }
+
+    // --- warm cache + a committed marker: ONE conditional request, 304 -------
+    {
+        const remote = makeIdRemote('g1');
+        const ids = {[GIST_NAME]: 'g1'};
+        const markers = makeMarkerStore();
+        markers.setStoredSyncMarker('g1', {etag: remote.etag, fingerprint: 'fp'});
+
+        const p = makeProvider({remote, ids, markers, discover: () => remote.body()});
+        const fetched = p.fetchCycleGist();
+
+        check('idle cycle: exactly ONE request (the conditional GET is the lookup)',
+            p.requests.length === 1 && p.requests[0].conditional === true);
+        check('idle cycle: that request is a 304 (no gist body downloaded at all)',
+            fetched.status === 304 && fetched.gist === null && p.requests[0].status === 304);
+        check('idle cycle: the cached gist id is adopted without re-discovery',
+            p.gistId === 'g1' && ids[GIST_NAME] === 'g1');
+    }
+
+    // --- warm cache, remote moved on: ONE request, full body, id revalidated --
+    {
+        const remote = makeIdRemote('g1');
+        const ids = {[GIST_NAME]: 'g1'};
+        const markers = makeMarkerStore();
+        markers.setStoredSyncMarker('g1', {etag: remote.etag, fingerprint: 'fp'});
+        remote.bump();
+
+        const p = makeProvider({remote, ids, markers, discover: () => remote.body()});
+        const fetched = p.fetchCycleGist();
+
+        check('changed cycle: still ONE request, and it carries the gist body',
+            p.requests.length === 1 && fetched.status === 200 && fetched.gist?.id === 'g1');
+        check('changed cycle: the marker travels with the response (fingerprint compare stays possible)',
+            fetched.marker?.fingerprint === 'fp');
+        check('changed cycle: the cached id is revalidated by that same response',
+            p.gistId === 'g1' && ids[GIST_NAME] === 'g1');
+    }
+
+    // --- cold cache (fresh install / cleared id): discovery, then ONE cond GET -
+    {
+        const remote = makeIdRemote('g1');
+        const ids = {};
+        const markers = makeMarkerStore();
+
+        const p = makeProvider({remote, ids, markers, discover: () => remote.body()});
+        const fetched = p.fetchCycleGist();
+
+        check('cold cache: list + one conditional GET (no third full download)',
+            p.requests.length === 2
+            && p.requests[0].url === 'GET /gists'
+            && p.requests[1].url === 'GET /gists/g1');
+        check('cold cache: the discovered id is persisted for the next run',
+            ids[GIST_NAME] === 'g1' && fetched.gist?.id === 'g1');
+    }
+
+    // --- stale cached id (gist deleted): cleared, then re-discovered ----------
+    {
+        const remote = makeIdRemote('g2');
+        const ids = {[GIST_NAME]: 'gone'};
+        const markers = makeMarkerStore();
+        markers.setStoredSyncMarker('gone', {etag: 'W/"old"', fingerprint: 'fp'});
+
+        const p = makeProvider({remote, ids, markers, discover: () => remote.body()});
+        const fetched = p.fetchCycleGist();
+
+        check('stale id: the 404 clears the cached id and falls back to discovery',
+            p.requests.map(r => r.url).join(' | ') === 'GET /gists/gone | GET /gists | GET /gists/g2');
+        check('stale id: recovery re-pins the cache to the real gist',
+            ids[GIST_NAME] === 'g2' && p.gistId === 'g2' && fetched.gist?.id === 'g2');
+    }
+
+    // --- cached id points at a gist that is no longer ours --------------------
+    {
+        const remote = makeIdRemote('g1', {usable: false});
+        const ids = {[GIST_NAME]: 'g1'};
+        const markers = makeMarkerStore();
+
+        const p = makeProvider({remote, ids, markers, discover: () => null});
+        const fetched = p.fetchCycleGist();
+
+        check('unusable cached gist: never adopted; the cached id is dropped',
+            fetched === null && !(GIST_NAME in ids));
+    }
+
+    // --- nothing to find at all ⇒ no cycle state (create-on-first-write path) -
+    {
+        const remote = makeIdRemote('g1');
+        const p = makeProvider({remote, ids: {}, markers: makeMarkerStore(), discover: () => null});
+
+        check('no gist anywhere: discovery returns nothing ⇒ null cycle state',
+            p.fetchCycleGist() === null && p.gistId === null);
+    }
 }
 
 // ============================ summary ========================================
