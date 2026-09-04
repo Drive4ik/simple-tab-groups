@@ -14,6 +14,11 @@
  * Suppression requires a KNOWN applied target url. A mark without one cannot attribute the
  * observed state to us, so it never suppresses: a spurious push converges, a swallowed user
  * edit does not.
+ *
+ * Past the bound the mark itself stops being evidence, but the url it recorded does not: the
+ * observed url compared against the applied target still says whether the tab landed
+ * elsewhere. So an expired mark decides on that comparison alone — differing url ⇒ capture,
+ * equal url ⇒ silence, and no usable url on either side ⇒ silence.
  */
 
 import {
@@ -242,10 +247,18 @@ check('markExpiry = null is treated as no mark ⇒ CAPTURE',
         store.settle(8, 'http://stuck', LOADING, NOW + 10_000) === false);
     check('stuck load: the mark survives a non-completing event',
         store.has(8) === true);
-    check('stuck load: past the bound the settle asks for NOTHING (an expired mark is no evidence)',
-        store.settle(8, 'http://elsewhere', LOADING, NOW + SAFETY_MS) === false);
+    check('stuck load: past the bound a url off the applied target is CAPTURED',
+        store.settle(8, 'http://elsewhere', LOADING, NOW + SAFETY_MS) === true);
     check('stuck load: the bound retires the mark',
         store.has(8) === false);
+}
+{
+    const store = createMarkStore();
+    store.mark(81, 'http://stuck', NOW);
+    check('stuck load: past the bound, still ON the applied target ⇒ nothing to push',
+        store.settle(81, 'http://stuck', LOADING, NOW + SAFETY_MS) === false);
+    check('stuck load: the bound retires that mark too',
+        store.has(81) === false);
 }
 
 // --- regression: the mark must NOT latch onto a pre-navigation url --------------------------
@@ -261,23 +274,33 @@ check('markExpiry = null is treated as no mark ⇒ CAPTURE',
         store.has(9) === false);
 }
 
-// --- the LANDED-OFF-TARGET decision: an expired mark carries no information ----------------
+// --- the LANDED-OFF-TARGET decision --------------------------------------------------------
 // Retiring a mark and reporting a landing elsewhere are two different questions. The echo
 // predicate answers "may this event be suppressed"; its negation is NOT "the tab landed off
-// the applied target", because a mark past its bound cannot attribute anything at all.
+// the applied target", because a mark past its bound can no longer attribute a still-loading
+// state to us. What survives the bound is the recorded target url: comparing it with the
+// observed url is evidence in its own right, whether or not the mark is still live.
 check('live mark, completion at a DIFFERENT url ⇒ LANDED OFF TARGET (the 3c837c1 property)',
     isAppliedNavigationLandedOffTarget({applying: false, markExpiry: NOW + SAFETY_MS, markUrl: 'http://x', observedUrl: 'http://y', observedStatus: COMPLETE, now: NOW}) === true);
 check('live mark, completion at the applied url ⇒ silent',
     isAppliedNavigationLandedOffTarget({applying: false, markExpiry: NOW + SAFETY_MS, markUrl: 'http://x', observedUrl: 'http://x', observedStatus: COMPLETE, now: NOW}) === false);
 check('live mark, still loading elsewhere ⇒ silent (the landing has not happened yet)',
     isAppliedNavigationLandedOffTarget({applying: false, markExpiry: NOW + SAFETY_MS, markUrl: 'http://x', observedUrl: 'http://hop', observedStatus: LOADING, now: NOW}) === false);
-check('EXPIRED mark ⇒ silent even at a different url',
-    isAppliedNavigationLandedOffTarget({applying: false, markExpiry: NOW, markUrl: 'http://x', observedUrl: 'http://y', observedStatus: COMPLETE, now: NOW}) === false);
-check('EXPIRED mark, status-less event ⇒ silent',
+check('EXPIRED mark at a DIFFERENT url ⇒ LANDED OFF TARGET (the url is still evidence)',
+    isAppliedNavigationLandedOffTarget({applying: false, markExpiry: NOW, markUrl: 'http://x', observedUrl: 'http://y', observedStatus: COMPLETE, now: NOW}) === true);
+check('EXPIRED mark, still loading at a DIFFERENT url ⇒ LANDED OFF TARGET',
+    isAppliedNavigationLandedOffTarget({applying: false, markExpiry: NOW, markUrl: 'http://x', observedUrl: 'http://y', observedStatus: LOADING, now: NOW}) === true);
+check('EXPIRED mark at the applied url ⇒ silent (nothing happened worth pushing)',
+    isAppliedNavigationLandedOffTarget({applying: false, markExpiry: NOW, markUrl: 'http://x', observedUrl: 'http://x', observedStatus: COMPLETE, now: NOW}) === false);
+check('EXPIRED mark, status-less event at the applied url ⇒ silent',
     isAppliedNavigationLandedOffTarget({applying: false, markExpiry: NOW - 10_000, markUrl: 'http://x', observedUrl: 'http://x', now: NOW}) === false);
-check('EXPIRED mark yields neither suppression nor a landed-off-target signal',
+check('EXPIRED mark, no observed url (an `audible`-only event) ⇒ silent',
+    isAppliedNavigationLandedOffTarget({applying: false, markExpiry: NOW - 10_000, markUrl: 'http://x', observedUrl: undefined, now: NOW}) === false);
+check('EXPIRED mark with NO recorded target url ⇒ silent (nothing to compare against)',
+    isAppliedNavigationLandedOffTarget({applying: false, markExpiry: NOW - 10_000, observedUrl: 'http://y', observedStatus: COMPLETE, now: NOW}) === false);
+check('an EXPIRED mark still yields no SUPPRESSION, whichever way the landing went',
     isAppliedNavigationEcho({applying: false, markExpiry: NOW - 1, markUrl: 'http://x', observedUrl: 'http://y', observedStatus: COMPLETE, now: NOW}) === false
-    && isAppliedNavigationLandedOffTarget({applying: false, markExpiry: NOW - 1, markUrl: 'http://x', observedUrl: 'http://y', observedStatus: COMPLETE, now: NOW}) === false);
+    && isAppliedNavigationEcho({applying: false, markExpiry: NOW - 1, markUrl: 'http://x', observedUrl: 'http://x', observedStatus: COMPLETE, now: NOW}) === false);
 check('no mark at all ⇒ silent',
     isAppliedNavigationLandedOffTarget({applying: false, markExpiry: undefined, observedUrl: 'http://y', observedStatus: COMPLETE, now: NOW}) === false);
 check('in-apply ⇒ silent (our own write, never a user landing)',
@@ -285,7 +308,8 @@ check('in-apply ⇒ silent (our own write, never a user landing)',
 
 // --- scenario: an UNRELATED event on a tab whose mark expired long ago ----------------------
 // `audible` / `favIconUrl` / a bare `status` carry no url or title, so tabs.js only reaches the
-// capture path through the settle decision. A forgotten mark must not turn one into a push.
+// capture path through the settle decision. A forgotten mark must not turn one into a push:
+// the tab is still sitting on the applied target, so there is nothing to report.
 {
     const store = createMarkStore();
     store.mark(10, 'http://stuck', NOW);
@@ -295,6 +319,27 @@ check('in-apply ⇒ silent (our own write, never a user landing)',
         store.has(10) === false);
     check('forgotten mark: a real user navigation afterwards is still captured',
         store.consume(10, 'http://user', COMPLETE, NOW + SAFETY_MS + 300_001) === false);
+}
+
+// --- scenario: a redirect whose load completes PAST the safety bound -------------------------
+// The site redirects, the hop is suppressed as part of our navigation and keeps the mark, and
+// the completion only arrives after the bound. That completing event carries nothing but
+// `status`, so the settle decision is the only chance to record where the tab really landed.
+// Losing it means the next diff resolves the tab back to the applied target and navigates the
+// user away from the page they are looking at.
+{
+    const store = createMarkStore();
+    store.mark(11, 'http://target', NOW);
+    check('slow redirect: the hop at +5s is suppressed',
+        store.consume(11, 'http://redirect', LOADING, NOW + 5_000) === true);
+    check('slow redirect: the mark survives the hop',
+        store.has(11) === true);
+    check('slow redirect: the status-only completion past the bound is CAPTURED at the real url',
+        store.settle(11, 'http://redirect', COMPLETE, NOW + SAFETY_MS + 5_000) === true);
+    check('slow redirect: that completion retires the mark',
+        store.has(11) === false);
+    check('slow redirect: nothing suppresses the tab afterwards',
+        store.consume(11, 'http://redirect', COMPLETE, NOW + SAFETY_MS + 6_000) === false);
 }
 
 console.log(`\n${passed} passed, ${failures.length} failed`);

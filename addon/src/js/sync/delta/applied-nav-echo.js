@@ -4,6 +4,10 @@ function hasLiveMark(markExpiry, now) {
     return Number.isFinite(markExpiry) && now < markExpiry;
 }
 
+function observedUrlDiffersFromTarget(markUrl, observedUrl) {
+    return typeof markUrl === 'string' && typeof observedUrl === 'string' && observedUrl !== markUrl;
+}
+
 export function isAppliedNavigationEcho({applying, markExpiry, markUrl, observedUrl, observedStatus, now}) {
     if (applying) {
         return true;
@@ -18,10 +22,13 @@ export function isAppliedNavigationEcho({applying, markExpiry, markUrl, observed
 }
 
 export function isAppliedNavigationLandedOffTarget({applying, markExpiry, markUrl, observedUrl, observedStatus, now}) {
-    if (!hasLiveMark(markExpiry, now)) {
+    if (applying) {
         return false;
     }
-    return !isAppliedNavigationEcho({applying, markExpiry, markUrl, observedUrl, observedStatus, now});
+    if (hasLiveMark(markExpiry, now) && observedStatus !== NAVIGATION_COMPLETE_STATUS) {
+        return false;
+    }
+    return observedUrlDiffersFromTarget(markUrl, observedUrl);
 }
 
 export function isAppliedNavigationSettled({markExpiry, observedStatus, now}) {
