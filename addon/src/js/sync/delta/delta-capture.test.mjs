@@ -42,6 +42,7 @@ const {
     markAppliedMove,
     consumeAppliedMoveEcho,
     markAppliedNavigation,
+    clearAppliedNavigation,
     settleAppliedNavigation,
     tabModified,
     pinnedModified,
@@ -374,6 +375,27 @@ function reset() {
     } finally {
         Date.now = realNow;
     }
+}
+
+// --- 18. a tab with NO applied-navigation mark never reports a landing -----------------
+// The landing decision compares the observed url with the url THIS device applied. A tab
+// that was never navigated by an apply — or whose mark was dropped when it discarded —
+// has no applied target, so its url can only be a plain user navigation and the settle
+// decision must stay out of it.
+{
+    reset();
+    globalThis.__tabFacts = {21: {uid: 'u21', groupId: 1}, 22: {uid: 'u22', groupId: 1}};
+
+    check('a tab that was never navigated by an apply asks for nothing',
+        settleAppliedNavigation(21, 'https://user.test/', 'complete') === false);
+
+    markAppliedNavigation(22, 'https://target.test/');
+    clearAppliedNavigation(22);
+
+    check('a dropped mark leaves no target to have landed off',
+        settleAppliedNavigation(22, 'https://user.test/', 'complete') === false);
+    check('nothing reached the log',
+        globalThis.__appended.length === 0);
 }
 
 // ---------------------------------------------------------------------------

@@ -19,6 +19,9 @@
  * observed url compared against the applied target still says whether the tab landed
  * elsewhere. So an expired mark decides on that comparison alone — differing url ⇒ capture,
  * equal url ⇒ silence, and no usable url on either side ⇒ silence.
+ *
+ * A landing is only ever reported for a navigation this device applied. With NO mark at all
+ * there is nothing to have landed off, whatever url the caller passes as the target.
  */
 
 import {
@@ -303,6 +306,16 @@ check('an EXPIRED mark still yields no SUPPRESSION, whichever way the landing we
     && isAppliedNavigationEcho({applying: false, markExpiry: NOW - 1, markUrl: 'http://x', observedUrl: 'http://x', observedStatus: COMPLETE, now: NOW}) === false);
 check('no mark at all ⇒ silent',
     isAppliedNavigationLandedOffTarget({applying: false, markExpiry: undefined, observedUrl: 'http://y', observedStatus: COMPLETE, now: NOW}) === false);
+check('NO MARK but both urls present ⇒ silent (a landing needs a navigation we applied)',
+    isAppliedNavigationLandedOffTarget({applying: false, markExpiry: undefined, markUrl: 'http://x', observedUrl: 'http://y', observedStatus: COMPLETE, now: NOW}) === false);
+check('no mark, both urls, still loading ⇒ silent',
+    isAppliedNavigationLandedOffTarget({applying: false, markExpiry: undefined, markUrl: 'http://x', observedUrl: 'http://y', observedStatus: LOADING, now: NOW}) === false);
+check('no mark, both urls, no status ⇒ silent',
+    isAppliedNavigationLandedOffTarget({applying: false, markUrl: 'http://x', observedUrl: 'http://y', now: NOW}) === false);
+check('markExpiry = NaN is no mark ⇒ silent even with both urls',
+    isAppliedNavigationLandedOffTarget({applying: false, markExpiry: NaN, markUrl: 'http://x', observedUrl: 'http://y', observedStatus: COMPLETE, now: NOW}) === false);
+check('markExpiry = null is no mark ⇒ silent even with both urls',
+    isAppliedNavigationLandedOffTarget({applying: false, markExpiry: null, markUrl: 'http://x', observedUrl: 'http://y', observedStatus: COMPLETE, now: NOW}) === false);
 check('in-apply ⇒ silent (our own write, never a user landing)',
     isAppliedNavigationLandedOffTarget({applying: true, markExpiry: NOW + SAFETY_MS, markUrl: 'http://x', observedUrl: 'http://y', observedStatus: COMPLETE, now: NOW}) === false);
 
