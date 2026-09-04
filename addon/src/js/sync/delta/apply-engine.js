@@ -8,7 +8,7 @@ import Logger from '/js/logger.js';
 import * as DeltaCapture from './delta-capture.js';
 import {shouldSleepSyncedTab, SLEEP_OPTION_KEYS} from './tab-sleep.js';
 import {isUrlSyncable, unwrapStubUrl, liveUrlMatchesSource} from './url-sync.js';
-import {planTabContentApply, REFUSED_DISCARDED} from './tab-content-apply.js';
+import {planTabContentApply, buildTabContentCacheWrite, REFUSED_DISCARDED} from './tab-content-apply.js';
 import {recordPendingNavTarget, clearPendingNavTarget} from './pending-nav-store.js';
 import {getLivePinnedTabs} from './local-state.js';
 import {resolveAbsoluteTabIndex} from './apply-index.js';
@@ -251,14 +251,7 @@ async function applyTabContentUpdate(liveTab, target, log, uid) {
     if (Object.hasOwn(target, 'url') || Object.hasOwn(target, 'title') || Object.hasOwn(target, 'favIconUrl')) {
         const contentPlan = planTabContentApply(liveTab, target);
 
-        Cache.setTab({
-            id: liveId,
-            url: contentPlan.url,
-            title: contentPlan.title,
-            favIconUrl: Object.hasOwn(target, 'favIconUrl') ? target.favIconUrl : liveTab.favIconUrl,
-            cookieStoreId: liveTab.cookieStoreId,
-            status: liveTab.status,
-        });
+        Cache.setTab(buildTabContentCacheWrite(liveTab, contentPlan, target));
 
         if (contentPlan.refusal) {
             log.log('tab content update rejected by the local tab', {
