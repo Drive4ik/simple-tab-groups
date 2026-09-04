@@ -29,3 +29,16 @@ export function resolveAbsoluteTabIndex(destGroupTabs, groupRelativeIndex) {
 
     return occupiedIndexes.length ? Math.min(...occupiedIndexes) : -1;
 }
+
+export function resolvePinnedMoveIndex(livePinnedTabs, movedTab, pinnedRelativeIndex) {
+    const windowId = movedTab?.windowId;
+
+    if (!Number.isFinite(windowId)) {
+        return -1;
+    }
+
+    const ownWindowPinned = (Array.isArray(livePinnedTabs) ? livePinnedTabs : [])
+        .filter(tab => tab && tab.windowId === windowId);
+
+    return resolveAbsoluteTabIndex(ownWindowPinned, pinnedRelativeIndex);
+}

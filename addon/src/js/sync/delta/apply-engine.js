@@ -11,7 +11,7 @@ import {isUrlSyncable, unwrapStubUrl, liveUrlMatchesSource} from './url-sync.js'
 import {planTabContentApply, buildTabContentCacheWrite, REFUSED_DISCARDED} from './tab-content-apply.js';
 import {recordPendingNavTarget, clearPendingNavTarget} from './pending-nav-store.js';
 import {getLivePinnedTabs} from './local-state.js';
-import {resolveAbsoluteTabIndex} from './apply-index.js';
+import {resolveAbsoluteTabIndex, resolvePinnedMoveIndex} from './apply-index.js';
 import {liveGroupTabOrder, planGroupReorderMoves} from './group-order.js';
 
 const logger = new Logger('DeltaSyncApply');
@@ -452,12 +452,12 @@ async function applyPinnedOps(browserOps, log, sleepOptions = {}) {
         }
 
         for (const move of toMove) {
-            const tabId = idByUid.get(move.uid);
-            if (tabId == null) {
+            const liveTab = tabByUid.get(move.uid);
+            if (liveTab == null) {
                 continue;
             }
-            const absoluteIndex = resolveAbsoluteTabIndex(livePinned, move.target?.index);
-            await Tabs.moveNative([{id: tabId}], {index: absoluteIndex}, true)
+            const absoluteIndex = resolvePinnedMoveIndex(livePinned, liveTab, move.target?.index);
+            await Tabs.moveNative([{id: liveTab.id}], {index: absoluteIndex}, true)
                 .catch(log.onCatch(['cant move pinned tab', move.uid], false));
         }
 

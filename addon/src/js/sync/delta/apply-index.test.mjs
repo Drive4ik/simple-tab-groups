@@ -23,10 +23,15 @@
  *   - group absent from any window / no usable R → -1 (append at window end), matching STG's
  *     native move-into-group default (`index: params.newTabIndex ?? -1`).
  *
+ * `resolvePinnedMoveIndex` is the same mapping for the pinned strip, with one extra step: a
+ * pinned move target is a rank in the flat CROSS-WINDOW list `getLivePinnedTabs()` returns, while
+ * browser pinned indices restart at 0 in every window, so the rank is resolved against the slots
+ * of the moving tab's own window alone.
+ *
  * Plain `node apply-index.test.mjs` (STG has no test runner). Exits non-zero on first failure.
  */
 
-import {resolveAbsoluteTabIndex} from './apply-index.js';
+import {resolveAbsoluteTabIndex, resolvePinnedMoveIndex} from './apply-index.js';
 import {computeGroupRelativeIndex} from './group-relative-index.js';
 
 let passed = 0;
@@ -297,6 +302,141 @@ function fxMove(order, id, index) {
 
     check('parity: appending past the mixed group lands one past its last syncable tab',
         resolveAbsoluteTabIndex(groupTabs, 4) === 9, String(resolveAbsoluteTabIndex(groupTabs, 4)));
+}
+
+// --- the pinned strip ------------------------------------------------------------------------
+// `getLivePinnedTabs()` queries EVERY window (`windowId` is deleted from the query) and keeps only
+// the pinned tabs that take part in sync: no group of their own, syncable url. `indexPinned` in
+// plan-sync.js numbers that flat cross-window list densely, so a `pinnedToMove` target is a RANK
+// in it — neither a browser index nor a per-window position.
+//
+// Browser pinned indices restart at 0 in every window, so the rank can only be turned into a
+// browser index against the slots of the moving tab's OWN window. Merging the slots of all
+// windows into one sorted list produces duplicates ([0,0,1,1] for two windows of two pinned tabs)
+// and resolves ranks to indices belonging to a different window.
+{
+    const strip = ids => ids.map(id => ({id, live: !id.startsWith('x')}));
+
+    const livePinnedOf = windows => {
+        const live = [];
+        for (const [windowId, tabs] of windows) {
+            tabs.forEach((tab, index) => {
+                if (tab.live) {
+                    live.push({id: tab.id, windowId, index, url: `https://pinned/${tab.id}`});
+                }
+            });
+        }
+        return live;
+    };
+
+    const applyPinnedMoves = (windows, moves) => {
+        const livePinned = livePinnedOf(windows);
+        const liveById = new Map(livePinned.map(tab => [tab.id, tab]));
+
+        for (const [id, rank] of moves) {
+            const liveTab = liveById.get(id);
+            const index = resolvePinnedMoveIndex(livePinned, liveTab, rank);
+            const tabs = windows.get(liveTab.windowId);
+            const [tab] = tabs.splice(tabs.findIndex(entry => entry.id === id), 1);
+            tabs.splice(index < 0 ? tabs.length : Math.min(index, tabs.length), 0, tab);
+        }
+
+        return [...windows]
+            .map(([windowId, tabs]) => `${windowId}:${tabs.map(tab => tab.id).join(',')}`)
+            .join(' ');
+    };
+
+    // One window, every pinned tab participating: the rank IS the browser index, so the resolver
+    // must reproduce the raw target index the pinned move used before it was routed through here.
+    {
+        const single = new Map([[11, strip(['P1', 'P2', 'P3'])]]);
+        const live = livePinnedOf(single);
+        const ranks = live.map((tab, rank) => resolvePinnedMoveIndex(live, tab, rank));
+        check('pinned, one window, no gaps: rank resolves to the identical browser index',
+            JSON.stringify(ranks) === JSON.stringify([0, 1, 2]), JSON.stringify(ranks));
+    }
+
+    check('pinned, one window: reorder to [P3,P1,P2] converges',
+        applyPinnedMoves(new Map([[11, strip(['P1', 'P2', 'P3'])]]), [['P3', 0], ['P1', 1], ['P2', 2]])
+        === '11:P3,P1,P2');
+
+    // A group-scoped pinned tab (x1) sits at browser index 1 and never enters the flat list, so
+    // ranks 0,1,2 map to browser indices 0,2,3 — the shift 3b85bd5 introduced the resolver for.
+    {
+        const gapped = new Map([[11, strip(['P1', 'x1', 'P2', 'P3'])]]);
+        const live = livePinnedOf(gapped);
+        const ranks = live.map((tab, rank) => resolvePinnedMoveIndex(live, tab, rank));
+        check('pinned, one window with a non-participating tab: ranks skip its slot',
+            JSON.stringify(ranks) === JSON.stringify([0, 2, 3]), JSON.stringify(ranks));
+    }
+
+    check('pinned, one window with a non-participating tab: reorder keeps it in place',
+        applyPinnedMoves(new Map([[11, strip(['P1', 'x1', 'P2', 'P3'])]]), [['P3', 0], ['P1', 1], ['P2', 2]])
+        === '11:P3,x1,P1,P2');
+
+    // Two windows. The flat list is [P1,P2,P3,Q1] → merging their slots gives [0,0,1,2], where
+    // rank 1 resolves to 0 and rank 2 to 1 — indices of the wrong window that reorder w1's strip
+    // into the order the peer did NOT ask for. Scoped to w1 the same ranks are 0,1,2.
+    {
+        const twoWindows = new Map([[11, strip(['P1', 'P2', 'P3'])], [22, strip(['Q1'])]]);
+        const live = livePinnedOf(twoWindows);
+        const merged = live.map(tab => tab.index).sort((a, b) => a - b);
+        check('pinned, two windows: merging the slots of both windows is ambiguous',
+            JSON.stringify(merged) === JSON.stringify([0, 0, 1, 2]), JSON.stringify(merged));
+
+        const w1Ranks = [0, 1, 2].map(rank => resolvePinnedMoveIndex(live, live[rank], rank));
+        check('pinned, two windows: a w1 rank resolves against w1 slots only',
+            JSON.stringify(w1Ranks) === JSON.stringify([0, 1, 2]), JSON.stringify(w1Ranks));
+    }
+
+    check('pinned, two windows: reordering w1 converges and leaves w2 untouched',
+        applyPinnedMoves(
+            new Map([[11, strip(['P1', 'P2', 'P3'])], [22, strip(['Q1'])]]),
+            [['P3', 0], ['P1', 1], ['P2', 2]],
+        ) === '11:P3,P1,P2 22:Q1');
+
+    // The review case: w1 [P1@0,P2@1], w2 [Q1@0,Q2@1] merges to [0,0,1,1]. P2 holds rank 1 and
+    // must stay at browser index 1; the merged list resolved it to 0 and swapped w1's strip.
+    {
+        const twoByTwo = new Map([[11, strip(['P1', 'P2'])], [22, strip(['Q1', 'Q2'])]]);
+        const live = livePinnedOf(twoByTwo);
+        const p2 = live.find(tab => tab.id === 'P2');
+        check('pinned, two windows of two: rank 1 in w1 stays browser index 1',
+            resolvePinnedMoveIndex(live, p2, 1) === 1, String(resolvePinnedMoveIndex(live, p2, 1)));
+
+        const q2 = live.find(tab => tab.id === 'Q2');
+        check('pinned, two windows of two: rank 3 belongs to w2 and lands at its strip end',
+            resolvePinnedMoveIndex(live, q2, 3) === 2, String(resolvePinnedMoveIndex(live, q2, 3)));
+    }
+
+    check('pinned, two windows of two: swapping w2 leaves w1 alone',
+        applyPinnedMoves(
+            new Map([[11, strip(['P1', 'P2'])], [22, strip(['Q1', 'Q2'])]]),
+            [['Q2', 2], ['Q1', 3]],
+        ) === '11:P1,P2 22:Q2,Q1');
+
+    check('pinned, two windows of two: swapping w1 leaves w2 alone',
+        applyPinnedMoves(
+            new Map([[11, strip(['P1', 'P2'])], [22, strip(['Q1', 'Q2'])]]),
+            [['P2', 0], ['P1', 1]],
+        ) === '11:P2,P1 22:Q1,Q2');
+
+    check('pinned: a tab with no windowId → -1 (append at the strip end)',
+        resolvePinnedMoveIndex([{id: 1, windowId: 7, index: 0, url: 'https://a/'}], {id: 2}, 0) === -1);
+
+    check('pinned: a rank past the tab window\'s strip appends one slot past its last tab',
+        resolvePinnedMoveIndex(
+            [{id: 1, windowId: 7, index: 0, url: 'https://a/'}],
+            {id: 1, windowId: 7},
+            5,
+        ) === 1);
+
+    check('pinned: a window with no participating tab → -1',
+        resolvePinnedMoveIndex(
+            [{id: 1, windowId: 7, index: 0, url: 'https://a/'}],
+            {id: 2, windowId: 8},
+            0,
+        ) === -1);
 }
 
 // ---------------------------------------------------------------------------
