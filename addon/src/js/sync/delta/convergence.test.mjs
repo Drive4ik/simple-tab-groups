@@ -106,9 +106,10 @@ const stubFor = url => {
     // a user navigation after the safety bound is captured (A6 preserved).
     check('(ii) user navigation past the safety bound is captured (not an echo)',
         isAppliedNavigationEcho({applying: false, markExpiry: NOW - 1, markUrl: 'http://x', observedUrl: 'http://z', observedStatus: 'complete', now: NOW}) === false);
-    // a url-less mark suppresses until the bound (safe default).
-    check('(ii) url-less live mark suppresses',
-        isAppliedNavigationEcho({applying: false, markExpiry: live, now: NOW}) === true);
+    // a mark with no applied target url cannot attribute anything to us ⇒ CAPTURE (a spurious
+    // push converges; a swallowed user edit does not).
+    check('(ii) url-less live mark captures',
+        isAppliedNavigationEcho({applying: false, markExpiry: live, now: NOW}) === false);
 
     // Convergence proof at the planner level: once the cloud has learned the redirect target Y,
     // a tab that is locally at Y produces ZERO update ops (no more re-nav).

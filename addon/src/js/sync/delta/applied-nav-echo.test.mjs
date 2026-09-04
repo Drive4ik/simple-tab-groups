@@ -10,6 +10,10 @@
  * `status === 'complete'`. Everything the load does on the way there (redirects, title
  * settling, url canonicalisation) is a resolution of OUR navigation, not a user edit. The
  * expiry is only a safety bound for a navigation that never completes.
+ *
+ * Suppression requires a KNOWN applied target url. A mark without one cannot attribute the
+ * observed state to us, so it never suppresses: a spurious push converges, a swallowed user
+ * edit does not.
  */
 
 import {isAppliedNavigationEcho, isAppliedNavigationSettled, NAVIGATION_COMPLETE_STATUS} from './applied-nav-echo.js';
@@ -87,8 +91,12 @@ check('completion at the applied url ⇒ ECHO (our own write)',
     isAppliedNavigationEcho({applying: false, markExpiry: NOW + SAFETY_MS, markUrl: 'http://x', observedUrl: 'http://x', observedStatus: COMPLETE, now: NOW}) === true);
 check('completion at a DIFFERENT url ⇒ CAPTURE (cloud converges to the redirect target)',
     isAppliedNavigationEcho({applying: false, markExpiry: NOW + SAFETY_MS, markUrl: 'http://x', observedUrl: 'http://y', observedStatus: COMPLETE, now: NOW}) === false);
-check('completion with a url-less mark ⇒ ECHO (safe default)',
-    isAppliedNavigationEcho({applying: false, markExpiry: NOW + SAFETY_MS, observedUrl: 'http://y', observedStatus: COMPLETE, now: NOW}) === true);
+check('completion with a url-less mark ⇒ CAPTURE (no applied target to attribute it to)',
+    isAppliedNavigationEcho({applying: false, markExpiry: NOW + SAFETY_MS, observedUrl: 'http://y', observedStatus: COMPLETE, now: NOW}) === false);
+check('loading with a url-less mark ⇒ CAPTURE (a target-less mark never blinds the tab)',
+    isAppliedNavigationEcho({applying: false, markExpiry: NOW + SAFETY_MS, observedUrl: 'http://y', observedStatus: LOADING, now: NOW}) === false);
+check('a url-less mark cannot blind the tab for the whole safety bound',
+    isAppliedNavigationEcho({applying: false, markExpiry: NOW + SAFETY_MS, observedUrl: 'http://y', now: NOW}) === false);
 check('completion RETIRES the mark before the bound',
     isAppliedNavigationSettled({markExpiry: NOW + SAFETY_MS, observedStatus: COMPLETE, now: NOW}) === true);
 check('a loading event does NOT retire the mark',
