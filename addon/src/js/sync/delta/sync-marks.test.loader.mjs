@@ -8,7 +8,8 @@
  * its remaining siblings (`content-marks`, `pending-nav`, `offline-remove-record`) are
  * pure and load unchanged. The stubbed log serves `globalThis.__deltaLogEvents`, and the
  * test installs `globalThis.localStorage` before importing so the same backing store can
- * be handed to a freshly evaluated module instance.
+ * be handed to a freshly evaluated module instance. An optional `globalThis.__deltaLogGate`
+ * hook lets the test hold a read open and interleave concurrent callers.
  *
  * Registered via `module.register()` from the test file so a plain `node <file>.test.mjs`
  * (the suite's invocation, no CLI flags) still picks it up.
@@ -20,7 +21,9 @@ const STUBS = {
     `,
     'stg:delta-log': `
         export async function getEventsSince(seq) {
-            return (globalThis.__deltaLogEvents || []).filter(event => event.seq > seq);
+            const events = (globalThis.__deltaLogEvents || []).filter(event => event.seq > seq);
+            await globalThis.__deltaLogGate?.();
+            return events;
         }
     `,
 };

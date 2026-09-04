@@ -17,6 +17,16 @@
  * overlaid with the un-pushed delta events, which the log already persists. Capture
  * therefore writes nothing at all, so there is no per-title-tick storage write.
  *
+ * Bug 4: the derivation is async and was not memoised while in flight, so two cold callers
+ * each rebuilt the map and each installed their own; a `rememberContentMark` landing between
+ * the two assignments was written into the map the second one replaced.
+ *
+ * Bug 3: that derivation was anchored on `lastPushedSeq`, which the conditional fast path
+ * (`pushLocalPendingOnly`) and the `suppressEmptyResolve` branch advance without rebuilding
+ * the mark store. A restart then replayed only the events above the NEW watermark, so every
+ * mark the stored snapshot did not already carry was dropped. The mark store now records the
+ * seq it was folded through, so nothing outside `saveContentMarks` can desynchronise it.
+ *
  * Bug 2: `resetSyncState` left `deltaContentMarks:<deviceId>`, `deltaPendingNav` and
  * `deltaOfflineRemovePending:<deviceId>` behind, plus the module-level mark cache, so the
  * documented escape hatch kept suppressing captures with pre-reset state.
@@ -120,7 +130,17 @@ function resetWorld() {
 /** A completed sync cycle: the pushed events fold into the snapshot marks. */
 function completeSyncCycle(SyncMarks, snapshot) {
     store[SyncMarks.lastPushedSeqKey(DEVICE)] = lastSeq;
-    SyncMarks.saveContentMarks(DEVICE, contentMarksFromSnapshot(snapshot));
+    SyncMarks.saveContentMarks(DEVICE, contentMarksFromSnapshot(snapshot), lastSeq);
+}
+
+/**
+ * The two cycles that push the pending tail and advance `lastPushedSeq` WITHOUT rebuilding
+ * the mark store: the conditional fast path (`pushLocalPendingOnly`, remote unchanged) and
+ * the `suppressEmptyResolve` branch. The stored marks carry their own seq, so the
+ * derivation stays anchored where the marks were last rebuilt and cannot be desynchronised.
+ */
+function pushWithoutSavingMarks(SyncMarks) {
+    store[SyncMarks.lastPushedSeqKey(DEVICE)] = lastSeq;
 }
 
 // --- 1. a capture-time mark survives a background restart ------------------------------
@@ -305,6 +325,108 @@ function completeSyncCycle(SyncMarks, snapshot) {
 
     check('a remember for a non-cached device id is a no-op, not a cross-device write',
         (await SyncMarks.loadContentMarks('device-b')).u1 === undefined);
+}
+
+// --- 8. the conditional fast path advances the seq but never rebuilds the marks --------
+{
+    resetWorld();
+    const before = await restartBackground();
+
+    completeSyncCycle(before, {groups: [{id: 1, tabs: [tabRecord('u1', 'https://u0.test/')]}]});
+
+    check('a user navigation after the full sync is captured',
+        await captureTabModify(before, 'u1', tabRecord('u1', 'https://u1.test/')) === true);
+
+    const writesBeforePush = writes;
+
+    pushWithoutSavingMarks(before);
+
+    check('the fast path writes only lastPushedSeq',
+        writes === writesBeforePush + 1, `writes went ${writesBeforePush} -> ${writes}`);
+
+    const after = await restartBackground();
+
+    check('a fast-path push does not lose the marks it pushed',
+        await captureTabModify(after, 'u1', tabRecord('u1', 'https://u1.test/')) === false,
+        JSON.stringify(globalThis.__deltaLogEvents));
+
+    check('the restart appended no duplicate event',
+        globalThis.__deltaLogEvents.length === 1);
+}
+
+// --- 9. the suppressEmptyResolve branch: same seq advance, marks deliberately kept ------
+{
+    resetWorld();
+    const before = await restartBackground();
+
+    completeSyncCycle(before, {groups: [{id: 1, tabs: [
+        tabRecord('u1', 'https://u0.test/'),
+        tabRecord('u2', 'https://keep.test/'),
+    ]}]});
+
+    await captureTabModify(before, 'u1', tabRecord('u1', 'https://u1.test/'));
+
+    appendEvent({op: 'tab.remove', groupId: 1, uid: 'u2'});
+    before.forgetContentMark(DEVICE, 'u2');
+
+    pushWithoutSavingMarks(before);
+
+    const after = await restartBackground();
+
+    check('a suppressed resolve keeps the pushed navigation mark',
+        await captureTabModify(after, 'u1', tabRecord('u1', 'https://u1.test/')) === false,
+        JSON.stringify(globalThis.__deltaLogEvents));
+
+    check('a suppressed resolve keeps the pushed removal, so the uid captures again',
+        await captureTabModify(after, 'u2', tabRecord('u2', 'https://keep.test/')) === true);
+
+    completeSyncCycle(after, {groups: [{id: 1, tabs: [tabRecord('u2', 'https://keep.test/')]}]});
+
+    check('the next completed cycle re-anchors the mark store at the pushed seq',
+        store[after.contentMarksKey(DEVICE)].seq === lastSeq,
+        JSON.stringify(store[after.contentMarksKey(DEVICE)]));
+
+    check('the re-anchored store derives from itself, not from the whole log',
+        await captureTabModify(after, 'u2', tabRecord('u2', 'https://keep.test/')) === false);
+}
+
+// --- 10. concurrent cold loads share one derivation ------------------------------------
+{
+    resetWorld();
+    const SyncMarks = await restartBackground();
+
+    completeSyncCycle(SyncMarks, {groups: [{id: 1, tabs: [tabRecord('u1', 'https://u0.test/')]}]});
+
+    const gates = [];
+    globalThis.__deltaLogGate = () => new Promise(resolve => gates.push(resolve));
+
+    const first = SyncMarks.loadContentMarks(DEVICE);
+    const second = SyncMarks.loadContentMarks(DEVICE);
+
+    check('a second cold load joins the in-flight derivation instead of starting its own',
+        gates.length === 1, `${gates.length} derivations in flight`);
+
+    gates[0]();
+
+    const firstMarks = await first;
+    const mark = contentMark(tabRecord('u2', 'https://u2.test/'));
+
+    SyncMarks.rememberContentMark(DEVICE, 'u2', mark);
+
+    gates.forEach(resolve => resolve());
+
+    const secondMarks = await second;
+
+    check('a mark remembered while another cold load was pending is not thrown away',
+        secondMarks.u2 === mark, JSON.stringify(secondMarks));
+
+    check('both callers hold the same live map',
+        firstMarks === secondMarks);
+
+    check('the mark is still there for the next capture',
+        (await SyncMarks.loadContentMarks(DEVICE)).u2 === mark);
+
+    globalThis.__deltaLogGate = null;
 }
 
 // ---------------------------------------------------------------------------

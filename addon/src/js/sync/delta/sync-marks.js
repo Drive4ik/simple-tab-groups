@@ -48,28 +48,58 @@ export function contentMarksKey(deviceId) {
 
 let cachedContentMarksDeviceId = null;
 let cachedContentMarks = null;
+let contentMarksLoading = null;
 
 export function invalidateContentMarks() {
     cachedContentMarksDeviceId = null;
     cachedContentMarks = null;
+    contentMarksLoading = null;
 }
 
 function storedContentMarks(deviceId) {
     const raw = storage[contentMarksKey(deviceId)];
-    return raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {};
+    const marks = raw?.marks;
+
+    return {
+        seq: Number(raw?.seq) || 0,
+        marks: marks && typeof marks === 'object' && !Array.isArray(marks) ? marks : {},
+    };
 }
 
-export async function loadContentMarks(deviceId) {
+async function deriveContentMarks(deviceId) {
+    const {seq, marks} = storedContentMarks(deviceId);
+    const eventsSinceMarks = await DeltaLog.getEventsSince(seq);
+
+    return contentMarksFromEvents(marks, eventsSinceMarks);
+}
+
+export function loadContentMarks(deviceId) {
     if (cachedContentMarksDeviceId === deviceId && cachedContentMarks) {
-        return cachedContentMarks;
+        return Promise.resolve(cachedContentMarks);
     }
 
-    const unpushed = await DeltaLog.getEventsSince(Number(storage[lastPushedSeqKey(deviceId)]) || 0);
+    if (contentMarksLoading?.deviceId === deviceId) {
+        return contentMarksLoading.promise;
+    }
 
-    cachedContentMarks = contentMarksFromEvents(storedContentMarks(deviceId), unpushed);
-    cachedContentMarksDeviceId = deviceId;
+    const loading = {deviceId, promise: null};
+    contentMarksLoading = loading;
 
-    return cachedContentMarks;
+    loading.promise = deriveContentMarks(deviceId).then(marks => {
+        if (contentMarksLoading === loading) {
+            contentMarksLoading = null;
+            cachedContentMarks = marks;
+            cachedContentMarksDeviceId = deviceId;
+        }
+        return marks;
+    }, error => {
+        if (contentMarksLoading === loading) {
+            contentMarksLoading = null;
+        }
+        throw error;
+    });
+
+    return loading.promise;
 }
 
 export function rememberContentMark(deviceId, uid, mark) {
@@ -86,8 +116,8 @@ export function forgetContentMark(deviceId, uid) {
     delete cachedContentMarks[uid];
 }
 
-export function saveContentMarks(deviceId, marks) {
-    storage[contentMarksKey(deviceId)] = marks;
+export function saveContentMarks(deviceId, marks, seq) {
+    storage[contentMarksKey(deviceId)] = {seq: Number(seq) || 0, marks};
     invalidateContentMarks();
 }
 
