@@ -191,14 +191,29 @@ check('past the bound a status-less event retires the mark (not in flight)',
     isAppliedNavigationSettled({markExpiry: NOW, observedStatus: undefined, now: NOW}) === true);
 check('past the bound an unrecognised status retires the mark',
     isAppliedNavigationSettled({markExpiry: NOW, observedStatus: 'unloaded', now: NOW}) === true);
-check('retirement and the landing verdict agree on every status past the bound',
-    [COMPLETE, LOADING, undefined, 'unloaded'].every(status =>
-        isAppliedNavigationSettled({markExpiry: NOW, observedStatus: status, now: NOW})
-        === isAppliedNavigationLandedOffTarget({applying: false, markExpiry: NOW, markUrl: 'http://x', observedUrl: 'http://y', observedStatus: status, now: NOW})));
-check('retirement and the landing verdict agree on every status before the bound',
-    [COMPLETE, LOADING, undefined, 'unloaded'].every(status =>
-        isAppliedNavigationSettled({markExpiry: NOW + SAFETY_MS, observedStatus: status, now: NOW})
-        === isAppliedNavigationLandedOffTarget({applying: false, markExpiry: NOW + SAFETY_MS, markUrl: 'http://x', observedUrl: 'http://y', observedStatus: status, now: NOW})));
+// `isAppliedNavigationLandedOffTarget` is `settled && urlsDiffer` by construction, so asserting
+// that the two merely AGREE is an identity that holds for any `isAppliedNavigationSettled` — the
+// pre-81f7a6f one included. What has to be pinned is the value each of them takes per status.
+const RETIREMENT_TABLE_PAST_THE_BOUND = [
+    [COMPLETE, true],
+    [LOADING, false],
+    [undefined, true],
+    ['unloaded', true],
+];
+const RETIREMENT_TABLE_BEFORE_THE_BOUND = [
+    [COMPLETE, true],
+    [LOADING, false],
+    [undefined, false],
+    ['unloaded', false],
+];
+check('retirement and the landing verdict take the EXPECTED value on every status past the bound',
+    RETIREMENT_TABLE_PAST_THE_BOUND.every(([status, settled]) =>
+        isAppliedNavigationSettled({applying: false, markExpiry: NOW, observedStatus: status, now: NOW}) === settled
+        && isAppliedNavigationLandedOffTarget({applying: false, markExpiry: NOW, markUrl: 'http://x', observedUrl: 'http://y', observedStatus: status, now: NOW}) === settled));
+check('retirement and the landing verdict take the EXPECTED value on every status before the bound',
+    RETIREMENT_TABLE_BEFORE_THE_BOUND.every(([status, settled]) =>
+        isAppliedNavigationSettled({applying: false, markExpiry: NOW + SAFETY_MS, observedStatus: status, now: NOW}) === settled
+        && isAppliedNavigationLandedOffTarget({applying: false, markExpiry: NOW + SAFETY_MS, markUrl: 'http://x', observedUrl: 'http://y', observedStatus: status, now: NOW}) === settled));
 check('no mark, not applying ⇒ CAPTURE (genuine user navigation)',
     isAppliedNavigationEcho({applying: false, markExpiry: undefined, observedStatus: COMPLETE, now: NOW}) === false);
 check('markExpiry = NaN is treated as no mark ⇒ CAPTURE',
