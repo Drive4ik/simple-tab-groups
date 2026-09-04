@@ -659,7 +659,7 @@ export default class GithubGist {
             if (body.files) {
                 for (const file of Object.values(body.files)) {
                     if (file && file.content && typeof file.content !== 'string') {
-                        file.content = JSON.stringify(file.content, null, 2);
+                        file.content = JSON.stringify(file.content);
                     }
                 }
             }
