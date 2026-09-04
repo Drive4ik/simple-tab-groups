@@ -26,7 +26,7 @@ export function isAppliedNavigationEcho({applying, markExpiry, markUrl, observed
     return observedUrl === markUrl;
 }
 
-function hasLanded(markExpiry, observedStatus, now) {
+export function isAppliedNavigationSettled({markExpiry, observedStatus, now}) {
     if (hasLiveMark(markExpiry, now)) {
         return observedStatus === NAVIGATION_COMPLETE_STATUS;
     }
@@ -37,12 +37,8 @@ export function isAppliedNavigationLandedOffTarget({applying, markExpiry, markUr
     if (applying || !hasMark(markExpiry)) {
         return false;
     }
-    if (!hasLanded(markExpiry, observedStatus, now)) {
+    if (!isAppliedNavigationSettled({markExpiry, observedStatus, now})) {
         return false;
     }
     return observedUrlDiffersFromTarget(markUrl, observedUrl);
-}
-
-export function isAppliedNavigationSettled({markExpiry, observedStatus, now}) {
-    return !hasLiveMark(markExpiry, now) || observedStatus === NAVIGATION_COMPLETE_STATUS;
 }

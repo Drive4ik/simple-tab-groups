@@ -381,8 +381,9 @@ function reset() {
 // The hop was suppressed and left in the cache, so an unrelated event past the bound
 // (`favIconUrl`, `audible` — no url, no title) reaches the settle decision carrying the hop
 // url and `status: 'loading'`. The tab has not landed there: reporting it would push a
-// mid-flight url and drag every peer onto it. The url the tab really lands on is a url
-// CHANGE, which the ordinary capture path picks up by itself.
+// mid-flight url and drag every peer onto it. But that event must not SPEND the mark either
+// — the tab is still in flight, and the settle decision on the event that ends the flight is
+// the only report of where it really landed.
 {
     reset();
     globalThis.__tabFacts = {23: {uid: 'u23', groupId: 1}};
@@ -401,10 +402,86 @@ function reset() {
             settleAppliedNavigation(23, 'https://hop.test/', 'loading') === false);
         check('no mid-flight url reached the log',
             globalThis.__appended.length === 0);
+        check('a second in-flight event past the bound still asks for nothing',
+            settleAppliedNavigation(23, 'https://hop.test/', 'loading') === false);
 
         await tabModified({id: 23, url: 'https://final.test/', title: 'F', windowId: 1, discarded: false, status: 'complete'});
         check('the url the tab finally lands on is captured through the ordinary content path',
             globalThis.__appended.length === 1 && globalThis.__appended[0].tab.url === 'https://final.test/');
+    } finally {
+        Date.now = realNow;
+    }
+}
+
+// --- 18b. the redirect LANDS on the hop url, past the safety bound ---------------------
+// The tab lands exactly where the suppressed hop already put it in the cache, so the
+// completing event carries only `status` — the ordinary content path never sees a change and
+// the settle decision is the only thing that can push `https://hop.test/`. When a still-loading
+// event past the bound spends the mark, that url is lost for good: remote keeps the applied
+// target and the next diff navigates the tab back off the page the user is reading.
+{
+    reset();
+    globalThis.__tabFacts = {24: {uid: 'u24', groupId: 1}};
+
+    markAppliedNavigation(24, 'https://target.test/');
+
+    await tabModified({id: 24, url: 'https://hop.test/', title: 'H', windowId: 1, discarded: false, status: 'loading'});
+    check('the hop is suppressed as part of the applied navigation',
+        globalThis.__appended.length === 0);
+
+    const realNow = Date.now;
+    Date.now = () => realNow() + 61_000;
+
+    try {
+        check('the still-loading event past the bound asks for no capture',
+            settleAppliedNavigation(24, 'https://hop.test/', 'loading') === false);
+
+        const landedOffAppliedTarget = settleAppliedNavigation(24, 'https://hop.test/', 'complete');
+        check('the status-only completion at the SAME hop url asks for a capture',
+            landedOffAppliedTarget === true);
+
+        if (landedOffAppliedTarget) {
+            await tabModified({id: 24, url: 'https://hop.test/', title: 'H', windowId: 1, discarded: false, status: 'complete'});
+        }
+        check('the hop url reaches the log instead of being reverted to the applied target',
+            globalThis.__appended.length === 1 && globalThis.__appended[0].tab.url === 'https://hop.test/');
+
+        check('the landing retired the mark, so the next event reports nothing',
+            settleAppliedNavigation(24, 'https://hop.test/', 'complete') === false);
+    } finally {
+        Date.now = realNow;
+    }
+}
+
+// --- 18c. a mark now outlives the bound, so the TAB bounds its lifetime ----------------
+// tabs.js clears the mark on `changeInfo.discarded === true` and onRemoved clears it
+// unconditionally, so an in-flight mark that the bound no longer retires still cannot outlive
+// the tab it belongs to, nor be inherited by a recycled tab id.
+{
+    reset();
+    globalThis.__tabFacts = {25: {uid: 'u25', groupId: 1}, 26: {uid: 'u26', groupId: 1}};
+
+    markAppliedNavigation(25, 'https://target.test/');
+    markAppliedNavigation(26, 'https://target.test/');
+
+    const realNow = Date.now;
+    Date.now = () => realNow() + 61_000;
+
+    try {
+        check('the discarded tab still holds its in-flight mark before the discard',
+            settleAppliedNavigation(25, 'https://hop.test/', 'loading') === false);
+        clearAppliedNavigation(25);
+        check('the discard drops it, so no later completion reports a landing',
+            settleAppliedNavigation(25, 'https://hop.test/', 'complete') === false);
+
+        check('the removed tab still holds its in-flight mark before onRemoved',
+            settleAppliedNavigation(26, 'https://hop.test/', 'loading') === false);
+        clearAppliedNavigation(26);
+        check('onRemoved drops it, so a recycled tab id starts clean',
+            settleAppliedNavigation(26, 'https://hop.test/', 'complete') === false);
+
+        check('nothing reached the log',
+            globalThis.__appended.length === 0);
     } finally {
         Date.now = realNow;
     }
