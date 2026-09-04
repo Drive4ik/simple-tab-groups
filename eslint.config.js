@@ -40,4 +40,28 @@ export default defineConfig([
             // 'semi': 'warn',
         },
     },
+
+    {
+        files: [
+            'addon/**/*.mjs',
+        ],
+        ignores: [
+            'addon/dist/',
+            'addon/node_modules/',
+        ],
+        languageOptions: {
+            sourceType: 'module',
+            globals: {
+                ...globals.nodeBuiltin,
+            },
+        },
+        rules: {
+            'no-const-assign': 'error',
+            'no-unreachable': 'error',
+            'no-mixed-spaces-and-tabs': 'error',
+            'valid-typeof': 'error',
+            'no-undef': 'error',
+            'no-unused-vars': 'warn',
+        },
+    },
 ]);
