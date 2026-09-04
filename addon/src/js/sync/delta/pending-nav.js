@@ -189,7 +189,7 @@ function leftTheRefusalUrl(entry, liveTab) {
 }
 
 export function planPendingNavOnTabUpdate(entry, liveTab, {woke = false, contentChanged = false, now} = {}) {
-    const keepWaiting = {navigate: false, clear: false, url: undefined, title: undefined, reason: null};
+    const keepWaiting = {navigate: false, clear: false, reason: null};
 
     if (!entry) {
         return keepWaiting;
@@ -219,7 +219,6 @@ export function planPendingNavOnTabUpdate(entry, liveTab, {woke = false, content
         navigate: plan.navigate,
         clear: true,
         url: plan.url,
-        title: plan.title,
         reason: plan.refusal,
     };
 }
