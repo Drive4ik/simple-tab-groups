@@ -22,6 +22,13 @@
  *
  * A landing is only ever reported for a navigation this device applied. With NO mark at all
  * there is nothing to have landed off, whatever url the caller passes as the target.
+ *
+ * Past the bound the url is evidence only once the tab is no longer in flight: a load still
+ * reporting `loading` is somewhere on the way, not somewhere it landed, and pushing that hop
+ * would navigate every peer to a url this tab is about to leave. `loading` is the only status
+ * that buys silence — an absent or unrecognised one is read as "not in flight", because losing
+ * a real landing reverts the page the user is looking at, while a redundant capture of the url
+ * the tab is already showing costs one event.
  */
 
 import {
@@ -29,6 +36,7 @@ import {
     isAppliedNavigationLandedOffTarget,
     isAppliedNavigationSettled,
     NAVIGATION_COMPLETE_STATUS,
+    NAVIGATION_LOADING_STATUS,
 } from './applied-nav-echo.js';
 
 let passed = 0;
@@ -46,7 +54,7 @@ function check(name, cond, detail) {
 
 const NOW = 1_000_000; // fixed clock
 const SAFETY_MS = 60_000;
-const LOADING = 'loading';
+const LOADING = NAVIGATION_LOADING_STATUS;
 const COMPLETE = NAVIGATION_COMPLETE_STATUS;
 
 // A faithful pure model of the mark store in delta-capture.js, so mark lifecycle scenarios
@@ -250,10 +258,20 @@ check('markExpiry = null is treated as no mark ⇒ CAPTURE',
         store.settle(8, 'http://stuck', LOADING, NOW + 10_000) === false);
     check('stuck load: the mark survives a non-completing event',
         store.has(8) === true);
-    check('stuck load: past the bound a url off the applied target is CAPTURED',
-        store.settle(8, 'http://elsewhere', LOADING, NOW + SAFETY_MS) === true);
+    check('stuck load: past the bound a url off the applied target, STILL LOADING, is not a landing',
+        store.settle(8, 'http://elsewhere', LOADING, NOW + SAFETY_MS) === false);
     check('stuck load: the bound retires the mark',
         store.has(8) === false);
+    check('stuck load: with the mark gone, the ordinary content path captures the real landing',
+        store.consume(8, 'http://elsewhere', COMPLETE, NOW + SAFETY_MS + 1_000) === false);
+}
+{
+    const store = createMarkStore();
+    store.mark(82, 'http://stuck', NOW);
+    check('stuck load: past the bound a COMPLETED url off the applied target is CAPTURED',
+        store.settle(82, 'http://elsewhere', COMPLETE, NOW + SAFETY_MS) === true);
+    check('stuck load: that completion retires the mark',
+        store.has(82) === false);
 }
 {
     const store = createMarkStore();
@@ -289,10 +307,18 @@ check('live mark, completion at the applied url ⇒ silent',
     isAppliedNavigationLandedOffTarget({applying: false, markExpiry: NOW + SAFETY_MS, markUrl: 'http://x', observedUrl: 'http://x', observedStatus: COMPLETE, now: NOW}) === false);
 check('live mark, still loading elsewhere ⇒ silent (the landing has not happened yet)',
     isAppliedNavigationLandedOffTarget({applying: false, markExpiry: NOW + SAFETY_MS, markUrl: 'http://x', observedUrl: 'http://hop', observedStatus: LOADING, now: NOW}) === false);
+check('live mark, status-less event elsewhere ⇒ silent (only the completion ends the wait)',
+    isAppliedNavigationLandedOffTarget({applying: false, markExpiry: NOW + SAFETY_MS, markUrl: 'http://x', observedUrl: 'http://hop', now: NOW}) === false);
+check('live mark, unknown status elsewhere ⇒ silent',
+    isAppliedNavigationLandedOffTarget({applying: false, markExpiry: NOW + SAFETY_MS, markUrl: 'http://x', observedUrl: 'http://hop', observedStatus: 'unloaded', now: NOW}) === false);
 check('EXPIRED mark at a DIFFERENT url ⇒ LANDED OFF TARGET (the url is still evidence)',
     isAppliedNavigationLandedOffTarget({applying: false, markExpiry: NOW, markUrl: 'http://x', observedUrl: 'http://y', observedStatus: COMPLETE, now: NOW}) === true);
-check('EXPIRED mark, still loading at a DIFFERENT url ⇒ LANDED OFF TARGET',
-    isAppliedNavigationLandedOffTarget({applying: false, markExpiry: NOW, markUrl: 'http://x', observedUrl: 'http://y', observedStatus: LOADING, now: NOW}) === true);
+check('EXPIRED mark, STILL LOADING at a different url ⇒ silent (a hop in flight is not a landing)',
+    isAppliedNavigationLandedOffTarget({applying: false, markExpiry: NOW, markUrl: 'http://x', observedUrl: 'http://y', observedStatus: LOADING, now: NOW}) === false);
+check('EXPIRED mark, no status at a DIFFERENT url ⇒ LANDED OFF TARGET (only `loading` buys silence)',
+    isAppliedNavigationLandedOffTarget({applying: false, markExpiry: NOW, markUrl: 'http://x', observedUrl: 'http://y', now: NOW}) === true);
+check('EXPIRED mark, UNKNOWN status at a different url ⇒ LANDED OFF TARGET',
+    isAppliedNavigationLandedOffTarget({applying: false, markExpiry: NOW, markUrl: 'http://x', observedUrl: 'http://y', observedStatus: 'unloaded', now: NOW}) === true);
 check('EXPIRED mark at the applied url ⇒ silent (nothing happened worth pushing)',
     isAppliedNavigationLandedOffTarget({applying: false, markExpiry: NOW, markUrl: 'http://x', observedUrl: 'http://x', observedStatus: COMPLETE, now: NOW}) === false);
 check('EXPIRED mark, status-less event at the applied url ⇒ silent',
@@ -353,6 +379,25 @@ check('in-apply ⇒ silent (our own write, never a user landing)',
         store.has(11) === false);
     check('slow redirect: nothing suppresses the tab afterwards',
         store.consume(11, 'http://redirect', COMPLETE, NOW + SAFETY_MS + 6_000) === false);
+}
+
+// --- scenario: the same redirect, but the load is STILL RUNNING past the bound ---------------
+// The hop url sits in the cache, so an unrelated event (`favIconUrl`, `audible`) past the bound
+// reaches the settle decision with the hop url and `status: 'loading'`. The hop is not where the
+// tab landed — reporting it would push a mid-flight url and navigate every peer to it. Staying
+// silent costs nothing: the url the tab really lands on is a url CHANGE, which the ordinary
+// content path captures on its own.
+{
+    const store = createMarkStore();
+    store.mark(12, 'http://target', NOW);
+    check('unfinished redirect: the hop at +5s is suppressed',
+        store.consume(12, 'http://redirect', LOADING, NOW + 5_000) === true);
+    check('unfinished redirect: an unrelated event past the bound, still loading, asks for nothing',
+        store.settle(12, 'http://redirect', LOADING, NOW + SAFETY_MS + 5_000) === false);
+    check('unfinished redirect: that event still retires the mark',
+        store.has(12) === false);
+    check('unfinished redirect: the real landing url is captured through the content path',
+        store.consume(12, 'http://final', COMPLETE, NOW + SAFETY_MS + 9_000) === false);
 }
 
 console.log(`\n${passed} passed, ${failures.length} failed`);
