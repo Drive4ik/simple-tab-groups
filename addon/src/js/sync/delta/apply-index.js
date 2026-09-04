@@ -1,22 +1,31 @@
 import {isUrlSyncable, unwrapStubUrl} from './url-sync.js';
 
-function syncableTabIndexesInOrder(tabs) {
+function positionedTabs(tabs) {
     return (Array.isArray(tabs) ? tabs : [])
-        .filter(tab => tab && Number.isFinite(tab.index) && isUrlSyncable(unwrapStubUrl(tab.url)))
+        .filter(tab => tab && Number.isFinite(tab.index));
+}
+
+function syncableTabIndexesInOrder(tabs) {
+    return positionedTabs(tabs)
+        .filter(tab => isUrlSyncable(unwrapStubUrl(tab.url)))
         .map(tab => tab.index)
         .sort((a, b) => a - b);
 }
 
 export function resolveAbsoluteTabIndex(destGroupTabs, groupRelativeIndex) {
-    const syncableIndexes = syncableTabIndexesInOrder(destGroupTabs);
-
-    if (!syncableIndexes.length || !Number.isInteger(groupRelativeIndex) || groupRelativeIndex < 0) {
+    if (!Number.isInteger(groupRelativeIndex) || groupRelativeIndex < 0) {
         return -1;
     }
 
-    if (groupRelativeIndex >= syncableIndexes.length) {
-        return syncableIndexes.at(-1) + 1;
+    const syncableIndexes = syncableTabIndexesInOrder(destGroupTabs);
+
+    if (syncableIndexes.length) {
+        return groupRelativeIndex < syncableIndexes.length
+            ? syncableIndexes[groupRelativeIndex]
+            : syncableIndexes.at(-1) + 1;
     }
 
-    return syncableIndexes[groupRelativeIndex];
+    const occupiedIndexes = positionedTabs(destGroupTabs).map(tab => tab.index);
+
+    return occupiedIndexes.length ? Math.min(...occupiedIndexes) : -1;
 }

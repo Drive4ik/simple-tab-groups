@@ -18,8 +18,10 @@
  *   - input is the destination group's live tabs ({index, url}), in any order;
  *   - R < syncableCount  → absolute index of the R-th syncable tab;
  *   - R >= syncableCount → one past the last syncable tab (append at the group's end);
- *   - no syncable tab / no usable R → -1 (append at window end), matching STG's native
- *     move-into-group default (`index: params.newTabIndex ?? -1`).
+ *   - no syncable tab but the group still occupies window slots → the group's first slot, so the
+ *     arriving tab lands WITH the group instead of behind every other tab of the window;
+ *   - group absent from any window / no usable R → -1 (append at window end), matching STG's
+ *     native move-into-group default (`index: params.newTabIndex ?? -1`).
  *
  * Plain `node apply-index.test.mjs` (STG has no test runner). Exits non-zero on first failure.
  */
@@ -158,9 +160,27 @@ check('relative index past the end → one past the last syncable tab (append in
 check('empty destination group → -1 (append at window end)',
     resolveAbsoluteTabIndex([], 0) === -1);
 
-check('all-non-syncable destination group → -1 (append at window end), not min of their slots',
-    resolveAbsoluteTabIndex([nonSyncable(3), nonSyncable(4)], 0) === -1,
-    String(resolveAbsoluteTabIndex([nonSyncable(3), nonSyncable(4)], 0)));
+// A LOADED group can hold only non-syncable tabs (a window of about:newtab pages). It still owns
+// window slots, so the arriving syncable tab must land on them — -1 would append it behind every
+// other tab of the window, including the hidden tabs of every other group, and leave
+// reconcileGroupTabOrders to drag it back on the next pass.
+{
+    const tabs = [nonSyncable(3), nonSyncable(4)];
+    check('loaded group with no syncable tab → its first slot, not the window end',
+        resolveAbsoluteTabIndex(tabs, 0) === 3, String(resolveAbsoluteTabIndex(tabs, 0)));
+    check('loaded group with no syncable tab: any relative index lands on the same slot',
+        resolveAbsoluteTabIndex(tabs, 5) === 3, String(resolveAbsoluteTabIndex(tabs, 5)));
+}
+
+// Non-contiguous and wholly non-syncable: f@0 g@1 f@2 f@3 g@4 → the group starts at 1.
+check('loaded non-contiguous group with no syncable tab → its lowest slot',
+    resolveAbsoluteTabIndex([nonSyncable(4), nonSyncable(1)], 0) === 1,
+    String(resolveAbsoluteTabIndex([nonSyncable(4), nonSyncable(1)], 0)));
+
+// A group that is NOT loaded in any window has no slots at all: its stored tabs carry no `index`.
+// applyTabMove hides the tab instead of moving it there, so -1 is the harmless answer.
+check('group absent from any window (stored tabs, no index) → -1 (append)',
+    resolveAbsoluteTabIndex([{id: 930, url: 'https://a/'}, {id: 931, url: 'https://b/'}], 0) === -1);
 
 check('destination group with no finite indices → -1 (append)',
     resolveAbsoluteTabIndex([{id: 920, index: NaN, url: 'https://a/'}, {id: 921, url: 'https://b/'}], 0) === -1);
@@ -193,7 +213,7 @@ function fxMove(order, id, index) {
         return arr;
     }
     arr.splice(current, 1);
-    arr.splice(Math.max(0, Math.min(index, arr.length)), 0, id);
+    arr.splice(index < 0 ? arr.length : Math.min(index, arr.length), 0, id);
     return arr;
 }
 
@@ -217,6 +237,24 @@ function fxMove(order, id, index) {
     const broken = fxMove(initial, A.id, oldFormula - base);
     check('simulate: the old min+relative index leaves A FIRST — the ping-pong',
         syncableOrder(broken) === JSON.stringify([A.id, B.id]), JSON.stringify(broken));
+}
+
+{
+    // Window: other@0, other@1 (hidden tabs of another group), G@2 = about:newtab,
+    // G@3 = about:blank, other@4. The peer moves S into G at relative 0. Landing at -1 appends S
+    // behind other@4; landing on the group's first slot puts it where G actually sits.
+    const windowTabs = ['o0', 'o1', 'g2', 'g3', 'o4'];
+    const groupTabs = [nonSyncable(2), nonSyncable(3)];
+    const landed = fxMove([...windowTabs, 'S'], 'S', resolveAbsoluteTabIndex(groupTabs, 0));
+
+    check('simulate: a syncable tab entering an all-non-syncable loaded group lands inside it',
+        JSON.stringify(landed) === JSON.stringify(['o0', 'o1', 'S', 'g2', 'g3', 'o4']),
+        JSON.stringify(landed));
+
+    const appended = fxMove([...windowTabs, 'S'], 'S', -1);
+    check('simulate: -1 would have parked it behind every foreign tab of the window',
+        JSON.stringify(appended) === JSON.stringify(['o0', 'o1', 'g2', 'g3', 'o4', 'S']),
+        JSON.stringify(appended));
 }
 
 // --- parity: capture → apply round trip is the identity ------------------------------------
