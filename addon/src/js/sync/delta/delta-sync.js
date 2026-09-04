@@ -246,7 +246,7 @@ export async function deltaSynchronization() {
 
         progress(10);
 
-        const {localState, priorBaseline, lastPushedSeq, favIconMap} =
+        const {localState, priorBaseline, lastPushedSeq, favIconMap, pendingNavTargets} =
             await gatherLocalPending(selfDeviceId, log);
         const diffBefore = (syncDiffEnable || syncNotifyEmptyDiff) ? deepClone(localState) : null;
 
@@ -350,6 +350,7 @@ export async function deltaSynchronization() {
             priorBaseline,
             defaultGroupTitle: groupId => Groups.createTitle(null, groupId),
             pinnedGroupId: Groups.PINNED_GROUP_ID,
+            pendingNavTargets,
         });
 
         plan.resolvedSnapshot.containers = {...plan.resolvedSnapshot.containers, ...containerRegistry};

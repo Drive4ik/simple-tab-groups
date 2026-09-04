@@ -104,7 +104,7 @@ function foldMigratedPinsIntoGroups(snapshot) {
     });
 }
 
-function resolveTabContentChanges(resolved, local) {
+function resolveTabContentChanges(resolved, local, pending) {
     const changed = {};
     for (const field of TAB_CONTENT_FIELDS) {
         if (field === 'pinned' || field === 'loaded') {
@@ -112,13 +112,24 @@ function resolveTabContentChanges(resolved, local) {
                 changed[field] = resolved[field] === true;
             }
         } else if ((resolved[field] ?? null) !== (local[field] ?? null)) {
+            if (pending && Object.hasOwn(pending, field) && (pending[field] ?? null) === (resolved[field] ?? null)) {
+                continue;
+            }
             changed[field] = deepClone(resolved[field]);
         }
     }
     return changed;
 }
 
-function diffToBrowserOps(resolvedSnapshot, localState, priorBaseline = {tabUids: new Set(), groupIds: new Set(), pinnedUids: new Set()}) {
+function normalizePendingNavTargets(pendingNavTargets) {
+    if (pendingNavTargets instanceof Map) {
+        return pendingNavTargets;
+    }
+    return new Map(Object.entries(pendingNavTargets || {}));
+}
+
+function diffToBrowserOps(resolvedSnapshot, localState, priorBaseline = {tabUids: new Set(), groupIds: new Set(), pinnedUids: new Set()}, pendingNavTargets = null) {
+    const pendingByUid = normalizePendingNavTargets(pendingNavTargets);
     const resolvedGroups = resolvedSnapshot.groups || [];
     const localGroups = (localState && localState.groups) || [];
 
@@ -194,7 +205,7 @@ function diffToBrowserOps(resolvedSnapshot, localState, priorBaseline = {tabUids
                     target: {groupId, index},
                 });
             }
-            const changed = resolveTabContentChanges(tab, local.tab);
+            const changed = resolveTabContentChanges(tab, local.tab, pendingByUid.get(uid));
             if (Object.keys(changed).length) {
                 tabsToUpdate.push({uid, target: changed});
             }
@@ -226,7 +237,7 @@ function diffToBrowserOps(resolvedSnapshot, localState, priorBaseline = {tabUids
             if (local.index !== index) {
                 pinnedToMove.push({uid, target: {index}});
             }
-            const changed = resolveTabContentChanges(tab, local.tab);
+            const changed = resolveTabContentChanges(tab, local.tab, pendingByUid.get(uid));
             delete changed.pinned;
             if (Object.keys(changed).length) {
                 pinnedToUpdate.push({uid, target: changed});
@@ -283,7 +294,7 @@ function diffOptionsToApply(resolvedOptions, localOptions) {
     return toApply;
 }
 
-export function planSync({pulledSnapshot, pulledDeltaLogs, localPendingEvents, selfDeviceId, localState, priorBaseline, defaultGroupTitle, pinnedGroupId}) {
+export function planSync({pulledSnapshot, pulledDeltaLogs, localPendingEvents, selfDeviceId, localState, priorBaseline, defaultGroupTitle, pinnedGroupId, pendingNavTargets}) {
     const {fullLogs, selfEvents} = buildFullLogs(pulledDeltaLogs, localPendingEvents, selfDeviceId);
 
     const {snapshot: resolvedSnapshot, watermark: newWatermark} = replay(pulledSnapshot || {groups: []}, fullLogs, {defaultGroupTitle, pinnedGroupId});
@@ -299,7 +310,7 @@ export function planSync({pulledSnapshot, pulledDeltaLogs, localPendingEvents, s
 
     const baseline = normalizeBaseline(priorBaseline);
 
-    const browserOps = diffToBrowserOps(resolvedSnapshot, localState || {groups: []}, baseline);
+    const browserOps = diffToBrowserOps(resolvedSnapshot, localState || {groups: []}, baseline, pendingNavTargets);
 
     const optionsToApply = diffOptionsToApply(resolvedSnapshot.options, (localState || {}).options);
 

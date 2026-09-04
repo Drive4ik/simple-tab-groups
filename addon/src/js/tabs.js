@@ -25,6 +25,7 @@ import * as Storage from './storage.js';
 import * as BrowserSettings from './browser-settings.js';
 import * as DeltaCapture from './sync/delta/delta-capture.js';
 import {closedTabCapturePlan} from './sync/delta/close-capture.js';
+import {resolvePendingNav} from './sync/delta/pending-nav-wake.js';
 
 export {on, off} from './broadcast.js?channel=tabs';
 export * from './tabs-helpers.js';
@@ -267,16 +268,23 @@ async function onUpdated(tabId, changeInfo, tab) {
 
     const log = logger.start(onUpdated, tabId, changeInfo);
 
+    const woke = changeInfo.discarded === false;
+
     changeInfo = Cache.getRealTabStateChanged(tab);
 
     Cache.setTab(tab);
+
+    const contentChanged = !!changeInfo && (Object.hasOwn(changeInfo, 'title') || Object.hasOwn(changeInfo, 'url'));
+
+    if (await resolvePendingNav(tab, {woke, contentChanged})) {
+        log.stop('🛑 applied the deferred sync navigation', tab.id);
+        return;
+    }
 
     if (!changeInfo) {
         log.stop('🛑 changeInfo keys was not changed');
         return;
     }
-
-    const contentChanged = Object.hasOwn(changeInfo, 'title') || Object.hasOwn(changeInfo, 'url');
 
     if (contentChanged && DeltaCapture.shouldArmAppliedNavigation()) {
         DeltaCapture.armAppliedNavigation(tab.id);
