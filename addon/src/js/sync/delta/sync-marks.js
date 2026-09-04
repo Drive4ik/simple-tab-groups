@@ -48,10 +48,12 @@ export function contentMarksKey(deviceId) {
 
 let cachedContentMarksDeviceId = null;
 let cachedContentMarks = null;
+let contentMarksLoading = null;
 
 export function invalidateContentMarks() {
     cachedContentMarksDeviceId = null;
     cachedContentMarks = null;
+    contentMarksLoading = null;
 }
 
 function storedContentMarks(deviceId) {
@@ -64,18 +66,40 @@ function storedContentMarks(deviceId) {
     };
 }
 
-export async function loadContentMarks(deviceId) {
-    if (cachedContentMarksDeviceId === deviceId && cachedContentMarks) {
-        return cachedContentMarks;
-    }
-
+async function deriveContentMarks(deviceId) {
     const {seq, marks} = storedContentMarks(deviceId);
     const eventsSinceMarks = await DeltaLog.getEventsSince(seq);
 
-    cachedContentMarks = contentMarksFromEvents(marks, eventsSinceMarks);
-    cachedContentMarksDeviceId = deviceId;
+    return contentMarksFromEvents(marks, eventsSinceMarks);
+}
 
-    return cachedContentMarks;
+export function loadContentMarks(deviceId) {
+    if (cachedContentMarksDeviceId === deviceId && cachedContentMarks) {
+        return Promise.resolve(cachedContentMarks);
+    }
+
+    if (contentMarksLoading?.deviceId === deviceId) {
+        return contentMarksLoading.promise;
+    }
+
+    const loading = {deviceId, promise: null};
+    contentMarksLoading = loading;
+
+    loading.promise = deriveContentMarks(deviceId).then(marks => {
+        if (contentMarksLoading === loading) {
+            contentMarksLoading = null;
+            cachedContentMarks = marks;
+            cachedContentMarksDeviceId = deviceId;
+        }
+        return marks;
+    }, error => {
+        if (contentMarksLoading === loading) {
+            contentMarksLoading = null;
+        }
+        throw error;
+    });
+
+    return loading.promise;
 }
 
 export function rememberContentMark(deviceId, uid, mark) {

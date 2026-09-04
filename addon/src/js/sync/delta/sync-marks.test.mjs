@@ -17,6 +17,10 @@
  * overlaid with the un-pushed delta events, which the log already persists. Capture
  * therefore writes nothing at all, so there is no per-title-tick storage write.
  *
+ * Bug 4: the derivation is async and was not memoised while in flight, so two cold callers
+ * each rebuilt the map and each installed their own; a `rememberContentMark` landing between
+ * the two assignments was written into the map the second one replaced.
+ *
  * Bug 3: that derivation was anchored on `lastPushedSeq`, which the conditional fast path
  * (`pushLocalPendingOnly`) and the `suppressEmptyResolve` branch advance without rebuilding
  * the mark store. A restart then replayed only the events above the NEW watermark, so every
@@ -384,6 +388,45 @@ function pushWithoutSavingMarks(SyncMarks) {
 
     check('the re-anchored store derives from itself, not from the whole log',
         await captureTabModify(after, 'u2', tabRecord('u2', 'https://keep.test/')) === false);
+}
+
+// --- 10. concurrent cold loads share one derivation ------------------------------------
+{
+    resetWorld();
+    const SyncMarks = await restartBackground();
+
+    completeSyncCycle(SyncMarks, {groups: [{id: 1, tabs: [tabRecord('u1', 'https://u0.test/')]}]});
+
+    const gates = [];
+    globalThis.__deltaLogGate = () => new Promise(resolve => gates.push(resolve));
+
+    const first = SyncMarks.loadContentMarks(DEVICE);
+    const second = SyncMarks.loadContentMarks(DEVICE);
+
+    check('a second cold load joins the in-flight derivation instead of starting its own',
+        gates.length === 1, `${gates.length} derivations in flight`);
+
+    gates[0]();
+
+    const firstMarks = await first;
+    const mark = contentMark(tabRecord('u2', 'https://u2.test/'));
+
+    SyncMarks.rememberContentMark(DEVICE, 'u2', mark);
+
+    gates.forEach(resolve => resolve());
+
+    const secondMarks = await second;
+
+    check('a mark remembered while another cold load was pending is not thrown away',
+        secondMarks.u2 === mark, JSON.stringify(secondMarks));
+
+    check('both callers hold the same live map',
+        firstMarks === secondMarks);
+
+    check('the mark is still there for the next capture',
+        (await SyncMarks.loadContentMarks(DEVICE)).u2 === mark);
+
+    globalThis.__deltaLogGate = null;
 }
 
 // ---------------------------------------------------------------------------
