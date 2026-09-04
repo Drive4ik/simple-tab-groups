@@ -258,11 +258,12 @@ function reset() {
         globalThis.__appended.length === 1 && globalThis.__appended[0].tab.url === 'https://user.test/');
 }
 
-// --- 14. an EXPIRED mark is no evidence of anything ------------------------------------
+// --- 14. an EXPIRED mark alone is no evidence ------------------------------------------
 // An applied navigation whose completion never arrives leaves its mark sitting until the
-// safety bound. Past the bound the mark can attribute nothing, so it must neither suppress
-// a real user navigation nor make an unrelated onUpdated (`audible`, `favIconUrl`, a bare
-// `status` — no url, no title) look like a landing off the applied target.
+// safety bound. Past the bound the mark can attribute nothing by itself, so it must neither
+// suppress a real user navigation nor make an unrelated onUpdated (`audible`, `favIconUrl`,
+// a bare `status` — no url, no title) on a tab still sitting at the applied target look like
+// a landing off it.
 {
     reset();
     globalThis.__tabFacts = {16: {uid: 'u16', groupId: 1}, 17: {uid: 'u17', groupId: 1}};
@@ -320,6 +321,59 @@ function reset() {
         settleAppliedNavigation(18, 'https://user.test/', 'complete') === false);
 
     delete globalThis.browser;
+}
+
+// --- 16. a redirect whose load completes PAST the safety bound -------------------------
+// The applied navigation redirects; the hop arrives with `status: 'loading'` and is
+// suppressed as part of our own navigation, which keeps the mark and leaves the new url in
+// the cache. The load then completes after the bound, so that event carries only `status`.
+// If the expired mark reported nothing, the real landing url would never be captured and
+// the next diff would navigate the tab back to the applied target — a visible revert.
+{
+    reset();
+    globalThis.__tabFacts = {19: {uid: 'u19', groupId: 1}};
+
+    markAppliedNavigation(19, 'https://target.test/');
+
+    await tabModified({id: 19, url: 'https://redirect.test/', title: 'R', windowId: 1, discarded: false, status: 'loading'});
+    check('the redirect hop is suppressed as part of the applied navigation',
+        globalThis.__appended.length === 0);
+
+    const realNow = Date.now;
+    Date.now = () => realNow() + 61_000;
+
+    try {
+        check('the status-only completion past the bound asks for a capture at the landing url',
+            settleAppliedNavigation(19, 'https://redirect.test/', 'complete') === true);
+
+        await tabModified({id: 19, url: 'https://redirect.test/', title: 'R', windowId: 1, discarded: false, status: 'complete'});
+        check('the redirect landing reaches the log instead of being reverted to the applied url',
+            globalThis.__appended.length === 1 && globalThis.__appended[0].tab.url === 'https://redirect.test/');
+    } finally {
+        Date.now = realNow;
+    }
+}
+
+// --- 17. an expired mark whose tab never left the applied target stays silent ----------
+{
+    reset();
+    globalThis.__tabFacts = {20: {uid: 'u20', groupId: 1}};
+
+    markAppliedNavigation(20, 'https://target.test/');
+
+    const realNow = Date.now;
+    Date.now = () => realNow() + 61_000;
+
+    try {
+        check('an expired mark on a tab still at the applied target asks for nothing',
+            settleAppliedNavigation(20, 'https://target.test/', 'complete') === false);
+        check('and the retired mark cannot report anything on the next event either',
+            settleAppliedNavigation(20, 'https://elsewhere.test/', 'complete') === false);
+        check('nothing reached the log',
+            globalThis.__appended.length === 0);
+    } finally {
+        Date.now = realNow;
+    }
 }
 
 // ---------------------------------------------------------------------------
