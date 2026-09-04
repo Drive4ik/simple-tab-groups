@@ -22,9 +22,6 @@ export function beginApply() {
 export function endApply() {
     if (applyDepth > 0) {
         applyDepth--;
-        if (applyDepth === 0) {
-            lastApplyEndedAt = Date.now();
-        }
     }
 }
 
@@ -35,45 +32,43 @@ export function isApplying() {
 const appliedNavTabs = new Map();
 const APPLIED_ECHO_WINDOW_MS = 4_000;
 const APPLIED_NAV_SAFETY_MS = 60_000;
-let lastApplyEndedAt = 0;
-
-export function shouldArmAppliedNavigation() {
-    return isApplying() || (Date.now() - lastApplyEndedAt) < APPLIED_ECHO_WINDOW_MS;
-}
-
-function isMarkLive(mark, now) {
-    return mark != null && now < mark.expiry;
-}
 
 export function markAppliedNavigation(tabId, url) {
-    if (!Number.isFinite(tabId)) {
+    if (!Number.isFinite(tabId) || typeof url !== 'string') {
         return;
     }
     appliedNavTabs.set(tabId, {
         expiry: Date.now() + APPLIED_NAV_SAFETY_MS,
-        url: typeof url === 'string' ? unwrapStubUrl(url) : undefined,
+        url: unwrapStubUrl(url),
     });
-}
-
-export function armAppliedNavigation(tabId) {
-    if (!Number.isFinite(tabId) || isMarkLive(appliedNavTabs.get(tabId), Date.now())) {
-        return;
-    }
-    markAppliedNavigation(tabId);
 }
 
 export function clearAppliedNavigation(tabId) {
     appliedNavTabs.delete(tabId);
 }
 
-export function settleAppliedNavigation(tabId, observedStatus) {
+export function settleAppliedNavigation(tabId, observedUrl, observedStatus) {
     const mark = appliedNavTabs.get(tabId);
     if (mark == null) {
-        return;
+        return false;
     }
-    if (isAppliedNavigationSettled({markExpiry: mark.expiry, observedStatus, now: Date.now()})) {
-        appliedNavTabs.delete(tabId);
+
+    const now = Date.now();
+
+    if (!isAppliedNavigationSettled({markExpiry: mark.expiry, observedStatus, now})) {
+        return false;
     }
+
+    appliedNavTabs.delete(tabId);
+
+    return !isAppliedNavigationEcho({
+        applying: isApplying(),
+        markExpiry: mark.expiry,
+        markUrl: mark.url,
+        observedUrl: typeof observedUrl === 'string' ? unwrapStubUrl(observedUrl) : observedUrl,
+        observedStatus,
+        now,
+    });
 }
 
 const appliedMoveTabs = new Map();

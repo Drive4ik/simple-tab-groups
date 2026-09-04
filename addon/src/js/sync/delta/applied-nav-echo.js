@@ -8,16 +8,13 @@ export function isAppliedNavigationEcho({applying, markExpiry, markUrl, observed
     if (applying) {
         return true;
     }
-    if (!hasLiveMark(markExpiry, now)) {
+    if (!hasLiveMark(markExpiry, now) || typeof markUrl !== 'string') {
         return false;
     }
     if (observedStatus !== NAVIGATION_COMPLETE_STATUS) {
         return true;
     }
-    if (typeof markUrl === 'string' && typeof observedUrl === 'string') {
-        return observedUrl === markUrl;
-    }
-    return true;
+    return observedUrl === markUrl;
 }
 
 export function isAppliedNavigationSettled({markExpiry, observedStatus, now}) {

@@ -10,6 +10,10 @@
  * `status === 'complete'`. Everything the load does on the way there (redirects, title
  * settling, url canonicalisation) is a resolution of OUR navigation, not a user edit. The
  * expiry is only a safety bound for a navigation that never completes.
+ *
+ * Suppression requires a KNOWN applied target url. A mark without one cannot attribute the
+ * observed state to us, so it never suppresses: a spurious push converges, a swallowed user
+ * edit does not.
  */
 
 import {isAppliedNavigationEcho, isAppliedNavigationSettled, NAVIGATION_COMPLETE_STATUS} from './applied-nav-echo.js';
@@ -58,6 +62,24 @@ function createMarkStore() {
             }
             return echo;
         },
+        settle(tabId, observedUrl, observedStatus, now, applying = false) {
+            const mark = marks.get(tabId);
+            if (mark == null) {
+                return false;
+            }
+            if (!isAppliedNavigationSettled({markExpiry: mark.expiry, observedStatus, now})) {
+                return false;
+            }
+            marks.delete(tabId);
+            return !isAppliedNavigationEcho({
+                applying,
+                markExpiry: mark.expiry,
+                markUrl: mark.url,
+                observedUrl,
+                observedStatus,
+                now,
+            });
+        },
         has(tabId) {
             return marks.has(tabId);
         },
@@ -87,8 +109,12 @@ check('completion at the applied url ⇒ ECHO (our own write)',
     isAppliedNavigationEcho({applying: false, markExpiry: NOW + SAFETY_MS, markUrl: 'http://x', observedUrl: 'http://x', observedStatus: COMPLETE, now: NOW}) === true);
 check('completion at a DIFFERENT url ⇒ CAPTURE (cloud converges to the redirect target)',
     isAppliedNavigationEcho({applying: false, markExpiry: NOW + SAFETY_MS, markUrl: 'http://x', observedUrl: 'http://y', observedStatus: COMPLETE, now: NOW}) === false);
-check('completion with a url-less mark ⇒ ECHO (safe default)',
-    isAppliedNavigationEcho({applying: false, markExpiry: NOW + SAFETY_MS, observedUrl: 'http://y', observedStatus: COMPLETE, now: NOW}) === true);
+check('completion with a url-less mark ⇒ CAPTURE (no applied target to attribute it to)',
+    isAppliedNavigationEcho({applying: false, markExpiry: NOW + SAFETY_MS, observedUrl: 'http://y', observedStatus: COMPLETE, now: NOW}) === false);
+check('loading with a url-less mark ⇒ CAPTURE (a target-less mark never blinds the tab)',
+    isAppliedNavigationEcho({applying: false, markExpiry: NOW + SAFETY_MS, observedUrl: 'http://y', observedStatus: LOADING, now: NOW}) === false);
+check('a url-less mark cannot blind the tab for the whole safety bound',
+    isAppliedNavigationEcho({applying: false, markExpiry: NOW + SAFETY_MS, observedUrl: 'http://y', now: NOW}) === false);
 check('completion RETIRES the mark before the bound',
     isAppliedNavigationSettled({markExpiry: NOW + SAFETY_MS, observedStatus: COMPLETE, now: NOW}) === true);
 check('a loading event does NOT retire the mark',
@@ -174,6 +200,60 @@ check('markExpiry = null is treated as no mark ⇒ CAPTURE',
         store.has(5) === false);
     check('removal: a recycled tab id is treated as a genuine user navigation',
         store.consume(5, 'http://other', COMPLETE, NOW + 1_000) === false);
+}
+
+// --- scenario: the completing event carries ONLY `status` (title and url unchanged) --------
+// tabs.js drives capture off title/url changes, so the completing event of an applied
+// navigation reaches the capture path through the SETTLE decision instead. Landing on the
+// applied target asks for nothing; landing anywhere else asks for a capture.
+{
+    const store = createMarkStore();
+    store.mark(6, 'http://x', NOW);
+    check('status-only completion at the applied target ⇒ no capture asked for',
+        store.settle(6, 'http://x', COMPLETE, NOW + 3_000) === false);
+    check('status-only completion retires the mark',
+        store.has(6) === false);
+}
+
+// --- scenario: a USER navigation typed while the applied load is still in flight ------------
+{
+    const store = createMarkStore();
+    store.mark(7, 'http://applied', NOW);
+    check('user nav: the in-flight url event is suppressed (indistinguishable from a redirect)',
+        store.consume(7, 'http://user', LOADING, NOW + 800) === true);
+    check('user nav: the status-only completion asks for a CAPTURE (landed off target)',
+        store.settle(7, 'http://user', COMPLETE, NOW + 2_500) === true);
+    check('user nav: the mark is retired by that completion',
+        store.has(7) === false);
+    check('user nav: nothing suppresses the tab afterwards',
+        store.consume(7, 'http://user2', COMPLETE, NOW + 3_000) === false);
+}
+
+// --- scenario: an applied load that NEVER completes ------------------------------------------
+{
+    const store = createMarkStore();
+    store.mark(8, 'http://stuck', NOW);
+    check('stuck load: settle asks for nothing while the bound is live',
+        store.settle(8, 'http://stuck', LOADING, NOW + 10_000) === false);
+    check('stuck load: the mark survives a non-completing event',
+        store.has(8) === true);
+    check('stuck load: past the bound the settle asks for a CAPTURE (degrade to capture)',
+        store.settle(8, 'http://elsewhere', LOADING, NOW + SAFETY_MS) === true);
+    check('stuck load: the bound retires the mark',
+        store.has(8) === false);
+}
+
+// --- regression: the mark must NOT latch onto a pre-navigation url --------------------------
+// The old store kept the FIRST url it ever saw, so an incidental onUpdated arming the mark
+// with the pre-navigation url defeated suppression for the very navigation it covered.
+{
+    const store = createMarkStore();
+    store.mark(9, 'http://before', NOW);
+    store.mark(9, 'http://applied', NOW + 10);
+    check('latch regression: the applied url replaces the pre-navigation url',
+        store.consume(9, 'http://applied', COMPLETE, NOW + 1_200) === true);
+    check('latch regression: the mark is retired by that completion',
+        store.has(9) === false);
 }
 
 console.log(`\n${passed} passed, ${failures.length} failed`);
