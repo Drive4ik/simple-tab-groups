@@ -13,9 +13,6 @@
  *   - the snapshot-write / own-log-truncation DECISION an idle cycle makes writes no snapshot.
  *
  * Exits non-zero on the first failed assertion so it can gate a manual check.
- *
- * Intentionally NOT matched by eslint (config targets addon/**\/*.js, not .mjs); it uses
- * node globals (process, console) the browser config bans.
  */
 
 import {

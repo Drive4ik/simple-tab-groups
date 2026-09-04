@@ -9,8 +9,6 @@
  * transport navigates via `browser.tabs.update`, whose `onUpdated` settle/redirect fires
  * ASYNCHRONOUSLY after `endApply()`. That echo must be SUPPRESSED, while a genuine USER
  * navigation made outside the apply's causal window must still SYNC.
- *
- * Intentionally NOT matched by eslint (config targets addon/**\/*.js, not .mjs).
  */
 
 import {isAppliedNavigationEcho} from './applied-nav-echo.js';

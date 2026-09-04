@@ -10,8 +10,6 @@
  * cloud self-delta); a later cycle truncates ONLY once the pulled snapshot watermark confirms
  * durability; a CLOBBERED snapshot leaves the marker and the events recoverable; re-runs
  * converge.
- *
- * Intentionally NOT matched by eslint (config targets addon/**\/*.js, not .mjs).
  */
 
 import {

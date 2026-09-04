@@ -10,7 +10,6 @@
  * shrinks when the tail's highest-seq events are cancelled (add+remove of a locally-born uid).
  *
  * Both engines are import-free / browser-free by contract, so this runs under plain node.
- * Intentionally NOT matched by eslint (config targets addon/**\/*.js, not .mjs).
  */
 
 import {replay} from './replay.js';

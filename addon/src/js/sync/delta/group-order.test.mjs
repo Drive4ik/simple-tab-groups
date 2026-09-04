@@ -9,9 +9,6 @@
  * already in the resolved order (and echoing those moves back into the delta log).
  * `groupTabsAlreadyOrdered` compares the group's CURRENT physical order (its live tabs
  * sorted by `.index`) against the resolved order so reconcile only moves when they differ.
- *
- * Intentionally NOT matched by eslint (config targets addon/**\/*.js, not .mjs); it uses
- * node globals (process, console) the browser config bans.
  */
 
 import {liveGroupTabOrder, groupTabsAlreadyOrdered, planGroupReorderMoves} from './group-order.js';

@@ -11,8 +11,6 @@
  * Regression: a spuriously-empty resolve on a first-sync or compaction cycle must NOT publish
  * an empty base snapshot over a non-existent/non-empty prior, and must NOT record a deferred
  * self-truncation marker (which a later peer watermark would confirm and strand data).
- *
- * Intentionally NOT matched by eslint (config targets addon/**\/*.js, not .mjs).
  */
 
 import {isResolvedSpuriouslyEmpty, shouldWriteSnapshot} from './snapshot-write-gate.js';

@@ -10,8 +10,6 @@
  *   - STG's "unsupported URL" stub page (moz-extension://…/help/stg-unsupported-url.html
  *     ?url=ORIG) decodes back to the embedded original — so a stub-rendered about: tab keeps
  *     its original identity and never diverges into a competing moz-extension tab record.
- *
- * Intentionally NOT matched by eslint (config targets addon/**\/*.js, not .mjs).
  */
 
 import {

@@ -12,9 +12,6 @@
  * apply-written option, but ALSO silently dropped a user's own option edit made while a
  * sync happened to be applying. The fix threads an explicit `{fromSync}` marker: skip only
  * a sync-originated write; capture a user write even mid-apply.
- *
- * Intentionally NOT matched by eslint (config targets addon/**\/*.js, not .mjs); it uses
- * node globals (process, console, module.register) the browser config bans.
  */
 
 import {register} from 'node:module';

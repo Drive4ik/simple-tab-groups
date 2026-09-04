@@ -9,8 +9,6 @@
  *
  * Covers: map build (live + archived + pinned), overwrite-on-change write gating,
  * merge-on-pull (union by uid), and the ARCHIVED backup→restore→sync acceptance case.
- *
- * Intentionally NOT matched by eslint (config targets addon/**\/*.js, not .mjs).
  */
 
 import {buildFavIconMap, serializeFavIconMap, mergeFavIconMaps, MAX_FAVICON_ENTRY_BYTES} from './favicon-map.js';

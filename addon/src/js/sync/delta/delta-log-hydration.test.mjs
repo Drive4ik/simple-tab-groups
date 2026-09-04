@@ -21,9 +21,6 @@
  * collision), and exactly one underlying read was issued (proof of memoization). It also
  * checks the reset path (clear() lets a later hydration re-run), the thumbnail/oversized-icon
  * bloat migration, and the one-time storage.local -> IndexedDB migration.
- *
- * Intentionally NOT matched by eslint (config targets addon/**\/*.js, not .mjs); it uses
- * node globals (process, console, module.register) the browser config bans.
  */
 
 import {register} from 'node:module';

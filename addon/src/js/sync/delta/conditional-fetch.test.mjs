@@ -17,8 +17,6 @@
  * flows are re-implemented here from the same source and the test pins the contract. The
  * PURE fingerprint (fingerprint.js) is imported and exercised directly. Keep the copies in
  * sync with githubgist.js / delta-sync.js.
- *
- * Intentionally NOT matched by eslint (config targets addon/**\/*.js, not .mjs).
  */
 
 import {contentFingerprint} from './fingerprint.js';

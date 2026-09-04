@@ -20,9 +20,6 @@
  *      NEVER in any remove list.
  *   D. optionsToApply only ever SETS values (it has no shape to delete an option key):
  *      it is a plain object whose values are not the `undefined` deletion sentinel.
- *
- * Intentionally NOT matched by eslint (config targets addon/**\/*.js, not .mjs); it
- * uses node globals (process, console) the browser config bans.
  */
 
 import {planSync} from './plan-sync.js';

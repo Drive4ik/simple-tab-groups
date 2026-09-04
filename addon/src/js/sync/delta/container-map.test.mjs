@@ -7,8 +7,6 @@
  *   - a tab/group in a custom container round-trips to the SAME logical container;
  *   - default/temporary markers are handled (never registered as real containers);
  *   - a missing registry definition falls back to the local default (never fails).
- *
- * Intentionally NOT matched by eslint (config targets addon/**\/*.js, not .mjs).
  */
 
 import {
@@ -48,7 +46,6 @@ const PC2_CONTAINERS = {
 
 const isDefault = csId => !csId || csId === DEFAULT_MARKER || csId.includes('default');
 const isPc1Temp = csId => csId === 'firefox-container-9';
-const isPc2Temp = () => false;
 
 // ---------------------------------------------------------------------------
 // 1. stringifyContainer is name+color+icon, stable across machines for one identity.
