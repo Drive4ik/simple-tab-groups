@@ -194,30 +194,26 @@ async function buildLiveTabIndexByUid() {
 async function buildTabMoveContext() {
     const {groups} = await Groups.load(null, true);
     const byUid = new Map();
-    const indicesByGroupId = new Map();
+    const tabsByGroupId = new Map();
     for (const group of groups) {
         if (group.isArchive || !Array.isArray(group.tabs)) {
             continue;
         }
-        const indices = [];
         for (const tab of group.tabs) {
-            if (Number.isFinite(tab.index)) {
-                indices.push(tab.index);
-            }
             if (tab.uid != null && tab.id != null) {
                 byUid.set(tab.uid, tab);
             }
         }
-        indicesByGroupId.set(group.id, indices);
+        tabsByGroupId.set(group.id, group.tabs);
     }
-    return {byUid, indicesByGroupId};
+    return {byUid, tabsByGroupId};
 }
 
-async function applyTabMove(liveTab, target, destGroupTabIndices, log) {
+async function applyTabMove(liveTab, target, destGroupTabs, log) {
     const groupId = target.groupId;
     const destinationWindowId = groupId != null ? Cache.getWindowId(groupId) : null;
     const groupChanged = groupId != null && Cache.getTabGroup(liveTab.id) !== groupId;
-    const absoluteIndex = resolveAbsoluteTabIndex(destGroupTabIndices, target.index);
+    const absoluteIndex = resolveAbsoluteTabIndex(destGroupTabs, target.index);
 
     if (!groupChanged) {
         const moveProps = {index: absoluteIndex};
@@ -460,7 +456,8 @@ async function applyPinnedOps(browserOps, log, sleepOptions = {}) {
             if (tabId == null) {
                 continue;
             }
-            await Tabs.moveNative([{id: tabId}], {index: move.target?.index}, true)
+            const absoluteIndex = resolveAbsoluteTabIndex(livePinned, move.target?.index);
+            await Tabs.moveNative([{id: tabId}], {index: absoluteIndex}, true)
                 .catch(log.onCatch(['cant move pinned tab', move.uid], false));
         }
 
@@ -656,7 +653,7 @@ export async function applyBrowserOps(browserOps, resolvedSnapshot) {
 
         if (browserOps.tabsToMove.length) {
             const endPhase = beginApplyPhase('tabs-move', log);
-            const {byUid, indicesByGroupId} = await buildTabMoveContext();
+            const {byUid, tabsByGroupId} = await buildTabMoveContext();
 
             for (const move of browserOps.tabsToMove) {
                 const liveTab = byUid.get(move.uid);
@@ -664,7 +661,7 @@ export async function applyBrowserOps(browserOps, resolvedSnapshot) {
                     continue;
                 }
                 const target = move.target || {};
-                await applyTabMove(liveTab, target, indicesByGroupId.get(target.groupId), log);
+                await applyTabMove(liveTab, target, tabsByGroupId.get(target.groupId), log);
             }
             endPhase();
         }
