@@ -42,6 +42,7 @@ const {
     markAppliedMove,
     consumeAppliedMoveEcho,
     markAppliedNavigation,
+    clearAppliedNavigation,
     settleAppliedNavigation,
     tabModified,
     pinnedModified,
@@ -374,6 +375,60 @@ function reset() {
     } finally {
         Date.now = realNow;
     }
+}
+
+// --- 18. the same redirect, still LOADING past the safety bound ------------------------
+// The hop was suppressed and left in the cache, so an unrelated event past the bound
+// (`favIconUrl`, `audible` — no url, no title) reaches the settle decision carrying the hop
+// url and `status: 'loading'`. The tab has not landed there: reporting it would push a
+// mid-flight url and drag every peer onto it. The url the tab really lands on is a url
+// CHANGE, which the ordinary capture path picks up by itself.
+{
+    reset();
+    globalThis.__tabFacts = {23: {uid: 'u23', groupId: 1}};
+
+    markAppliedNavigation(23, 'https://target.test/');
+
+    await tabModified({id: 23, url: 'https://hop.test/', title: 'H', windowId: 1, discarded: false, status: 'loading'});
+    check('the hop is suppressed as part of the applied navigation',
+        globalThis.__appended.length === 0);
+
+    const realNow = Date.now;
+    Date.now = () => realNow() + 61_000;
+
+    try {
+        check('an unrelated event past the bound, still loading, asks for no capture',
+            settleAppliedNavigation(23, 'https://hop.test/', 'loading') === false);
+        check('no mid-flight url reached the log',
+            globalThis.__appended.length === 0);
+
+        await tabModified({id: 23, url: 'https://final.test/', title: 'F', windowId: 1, discarded: false, status: 'complete'});
+        check('the url the tab finally lands on is captured through the ordinary content path',
+            globalThis.__appended.length === 1 && globalThis.__appended[0].tab.url === 'https://final.test/');
+    } finally {
+        Date.now = realNow;
+    }
+}
+
+// --- 19. a tab with NO applied-navigation mark never reports a landing -----------------
+// The landing decision compares the observed url with the url THIS device applied. A tab
+// that was never navigated by an apply — or whose mark was dropped when it discarded —
+// has no applied target, so its url can only be a plain user navigation and the settle
+// decision must stay out of it.
+{
+    reset();
+    globalThis.__tabFacts = {21: {uid: 'u21', groupId: 1}, 22: {uid: 'u22', groupId: 1}};
+
+    check('a tab that was never navigated by an apply asks for nothing',
+        settleAppliedNavigation(21, 'https://user.test/', 'complete') === false);
+
+    markAppliedNavigation(22, 'https://target.test/');
+    clearAppliedNavigation(22);
+
+    check('a dropped mark leaves no target to have landed off',
+        settleAppliedNavigation(22, 'https://user.test/', 'complete') === false);
+    check('nothing reached the log',
+        globalThis.__appended.length === 0);
 }
 
 // ---------------------------------------------------------------------------

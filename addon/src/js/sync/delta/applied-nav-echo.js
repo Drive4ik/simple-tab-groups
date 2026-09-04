@@ -1,7 +1,12 @@
 export const NAVIGATION_COMPLETE_STATUS = 'complete';
+export const NAVIGATION_LOADING_STATUS = 'loading';
+
+function hasMark(markExpiry) {
+    return Number.isFinite(markExpiry);
+}
 
 function hasLiveMark(markExpiry, now) {
-    return Number.isFinite(markExpiry) && now < markExpiry;
+    return hasMark(markExpiry) && now < markExpiry;
 }
 
 function observedUrlDiffersFromTarget(markUrl, observedUrl) {
@@ -21,11 +26,18 @@ export function isAppliedNavigationEcho({applying, markExpiry, markUrl, observed
     return observedUrl === markUrl;
 }
 
+function hasLanded(markExpiry, observedStatus, now) {
+    if (hasLiveMark(markExpiry, now)) {
+        return observedStatus === NAVIGATION_COMPLETE_STATUS;
+    }
+    return observedStatus !== NAVIGATION_LOADING_STATUS;
+}
+
 export function isAppliedNavigationLandedOffTarget({applying, markExpiry, markUrl, observedUrl, observedStatus, now}) {
-    if (applying) {
+    if (applying || !hasMark(markExpiry)) {
         return false;
     }
-    if (hasLiveMark(markExpiry, now) && observedStatus !== NAVIGATION_COMPLETE_STATUS) {
+    if (!hasLanded(markExpiry, observedStatus, now)) {
         return false;
     }
     return observedUrlDiffersFromTarget(markUrl, observedUrl);
