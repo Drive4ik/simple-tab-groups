@@ -29,6 +29,7 @@ import {
     deviceIdFromDeltaFileName,
     favIconFileName,
 } from './layout.js';
+import {contentMarksFromSnapshot} from './content-marks.js';
 import {serializeFavIconMap, mergeFavIconMaps} from './favicon-map.js';
 import {applyFavIconMap} from './favicon-file.js';
 import {
@@ -41,6 +42,7 @@ import {
     lastSyncErrorKey,
     maxSeq,
     saveBaseline,
+    saveContentMarks,
 } from './sync-marks.js';
 import {gatherLocalPending, captureLocalSnapshot} from './local-state.js';
 import {deepClone} from './deep-clone.js';
@@ -521,6 +523,7 @@ export async function deltaSynchronization() {
 
         if (!suppressEmptyResolve) {
             saveBaseline(selfDeviceId, baselineFromSnapshot(plan.resolvedSnapshot));
+            saveContentMarks(selfDeviceId, contentMarksFromSnapshot(plan.resolvedSnapshot));
         }
 
         Cloud.commitSyncCycle?.(cycle);

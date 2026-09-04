@@ -36,10 +36,26 @@ function check(name, cond, detail) {
 
 globalThis.__appended = [];
 
-const {optionsChanged, beginApply, endApply, isApplying, markAppliedMove, consumeAppliedMoveEcho} = await import('./delta-capture.js');
+const {
+    optionsChanged,
+    beginApply,
+    endApply,
+    isApplying,
+    markAppliedMove,
+    consumeAppliedMoveEcho,
+    tabModified,
+    pinnedModified,
+    tabRemoved,
+} = await import('./delta-capture.js');
+const {contentMark} = await import('./content-marks.js');
+
+globalThis.__contentMarks = {};
+globalThis.__tabFacts = {};
 
 function reset() {
     globalThis.__appended.length = 0;
+    globalThis.__contentMarks = {};
+    globalThis.__tabFacts = {};
 }
 
 // --- 1. a user-initiated option change is captured while no sync is applying -----------
@@ -103,6 +119,85 @@ function reset() {
     endApply();
     check('after endApply, an unmarked tab is a USER move (capture)',
         consumeAppliedMoveEcho(303) === false);
+}
+
+// --- 6. last-synced content gate: capture is edge-triggered, not level-triggered ------
+{
+    // A tab whose content still equals what the last sync agreed on is NOT re-pushed:
+    // the drift-back that fed the two-device url/title ping-pong stops here.
+    reset();
+    globalThis.__tabFacts = {7: {uid: 'u7', groupId: 1, lastModified: 5}};
+    globalThis.__contentMarks = {u7: contentMark({url: 'https://a.test/', title: 'A'})};
+
+    await tabModified({id: 7, url: 'https://a.test/', title: 'A', windowId: 1, discarded: true});
+    check('content equal to the last-synced value is not captured',
+        globalThis.__appended.length === 0);
+
+    // A genuine user edit to a DIFFERENT value is always captured.
+    await tabModified({id: 7, url: 'https://a.test/next', title: 'A', windowId: 1, discarded: false});
+    check('a user edit to a different url is captured',
+        globalThis.__appended.length === 1
+        && globalThis.__appended[0].op === 'TAB_MODIFY'
+        && globalThis.__appended[0].tab.url === 'https://a.test/next');
+
+    // The capture itself becomes the newest thing the sync layer knows for that uid, so
+    // navigating BACK to the older agreed value is still a real change and must sync.
+    await tabModified({id: 7, url: 'https://a.test/', title: 'A', windowId: 1, discarded: false});
+    check('navigating back to the previously agreed value after a local edit is captured',
+        globalThis.__appended.length === 2
+        && globalThis.__appended[1].tab.url === 'https://a.test/');
+
+    // ...and the re-emission of that very same value is a no-op again.
+    await tabModified({id: 7, url: 'https://a.test/', title: 'A', windowId: 1, discarded: false});
+    check('re-emitting the just-captured value is not captured twice',
+        globalThis.__appended.length === 2);
+}
+
+// --- 7. a uid with no mark yet behaves exactly as today --------------------------------
+{
+    reset();
+    globalThis.__tabFacts = {8: {uid: 'u8', groupId: 1}};
+
+    await tabModified({id: 8, url: 'https://a.test/', title: 'A', windowId: 1, discarded: false});
+    check('an unmarked uid is captured as before',
+        globalThis.__appended.length === 1 && globalThis.__appended[0].op === 'TAB_MODIFY');
+}
+
+// --- 8. a group-pin flip is content, not drift -----------------------------------------
+{
+    reset();
+    globalThis.__tabFacts = {9: {uid: 'u9', groupId: 1, groupPinned: true}};
+    globalThis.__contentMarks = {u9: contentMark({url: 'https://a.test/', title: 'A', pinned: false})};
+
+    await tabModified({id: 9, url: 'https://a.test/', title: 'A', windowId: 1, discarded: false});
+    check('a group-pin change with unchanged url/title is captured',
+        globalThis.__appended.length === 1 && globalThis.__appended[0].tab.pinned === true);
+}
+
+// --- 9. the same gate guards the browser-pinned capture path ---------------------------
+{
+    reset();
+    globalThis.__tabFacts = {10: {uid: 'u10'}};
+    globalThis.__contentMarks = {u10: contentMark({url: 'https://p.test/', title: 'P'})};
+
+    await pinnedModified({id: 10, url: 'https://p.test/', title: 'P', index: 0, discarded: true});
+    check('a pinned tab still at the last-synced content is not captured',
+        globalThis.__appended.length === 0);
+
+    await pinnedModified({id: 10, url: 'https://p.test/other', title: 'P', index: 0, discarded: false});
+    check('a pinned tab edited to a different url is captured',
+        globalThis.__appended.length === 1 && globalThis.__appended[0].op === 'PINNED_MODIFY');
+}
+
+// --- 10. removing a tab drops its mark (bounded store, no stale suppression) -----------
+{
+    reset();
+    globalThis.__tabFacts = {11: {uid: 'u11', groupId: 1}};
+    globalThis.__contentMarks = {u11: contentMark({url: 'https://a.test/', title: 'A'})};
+
+    await tabRemoved('u11', 1);
+    check('TAB_REMOVE forgets the uid mark',
+        !Object.hasOwn(globalThis.__contentMarks, 'u11'));
 }
 
 // ---------------------------------------------------------------------------
