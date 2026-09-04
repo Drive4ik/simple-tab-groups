@@ -286,10 +286,6 @@ async function onUpdated(tabId, changeInfo, tab) {
         return;
     }
 
-    if (contentChanged && DeltaCapture.shouldArmAppliedNavigation()) {
-        DeltaCapture.armAppliedNavigation(tab.id);
-    }
-
     if (changeInfo.discarded === true) {
         DeltaCapture.clearAppliedNavigation(tab.id);
     }

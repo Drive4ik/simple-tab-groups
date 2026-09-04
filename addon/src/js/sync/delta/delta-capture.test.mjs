@@ -235,6 +235,29 @@ function reset() {
         globalThis.__appended.length === 1 && globalThis.__appended[0].tab.url === 'https://user.test/');
 }
 
+// --- 13. a deferred wake navigation arms only the tab it navigates ---------------------
+// pending-nav-wake wraps its wake-time navigation in beginApply/endApply. That switch must
+// not leave a post-apply window in which any tab that changes gets suppressed.
+{
+    reset();
+    globalThis.__tabFacts = {14: {uid: 'u14', groupId: 1}, 15: {uid: 'u15', groupId: 1}};
+
+    markAppliedNavigation(14, 'https://woken.test/');
+    beginApply();
+    endApply();
+
+    check('arming is not a global switch',
+        !Object.hasOwn(DeltaCapture, 'shouldArmAppliedNavigation')
+        && !Object.hasOwn(DeltaCapture, 'armAppliedNavigation'));
+
+    check('the woken tab keeps the mark for its own applied navigation',
+        settleAppliedNavigation(14, 'https://woken.test/', 'complete') === false);
+
+    await tabModified({id: 15, url: 'https://user.test/', title: 'U', windowId: 1, discarded: false, status: 'complete'});
+    check('a second, unrelated tab changing right after the wake is captured',
+        globalThis.__appended.length === 1 && globalThis.__appended[0].tab.url === 'https://user.test/');
+}
+
 // ---------------------------------------------------------------------------
 console.log(`\n${passed} passed, ${failures.length} failed`);
 if (failures.length) {
