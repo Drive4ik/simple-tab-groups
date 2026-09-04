@@ -16,7 +16,12 @@
  * edit does not.
  */
 
-import {isAppliedNavigationEcho, isAppliedNavigationSettled, NAVIGATION_COMPLETE_STATUS} from './applied-nav-echo.js';
+import {
+    isAppliedNavigationEcho,
+    isAppliedNavigationLandedOffTarget,
+    isAppliedNavigationSettled,
+    NAVIGATION_COMPLETE_STATUS,
+} from './applied-nav-echo.js';
 
 let passed = 0;
 const failures = [];
@@ -37,7 +42,7 @@ const LOADING = 'loading';
 const COMPLETE = NAVIGATION_COMPLETE_STATUS;
 
 // A faithful pure model of the mark store in delta-capture.js, so mark lifecycle scenarios
-// (supersede / removal / settle) are exercised through the same two predicates.
+// (supersede / removal / settle) are exercised through the same predicates.
 function createMarkStore() {
     const marks = new Map();
     return {
@@ -71,7 +76,7 @@ function createMarkStore() {
                 return false;
             }
             marks.delete(tabId);
-            return !isAppliedNavigationEcho({
+            return isAppliedNavigationLandedOffTarget({
                 applying,
                 markExpiry: mark.expiry,
                 markUrl: mark.url,
@@ -237,8 +242,8 @@ check('markExpiry = null is treated as no mark ⇒ CAPTURE',
         store.settle(8, 'http://stuck', LOADING, NOW + 10_000) === false);
     check('stuck load: the mark survives a non-completing event',
         store.has(8) === true);
-    check('stuck load: past the bound the settle asks for a CAPTURE (degrade to capture)',
-        store.settle(8, 'http://elsewhere', LOADING, NOW + SAFETY_MS) === true);
+    check('stuck load: past the bound the settle asks for NOTHING (an expired mark is no evidence)',
+        store.settle(8, 'http://elsewhere', LOADING, NOW + SAFETY_MS) === false);
     check('stuck load: the bound retires the mark',
         store.has(8) === false);
 }
@@ -254,6 +259,42 @@ check('markExpiry = null is treated as no mark ⇒ CAPTURE',
         store.consume(9, 'http://applied', COMPLETE, NOW + 1_200) === true);
     check('latch regression: the mark is retired by that completion',
         store.has(9) === false);
+}
+
+// --- the LANDED-OFF-TARGET decision: an expired mark carries no information ----------------
+// Retiring a mark and reporting a landing elsewhere are two different questions. The echo
+// predicate answers "may this event be suppressed"; its negation is NOT "the tab landed off
+// the applied target", because a mark past its bound cannot attribute anything at all.
+check('live mark, completion at a DIFFERENT url ⇒ LANDED OFF TARGET (the 3c837c1 property)',
+    isAppliedNavigationLandedOffTarget({applying: false, markExpiry: NOW + SAFETY_MS, markUrl: 'http://x', observedUrl: 'http://y', observedStatus: COMPLETE, now: NOW}) === true);
+check('live mark, completion at the applied url ⇒ silent',
+    isAppliedNavigationLandedOffTarget({applying: false, markExpiry: NOW + SAFETY_MS, markUrl: 'http://x', observedUrl: 'http://x', observedStatus: COMPLETE, now: NOW}) === false);
+check('live mark, still loading elsewhere ⇒ silent (the landing has not happened yet)',
+    isAppliedNavigationLandedOffTarget({applying: false, markExpiry: NOW + SAFETY_MS, markUrl: 'http://x', observedUrl: 'http://hop', observedStatus: LOADING, now: NOW}) === false);
+check('EXPIRED mark ⇒ silent even at a different url',
+    isAppliedNavigationLandedOffTarget({applying: false, markExpiry: NOW, markUrl: 'http://x', observedUrl: 'http://y', observedStatus: COMPLETE, now: NOW}) === false);
+check('EXPIRED mark, status-less event ⇒ silent',
+    isAppliedNavigationLandedOffTarget({applying: false, markExpiry: NOW - 10_000, markUrl: 'http://x', observedUrl: 'http://x', now: NOW}) === false);
+check('EXPIRED mark yields neither suppression nor a landed-off-target signal',
+    isAppliedNavigationEcho({applying: false, markExpiry: NOW - 1, markUrl: 'http://x', observedUrl: 'http://y', observedStatus: COMPLETE, now: NOW}) === false
+    && isAppliedNavigationLandedOffTarget({applying: false, markExpiry: NOW - 1, markUrl: 'http://x', observedUrl: 'http://y', observedStatus: COMPLETE, now: NOW}) === false);
+check('no mark at all ⇒ silent',
+    isAppliedNavigationLandedOffTarget({applying: false, markExpiry: undefined, observedUrl: 'http://y', observedStatus: COMPLETE, now: NOW}) === false);
+check('in-apply ⇒ silent (our own write, never a user landing)',
+    isAppliedNavigationLandedOffTarget({applying: true, markExpiry: NOW + SAFETY_MS, markUrl: 'http://x', observedUrl: 'http://y', observedStatus: COMPLETE, now: NOW}) === false);
+
+// --- scenario: an UNRELATED event on a tab whose mark expired long ago ----------------------
+// `audible` / `favIconUrl` / a bare `status` carry no url or title, so tabs.js only reaches the
+// capture path through the settle decision. A forgotten mark must not turn one into a push.
+{
+    const store = createMarkStore();
+    store.mark(10, 'http://stuck', NOW);
+    check('forgotten mark: an unrelated event past the bound asks for nothing',
+        store.settle(10, 'http://stuck', COMPLETE, NOW + SAFETY_MS + 300_000) === false);
+    check('forgotten mark: that event retires the mark',
+        store.has(10) === false);
+    check('forgotten mark: a real user navigation afterwards is still captured',
+        store.consume(10, 'http://user', COMPLETE, NOW + SAFETY_MS + 300_001) === false);
 }
 
 console.log(`\n${passed} passed, ${failures.length} failed`);

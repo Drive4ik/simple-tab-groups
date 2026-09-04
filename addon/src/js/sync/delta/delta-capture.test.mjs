@@ -258,6 +258,70 @@ function reset() {
         globalThis.__appended.length === 1 && globalThis.__appended[0].tab.url === 'https://user.test/');
 }
 
+// --- 14. an EXPIRED mark is no evidence of anything ------------------------------------
+// An applied navigation whose completion never arrives leaves its mark sitting until the
+// safety bound. Past the bound the mark can attribute nothing, so it must neither suppress
+// a real user navigation nor make an unrelated onUpdated (`audible`, `favIconUrl`, a bare
+// `status` — no url, no title) look like a landing off the applied target.
+{
+    reset();
+    globalThis.__tabFacts = {16: {uid: 'u16', groupId: 1}, 17: {uid: 'u17', groupId: 1}};
+
+    markAppliedNavigation(16, 'https://stuck.test/');
+    markAppliedNavigation(17, 'https://stuck.test/');
+
+    const realNow = Date.now;
+    Date.now = () => realNow() + 61_000;
+
+    try {
+        check('an unrelated event past the safety bound asks for no capture',
+            settleAppliedNavigation(16, 'https://stuck.test/', 'complete') === false);
+        check('and nothing reached the log for it',
+            globalThis.__appended.length === 0);
+
+        await tabModified({id: 17, url: 'https://user.test/', title: 'U', windowId: 1, discarded: false, status: 'loading'});
+        check('an expired mark does not suppress a real user navigation either',
+            globalThis.__appended.length === 1 && globalThis.__appended[0].tab.url === 'https://user.test/');
+    } finally {
+        Date.now = realNow;
+    }
+}
+
+// --- 15. a FAILED deferred navigation leaves no live mark behind -----------------------
+// pending-nav-wake arms the mark before `browser.tabs.update`. When that call throws no
+// navigation ever happens, so the mark must go with it — otherwise it blinds the tab for
+// the whole safety bound and then lingers as an expired one.
+{
+    reset();
+    globalThis.__tabFacts = {18: {uid: 'u18', groupId: 1}};
+
+    globalThis.browser = {
+        tabs: {
+            query: async () => [],
+            update: async () => {
+                throw new Error('cant navigate');
+            },
+        },
+    };
+
+    const {recordPendingNavTarget} = await import('./pending-nav-store.js');
+    const {resolvePendingNav} = await import('./pending-nav-wake.js');
+
+    const liveTab = {id: 18, url: 'https://old.test/', title: 'Old', windowId: 1, discarded: false};
+    recordPendingNavTarget('u18', liveTab, {url: 'https://deferred.test/'});
+
+    check('the failed deferred navigation reports no delivery',
+        await resolvePendingNav(liveTab, {woke: true}) === false);
+    await tabModified({id: 18, url: 'https://user.test/', title: 'U', windowId: 1, discarded: false, status: 'loading'});
+    check('the tab is not blinded by the mark of a navigation that never ran',
+        globalThis.__appended.length === 1 && globalThis.__appended[0].tab.url === 'https://user.test/');
+
+    check('no mark survives the failure (a live one would report a landing off target)',
+        settleAppliedNavigation(18, 'https://user.test/', 'complete') === false);
+
+    delete globalThis.browser;
+}
+
 // ---------------------------------------------------------------------------
 console.log(`\n${passed} passed, ${failures.length} failed`);
 if (failures.length) {
