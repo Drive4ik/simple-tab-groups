@@ -80,24 +80,23 @@ export function buildLocalState(loadedGroups, syncedOptions = {}, livePinnedTabs
     return {groups, pinnedTabs, options: {...syncedOptions}};
 }
 
-function collectLocalStateUids(localState) {
-    const uids = new Set();
+function collectPendingNavGcUids(localState) {
+    const alive = new Set();
+    const awake = new Set();
 
-    for (const group of localState.groups) {
-        for (const tab of group.tabs) {
-            if (tab.uid != null) {
-                uids.add(tab.uid);
-            }
+    const allTabs = [...localState.groups.flatMap(group => group.tabs), ...localState.pinnedTabs];
+
+    for (const tab of allTabs) {
+        if (tab.uid == null) {
+            continue;
+        }
+        alive.add(tab.uid);
+        if (tab.loaded) {
+            awake.add(tab.uid);
         }
     }
 
-    for (const tab of localState.pinnedTabs) {
-        if (tab.uid != null) {
-            uids.add(tab.uid);
-        }
-    }
-
-    return uids;
+    return {alive, awake};
 }
 
 export async function getLivePinnedTabs() {
@@ -195,7 +194,8 @@ export async function gatherLocalPending(selfDeviceId, log) {
     }
     const livePinnedTabs = await getLivePinnedTabs();
     const localState = buildLocalState(loadedGroups, localSyncedOptions, livePinnedTabs);
-    gcPendingNavTargets(collectLocalStateUids(localState));
+    const pendingNavGcUids = collectPendingNavGcUids(localState);
+    gcPendingNavTargets(pendingNavGcUids.alive, pendingNavGcUids.awake);
     const favIconMap = buildFavIconMap(loadedGroups, livePinnedTabs, overflow => {
         logger.warn('favicon file overflow: dropped favicons that exceed the caps', overflow);
     });

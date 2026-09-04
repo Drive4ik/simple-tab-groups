@@ -12,9 +12,12 @@
  * refused target per uid so it can be delivered when the tab wakes, and so the diff can stop
  * re-emitting it in the meantime.
  *
- * The load-bearing property is that a USER navigation always beats a stale pending target: the
- * entry records the url the tab really had when the refusal happened, and any content change the
- * user makes before the wake drops the entry instead of overwriting the user's page.
+ * The load-bearing property is that a USER navigation always beats a stale pending target, while a
+ * change the user did not make never counts as one: the entry records the url the tab really had
+ * when the refusal happened, so a live url that still matches it is evidence the user did nothing
+ * (Firefox refreshes a discarded tab's title from the session store on its own). A live url that
+ * moved — or an entry with no recorded url to compare against — drops the target rather than risk
+ * overwriting the page the user chose.
  *
  * Intentionally NOT matched by eslint (config targets addon/**\/*.js, not .mjs); it uses node
  * globals (process, console) the browser config bans.
@@ -34,7 +37,7 @@ import {
     gcPendingNav,
     planPendingNavOnTabUpdate,
 } from './pending-nav.js';
-import {planTabContentApply, REFUSED_DISCARDED, REFUSED_UNSYNCABLE_URL} from './tab-content-apply.js';
+import {planTabContentApply, buildTabContentCacheWrite, REFUSED_DISCARDED, REFUSED_UNSYNCABLE_URL} from './tab-content-apply.js';
 
 let passed = 0;
 const failures = [];
@@ -76,6 +79,11 @@ function onTabUpdated(store, uid, liveTab, {woke = false, contentChanged = false
         clearPendingNav(store, uid);
     }
     return plan;
+}
+
+// what pending-nav-wake.js hands to Cache.setTab when the plan carries content but no navigation
+function cacheWriteFor(liveTab, plan) {
+    return plan.writeContent ? buildTabContentCacheWrite(liveTab, plan) : null;
 }
 
 // --- registration: a refused discarded-tab update becomes a pending target -------------------
@@ -189,10 +197,36 @@ function onTabUpdated(store, uid, liveTab, {woke = false, contentChanged = false
 {
     const store = {};
     applyContentUpdate(store, 'u1', discardedTab(), {title: 'New'});
-    const onWake = onTabUpdated(store, 'u1', wokenTab(), {woke: true});
-    check('a title-only deferral resolves to no navigation and is forgotten',
-        onWake.navigate === false && onWake.clear === true && getPendingNav(store, 'u1') === null,
+
+    const liveTab = wokenTab();
+    const onWake = onTabUpdated(store, 'u1', liveTab, {woke: true});
+    check('a title-only deferral is delivered as a content write, not a navigation',
+        onWake.navigate === false && onWake.writeContent === true && onWake.title === 'New',
         JSON.stringify(onWake));
+
+    const write = cacheWriteFor(liveTab, onWake);
+    check('the delivered title goes into the cache without moving the url',
+        write.title === 'New' && write.url === 'http://old', JSON.stringify(write));
+    check('the title-only entry is forgotten once delivered',
+        onWake.clear === true && getPendingNav(store, 'u1') === null, JSON.stringify(store));
+}
+{
+    const store = {};
+    recordPendingNav(store, 'u1', discardedTab(), {title: 'Old'}, NOW);
+    const onWake = onTabUpdated(store, 'u1', wokenTab(), {woke: true});
+    check('a title the tab already carries needs no write',
+        onWake.writeContent === false && onWake.clear === true && getPendingNav(store, 'u1') === null,
+        JSON.stringify(onWake));
+}
+{
+    const store = {};
+    applyContentUpdate(store, 'u1', discardedTab(), {url: 'http://new', title: 'New'});
+    const onWake = onTabUpdated(store, 'u1', wokenTab(), {woke: true});
+    check('a url+title target still navigates and writes nothing behind the browser\'s back',
+        onWake.navigate === true && onWake.url === 'http://new' && onWake.writeContent === false,
+        JSON.stringify(onWake));
+    check('the url+title entry is forgotten once delivered',
+        getPendingNav(store, 'u1') === null, JSON.stringify(store));
 }
 {
     const store = {};
@@ -224,6 +258,62 @@ function onTabUpdated(store, uid, liveTab, {woke = false, contentChanged = false
         onWake.navigate === false && onWake.reason === DROPPED_USER_NAVIGATION,
         JSON.stringify(onWake));
 }
+{
+    const store = {};
+    applyContentUpdate(store, 'u1', discardedTab(), {url: 'http://new', title: 'New'});
+
+    const sessionTitle = onTabUpdated(store, 'u1', discardedTab({title: 'Restored from the session store'}), {contentChanged: true});
+    check('a session-store title on a still-discarded tab is not a user edit',
+        sessionTitle.clear === false && getPendingNav(store, 'u1')?.url === 'http://new',
+        JSON.stringify(sessionTitle));
+
+    const onWake = onTabUpdated(store, 'u1', wokenTab({title: 'Restored from the session store'}), {woke: true});
+    check('the target survives the session-store noise and lands on the real wake',
+        onWake.navigate === true && onWake.url === 'http://new' && getPendingNav(store, 'u1') === null,
+        JSON.stringify(onWake));
+}
+{
+    const store = {};
+    applyContentUpdate(store, 'u1', discardedTab(), {url: 'http://new'});
+
+    const userNav = onTabUpdated(store, 'u1', discardedTab({url: 'http://user-typed'}), {contentChanged: true});
+    check('a url the user moved to before the wake drops the pending target',
+        userNav.clear === true && userNav.reason === DROPPED_USER_NAVIGATION
+        && getPendingNav(store, 'u1') === null,
+        JSON.stringify(userNav));
+}
+{
+    const store = {};
+    recordPendingNav(store, 'u1', {id: 1, discarded: true}, {url: 'http://new'}, NOW);
+
+    const onWake = onTabUpdated(store, 'u1', wokenTab(), {woke: true});
+    check('an entry with no recorded live url is dropped instead of guessing',
+        onWake.navigate === false && onWake.clear === true && onWake.reason === DROPPED_USER_NAVIGATION,
+        JSON.stringify(onWake));
+}
+
+// --- a tab that is already awake must not keep suppressing the diff ---------------------------
+{
+    const store = {};
+    applyContentUpdate(store, 'u1', discardedTab(), {url: 'http://new', title: 'New'});
+
+    gcPendingNav(store, {aliveUids: new Set(['u1']), awakeUids: new Set(['u1']), now: NOW});
+
+    check('a tab found already awake retires its stale pending target',
+        getPendingNav(store, 'u1') === null, JSON.stringify(store));
+    check('the retired target stops suppressing the plan',
+        JSON.stringify(pendingNavTargets(store)) === '{}', JSON.stringify(store));
+}
+{
+    const store = {};
+    applyContentUpdate(store, 'u1', discardedTab(), {url: 'http://new'});
+
+    gcPendingNav(store, {aliveUids: new Set(['u1']), awakeUids: new Set(), now: NOW});
+
+    check('a tab that is still asleep keeps its pending target through GC',
+        getPendingNav(store, 'u1')?.url === 'http://new', JSON.stringify(store));
+}
+
 {
     const store = {};
     const stub = 'moz-extension://abc-123/help/stg-unsupported-url.html?url=about%3Aconfig';

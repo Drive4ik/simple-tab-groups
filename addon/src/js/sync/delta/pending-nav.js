@@ -148,14 +148,24 @@ export function pendingNavTargets(store) {
     return targets;
 }
 
-export function gcPendingNav(store, {aliveUids, now} = {}) {
-    const alive = aliveUids == null ? null : (aliveUids instanceof Set ? aliveUids : new Set(aliveUids));
+function toUidSet(uids) {
+    if (uids == null) {
+        return null;
+    }
+    return uids instanceof Set ? uids : new Set(uids);
+}
+
+export function gcPendingNav(store, {aliveUids, awakeUids, now} = {}) {
+    const alive = toUidSet(aliveUids);
+    const awake = toUidSet(awakeUids);
     const cutoff = Number.isFinite(now) ? now - PENDING_NAV_MAX_AGE_MS : null;
 
     const pending = loadPendingNav(store);
 
     for (const [uid, entry] of pending) {
         if (alive && !alive.has(uid)) {
+            pending.delete(uid);
+        } else if (awake && awake.has(uid)) {
             pending.delete(uid);
         } else if (cutoff !== null && entry.ts < cutoff) {
             pending.delete(uid);
@@ -167,8 +177,22 @@ export function gcPendingNav(store, {aliveUids, now} = {}) {
     return pending;
 }
 
+function leftTheRefusalUrl(entry, liveTab) {
+    if (entry.liveUrl == null || typeof liveTab?.url !== 'string') {
+        return true;
+    }
+    return !liveUrlMatchesSource(liveTab.url, entry.liveUrl);
+}
+
 export function planPendingNavOnTabUpdate(entry, liveTab, {woke = false, contentChanged = false, now} = {}) {
-    const keepWaiting = {navigate: false, clear: false, url: undefined, title: undefined, reason: null};
+    const keepWaiting = {
+        navigate: false,
+        writeContent: false,
+        clear: false,
+        url: undefined,
+        title: undefined,
+        reason: null,
+    };
 
     if (!entry) {
         return keepWaiting;
@@ -178,7 +202,9 @@ export function planPendingNavOnTabUpdate(entry, liveTab, {woke = false, content
         return {...keepWaiting, clear: true, reason: DROPPED_EXPIRED};
     }
 
-    if (contentChanged && !woke) {
+    const userMoved = leftTheRefusalUrl(entry, liveTab);
+
+    if (contentChanged && !woke && userMoved) {
         return {...keepWaiting, clear: true, reason: DROPPED_USER_NAVIGATION};
     }
 
@@ -186,7 +212,7 @@ export function planPendingNavOnTabUpdate(entry, liveTab, {woke = false, content
         return keepWaiting;
     }
 
-    if (entry.liveUrl != null && !liveUrlMatchesSource(liveTab.url, entry.liveUrl)) {
+    if (userMoved) {
         return {...keepWaiting, clear: true, reason: DROPPED_USER_NAVIGATION};
     }
 
@@ -194,6 +220,7 @@ export function planPendingNavOnTabUpdate(entry, liveTab, {woke = false, content
 
     return {
         navigate: plan.navigate,
+        writeContent: !plan.navigate && plan.refusal == null && plan.title !== liveTab.title,
         clear: true,
         url: plan.url,
         title: plan.title,
