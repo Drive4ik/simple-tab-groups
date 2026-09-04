@@ -15,12 +15,11 @@ const logger = new Logger('DeltaCapture');
 
 let applyDepth = 0;
 
-export function beginApply() {
+export async function runApplying(fn) {
     applyDepth++;
-}
-
-export function endApply() {
-    if (applyDepth > 0) {
+    try {
+        return await fn();
+    } finally {
         applyDepth--;
     }
 }

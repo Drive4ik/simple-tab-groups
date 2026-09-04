@@ -480,15 +480,14 @@ export async function applyOptions(optionsToApply) {
 
     const log = logger.start('applyOptions', {keys});
 
-    DeltaCapture.beginApply();
-    try {
-        await backgroundSelf.saveOptions(optionsToApply, {fromSync: true});
-        log.stop();
-    } catch (e) {
-        log.logError('cant apply options', e);
-    } finally {
-        DeltaCapture.endApply();
-    }
+    await DeltaCapture.runApplying(async () => {
+        try {
+            await backgroundSelf.saveOptions(optionsToApply, {fromSync: true});
+            log.stop();
+        } catch (e) {
+            log.logError('cant apply options', e);
+        }
+    });
 }
 
 export async function applyBrowserOps(browserOps, resolvedSnapshot) {
@@ -507,11 +506,9 @@ export async function applyBrowserOps(browserOps, resolvedSnapshot) {
         pinnedToRemove: browserOps.pinnedToRemove?.length || 0,
     });
 
-    DeltaCapture.beginApply();
-
     const sleepOptions = await Storage.get(SLEEP_OPTION_KEYS);
 
-    try {
+    return DeltaCapture.runApplying(async () => {
         const needGroupWrite = browserOps.groupsToCreate.length
             || browserOps.groupsToUpdate.length
             || browserOps.groupsToRemove.length
@@ -703,7 +700,5 @@ export async function applyBrowserOps(browserOps, resolvedSnapshot) {
         endPinned();
 
         log.stop();
-    } finally {
-        DeltaCapture.endApply();
-    }
+    });
 }

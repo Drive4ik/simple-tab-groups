@@ -8,18 +8,17 @@ const logger = new Logger('DeltaPendingNav');
 
 async function navigateToDeferredTarget(tab, plan) {
     DeltaCapture.markAppliedNavigation(tab.id, plan.url);
-    DeltaCapture.beginApply();
 
-    try {
-        await browser.tabs.update(tab.id, {url: plan.url});
-        return true;
-    } catch (e) {
-        DeltaCapture.clearAppliedNavigation(tab.id);
-        logger.onCatch(['cant apply deferred navigation', tab.id], false)(e);
-        return false;
-    } finally {
-        DeltaCapture.endApply();
-    }
+    return DeltaCapture.runApplying(async () => {
+        try {
+            await browser.tabs.update(tab.id, {url: plan.url});
+            return true;
+        } catch (e) {
+            DeltaCapture.clearAppliedNavigation(tab.id);
+            logger.onCatch(['cant apply deferred navigation', tab.id], false)(e);
+            return false;
+        }
+    });
 }
 
 export async function resolvePendingNav(tab, {woke = false, contentChanged = false} = {}) {

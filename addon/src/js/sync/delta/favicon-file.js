@@ -54,12 +54,7 @@ async function applyArchivedFavIcons(mergedMap) {
         return;
     }
 
-    DeltaCapture.beginApply();
-    try {
-        await Groups.save(groups);
-    } finally {
-        DeltaCapture.endApply();
-    }
+    await DeltaCapture.runApplying(() => Groups.save(groups));
 }
 
 export async function applyFavIconMap(mergedMap) {

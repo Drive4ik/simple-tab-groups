@@ -36,8 +36,7 @@ globalThis.__appended = [];
 const DeltaCapture = await import('./delta-capture.js');
 const {
     optionsChanged,
-    beginApply,
-    endApply,
+    runApplying,
     isApplying,
     markAppliedMove,
     consumeAppliedMoveEcho,
@@ -74,15 +73,15 @@ function reset() {
 // --- 2. a sync-originated write during apply is NOT captured (no echo) -----------------
 {
     reset();
-    beginApply();
-    check('isApplying reflects the active sync', isApplying() === true);
+    await runApplying(async () => {
+        check('isApplying reflects the active sync', isApplying() === true);
 
-    await optionsChanged({closePopupAfterSelectTab: false}, {fromSync: true});
-    check('sync-originated write is skipped (no echo into the log)', globalThis.__appended.length === 0);
+        await optionsChanged({closePopupAfterSelectTab: false}, {fromSync: true});
+        check('sync-originated write is skipped (no echo into the log)', globalThis.__appended.length === 0);
 
-    // --- 3. a USER change during that same apply window is STILL captured (the fix) ----
-    await optionsChanged({closePopupAfterSelectTab: true});
-    endApply();
+        // --- 3. a USER change during that same apply window is STILL captured (the fix) ----
+        await optionsChanged({closePopupAfterSelectTab: true});
+    });
 
     check('user change mid-apply is captured despite the active sync', globalThis.__appended.length === 1);
     check('the mid-apply user change carries the user value',
@@ -103,7 +102,7 @@ function reset() {
 {
     // A move armed by apply and settling within the trailing window ⇒ echo (suppress).
     markAppliedMove(101);
-    check('apply-armed move settling after endApply ⇒ echo (suppress)',
+    check('apply-armed move settling after the apply pass ⇒ echo (suppress)',
         consumeAppliedMoveEcho(101) === true);
     // The mark is consumed on read, so a genuine LATER user move of the SAME tab syncs.
     check('mark consumed on read ⇒ next move of the same tab is a USER move (capture)',
@@ -114,11 +113,9 @@ function reset() {
         consumeAppliedMoveEcho(202) === false);
 
     // While apply is in progress every move is an echo (matches the existing isApplying gate).
-    beginApply();
-    check('in-apply move (no mark) ⇒ echo (suppress)',
-        consumeAppliedMoveEcho(303) === true);
-    endApply();
-    check('after endApply, an unmarked tab is a USER move (capture)',
+    await runApplying(() => check('in-apply move (no mark) ⇒ echo (suppress)',
+        consumeAppliedMoveEcho(303) === true));
+    check('after the apply pass, an unmarked tab is a USER move (capture)',
         consumeAppliedMoveEcho(303) === false);
 }
 
@@ -237,15 +234,14 @@ function reset() {
 }
 
 // --- 13. a deferred wake navigation arms only the tab it navigates ---------------------
-// pending-nav-wake wraps its wake-time navigation in beginApply/endApply. That switch must
-// not leave a post-apply window in which any tab that changes gets suppressed.
+// pending-nav-wake wraps its wake-time navigation in runApplying. That switch must not
+// leave a post-apply window in which any tab that changes gets suppressed.
 {
     reset();
     globalThis.__tabFacts = {14: {uid: 'u14', groupId: 1}, 15: {uid: 'u15', groupId: 1}};
 
     markAppliedNavigation(14, 'https://woken.test/');
-    beginApply();
-    endApply();
+    await runApplying(() => {});
 
     check('arming is not a global switch',
         !Object.hasOwn(DeltaCapture, 'shouldArmAppliedNavigation')
@@ -524,10 +520,8 @@ function reset() {
     check('the hop is suppressed as part of the applied navigation',
         globalThis.__appended.length === 0);
 
-    beginApply();
-    check('a completion inside the apply pass asks for no capture',
-        settleAppliedNavigation(27, 'https://hop.test/', 'complete') === false);
-    endApply();
+    await runApplying(() => check('a completion inside the apply pass asks for no capture',
+        settleAppliedNavigation(27, 'https://hop.test/', 'complete') === false));
 
     const landedOffAppliedTarget = settleAppliedNavigation(27, 'https://hop.test/', 'complete');
     check('the apply pass did not spend the mark, so the landing is still reported',
@@ -550,15 +544,93 @@ function reset() {
 
     markAppliedNavigation(28, 'https://target.test/');
 
-    beginApply();
-    check('a loading event inside the apply pass asks for no capture',
-        settleAppliedNavigation(28, 'https://hop.test/', 'loading') === false);
-    endApply();
+    await runApplying(() => check('a loading event inside the apply pass asks for no capture',
+        settleAppliedNavigation(28, 'https://hop.test/', 'loading') === false));
 
     check('the mark survives the apply pass and reports the eventual landing',
         settleAppliedNavigation(28, 'https://hop.test/', 'complete') === true);
     check('nothing reached the log by itself',
         globalThis.__appended.length === 0);
+}
+
+// --- 22. the apply window is owned by `runApplying`, so it can never leak ------------
+// `applyDepth` used to be raised and lowered by two separate exports, and a throw between
+// them left it raised for the rest of the background session: `isApplying()` stayed true,
+// every capture entry point early-returned and no local change ever reached the delta log
+// again. There is no longer a way to raise it without a `finally` that lowers it.
+{
+    reset();
+    globalThis.__tabFacts = {29: {uid: 'u29', groupId: 1}};
+
+    check('there is no unpaired way into the apply window',
+        !Object.hasOwn(DeltaCapture, 'beginApply') && !Object.hasOwn(DeltaCapture, 'endApply'));
+
+    let thrown = null;
+    try {
+        await runApplying(async () => {
+            check('the apply window is open inside the callback', isApplying() === true);
+            throw new Error('storage read failed');
+        });
+    } catch (e) {
+        thrown = e;
+    }
+
+    check('a rejecting apply callback still propagates', thrown?.message === 'storage read failed');
+    check('and the apply window is closed again', isApplying() === false);
+
+    await tabModified({id: 29, url: 'https://after-throw.test/', title: 'A', windowId: 1, discarded: false, status: 'complete'});
+    check('capture keeps working after an apply pass threw',
+        globalThis.__appended.length === 1 && globalThis.__appended[0].tab.url === 'https://after-throw.test/');
+}
+
+// --- 23. a synchronous throw and nesting unwind the counter just as cleanly -----------
+{
+    reset();
+    globalThis.__tabFacts = {30: {uid: 'u30', groupId: 1}};
+
+    await runApplying(async () => {
+        await runApplying(() => {}).catch(() => {});
+        check('the outer apply window survives the inner one closing', isApplying() === true);
+    });
+    check('both windows closed', isApplying() === false);
+
+    await runApplying(() => {
+        throw new Error('sync throw');
+    }).catch(() => {});
+    check('a synchronous throw closes the window too', isApplying() === false);
+
+    await runApplying(async () => {
+        await runApplying(() => {
+            throw new Error('inner throw');
+        }).catch(() => {});
+        check('the inner throw did not close the outer window', isApplying() === true);
+    });
+    check('the outer window closed after the inner throw', isApplying() === false);
+
+    await tabModified({id: 30, url: 'https://nested.test/', title: 'N', windowId: 1, discarded: false, status: 'complete'});
+    check('capture keeps working after nested apply passes threw',
+        globalThis.__appended.length === 1 && globalThis.__appended[0].tab.url === 'https://nested.test/');
+}
+
+// --- 24. a leaked apply window would also freeze every applied-navigation mark --------
+// `applying` gates `isAppliedNavigationSettled`, so a stuck counter makes every mark
+// immortal and `consumeAppliedNavigationEcho` keeps suppressing on those tabs forever.
+{
+    reset();
+    globalThis.__tabFacts = {31: {uid: 'u31', groupId: 1}};
+
+    markAppliedNavigation(31, 'https://target.test/');
+
+    await runApplying(async () => {
+        throw new Error('apply blew up');
+    }).catch(() => {});
+
+    check('the mark can still be settled after the failed apply pass',
+        settleAppliedNavigation(31, 'https://hop.test/', 'complete') === true);
+
+    await tabModified({id: 31, url: 'https://hop.test/', title: 'H', windowId: 1, discarded: false, status: 'complete'});
+    check('and the landing reaches the log',
+        globalThis.__appended.length === 1 && globalThis.__appended[0].tab.url === 'https://hop.test/');
 }
 
 // ---------------------------------------------------------------------------
