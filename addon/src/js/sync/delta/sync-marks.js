@@ -7,6 +7,7 @@ const RESET_PENDING_PREFIX = 'deltaResetPending:';
 const PENDING_TRUNCATE_PREFIX = 'deltaPendingTruncateSeq:';
 const BASELINE_PREFIX = 'deltaBaseline:';
 const FAVICON_MAP_PREFIX = 'deltaFavIconMap:';
+const CONTENT_MARKS_PREFIX = 'deltaContentMarks:';
 
 export const PRE_APPLY_BACKUP_SLOTS = 5;
 export const PRE_APPLY_BACKUP_SLOT_KEY = 'deltaPreApplyBackupSlot';
@@ -35,6 +36,47 @@ export function pendingTruncateKey(deviceId) {
 
 export function favIconMapKey(deviceId) {
     return FAVICON_MAP_PREFIX + deviceId;
+}
+
+export function contentMarksKey(deviceId) {
+    return CONTENT_MARKS_PREFIX + deviceId;
+}
+
+let cachedContentMarksDeviceId = null;
+let cachedContentMarks = null;
+
+export function loadContentMarks(deviceId) {
+    if (cachedContentMarksDeviceId === deviceId && cachedContentMarks) {
+        return cachedContentMarks;
+    }
+
+    const raw = storage[contentMarksKey(deviceId)];
+    const marks = raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {};
+
+    cachedContentMarksDeviceId = deviceId;
+    cachedContentMarks = marks;
+
+    return marks;
+}
+
+export function rememberContentMark(deviceId, uid, mark) {
+    if (uid == null || !mark) {
+        return;
+    }
+    loadContentMarks(deviceId)[uid] = mark;
+}
+
+export function forgetContentMark(deviceId, uid) {
+    if (uid == null) {
+        return;
+    }
+    delete loadContentMarks(deviceId)[uid];
+}
+
+export function saveContentMarks(deviceId, marks) {
+    storage[contentMarksKey(deviceId)] = marks;
+    cachedContentMarksDeviceId = deviceId;
+    cachedContentMarks = marks;
 }
 
 export function maxSeq(events, seed) {

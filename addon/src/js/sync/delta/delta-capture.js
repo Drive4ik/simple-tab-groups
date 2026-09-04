@@ -7,6 +7,9 @@ import {isUrlSyncable, unwrapStubUrl, sanitizeGroupRecordForSync} from './url-sy
 import {computeGroupRelativeIndex} from './group-relative-index.js';
 import {isAppliedNavigationEcho, isAppliedNavigationSettled} from './applied-nav-echo.js';
 import {isAppliedMoveEcho} from './applied-move-echo.js';
+import {contentMark, isSyncedContent} from './content-marks.js';
+import {forgetContentMark, loadContentMarks, rememberContentMark} from './sync-marks.js';
+import {getDeviceId} from './device-id.js';
 
 const logger = new Logger('DeltaCapture');
 
@@ -147,6 +150,33 @@ function buildBaseTabRecord(tab, uid, snapshot) {
     };
 }
 
+function contentMarkDeviceId() {
+    try {
+        return getDeviceId();
+    } catch {
+        return null;
+    }
+}
+
+function matchesLastSyncedContent(uid, record) {
+    const deviceId = contentMarkDeviceId();
+    return deviceId != null && isSyncedContent(loadContentMarks(deviceId), uid, record);
+}
+
+function rememberCapturedContent(uid, record) {
+    const deviceId = contentMarkDeviceId();
+    if (deviceId != null) {
+        rememberContentMark(deviceId, uid, contentMark(record));
+    }
+}
+
+function forgetCapturedContent(uid) {
+    const deviceId = contentMarkDeviceId();
+    if (deviceId != null) {
+        forgetContentMark(deviceId, uid);
+    }
+}
+
 function buildTabRecord(tab, uid, groupRelativeIndex, snapshot = null) {
     const record = buildBaseTabRecord(tab, uid, snapshot);
     if (Number.isInteger(groupRelativeIndex)) {
@@ -194,6 +224,7 @@ export async function tabAdded(tab) {
 
         const {op, ...payload} = item;
         await DeltaLog.append(op, payload);
+        rememberCapturedContent(payload.tab.uid, payload.tab);
     } catch (e) {
         logger.onCatch('tabAdded', false)(e);
     }
@@ -214,6 +245,10 @@ export async function tabsAdded(tabs) {
         }
 
         await DeltaLog.appendMany(items);
+
+        for (const item of items) {
+            rememberCapturedContent(item.tab.uid, item.tab);
+        }
     } catch (e) {
         logger.onCatch('tabsAdded', false)(e);
     }
@@ -244,11 +279,14 @@ export async function tabModified(tab, snapshot = null) {
         }
 
         const index = await getGroupRelativeIndex(tab.id, tab.windowId, groupId);
+        const record = buildTabRecord(tab, uid, index, snapshot);
 
-        await DeltaLog.append(DeltaLog.OPS.TAB_MODIFY, {
-            groupId,
-            tab: buildTabRecord(tab, uid, index, snapshot),
-        });
+        if (matchesLastSyncedContent(uid, record)) {
+            return;
+        }
+
+        await DeltaLog.append(DeltaLog.OPS.TAB_MODIFY, {groupId, tab: record});
+        rememberCapturedContent(uid, record);
     } catch (e) {
         logger.onCatch('tabModified', false)(e);
     }
@@ -307,6 +345,7 @@ export async function tabRemoved(uid, groupId) {
             groupId,
             uid,
         });
+        forgetCapturedContent(uid);
     } catch (e) {
         logger.onCatch('tabRemoved', false)(e);
     }
@@ -410,9 +449,14 @@ export async function pinnedModified(tab, snapshot = null) {
             return;
         }
 
-        await DeltaLog.append(DeltaLog.OPS.PINNED_MODIFY, {
-            tab: buildPinnedRecord(tab, uid, snapshot),
-        });
+        const record = buildPinnedRecord(tab, uid, snapshot);
+
+        if (matchesLastSyncedContent(uid, record)) {
+            return;
+        }
+
+        await DeltaLog.append(DeltaLog.OPS.PINNED_MODIFY, {tab: record});
+        rememberCapturedContent(uid, record);
     } catch (e) {
         logger.onCatch('pinnedModified', false)(e);
     }
@@ -451,6 +495,7 @@ export async function pinnedRemoved(uid) {
         }
 
         await DeltaLog.append(DeltaLog.OPS.PINNED_REMOVE, {uid});
+        forgetCapturedContent(uid);
     } catch (e) {
         logger.onCatch('pinnedRemoved', false)(e);
     }
