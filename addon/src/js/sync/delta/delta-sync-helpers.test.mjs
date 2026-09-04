@@ -10,8 +10,6 @@
  * NOTE: this MUST stay in sync with `buildLocalState` in delta-sync.js. The function
  * is short and deterministic; the duplication is deliberate so the test needs no
  * extension host (the same approach replay.test.mjs / plan-sync.test.mjs take).
- *
- * Intentionally NOT matched by eslint (config targets addon/**\/*.js, not .mjs).
  */
 
 import {planSync} from './plan-sync.js';

@@ -5,9 +5,6 @@
  * test runner). It imports the pure modules directly (no extension host) and asserts
  * the planner's `deltaFileToWrite` / `browserOps` shape across the scenarios in the
  * P3a task. Exits non-zero on the first failure.
- *
- * Intentionally NOT matched by eslint (config targets addon/**\/*.js, not .mjs); it
- * uses node globals (process, console) the browser config bans.
  */
 
 import {planSync, computeBootstrapEvents, baselineFromSnapshot} from './plan-sync.js';

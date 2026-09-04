@@ -10,8 +10,6 @@
  *   - SYNC apply DEFERS when the user is active (pre-check) and when a user mutation slips
  *     in mid-wait, but RUNS when the user is idle;
  *   - the sync acquisition safety timeout DEFERS rather than blocking forever.
- *
- * Intentionally NOT matched by eslint (config targets addon/**\/*.js, not .mjs).
  */
 
 import {

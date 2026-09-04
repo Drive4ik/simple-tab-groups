@@ -11,8 +11,6 @@
  *   2. A favicon-ONLY change emits NO delta event (unchanged behaviour).
  *   3. The favicon file (built by buildFavIconMap) carries `data:` favicons keyed by uid,
  *      exactly one entry per tab, capped per-favicon and per-file.
- *
- * Intentionally NOT matched by eslint (config targets addon/**\/*.js, not .mjs).
  */
 
 import {sanitizeGroupIconUrl, sanitizeGroupRecordForSync} from './url-sync.js';

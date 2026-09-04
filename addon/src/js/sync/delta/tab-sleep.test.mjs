@@ -11,8 +11,6 @@
  *     - load by default; sleep ONLY when syncSleepPinnedTabs is ON (regardless of
  *       syncSleepNewTabs, because Firefox can't create a discarded pinned tab and STG
  *       only sleeps it via opt-in create-then-discard).
- *
- * Intentionally NOT matched by eslint (config targets addon/**\/*.js, not .mjs).
  */
 
 import {shouldSleepSyncedTab, SLEEP_OPTION_KEYS} from './tab-sleep.js';

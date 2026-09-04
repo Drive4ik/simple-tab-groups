@@ -11,8 +11,6 @@
  * reorder round next sync. A move that lands while apply is in progress OR within the
  * trailing apply window (against a mark armed when apply issued the move) is an echo and
  * must be SUPPRESSED, while a genuine USER move made outside that causal window must sync.
- *
- * Intentionally NOT matched by eslint (config targets addon/**\/*.js, not .mjs).
  */
 
 import {isAppliedMoveEcho} from './applied-move-echo.js';

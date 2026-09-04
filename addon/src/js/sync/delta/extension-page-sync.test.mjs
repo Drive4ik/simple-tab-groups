@@ -11,8 +11,6 @@
  *   - buildLocalState drops a group tab when `!isUrlSyncable(unwrapStubUrl(tab.url))`;
  *   - apply-engine's create paths skip a resolved record failing the same guard.
  * The re-implemented group mapping below mirrors `buildLocalState` in `local-state.js`.
- *
- * Intentionally NOT matched by eslint (config targets addon/**\/*.js, not .mjs).
  */
 
 import {planSync} from './plan-sync.js';

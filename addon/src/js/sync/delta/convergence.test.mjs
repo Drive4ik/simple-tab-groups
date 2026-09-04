@@ -9,9 +9,6 @@
  *   - isAppliedNavigationEcho for the redirect-vs-echo decision;
  *   - liveUrlMatchesSource / shouldNavigateLiveTabUrl / isUrlSyncable / unwrapStubUrl for the
  *     apply-side stamp + no-op + url-less guards.
- *
- * Intentionally NOT matched by eslint (config targets addon/**\/*.js, not .mjs); it uses node
- * globals (process, console) the browser config bans.
  */
 
 import {planSync} from './plan-sync.js';

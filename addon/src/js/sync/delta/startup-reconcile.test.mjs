@@ -9,9 +9,6 @@
  * legacy global pinned records. Uids owned by other devices (baseline/cloud only, never
  * in the local log) and uids whose latest local event is already a remove are untouched,
  * so a second run is a no-op.
- *
- * Intentionally NOT matched by eslint (config targets addon/**\/*.js, not .mjs); it uses
- * node globals (process, console) the browser config bans.
  */
 
 import {planStartupReconcile} from './startup-reconcile.js';

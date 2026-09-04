@@ -10,9 +10,6 @@
  *      does for beginSyncCycle, we re-implement that small control flow here over a mocked
  *      provider and pin the contract: acquire when free / not when held-fresh-by-other /
  *      acquire when expired / two racers resolve ONE winner / release clears the lock.
- *
- * Intentionally NOT matched by eslint (config targets addon/**\/*.js, not .mjs); it uses
- * node globals (process, console) the browser config bans.
  */
 
 import {

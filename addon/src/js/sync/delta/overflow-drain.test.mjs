@@ -17,8 +17,6 @@
  *   - `dropOverflow` NEVER drops the un-synced tail (seq above the cloud-confirmed floor);
  *   - when the log exceeds the cap with an un-synced excess, a drain-broken SIGNAL fires instead
  *     of silently discarding.
- *
- * Intentionally NOT matched by eslint (config targets addon/**\/*.js, not .mjs).
  */
 
 import {

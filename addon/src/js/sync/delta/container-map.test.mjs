@@ -7,8 +7,6 @@
  *   - a tab/group in a custom container round-trips to the SAME logical container;
  *   - default/temporary markers are handled (never registered as real containers);
  *   - a missing registry definition falls back to the local default (never fails).
- *
- * Intentionally NOT matched by eslint (config targets addon/**\/*.js, not .mjs).
  */
 
 import {

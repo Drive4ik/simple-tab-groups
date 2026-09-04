@@ -6,9 +6,6 @@
  * token configured), and `createCaptureGate` wraps it in a TTL cache with explicit
  * invalidation so option changes take effect immediately while a token saved outside
  * the background's saveOptions choke point is still picked up within one TTL.
- *
- * Intentionally NOT matched by eslint (config targets addon/**\/*.js, not .mjs); it uses
- * node globals (process, console) the browser config bans.
  */
 
 import {evaluateCaptureGate, createCaptureGate, CAPTURE_GATE_TTL_MS} from './capture-gate.js';
