@@ -32,8 +32,8 @@ function hashFavIconUrl(favIconUrl) {
     return hash >>> 0;
 }
 
-function setLastTabState({id, url, title, status, hidden, pinned, favIconUrl}) {
-    lastTabsState[id] = {id, url, title, status, hidden, pinned, favIconUrlHash: hashFavIconUrl(favIconUrl)};
+function setLastTabState({id, url, title, status, hidden, pinned, discarded, audible, favIconUrl}) {
+    lastTabsState[id] = {id, url, title, status, hidden, pinned, discarded, audible, favIconUrlHash: hashFavIconUrl(favIconUrl)};
 }
 
 // don't forget for pinned tabs events
