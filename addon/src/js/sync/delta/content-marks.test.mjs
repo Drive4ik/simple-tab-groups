@@ -220,6 +220,37 @@ function check(name, cond, detail) {
         Object.keys(contentMarksFromEvents({}, overflow)).length === CONTENT_MARK_MAX_ENTRIES);
 }
 
+// --- 7. the fold is idempotent, so the replayed prefix may safely be too long ----------
+{
+    const events = [
+        {seq: 1, op: 'tab.add', groupId: 1, tab: {uid: 'u1', url: 'https://a.test/', title: 'A'}},
+        {seq: 2, op: 'tab.modify', groupId: 1, tab: {uid: 'u1', url: 'https://b.test/', title: 'A'}},
+        {seq: 3, op: 'tab.add', groupId: 1, tab: {uid: 'u2', url: 'https://c.test/', title: 'C'}},
+        {seq: 4, op: 'tab.remove', groupId: 1, uid: 'u2'},
+        {seq: 5, op: 'tab.modify', groupId: 1, tab: {uid: 'u1', url: 'https://d.test/', title: 'A'}},
+    ];
+
+    const stored = contentMarksFromSnapshot({groups: [{id: 1, tabs: [
+        {uid: 'u1', url: 'https://b.test/', title: 'A'},
+    ]}]});
+
+    const foldedFromSeq2 = contentMarksFromEvents(stored, events.filter(event => event.seq > 2));
+    const foldedFromSeq0 = contentMarksFromEvents(stored, events);
+
+    check('replaying events already reflected in the stored marks changes nothing',
+        JSON.stringify(foldedFromSeq0) === JSON.stringify(foldedFromSeq2),
+        `${JSON.stringify(foldedFromSeq0)} vs ${JSON.stringify(foldedFromSeq2)}`);
+
+    check('the fold lands on the newest logged value for the uid',
+        foldedFromSeq0.u1 === contentMark({url: 'https://d.test/', title: 'A'}));
+
+    check('a uid created and removed inside the replayed prefix leaves no mark',
+        foldedFromSeq0.u2 === undefined);
+
+    check('folding the same events onto their own result is a no-op',
+        JSON.stringify(contentMarksFromEvents(foldedFromSeq0, events)) === JSON.stringify(foldedFromSeq0));
+}
+
 // ---------------------------------------------------------------------------
 console.log(`\n${passed} passed, ${failures.length} failed`);
 if (failures.length) {

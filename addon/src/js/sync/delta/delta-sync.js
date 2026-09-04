@@ -483,8 +483,12 @@ export async function deltaSynchronization() {
             await Cloud.writeFiles(filesToWrite, null, cycle);
         }
 
+        const pushedSeq = plan.deltaFileToWrite
+            ? maxSeq(plan.deltaFileToWrite.events, lastPushedSeq)
+            : lastPushedSeq;
+
         if (plan.deltaFileToWrite) {
-            storage[lastPushedSeqKey(selfDeviceId)] = maxSeq(plan.deltaFileToWrite.events, lastPushedSeq);
+            storage[lastPushedSeqKey(selfDeviceId)] = pushedSeq;
         }
 
         if (favIconWrite) {
@@ -524,7 +528,7 @@ export async function deltaSynchronization() {
 
         if (!suppressEmptyResolve) {
             saveBaseline(selfDeviceId, baselineFromSnapshot(plan.resolvedSnapshot));
-            saveContentMarks(selfDeviceId, contentMarksFromSnapshot(plan.resolvedSnapshot));
+            saveContentMarks(selfDeviceId, contentMarksFromSnapshot(plan.resolvedSnapshot), pushedSeq);
         }
 
         Cloud.commitSyncCycle?.(cycle);

@@ -56,7 +56,12 @@ export function invalidateContentMarks() {
 
 function storedContentMarks(deviceId) {
     const raw = storage[contentMarksKey(deviceId)];
-    return raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {};
+    const marks = raw?.marks;
+
+    return {
+        seq: Number(raw?.seq) || 0,
+        marks: marks && typeof marks === 'object' && !Array.isArray(marks) ? marks : {},
+    };
 }
 
 export async function loadContentMarks(deviceId) {
@@ -64,9 +69,10 @@ export async function loadContentMarks(deviceId) {
         return cachedContentMarks;
     }
 
-    const unpushed = await DeltaLog.getEventsSince(Number(storage[lastPushedSeqKey(deviceId)]) || 0);
+    const {seq, marks} = storedContentMarks(deviceId);
+    const eventsSinceMarks = await DeltaLog.getEventsSince(seq);
 
-    cachedContentMarks = contentMarksFromEvents(storedContentMarks(deviceId), unpushed);
+    cachedContentMarks = contentMarksFromEvents(marks, eventsSinceMarks);
     cachedContentMarksDeviceId = deviceId;
 
     return cachedContentMarks;
@@ -86,8 +92,8 @@ export function forgetContentMark(deviceId, uid) {
     delete cachedContentMarks[uid];
 }
 
-export function saveContentMarks(deviceId, marks) {
-    storage[contentMarksKey(deviceId)] = marks;
+export function saveContentMarks(deviceId, marks, seq) {
+    storage[contentMarksKey(deviceId)] = {seq: Number(seq) || 0, marks};
     invalidateContentMarks();
 }
 
