@@ -35,7 +35,6 @@ import {applyFavIconMap} from './favicon-file.js';
 import {
     storage,
     lastPushedSeqKey,
-    baselineKey,
     resetPendingKey,
     pendingTruncateKey,
     favIconMapKey,
@@ -43,6 +42,7 @@ import {
     maxSeq,
     saveBaseline,
     saveContentMarks,
+    clearDeviceSyncState,
 } from './sync-marks.js';
 import {gatherLocalPending, captureLocalSnapshot} from './local-state.js';
 import {deepClone} from './deep-clone.js';
@@ -136,11 +136,7 @@ export async function resetSyncState() {
     try {
         storage[resetPendingKey(selfDeviceId)] = '1';
 
-        delete storage[baselineKey(selfDeviceId)];
-        delete storage[lastPushedSeqKey(selfDeviceId)];
-        delete storage[pendingTruncateKey(selfDeviceId)];
-        delete storage[favIconMapKey(selfDeviceId)];
-        delete storage[lastSyncErrorKey];
+        clearDeviceSyncState(selfDeviceId);
 
         await DeltaLog.clear();
 

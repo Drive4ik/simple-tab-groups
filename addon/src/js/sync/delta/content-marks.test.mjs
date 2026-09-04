@@ -17,6 +17,7 @@ import {
     CONTENT_MARK_MAX_ENTRIES,
     contentMark,
     contentMarksFromSnapshot,
+    contentMarksFromEvents,
     capContentMarks,
     isSyncedContent,
 } from './content-marks.js';
@@ -153,6 +154,70 @@ function check(name, cond, detail) {
 
     check('a non-string mark is ignored',
         isSyncedContent({u1: 1}, 'u1', record) === false);
+}
+
+// --- 6. marks derived from the un-pushed delta log ------------------------------------
+{
+    const synced = contentMarksFromSnapshot({groups: [{id: 1, tabs: [
+        {uid: 'u1', url: 'https://u0.test/', title: 'A'},
+        {uid: 'u2', url: 'https://keep.test/', title: 'K'},
+    ]}]});
+
+    check('with no un-pushed events the synced marks are returned unchanged',
+        JSON.stringify(contentMarksFromEvents(synced, [])) === JSON.stringify(synced));
+
+    const navigated = contentMarksFromEvents(synced, [
+        {seq: 1, op: 'tab.modify', groupId: 1, tab: {uid: 'u1', url: 'https://u1.test/', title: 'A'}},
+    ]);
+
+    check('a queued TAB_MODIFY moves the mark to the value the log will push',
+        navigated.u1 === contentMark({url: 'https://u1.test/', title: 'A'}));
+
+    check('a uid with no un-pushed event keeps its synced mark',
+        navigated.u2 === synced.u2);
+
+    check('deriving does not mutate the stored synced marks',
+        synced.u1 === contentMark({url: 'https://u0.test/', title: 'A'}));
+
+    check('the LAST event for a uid wins',
+        contentMarksFromEvents(synced, [
+            {seq: 1, op: 'tab.modify', tab: {uid: 'u1', url: 'https://u1.test/', title: 'A'}},
+            {seq: 2, op: 'tab.modify', tab: {uid: 'u1', url: 'https://u2.test/', title: 'A'}},
+        ]).u1 === contentMark({url: 'https://u2.test/', title: 'A'}));
+
+    check('TAB_ADD and PINNED_ADD/MODIFY also carry a mark',
+        contentMarksFromEvents({}, [
+            {seq: 1, op: 'tab.add', tab: {uid: 'a1', url: 'https://a.test/', title: 'A'}},
+            {seq: 2, op: 'pinned.add', tab: {uid: 'p1', url: 'https://p.test/', title: 'P'}},
+            {seq: 3, op: 'pinned.modify', tab: {uid: 'p2', url: 'https://q.test/', title: 'Q'}},
+        ]).a1 === contentMark({url: 'https://a.test/', title: 'A'}));
+
+    check('a queued removal drops the mark, so a re-created uid captures',
+        contentMarksFromEvents(synced, [{seq: 1, op: 'tab.remove', groupId: 1, uid: 'u1'}]).u1 === undefined);
+
+    check('a queued pinned removal drops the mark too',
+        contentMarksFromEvents({p1: 'x'}, [{seq: 1, op: 'pinned.remove', uid: 'p1'}]).p1 === undefined);
+
+    check('moves and group/option events never touch a mark',
+        JSON.stringify(contentMarksFromEvents(synced, [
+            {seq: 1, op: 'tab.move', uid: 'u1', toIndex: 3},
+            {seq: 2, op: 'pinned.move', uid: 'u2', toIndex: 0},
+            {seq: 3, op: 'group.modify', group: {id: 1, title: 'G'}},
+            {seq: 4, op: 'option.set', key: 'syncEnable', value: true},
+        ])) === JSON.stringify(synced));
+
+    check('a malformed store or event list degrades to capturing, never throws',
+        Object.keys(contentMarksFromEvents(null, null)).length === 0
+        && Object.keys(contentMarksFromEvents('garbage', undefined)).length === 0
+        && Object.keys(contentMarksFromEvents(['x'], [null, {}, {op: 'tab.modify'}])).length === 0);
+
+    const overflow = [];
+    for (let i = 0; i < CONTENT_MARK_MAX_ENTRIES + 25; i++) {
+        overflow.push({seq: i + 1, op: 'tab.modify', tab: {uid: `e${i}`, url: `https://a.test/${i}`}});
+    }
+
+    check('the derived store is capped exactly like the snapshot-built one',
+        Object.keys(contentMarksFromEvents({}, overflow)).length === CONTENT_MARK_MAX_ENTRIES);
 }
 
 // ---------------------------------------------------------------------------
