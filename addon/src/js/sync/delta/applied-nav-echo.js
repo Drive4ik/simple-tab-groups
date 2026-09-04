@@ -52,3 +52,17 @@ export function resolveAppliedNavigationSettlement(observation) {
     }
     return {retireMark: true, landedOffTarget: isAppliedNavigationLandedOffTarget(observation)};
 }
+
+export function isAppliedNavigationDiscardedOffTarget({applying, markExpiry, markUrl, markTargetReached, observedUrl, now}) {
+    if (markTargetReached !== true) {
+        return false;
+    }
+    return isAppliedNavigationLandedOffTarget({
+        applying,
+        markExpiry,
+        markUrl,
+        observedUrl,
+        observedStatus: NAVIGATION_COMPLETE_STATUS,
+        now,
+    });
+}

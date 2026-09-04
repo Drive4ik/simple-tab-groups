@@ -634,14 +634,15 @@ function reset() {
         globalThis.__appended.length === 1 && globalThis.__appended[0].tab.url === 'https://hop.test/');
 }
 
-// --- 25. a discard IS a landing: the deferred retirement no longer swallows the url ----
+// --- 25. a discard IS a landing once the applied navigation reached its target ---------
 // Retirement is deferred while applying, so a mark whose completion landed inside an apply
 // pass survives with most of the safety bound left. The user then navigates that tab away:
 // the loading event is suppressed as an echo, and if the tab is discarded before the load
 // completes the mark used to be dropped with no verdict — tabs.js reports no content change
 // on a discard, so the url the user is on never reached the delta log and the next apply
-// pulled the tab back to the applied target. A discard ends the flight: the url the tab
-// holds at that moment is the url it sits on and the one it will restore to.
+// pulled the tab back to the applied target. The applied navigation was seen at its target
+// here, so the discard ends a flight that is the USER's: the url the tab holds at that
+// moment is the url it sits on and the one it will restore to.
 {
     reset();
     globalThis.__tabFacts = {32: {uid: 'u32', groupId: 1}};
@@ -719,24 +720,135 @@ function reset() {
     check('nothing reached the log', globalThis.__appended.length === 0);
 }
 
-// --- 29. a discard past the safety bound reports the url the tab holds ------------------
+// --- 29. past the bound the discard verdict still needs a navigation that landed --------
+// The bound stops the mark being evidence of an in-flight navigation, but it says nothing
+// about whether the applied load ever committed. A minute-old mark whose target was never
+// reached belongs to a load that is simply dead: the tab sits where it always sat, the peer's
+// url is still unapplied, and pushing the local url would revert it. The next diff re-applies
+// instead. A mark whose navigation DID reach the target still names it past the bound.
 {
     reset();
-    globalThis.__tabFacts = {37: {uid: 'u37', groupId: 1}};
+    globalThis.__tabFacts = {37: {uid: 'u37', groupId: 1}, 38: {uid: 'u38', groupId: 1}};
 
     markAppliedNavigation(37, 'https://applied.test/');
+    markAppliedNavigation(38, 'https://applied.test/');
 
     const realNow = Date.now;
     Date.now = () => realNow() + 61_000;
 
     try {
-        check('an expired mark still names the target the discard landed off',
-            settleAppliedNavigationOnDiscard(37, 'https://user.test/') === true);
+        check('an expired mark for a load that never committed reports nothing',
+            settleAppliedNavigationOnDiscard(37, 'https://old.test/') === false);
         check('and the mark is spent',
-            settleAppliedNavigation(37, 'https://user.test/', 'complete') === false);
+            settleAppliedNavigation(37, 'https://old.test/', 'complete') === false);
+
+        check('the tab still in flight ON the applied target keeps its mark past the bound',
+            settleAppliedNavigation(38, 'https://applied.test/', 'loading') === false);
+        check('an expired mark whose navigation landed still names the target it left',
+            settleAppliedNavigationOnDiscard(38, 'https://user.test/') === true);
+        check('and that mark is spent too',
+            settleAppliedNavigation(38, 'https://user.test/', 'complete') === false);
     } finally {
         Date.now = realNow;
     }
+
+    check('nothing reached the log on its own', globalThis.__appended.length === 0);
+}
+
+// --- 30. a discard that CANCELLED the applied load appends no stale url -----------------
+// `browser.tabs.update` resolves when the load STARTS, not when it commits. A group switch
+// with `discardTabsAfterHide` calls `Tabs.discard` with `skipTrackingFlag` defaulting to
+// false, so the discard reaches `onUpdated` unsuppressed while the applied load is still in
+// flight: `changeInfo.discarded === true`, `tab.url` is still the pre-apply url and nothing
+// changed content-wise. Reading that as a landing appends a TAB_MODIFY carrying the url the
+// apply had just navigated away from, which is pushed and reverts the applied navigation on
+// every device. Firefox unloading the tab by itself reaches the same state.
+{
+    reset();
+    globalThis.__tabFacts = {39: {uid: 'u39', groupId: 1}};
+
+    markAppliedNavigation(39, 'https://applied.test/');
+
+    const landedOffAppliedTarget = settleAppliedNavigationOnDiscard(39, 'https://old.test/');
+    check('the discard of a load that never committed is no landing',
+        landedOffAppliedTarget === false);
+
+    if (landedOffAppliedTarget) {
+        await tabModified({id: 39, url: 'https://old.test/', title: 'Old', windowId: 1, discarded: true, status: 'complete'});
+    }
+    check('the url the apply navigated AWAY from never reaches the log',
+        globalThis.__appended.length === 0);
+    check('the discard still bounded the mark',
+        settleAppliedNavigation(39, 'https://old.test/', 'complete') === false);
+}
+
+// --- 31. the same cancellation on the pending-nav-wake path -----------------------------
+// `resolvePendingNav` clears the deferred target BEFORE it navigates, so this path has no
+// retry left. Pushing the pre-wake url here would not merely revert the peer's change, it
+// would bury it: the log would carry a newer entry for that tab holding the old url.
+{
+    reset();
+    globalThis.__tabFacts = {40: {uid: 'u40', groupId: 1}};
+
+    globalThis.browser = {
+        tabs: {
+            query: async () => [],
+            update: async () => {},
+        },
+    };
+
+    const {recordPendingNavTarget, getPendingNavTarget} = await import('./pending-nav-store.js');
+    const {resolvePendingNav} = await import('./pending-nav-wake.js');
+
+    const liveTab = {id: 40, url: 'https://old.test/', title: 'Old', windowId: 1, discarded: false};
+    recordPendingNavTarget('u40', liveTab, {url: 'https://deferred.test/'});
+
+    check('the deferred navigation is delivered on wake',
+        await resolvePendingNav(liveTab, {woke: true}) === true);
+    check('and the deferred target is already gone, so nothing is left to retry',
+        getPendingNavTarget('u40') == null);
+
+    const landedOffAppliedTarget = settleAppliedNavigationOnDiscard(40, 'https://old.test/');
+    check('a discard before that load committed is no landing either',
+        landedOffAppliedTarget === false);
+
+    if (landedOffAppliedTarget) {
+        await tabModified({id: 40, url: 'https://old.test/', title: 'Old', windowId: 1, discarded: true, status: 'complete'});
+    }
+    check('the peer url is not buried under the url the wake navigated away from',
+        globalThis.__appended.length === 0);
+
+    delete globalThis.browser;
+}
+
+// --- 32. the echo path records the landing too, so a later discard can report -----------
+// A navigation the apply engine did not pre-write into the cache (the wake path) commits as
+// a real url change, so its arrival on the applied target is seen by the echo gate rather
+// than by the settle call. That observation is what makes the tab's url evidence when the
+// user then navigates away and the tab is discarded mid-load.
+{
+    reset();
+    globalThis.__tabFacts = {41: {uid: 'u41', groupId: 1}};
+
+    markAppliedNavigation(41, 'https://applied.test/');
+
+    await tabModified({id: 41, url: 'https://applied.test/', title: 'A', windowId: 1, discarded: false, status: 'loading'});
+    check('the applied load committing on target is suppressed as our own echo',
+        globalThis.__appended.length === 0);
+
+    await tabModified({id: 41, url: 'https://user.test/', title: 'U', windowId: 1, discarded: false, status: 'loading'});
+    check('the user navigation started under the live mark is suppressed too',
+        globalThis.__appended.length === 0);
+
+    const landedOffAppliedTarget = settleAppliedNavigationOnDiscard(41, 'https://user.test/');
+    check('the discard of a navigation that DID reach its target is a landing',
+        landedOffAppliedTarget === true);
+
+    if (landedOffAppliedTarget) {
+        await tabModified({id: 41, url: 'https://user.test/', title: 'U', windowId: 1, discarded: true, status: 'complete'});
+    }
+    check('so the user url reaches the log instead of being reverted',
+        globalThis.__appended.length === 1 && globalThis.__appended[0].tab.url === 'https://user.test/');
 }
 
 // ---------------------------------------------------------------------------
