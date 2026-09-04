@@ -5,6 +5,11 @@ import * as Utils from '/js/utils.js';
 import {LOCK_FILE_NAME} from '../delta/layout.js';
 import {canWriteLock, didWinLock, makeLockStamp, LOCK_CONFIRM_DELAY_MS} from '../delta/lock.js';
 import {contentFingerprint} from '../delta/fingerprint.js';
+import {
+    classifyCachedGistLookup,
+    GIST_LOOKUP_RESOLVED,
+    GIST_LOOKUP_UNCHANGED,
+} from './gist-cycle.js';
 
 const storage = localStorage.create(Constants.MODULES.CLOUD);
 
@@ -166,11 +171,14 @@ export default class GithubGist {
         return !!gist && !gist.public && !!gist.files?.[this.#fileName];
     }
 
+    #isUsableGist(gist) {
+        return this.#matchesGistName(gist) || this.#holdsConfiguredFile(gist);
+    }
+
     async #getGistById(gistId) {
         try {
             const gist = await this.#request('GET', `${this.#mainUrl}/${gistId}`);
-            const usable = this.#matchesGistName(gist) || this.#holdsConfiguredFile(gist);
-            return usable ? gist : null;
+            return this.#isUsableGist(gist) ? gist : null;
         } catch {
             return null;
         }
@@ -279,18 +287,65 @@ export default class GithubGist {
         this.hasGist || await this.#findGist();
     }
 
+    async #conditionalGetCachedGist(progressFunc) {
+        const cachedId = getStoredGistId(this.#gistName);
+
+        if (!cachedId) {
+            return null;
+        }
+
+        const marker = getStoredSyncMarker(cachedId);
+        const result = await this.#conditionalGet(`${this.#mainUrl}/${cachedId}`, marker?.etag, progressFunc);
+
+        switch (classifyCachedGistLookup(result.status, result.gist, this.#isUsableGist(result.gist))) {
+            case GIST_LOOKUP_UNCHANGED:
+                this.#gistId = cachedId;
+                return {...result, marker};
+            case GIST_LOOKUP_RESOLVED:
+                this.#gistId = result.gist.id;
+                setStoredGistId(this.#gistName, result.gist.id);
+                return {...result, marker};
+            default:
+                clearStoredGistId(this.#gistName);
+                return null;
+        }
+    }
+
+    async #conditionalGetSyncCycleGist(progressFunc) {
+        if (!this.hasGist) {
+            const cached = await this.#conditionalGetCachedGist(progressFunc);
+
+            if (cached) {
+                return cached;
+            }
+
+            const found = await this.#findGistByName();
+
+            if (!found) {
+                return null;
+            }
+
+            this.#gistId = found.id;
+            setStoredGistId(this.#gistName, found.id);
+        }
+
+        const marker = getStoredSyncMarker(this.#gistId);
+        const result = await this.#conditionalGet(this.#gistUrl, marker?.etag, progressFunc);
+
+        return {...result, marker};
+    }
+
     async beginSyncCycle(progressFunc = null) {
         const cycle = {unchanged: false, gist: null, etag: null};
 
         try {
-            await this.#findDeltaGist();
+            const fetched = await this.#conditionalGetSyncCycleGist(progressFunc);
 
-            if (!this.hasGist) {
+            if (!fetched) {
                 return cycle;
             }
 
-            const marker = getStoredSyncMarker(this.#gistId);
-            const {status, etag, gist} = await this.#conditionalGet(this.#gistUrl, marker?.etag, progressFunc);
+            const {status, etag, gist, marker} = fetched;
 
             if (status === 304) {
                 cycle.unchanged = true;
