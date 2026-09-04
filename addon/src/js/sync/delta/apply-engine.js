@@ -7,7 +7,8 @@ import backgroundSelf from '/js/background.js';
 import Logger from '/js/logger.js';
 import * as DeltaCapture from './delta-capture.js';
 import {shouldSleepSyncedTab, SLEEP_OPTION_KEYS} from './tab-sleep.js';
-import {isUrlSyncable, unwrapStubUrl, liveUrlMatchesSource, shouldNavigateLiveTabUrl} from './url-sync.js';
+import {isUrlSyncable, unwrapStubUrl, liveUrlMatchesSource} from './url-sync.js';
+import {planTabContentApply} from './tab-content-apply.js';
 import {getLivePinnedTabs} from './local-state.js';
 import {resolveAbsoluteTabIndex} from './apply-index.js';
 import {liveGroupTabOrder, planGroupReorderMoves} from './group-order.js';
@@ -247,26 +248,31 @@ async function applyTabContentUpdate(liveTab, target, log) {
     const liveId = liveTab.id;
 
     if (Object.hasOwn(target, 'url') || Object.hasOwn(target, 'title') || Object.hasOwn(target, 'favIconUrl')) {
-        const nextUrl = Object.hasOwn(target, 'url') ? target.url : liveTab.url;
-        const nextTitle = Object.hasOwn(target, 'title') ? target.title : liveTab.title;
+        const contentPlan = planTabContentApply(liveTab, target);
 
         Cache.setTab({
             id: liveId,
-            url: nextUrl,
-            title: nextTitle,
+            url: contentPlan.url,
+            title: contentPlan.title,
             favIconUrl: Object.hasOwn(target, 'favIconUrl') ? target.favIconUrl : liveTab.favIconUrl,
             cookieStoreId: liveTab.cookieStoreId,
             status: liveTab.status,
         });
+
+        if (contentPlan.refusal) {
+            log.log('tab content update rejected by the local tab', {
+                tabId: liveId,
+                reason: contentPlan.refusal,
+                targetUrl: target.url,
+            });
+        }
 
         if (Object.hasOwn(target, 'favIconUrl')) {
             await Cache.setTabFavIcon(liveId, target.favIconUrl)
                 .catch(log.onCatch(['cant set favIcon (update)', liveId], false));
         }
 
-        if (Object.hasOwn(target, 'url') && liveTab.discarded !== true
-            && isUrlSyncable(unwrapStubUrl(target.url))
-            && shouldNavigateLiveTabUrl(liveTab.url, target.url)) {
+        if (contentPlan.navigate) {
             await browser.tabs.update(liveId, {url: target.url})
                 .catch(log.onCatch(['cant update tab url', liveId], false));
         }
