@@ -1118,8 +1118,8 @@ async function onBackgroundMessage(message, sender) {
 
                     result.ok = syncResult.ok;
 
-                    if (!syncResult.ok) {
-                        throw objectToNativeError(syncResult);
+                    if (!syncResult.ok && !syncResult.inProgress) {
+                        result.error = syncErrorMessage(syncResult);
                     }
                 } else {
                     result.error = Lang('syncIsDisabled');
