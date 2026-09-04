@@ -16,6 +16,7 @@ import {syncedOptionKeys} from './option-keys.js';
 import {isUrlSyncable, unwrapStubUrl} from './url-sync.js';
 import {buildFavIconMap} from './favicon-map.js';
 import {loadBaseline, lastPushedSeqKey, storage} from './sync-marks.js';
+import {gcPendingNavTargets, pendingNavTargetsByUid} from './pending-nav-store.js';
 
 const logger = new Logger('DeltaSyncLocalState');
 
@@ -77,6 +78,26 @@ export function buildLocalState(loadedGroups, syncedOptions = {}, livePinnedTabs
         }));
 
     return {groups, pinnedTabs, options: {...syncedOptions}};
+}
+
+function collectLocalStateUids(localState) {
+    const uids = new Set();
+
+    for (const group of localState.groups) {
+        for (const tab of group.tabs) {
+            if (tab.uid != null) {
+                uids.add(tab.uid);
+            }
+        }
+    }
+
+    for (const tab of localState.pinnedTabs) {
+        if (tab.uid != null) {
+            uids.add(tab.uid);
+        }
+    }
+
+    return uids;
 }
 
 export async function getLivePinnedTabs() {
@@ -174,6 +195,7 @@ export async function gatherLocalPending(selfDeviceId, log) {
     }
     const livePinnedTabs = await getLivePinnedTabs();
     const localState = buildLocalState(loadedGroups, localSyncedOptions, livePinnedTabs);
+    gcPendingNavTargets(collectLocalStateUids(localState));
     const favIconMap = buildFavIconMap(loadedGroups, livePinnedTabs, overflow => {
         logger.warn('favicon file overflow: dropped favicons that exceed the caps', overflow);
     });
@@ -233,5 +255,5 @@ export async function gatherLocalPending(selfDeviceId, log) {
 
     const lastPushedSeq = Number(storage[lastPushedSeqKey(selfDeviceId)]) || 0;
 
-    return {localState, priorBaseline, lastPushedSeq, favIconMap};
+    return {localState, priorBaseline, lastPushedSeq, favIconMap, pendingNavTargets: pendingNavTargetsByUid()};
 }

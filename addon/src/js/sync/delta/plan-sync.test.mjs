@@ -1546,6 +1546,90 @@ function buildLogGroupRecordIds(events) {
 }
 
 // ---------------------------------------------------------------------------
+// TU6. DEFERRED-NAVIGATION churn guard: applyTabContentUpdate cannot navigate a DISCARDED tab, so
+//   it remembers the refused target per uid (pending-nav.js) and delivers it when the tab wakes.
+//   While that target is pending the diff must NOT keep re-emitting the very same
+//   tabsToUpdate/pinnedToUpdate every cycle (same defect class as TU5) — but a target the peer
+//   has since moved on from is a genuinely NEW op and must still be emitted.
+// ---------------------------------------------------------------------------
+{
+    const snapshot = () => ({
+        groups: [{id: 'g1', title: 'G1', tabs: [{uid: 't1', url: 'http://new', title: 'New', index: 0}]}],
+        pinnedTabs: [{uid: 'p1', url: 'http://pnew', title: 'PNew', index: 0}],
+        watermark: {},
+    });
+    const local = () => ({
+        groups: [{id: 'g1', title: 'G1', tabs: [{uid: 't1', url: 'http://old', title: 'Old', index: 0}]}],
+        pinnedTabs: [{uid: 'p1', url: 'http://pold', title: 'POld', index: 0}],
+    });
+    const base = {pulledDeltaLogs: [], localPendingEvents: [], selfDeviceId: SELF};
+
+    const noPending = planSync({...base, pulledSnapshot: snapshot(), localState: local()});
+    check('without a pending target the refused update is emitted (the peer edit is still owed)',
+        noPending.browserOps.tabsToUpdate.some(u => u.uid === 't1')
+        && noPending.browserOps.pinnedToUpdate.some(u => u.uid === 'p1'),
+        JSON.stringify(noPending.browserOps.tabsToUpdate));
+
+    const pending = planSync({
+        ...base,
+        pulledSnapshot: snapshot(),
+        localState: local(),
+        pendingNavTargets: {
+            t1: {url: 'http://new', title: 'New'},
+            p1: {url: 'http://pnew', title: 'PNew'},
+        },
+    });
+    check('a pending target suppresses the repeat tabsToUpdate (no perpetual unapplyable op)',
+        !pending.browserOps.tabsToUpdate.some(u => u.uid === 't1'),
+        JSON.stringify(pending.browserOps.tabsToUpdate));
+    check('a pending target suppresses the repeat pinnedToUpdate',
+        !pending.browserOps.pinnedToUpdate.some(u => u.uid === 'p1'),
+        JSON.stringify(pending.browserOps.pinnedToUpdate));
+
+    const moved = planSync({
+        ...base,
+        pulledSnapshot: snapshot(),
+        localState: local(),
+        pendingNavTargets: {t1: {url: 'http://stale', title: 'New'}},
+    });
+    const movedUpdate = moved.browserOps.tabsToUpdate.find(u => u.uid === 't1');
+    check('a target the peer moved past is emitted again, and only for the field that moved',
+        movedUpdate && movedUpdate.target.url === 'http://new' && !Object.hasOwn(movedUpdate.target, 'title'),
+        JSON.stringify(movedUpdate));
+
+    const otherTab = planSync({
+        ...base,
+        pulledSnapshot: snapshot(),
+        localState: local(),
+        pendingNavTargets: {other: {url: 'http://new'}},
+    });
+    check('a pending target for another uid suppresses nothing',
+        otherTab.browserOps.tabsToUpdate.some(u => u.uid === 't1'),
+        JSON.stringify(otherTab.browserOps.tabsToUpdate));
+
+    const stillMoves = planSync({
+        ...base,
+        pulledSnapshot: {
+            groups: [{id: 'g1', title: 'G1', tabs: [
+                {uid: 'x', url: 'http://x', title: 'X', index: 0},
+                {uid: 't1', url: 'http://new', title: 'New', index: 1},
+            ]}],
+            watermark: {},
+        },
+        localState: {
+            groups: [{id: 'g1', title: 'G1', tabs: [
+                {uid: 't1', url: 'http://old', title: 'Old', index: 0},
+                {uid: 'x', url: 'http://x', title: 'X', index: 1},
+            ]}],
+        },
+        pendingNavTargets: {t1: {url: 'http://new', title: 'New'}},
+    });
+    check('suppressing the content op does not suppress the tab move',
+        stillMoves.browserOps.tabsToMove.some(m => m.uid === 't1'),
+        JSON.stringify(stillMoves.browserOps.tabsToMove));
+}
+
+// ---------------------------------------------------------------------------
 console.log(`\n${passed} passed, ${failures.length} failed`);
 if (failures.length) {
     console.error('FAILURES:', failures.join(', '));
