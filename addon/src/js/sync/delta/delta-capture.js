@@ -244,6 +244,11 @@ export async function tabMoved(tabId) {
             return;
         }
 
+        const movedTab = await browser.tabs.get(tabId).catch(() => null);
+        if (!movedTab || !isUrlSyncable(unwrapStubUrl(movedTab.url))) {
+            return;
+        }
+
         const uid = await resolveUid(tabId);
         if (!uid) {
             return;

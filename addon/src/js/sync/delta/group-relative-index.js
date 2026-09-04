@@ -1,10 +1,12 @@
+import {isUrlSyncable, unwrapStubUrl} from './url-sync.js';
+
 export function computeGroupRelativeIndex(windowTabs, getTabGroupFn, tabId, groupId) {
     if (!Array.isArray(windowTabs) || typeof getTabGroupFn !== 'function' || !groupId) {
         return null;
     }
 
     const groupTabs = windowTabs
-        .filter(t => getTabGroupFn(t.id) === groupId)
+        .filter(t => getTabGroupFn(t.id) === groupId && isUrlSyncable(unwrapStubUrl(t.url)))
         .sort((a, b) => a.index - b.index);
 
     const position = groupTabs.findIndex(t => t.id === tabId);
