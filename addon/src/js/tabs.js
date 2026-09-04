@@ -292,9 +292,13 @@ async function onUpdated(tabId, changeInfo, tab) {
 
     if (changeInfo.discarded === true) {
         DeltaCapture.clearAppliedNavigation(tab.id);
-    } else if (!contentChanged) {
-        DeltaCapture.settleAppliedNavigation(tab.id, changeInfo.status);
     }
+
+    const landedOffAppliedTarget = changeInfo.discarded !== true
+        && !contentChanged
+        && DeltaCapture.settleAppliedNavigation(tab.id, tab.url, tab.status);
+
+    const captureContent = contentChanged || landedOffAppliedTarget;
 
     if (isPinned(tab) && !Object.hasOwn(changeInfo, 'pinned')) {
         if (Object.hasOwn(changeInfo, 'favIconUrl')) {
@@ -302,7 +306,7 @@ async function onUpdated(tabId, changeInfo, tab) {
                 .catch(log.onCatch(['cant set favIcon (pinned)', tab, changeInfo], false));
         }
 
-        if (contentChanged) {
+        if (captureContent) {
             await Cache.setTabLastModified(tab.id, Cache.getTabLastModified(tab.id))
                 .catch(log.onCatch(['cant set lastModified (pinned)', tab, changeInfo], false));
 
@@ -322,7 +326,7 @@ async function onUpdated(tabId, changeInfo, tab) {
             .catch(log.onCatch(['cant set favIcon', tab, changeInfo], false));
     }
 
-    if (contentChanged) {
+    if (captureContent) {
         await Cache.setTabLastModified(tab.id, Cache.getTabLastModified(tab.id))
             .catch(log.onCatch(['cant set lastModified', tab, changeInfo], false));
 

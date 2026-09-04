@@ -66,14 +66,28 @@ export function clearAppliedNavigation(tabId) {
     appliedNavTabs.delete(tabId);
 }
 
-export function settleAppliedNavigation(tabId, observedStatus) {
+export function settleAppliedNavigation(tabId, observedUrl, observedStatus) {
     const mark = appliedNavTabs.get(tabId);
     if (mark == null) {
-        return;
+        return false;
     }
-    if (isAppliedNavigationSettled({markExpiry: mark.expiry, observedStatus, now: Date.now()})) {
-        appliedNavTabs.delete(tabId);
+
+    const now = Date.now();
+
+    if (!isAppliedNavigationSettled({markExpiry: mark.expiry, observedStatus, now})) {
+        return false;
     }
+
+    appliedNavTabs.delete(tabId);
+
+    return !isAppliedNavigationEcho({
+        applying: isApplying(),
+        markExpiry: mark.expiry,
+        markUrl: mark.url,
+        observedUrl: typeof observedUrl === 'string' ? unwrapStubUrl(observedUrl) : observedUrl,
+        observedStatus,
+        now,
+    });
 }
 
 const appliedMoveTabs = new Map();

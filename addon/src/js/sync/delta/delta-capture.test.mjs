@@ -33,6 +33,7 @@ function check(name, cond, detail) {
 
 globalThis.__appended = [];
 
+const DeltaCapture = await import('./delta-capture.js');
 const {
     optionsChanged,
     beginApply,
@@ -40,10 +41,12 @@ const {
     isApplying,
     markAppliedMove,
     consumeAppliedMoveEcho,
+    markAppliedNavigation,
+    settleAppliedNavigation,
     tabModified,
     pinnedModified,
     tabRemoved,
-} = await import('./delta-capture.js');
+} = DeltaCapture;
 const {contentMark} = await import('./content-marks.js');
 
 globalThis.__contentMarks = {};
@@ -195,6 +198,41 @@ function reset() {
     await tabRemoved('u11', 1);
     check('TAB_REMOVE forgets the uid mark',
         !Object.hasOwn(globalThis.__contentMarks, 'u11'));
+}
+
+// --- 11. an applied navigation that completes on its target asks for no capture --------
+{
+    reset();
+    globalThis.__tabFacts = {12: {uid: 'u12', groupId: 1}};
+
+    markAppliedNavigation(12, 'https://applied.test/');
+
+    check('the completion on the applied target asks for no capture',
+        settleAppliedNavigation(12, 'https://applied.test/', 'complete') === false);
+    check('a tab with no live mark asks for no capture',
+        settleAppliedNavigation(12, 'https://applied.test/', 'complete') === false);
+}
+
+// --- 12. a USER navigation landing mid-load still reaches the log ----------------------
+// tabs.js drives capture off title/url changes, so the completing event of the user's own
+// navigation ('complete' with an unchanged title) carries nothing the capture path reacts
+// to. The settle decision is what tells tabs.js the tab landed off the applied target.
+{
+    reset();
+    globalThis.__tabFacts = {13: {uid: 'u13', groupId: 1}};
+
+    markAppliedNavigation(13, 'https://applied.test/');
+
+    await tabModified({id: 13, url: 'https://user.test/', title: 'U', windowId: 1, discarded: false, status: 'loading'});
+    check('the mid-load user url is suppressed (still indistinguishable from a redirect hop)',
+        globalThis.__appended.length === 0);
+
+    check('the status-only completion off the applied target asks for a capture',
+        settleAppliedNavigation(13, 'https://user.test/', 'complete') === true);
+
+    await tabModified({id: 13, url: 'https://user.test/', title: 'U', windowId: 1, discarded: false, status: 'complete'});
+    check('the user navigation is captured instead of being reverted by the next sync',
+        globalThis.__appended.length === 1 && globalThis.__appended[0].tab.url === 'https://user.test/');
 }
 
 // ---------------------------------------------------------------------------
