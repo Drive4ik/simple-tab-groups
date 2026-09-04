@@ -24,6 +24,7 @@ async function navigateToDeferredTarget(tab, plan) {
         await browser.tabs.update(tab.id, {url: plan.url});
         return true;
     } catch (e) {
+        DeltaCapture.clearAppliedNavigation(tab.id);
         logger.onCatch(['cant apply deferred navigation', tab.id], false)(e);
         return false;
     } finally {

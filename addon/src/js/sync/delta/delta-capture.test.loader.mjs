@@ -9,8 +9,9 @@
  * Its remaining siblings (`option-keys`, `url-sync`, `group-relative-index`,
  * `applied-nav-echo`, `content-marks`) are pure and load unchanged. Appended events land
  * on `globalThis.__appended` so the test can inspect exactly what the capture path logged;
- * the last-synced content marks live on `globalThis.__contentMarks`, and the tab facts the
- * capture path reads out of the cache live on `globalThis.__tabFacts`.
+ * the last-synced content marks live on `globalThis.__contentMarks`, the tab facts the
+ * capture path reads out of the cache live on `globalThis.__tabFacts`, and the persistent
+ * sync store (`pending-nav-store`'s backing) lives on `globalThis.__syncStorage`.
  *
  * Registered via `module.register()` from the test file so a plain `node <file>.test.mjs`
  * (the suite's invocation, no CLI flags) still picks it up.
@@ -52,6 +53,7 @@ const STUBS = {
         }
     `,
     'stg:sync-marks': `
+        export const storage = (globalThis.__syncStorage ||= {});
         const marks = () => (globalThis.__contentMarks ||= {});
         export function loadContentMarks() { return marks(); }
         export function rememberContentMark(deviceId, uid, mark) { marks()[uid] = mark; }
