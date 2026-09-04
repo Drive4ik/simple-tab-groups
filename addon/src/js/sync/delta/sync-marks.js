@@ -1,4 +1,6 @@
 import * as Constants from '/js/constants.js';
+import * as DeltaLog from './delta-log.js';
+import {contentMarksFromEvents} from './content-marks.js';
 
 export const storage = localStorage.create(Constants.MODULES.CLOUD);
 
@@ -45,38 +47,46 @@ export function contentMarksKey(deviceId) {
 let cachedContentMarksDeviceId = null;
 let cachedContentMarks = null;
 
-export function loadContentMarks(deviceId) {
+export function invalidateContentMarks() {
+    cachedContentMarksDeviceId = null;
+    cachedContentMarks = null;
+}
+
+function storedContentMarks(deviceId) {
+    const raw = storage[contentMarksKey(deviceId)];
+    return raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {};
+}
+
+export async function loadContentMarks(deviceId) {
     if (cachedContentMarksDeviceId === deviceId && cachedContentMarks) {
         return cachedContentMarks;
     }
 
-    const raw = storage[contentMarksKey(deviceId)];
-    const marks = raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {};
+    const unpushed = await DeltaLog.getEventsSince(Number(storage[lastPushedSeqKey(deviceId)]) || 0);
 
+    cachedContentMarks = contentMarksFromEvents(storedContentMarks(deviceId), unpushed);
     cachedContentMarksDeviceId = deviceId;
-    cachedContentMarks = marks;
 
-    return marks;
+    return cachedContentMarks;
 }
 
 export function rememberContentMark(deviceId, uid, mark) {
-    if (uid == null || !mark) {
+    if (uid == null || !mark || cachedContentMarksDeviceId !== deviceId || !cachedContentMarks) {
         return;
     }
-    loadContentMarks(deviceId)[uid] = mark;
+    cachedContentMarks[uid] = mark;
 }
 
 export function forgetContentMark(deviceId, uid) {
-    if (uid == null) {
+    if (uid == null || cachedContentMarksDeviceId !== deviceId || !cachedContentMarks) {
         return;
     }
-    delete loadContentMarks(deviceId)[uid];
+    delete cachedContentMarks[uid];
 }
 
 export function saveContentMarks(deviceId, marks) {
     storage[contentMarksKey(deviceId)] = marks;
-    cachedContentMarksDeviceId = deviceId;
-    cachedContentMarks = marks;
+    invalidateContentMarks();
 }
 
 export function maxSeq(events, seed) {

@@ -48,6 +48,25 @@ export function contentMarksFromSnapshot(snapshot) {
     return capContentMarks(marks);
 }
 
+const CONTENT_EVENT_OPS = new Set(['tab.add', 'tab.modify', 'pinned.add', 'pinned.modify']);
+const CONTENT_REMOVE_OPS = new Set(['tab.remove', 'pinned.remove']);
+
+export function contentMarksFromEvents(syncedMarks, events) {
+    const marks = syncedMarks && typeof syncedMarks === 'object' && !Array.isArray(syncedMarks)
+        ? {...syncedMarks}
+        : {};
+
+    for (const event of Array.isArray(events) ? events : []) {
+        if (CONTENT_EVENT_OPS.has(event?.op) && event.tab?.uid != null) {
+            marks[event.tab.uid] = contentMark(event.tab);
+        } else if (CONTENT_REMOVE_OPS.has(event?.op) && event?.uid != null) {
+            delete marks[event.uid];
+        }
+    }
+
+    return capContentMarks(marks);
+}
+
 export function isSyncedContent(marks, uid, record) {
     if (uid == null || !marks) {
         return false;

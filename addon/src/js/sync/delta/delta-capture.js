@@ -158,9 +158,9 @@ function contentMarkDeviceId() {
     }
 }
 
-function matchesLastSyncedContent(uid, record) {
+async function matchesLastSyncedContent(uid, record) {
     const deviceId = contentMarkDeviceId();
-    return deviceId != null && isSyncedContent(loadContentMarks(deviceId), uid, record);
+    return deviceId != null && isSyncedContent(await loadContentMarks(deviceId), uid, record);
 }
 
 function rememberCapturedContent(uid, record) {
@@ -281,7 +281,7 @@ export async function tabModified(tab, snapshot = null) {
         const index = await getGroupRelativeIndex(tab.id, tab.windowId, groupId);
         const record = buildTabRecord(tab, uid, index, snapshot);
 
-        if (matchesLastSyncedContent(uid, record)) {
+        if (await matchesLastSyncedContent(uid, record)) {
             return;
         }
 
@@ -451,7 +451,7 @@ export async function pinnedModified(tab, snapshot = null) {
 
         const record = buildPinnedRecord(tab, uid, snapshot);
 
-        if (matchesLastSyncedContent(uid, record)) {
+        if (await matchesLastSyncedContent(uid, record)) {
             return;
         }
 
