@@ -286,13 +286,9 @@ async function onUpdated(tabId, changeInfo, tab) {
         return;
     }
 
-    if (changeInfo.discarded === true) {
-        DeltaCapture.clearAppliedNavigation(tab.id);
-    }
-
-    const landedOffAppliedTarget = changeInfo.discarded !== true
-        && !contentChanged
-        && DeltaCapture.settleAppliedNavigation(tab.id, tab.url, tab.status);
+    const landedOffAppliedTarget = changeInfo.discarded === true
+        ? DeltaCapture.settleAppliedNavigationOnDiscard(tab.id, tab.url)
+        : !contentChanged && DeltaCapture.settleAppliedNavigation(tab.id, tab.url, tab.status);
 
     const captureContent = contentChanged || landedOffAppliedTarget;
 

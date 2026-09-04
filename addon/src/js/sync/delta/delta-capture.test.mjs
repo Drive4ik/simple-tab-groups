@@ -43,6 +43,7 @@ const {
     markAppliedNavigation,
     clearAppliedNavigation,
     settleAppliedNavigation,
+    settleAppliedNavigationOnDiscard,
     tabModified,
     pinnedModified,
     tabRemoved,
@@ -450,9 +451,9 @@ function reset() {
 }
 
 // --- 18c. a mark now outlives the bound, so the TAB bounds its lifetime ----------------
-// tabs.js clears the mark on `changeInfo.discarded === true` and onRemoved clears it
-// unconditionally, so an in-flight mark that the bound no longer retires still cannot outlive
-// the tab it belongs to, nor be inherited by a recycled tab id.
+// tabs.js settles-and-drops the mark on `changeInfo.discarded === true` and onRemoved clears
+// it unconditionally, so an in-flight mark that the bound no longer retires still cannot
+// outlive the tab it belongs to, nor be inherited by a recycled tab id.
 {
     reset();
     globalThis.__tabFacts = {25: {uid: 'u25', groupId: 1}, 26: {uid: 'u26', groupId: 1}};
@@ -466,7 +467,7 @@ function reset() {
     try {
         check('the discarded tab still holds its in-flight mark before the discard',
             settleAppliedNavigation(25, 'https://hop.test/', 'loading') === false);
-        clearAppliedNavigation(25);
+        settleAppliedNavigationOnDiscard(25, 'https://hop.test/');
         check('the discard drops it, so no later completion reports a landing',
             settleAppliedNavigation(25, 'https://hop.test/', 'complete') === false);
 
@@ -631,6 +632,111 @@ function reset() {
     await tabModified({id: 31, url: 'https://hop.test/', title: 'H', windowId: 1, discarded: false, status: 'complete'});
     check('and the landing reaches the log',
         globalThis.__appended.length === 1 && globalThis.__appended[0].tab.url === 'https://hop.test/');
+}
+
+// --- 25. a discard IS a landing: the deferred retirement no longer swallows the url ----
+// Retirement is deferred while applying, so a mark whose completion landed inside an apply
+// pass survives with most of the safety bound left. The user then navigates that tab away:
+// the loading event is suppressed as an echo, and if the tab is discarded before the load
+// completes the mark used to be dropped with no verdict — tabs.js reports no content change
+// on a discard, so the url the user is on never reached the delta log and the next apply
+// pulled the tab back to the applied target. A discard ends the flight: the url the tab
+// holds at that moment is the url it sits on and the one it will restore to.
+{
+    reset();
+    globalThis.__tabFacts = {32: {uid: 'u32', groupId: 1}};
+
+    markAppliedNavigation(32, 'https://applied.test/');
+
+    await runApplying(() => check('the completion inside the apply pass spends nothing',
+        settleAppliedNavigation(32, 'https://applied.test/', 'complete') === false));
+
+    await tabModified({id: 32, url: 'https://user.test/', title: 'U', windowId: 1, discarded: false, status: 'loading'});
+    check('the user navigation under the surviving mark is suppressed',
+        globalThis.__appended.length === 0);
+
+    const landedOffAppliedTarget = settleAppliedNavigationOnDiscard(32, 'https://user.test/');
+    check('the discard is a landing, and it is off the applied target',
+        landedOffAppliedTarget === true);
+
+    if (landedOffAppliedTarget) {
+        await tabModified({id: 32, url: 'https://user.test/', title: 'U', windowId: 1, discarded: true, status: 'complete'});
+    }
+    check('the user url reaches the log instead of being reverted to the applied target',
+        globalThis.__appended.length === 1 && globalThis.__appended[0].tab.url === 'https://user.test/');
+    check('and it is recorded as the sleeping tab it now is',
+        globalThis.__appended[0]?.tab.loaded === false);
+
+    check('the discard spent the mark, so nothing can report on it again',
+        settleAppliedNavigation(32, 'https://user.test/', 'complete') === false);
+}
+
+// --- 26. a discard with no live mark stays out of it -----------------------------------
+{
+    reset();
+    globalThis.__tabFacts = {33: {uid: 'u33', groupId: 1}, 34: {uid: 'u34', groupId: 1}};
+
+    check('a tab no apply ever navigated reports nothing when it discards',
+        settleAppliedNavigationOnDiscard(33, 'https://user.test/') === false);
+
+    markAppliedNavigation(34, 'https://applied.test/');
+    clearAppliedNavigation(34);
+    check('a dropped mark leaves no target the discard could have landed off',
+        settleAppliedNavigationOnDiscard(34, 'https://user.test/') === false);
+
+    check('nothing reached the log', globalThis.__appended.length === 0);
+}
+
+// --- 27. a discard while genuinely on the applied target is not a capture --------------
+{
+    reset();
+    globalThis.__tabFacts = {35: {uid: 'u35', groupId: 1}};
+
+    markAppliedNavigation(35, 'https://applied.test/');
+
+    check('the tab discarded where the apply put it asks for no capture',
+        settleAppliedNavigationOnDiscard(35, 'https://applied.test/') === false);
+    check('and the mark went with the discard',
+        settleAppliedNavigation(35, 'https://elsewhere.test/', 'complete') === false);
+    check('nothing reached the log', globalThis.__appended.length === 0);
+}
+
+// --- 28. a discard INSIDE an apply pass still attributes nothing ------------------------
+// `applying` enters at exactly one place, so no verdict is produced during a pass: the url
+// the tab holds mid-apply may be the one this very pass is navigating away from. The mark
+// is dropped regardless, because the discard bounds its lifetime.
+{
+    reset();
+    globalThis.__tabFacts = {36: {uid: 'u36', groupId: 1}};
+
+    markAppliedNavigation(36, 'https://applied.test/');
+
+    await runApplying(() => check('a discard inside the apply pass reports nothing',
+        settleAppliedNavigationOnDiscard(36, 'https://stale.test/') === false));
+
+    check('the discard still dropped the mark',
+        settleAppliedNavigation(36, 'https://stale.test/', 'complete') === false);
+    check('nothing reached the log', globalThis.__appended.length === 0);
+}
+
+// --- 29. a discard past the safety bound reports the url the tab holds ------------------
+{
+    reset();
+    globalThis.__tabFacts = {37: {uid: 'u37', groupId: 1}};
+
+    markAppliedNavigation(37, 'https://applied.test/');
+
+    const realNow = Date.now;
+    Date.now = () => realNow() + 61_000;
+
+    try {
+        check('an expired mark still names the target the discard landed off',
+            settleAppliedNavigationOnDiscard(37, 'https://user.test/') === true);
+        check('and the mark is spent',
+            settleAppliedNavigation(37, 'https://user.test/', 'complete') === false);
+    } finally {
+        Date.now = realNow;
+    }
 }
 
 // ---------------------------------------------------------------------------
