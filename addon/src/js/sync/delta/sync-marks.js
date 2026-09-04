@@ -1,6 +1,8 @@
 import * as Constants from '/js/constants.js';
 import * as DeltaLog from './delta-log.js';
 import {contentMarksFromEvents} from './content-marks.js';
+import {PENDING_NAV_KEY} from './pending-nav.js';
+import {pendingKey as offlineRemovePendingKey} from './offline-remove-record.js';
 
 export const storage = localStorage.create(Constants.MODULES.CLOUD);
 
@@ -86,6 +88,19 @@ export function forgetContentMark(deviceId, uid) {
 
 export function saveContentMarks(deviceId, marks) {
     storage[contentMarksKey(deviceId)] = marks;
+    invalidateContentMarks();
+}
+
+export function clearDeviceSyncState(deviceId) {
+    delete storage[baselineKey(deviceId)];
+    delete storage[lastPushedSeqKey(deviceId)];
+    delete storage[pendingTruncateKey(deviceId)];
+    delete storage[favIconMapKey(deviceId)];
+    delete storage[contentMarksKey(deviceId)];
+    delete storage[offlineRemovePendingKey(deviceId)];
+    delete storage[PENDING_NAV_KEY];
+    delete storage[lastSyncErrorKey];
+
     invalidateContentMarks();
 }
 

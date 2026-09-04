@@ -1,6 +1,6 @@
 /**
  * Standalone node test for the PERSISTENCE of the last-synced content marks
- * (`sync-marks.js`).
+ * (`sync-marks.js`) and for the reset sweep that must drop them again.
  *
  * Plain `node sync-marks.test.mjs` (STG has no test runner). `sync-marks.js` opens a
  * prefixed `localStorage` view at module scope, so the browser-dependent imports are
@@ -16,6 +16,10 @@
  * overwritten by their older one. The marks are now DERIVED: the stored snapshot marks
  * overlaid with the un-pushed delta events, which the log already persists. Capture
  * therefore writes nothing at all, so there is no per-title-tick storage write.
+ *
+ * Bug 2: `resetSyncState` left `deltaContentMarks:<deviceId>`, `deltaPendingNav` and
+ * `deltaOfflineRemovePending:<deviceId>` behind, plus the module-level mark cache, so the
+ * documented escape hatch kept suppressing captures with pre-reset state.
  *
  * Intentionally NOT matched by eslint (config targets addon/**\/*.js, not .mjs).
  */
@@ -84,6 +88,9 @@ function restartBackground() {
 }
 
 const {contentMark, contentMarksFromSnapshot, isSyncedContent} = await import('./content-marks.js');
+const {loadPendingNav, recordPendingNav, PENDING_NAV_KEY} = await import('./pending-nav.js');
+const {pendingKey: offlineRemovePendingKey, persistPendingOfflineRemoves} =
+    await import('./offline-remove-record.js');
 
 function tabRecord(uid, url, title = 'T') {
     return {uid, url, title, pinned: false};
@@ -237,7 +244,51 @@ function completeSyncCycle(SyncMarks, snapshot) {
         await captureTabModify(SyncMarks, 'u1', tabRecord('u1', 'https://u0.test/')) === true);
 }
 
-// --- 6. the cache is not served across a device-id change ------------------------------
+// --- 6. reset clears every store the capture and apply paths read ----------------------
+{
+    resetWorld();
+    const SyncMarks = await restartBackground();
+
+    completeSyncCycle(SyncMarks, {groups: [{id: 1, tabs: [tabRecord('u1', 'https://u0.test/')]}]});
+
+    store[SyncMarks.baselineKey(DEVICE)] = JSON.stringify({tabUids: ['u1']});
+    store[SyncMarks.pendingTruncateKey(DEVICE)] = 42;
+    store[SyncMarks.favIconMapKey(DEVICE)] = JSON.stringify({tabs: {}});
+    store[SyncMarks.lastSyncErrorKey] = 'boom';
+    recordPendingNav(store, 'u1', {url: 'https://live.test/', discarded: true}, {url: 'https://target.test/'}, 1);
+    persistPendingOfflineRemoves(store, DEVICE, [{op: 'tab.remove', uid: 'u1'}]);
+
+    check('the pending-nav store really holds an entry before reset',
+        loadPendingNav(store).size === 1);
+
+    check('the mark cache is warm before reset',
+        await captureTabModify(SyncMarks, 'u1', tabRecord('u1', 'https://u0.test/')) === false);
+
+    SyncMarks.clearDeviceSyncState(DEVICE);
+
+    check('reset clears the content marks',
+        store[SyncMarks.contentMarksKey(DEVICE)] === undefined);
+
+    check('reset clears the pending-nav store',
+        store[PENDING_NAV_KEY] === undefined && loadPendingNav(store).size === 0);
+
+    check('reset clears the deferred offline removals',
+        store[offlineRemovePendingKey(DEVICE)] === undefined);
+
+    check('reset clears the baseline, lastPushedSeq, pending truncate and favicon map',
+        store[SyncMarks.baselineKey(DEVICE)] === undefined
+        && store[SyncMarks.lastPushedSeqKey(DEVICE)] === undefined
+        && store[SyncMarks.pendingTruncateKey(DEVICE)] === undefined
+        && store[SyncMarks.favIconMapKey(DEVICE)] === undefined);
+
+    check('reset clears the last sync error',
+        store[SyncMarks.lastSyncErrorKey] === undefined);
+
+    check('reset drops the in-memory mark cache, so the same value captures again',
+        await captureTabModify(SyncMarks, 'u1', tabRecord('u1', 'https://u0.test/')) === true);
+}
+
+// --- 7. the cache is not served across a device-id change ------------------------------
 {
     resetWorld();
     const SyncMarks = await restartBackground();
