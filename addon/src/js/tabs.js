@@ -277,7 +277,7 @@ async function onUpdated(tabId, changeInfo, tab) {
     const contentChanged = !!changeInfo && (Object.hasOwn(changeInfo, 'title') || Object.hasOwn(changeInfo, 'url'));
 
     if (await resolvePendingNav(tab, {woke, contentChanged})) {
-        log.stop('🛑 delivered the deferred sync update', tab.id);
+        log.stop('🛑 applied the deferred sync navigation', tab.id);
         return;
     }
 

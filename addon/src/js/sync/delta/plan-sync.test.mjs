@@ -1627,6 +1627,76 @@ function buildLogGroupRecordIds(events) {
 }
 
 // ---------------------------------------------------------------------------
+// TU7. TITLE-ONLY churn guard: a tab's title belongs to its page. Firefox exposes no API to set
+//   it, so a target carrying a title but no url cannot be applied to any tab — awake or not.
+//   Writing it into the cache arms `lastTabsState` with a value the page contradicts on its very
+//   next `onUpdated`, which pushes the real title straight back out as a local edit (the dbad98a
+//   defect shape, one driver of the cross-device ping-pong). Such a difference is therefore not
+//   an op at all: it is never emitted, so nothing recurs per cycle and nothing is deferred for a
+//   wake that could never honour it. A title still rides along with a url change, where the
+//   navigation is what actually lands.
+// ---------------------------------------------------------------------------
+{
+    const base = {pulledDeltaLogs: [], localPendingEvents: [], selfDeviceId: SELF};
+    const peerTitle = loaded => ({
+        groups: [{id: 'g1', title: 'G1', tabs: [{uid: 't1', url: 'http://x', title: 'Peer title', index: 0, ...(loaded ? {loaded: true} : {})}]}],
+        pinnedTabs: [{uid: 'p1', url: 'http://p', title: 'Peer pinned title', index: 0}],
+        watermark: {},
+    });
+    const localTitle = loaded => ({
+        groups: [{id: 'g1', title: 'G1', tabs: [{uid: 't1', url: 'http://x', title: 'Local title', index: 0, ...(loaded ? {loaded: true} : {})}]}],
+        pinnedTabs: [{uid: 'p1', url: 'http://p', title: 'Local pinned title', index: 0}],
+    });
+
+    const discarded = planSync({...base, pulledSnapshot: peerTitle(false), localState: localTitle(false)});
+    check('a title-only difference on a DISCARDED tab emits no tabsToUpdate',
+        !discarded.browserOps.tabsToUpdate.some(u => u.uid === 't1'),
+        JSON.stringify(discarded.browserOps.tabsToUpdate));
+    check('a title-only difference on a discarded tab emits no pinnedToUpdate either',
+        !discarded.browserOps.pinnedToUpdate.some(u => u.uid === 'p1'),
+        JSON.stringify(discarded.browserOps.pinnedToUpdate));
+    check('and it is not smuggled out as a move or a create',
+        !discarded.browserOps.tabsToMove.some(m => m.uid === 't1')
+        && !discarded.browserOps.tabsToCreate.some(t => t.uid === 't1'),
+        JSON.stringify(discarded.browserOps));
+
+    const awake = planSync({...base, pulledSnapshot: peerTitle(true), localState: localTitle(true)});
+    check('a title-only difference on an AWAKE tab emits nothing either (the live page owns it)',
+        !awake.browserOps.tabsToUpdate.some(u => u.uid === 't1'),
+        JSON.stringify(awake.browserOps.tabsToUpdate));
+
+    const withUrl = planSync({
+        ...base,
+        pulledSnapshot: {
+            groups: [{id: 'g1', title: 'G1', tabs: [{uid: 't1', url: 'http://new', title: 'New', index: 0}]}],
+            watermark: {},
+        },
+        localState: {
+            groups: [{id: 'g1', title: 'G1', tabs: [{uid: 't1', url: 'http://old', title: 'Old', index: 0}]}],
+        },
+    });
+    const rides = withUrl.browserOps.tabsToUpdate.find(u => u.uid === 't1');
+    check('a title still rides along with a url change',
+        rides && rides.target.url === 'http://new' && rides.target.title === 'New',
+        JSON.stringify(rides));
+
+    const urlPending = planSync({
+        ...base,
+        pulledSnapshot: {
+            groups: [{id: 'g1', title: 'G1', tabs: [{uid: 't1', url: 'http://new', title: 'New', index: 0}]}],
+            watermark: {},
+        },
+        localState: {
+            groups: [{id: 'g1', title: 'G1', tabs: [{uid: 't1', url: 'http://old', title: 'Old', index: 0}]}],
+        },
+        pendingNavTargets: {t1: {url: 'http://new'}},
+    });
+    check('a title left over after the pending url is suppressed does not leak out alone',
+        !urlPending.browserOps.tabsToUpdate.some(u => u.uid === 't1'),
+        JSON.stringify(urlPending.browserOps.tabsToUpdate));
+}
+
+// ---------------------------------------------------------------------------
 console.log(`\n${passed} passed, ${failures.length} failed`);
 if (failures.length) {
     console.error('FAILURES:', failures.join(', '));
