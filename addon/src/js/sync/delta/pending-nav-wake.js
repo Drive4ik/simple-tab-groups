@@ -2,19 +2,9 @@ import Logger from '/js/logger.js';
 import * as Cache from '/js/cache.js';
 import * as DeltaCapture from './delta-capture.js';
 import {planPendingNavOnTabUpdate} from './pending-nav.js';
-import {buildTabContentCacheWrite} from './tab-content-apply.js';
 import {getPendingNavTarget, clearPendingNavTarget} from './pending-nav-store.js';
 
 const logger = new Logger('DeltaPendingNav');
-
-function writeDeferredContent(tab, plan) {
-    DeltaCapture.beginApply();
-    try {
-        Cache.setTab(buildTabContentCacheWrite(tab, plan));
-    } finally {
-        DeltaCapture.endApply();
-    }
-}
 
 async function navigateToDeferredTarget(tab, plan) {
     DeltaCapture.markAppliedNavigation(tab.id, plan.url);
@@ -48,12 +38,6 @@ export async function resolvePendingNav(tab, {woke = false, contentChanged = fal
     }
 
     clearPendingNavTarget(uid);
-
-    if (plan.writeContent) {
-        writeDeferredContent(tab, plan);
-        logger.log('deferred title applied on wake', {tabId: tab.id, uid, title: plan.title});
-        return true;
-    }
 
     if (!plan.navigate) {
         logger.log('deferred navigation dropped', {tabId: tab.id, uid, reason: plan.reason});

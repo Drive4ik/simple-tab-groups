@@ -24,13 +24,17 @@ function targetOf(source) {
     return target;
 }
 
+function isNavigationTarget(target) {
+    return Object.hasOwn(target, 'url');
+}
+
 function normalizeEntry(uid, raw) {
     if (!raw || typeof raw !== 'object') {
         return null;
     }
 
     const target = targetOf(raw);
-    if (!Object.keys(target).length) {
+    if (!isNavigationTarget(target)) {
         return null;
     }
 
@@ -101,7 +105,7 @@ export function recordPendingNav(store, uid, liveTab, target, now) {
     }
 
     const deferred = targetOf(target || {});
-    if (!Object.keys(deferred).length) {
+    if (!isNavigationTarget(deferred)) {
         return null;
     }
 
@@ -185,14 +189,7 @@ function leftTheRefusalUrl(entry, liveTab) {
 }
 
 export function planPendingNavOnTabUpdate(entry, liveTab, {woke = false, contentChanged = false, now} = {}) {
-    const keepWaiting = {
-        navigate: false,
-        writeContent: false,
-        clear: false,
-        url: undefined,
-        title: undefined,
-        reason: null,
-    };
+    const keepWaiting = {navigate: false, clear: false, url: undefined, title: undefined, reason: null};
 
     if (!entry) {
         return keepWaiting;
@@ -220,7 +217,6 @@ export function planPendingNavOnTabUpdate(entry, liveTab, {woke = false, content
 
     return {
         navigate: plan.navigate,
-        writeContent: !plan.navigate && plan.refusal == null && plan.title !== liveTab.title,
         clear: true,
         url: plan.url,
         title: plan.title,

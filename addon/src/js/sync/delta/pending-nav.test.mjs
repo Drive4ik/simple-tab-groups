@@ -12,6 +12,13 @@
  * refused target per uid so it can be delivered when the tab wakes, and so the diff can stop
  * re-emitting it in the meantime.
  *
+ * Only a NAVIGATION is deferrable. A tab's title belongs to its page: Firefox exposes no API to
+ * set it, so the one thing the wake path can do — write the peer's title into the cache — arms
+ * `lastTabsState` with a value the woken page immediately contradicts, and the very next
+ * `onUpdated` pushes the real title back out as a local edit. A target carrying a title but no
+ * url is therefore never recorded here; `resolveTabContentChanges` (plan-sync.js) does not emit
+ * one in the first place, so nothing recurs either.
+ *
  * The load-bearing property is that a USER navigation always beats a stale pending target, while a
  * change the user did not make never counts as one: the entry records the url the tab really had
  * when the refusal happened, so a live url that still matches it is evidence the user did nothing
@@ -37,7 +44,7 @@ import {
     gcPendingNav,
     planPendingNavOnTabUpdate,
 } from './pending-nav.js';
-import {planTabContentApply, buildTabContentCacheWrite, REFUSED_DISCARDED, REFUSED_UNSYNCABLE_URL} from './tab-content-apply.js';
+import {planTabContentApply, REFUSED_DISCARDED, REFUSED_UNSYNCABLE_URL} from './tab-content-apply.js';
 
 let passed = 0;
 const failures = [];
@@ -81,11 +88,6 @@ function onTabUpdated(store, uid, liveTab, {woke = false, contentChanged = false
     return plan;
 }
 
-// what pending-nav-wake.js hands to Cache.setTab when the plan carries content but no navigation
-function cacheWriteFor(liveTab, plan) {
-    return plan.writeContent ? buildTabContentCacheWrite(liveTab, plan) : null;
-}
-
 // --- registration: a refused discarded-tab update becomes a pending target -------------------
 {
     const store = {};
@@ -112,6 +114,31 @@ function cacheWriteFor(liveTab, plan) {
     applyContentUpdate(store, 'u1', discardedTab(), {favIconUrl: 'http://icon'});
     check('a favIcon-only target defers nothing',
         getPendingNav(store, 'u1') === null, JSON.stringify(store));
+}
+{
+    const store = {};
+    const plan = applyContentUpdate(store, 'u1', discardedTab(), {title: 'New'});
+    check('a title-only target is still refused on a discarded tab',
+        plan.refusal === REFUSED_DISCARDED && plan.title === 'Old', JSON.stringify(plan));
+    check('a title-only target defers nothing — a title is not a navigation',
+        getPendingNav(store, 'u1') === null, JSON.stringify(store));
+
+    const onWake = onTabUpdated(store, 'u1', wokenTab(), {woke: true});
+    check('waking the tab delivers nothing, so nothing is written behind the browser\'s back',
+        onWake.clear === false && onWake.navigate === false && onWake.title === undefined,
+        JSON.stringify(onWake));
+    check('the plan has no content-write channel at all',
+        !Object.hasOwn(onWake, 'writeContent'), JSON.stringify(onWake));
+    check('and no suppression entry is left dangling behind the refusal',
+        JSON.stringify(pendingNavTargets(store)) === '{}' && store[PENDING_NAV_KEY] === undefined,
+        JSON.stringify(store));
+}
+{
+    const store = {};
+    recordPendingNav(store, 'u1', discardedTab(), {url: 'http://new'}, NOW);
+    applyContentUpdate(store, 'u1', discardedTab(), {title: 'New'});
+    check('a title-only target does NOT wipe an already pending navigation',
+        getPendingNav(store, 'u1')?.url === 'http://new', JSON.stringify(store));
 }
 {
     const store = {};
@@ -158,6 +185,11 @@ function cacheWriteFor(liveTab, plan) {
     check('an entry carrying neither url nor title is dropped on load',
         pending.size === 1 && pending.has('u2'), JSON.stringify([...pending]));
 }
+{
+    const store = {[PENDING_NAV_KEY]: JSON.stringify({u1: {title: 'Only a title', ts: NOW}})};
+    check('a title-only entry written by an older build is dropped on load',
+        loadPendingNav(store).size === 0, JSON.stringify([...loadPendingNav(store)]));
+}
 
 // --- delivery: the target is applied when the tab wakes, then forgotten ----------------------
 {
@@ -196,34 +228,10 @@ function cacheWriteFor(liveTab, plan) {
 }
 {
     const store = {};
-    applyContentUpdate(store, 'u1', discardedTab(), {title: 'New'});
-
-    const liveTab = wokenTab();
-    const onWake = onTabUpdated(store, 'u1', liveTab, {woke: true});
-    check('a title-only deferral is delivered as a content write, not a navigation',
-        onWake.navigate === false && onWake.writeContent === true && onWake.title === 'New',
-        JSON.stringify(onWake));
-
-    const write = cacheWriteFor(liveTab, onWake);
-    check('the delivered title goes into the cache without moving the url',
-        write.title === 'New' && write.url === 'http://old', JSON.stringify(write));
-    check('the title-only entry is forgotten once delivered',
-        onWake.clear === true && getPendingNav(store, 'u1') === null, JSON.stringify(store));
-}
-{
-    const store = {};
-    recordPendingNav(store, 'u1', discardedTab(), {title: 'Old'}, NOW);
-    const onWake = onTabUpdated(store, 'u1', wokenTab(), {woke: true});
-    check('a title the tab already carries needs no write',
-        onWake.writeContent === false && onWake.clear === true && getPendingNav(store, 'u1') === null,
-        JSON.stringify(onWake));
-}
-{
-    const store = {};
     applyContentUpdate(store, 'u1', discardedTab(), {url: 'http://new', title: 'New'});
     const onWake = onTabUpdated(store, 'u1', wokenTab(), {woke: true});
     check('a url+title target still navigates and writes nothing behind the browser\'s back',
-        onWake.navigate === true && onWake.url === 'http://new' && onWake.writeContent === false,
+        onWake.navigate === true && onWake.url === 'http://new' && onWake.title === 'New',
         JSON.stringify(onWake));
     check('the url+title entry is forgotten once delivered',
         getPendingNav(store, 'u1') === null, JSON.stringify(store));

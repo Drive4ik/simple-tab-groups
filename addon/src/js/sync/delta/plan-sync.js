@@ -104,6 +104,13 @@ function foldMigratedPinsIntoGroups(snapshot) {
     });
 }
 
+function dropTitleWithoutUrl(changed) {
+    if (!Object.hasOwn(changed, 'url')) {
+        delete changed.title;
+    }
+    return changed;
+}
+
 function resolveTabContentChanges(resolved, local, pending) {
     const changed = {};
     for (const field of TAB_CONTENT_FIELDS) {
@@ -118,7 +125,7 @@ function resolveTabContentChanges(resolved, local, pending) {
             changed[field] = deepClone(resolved[field]);
         }
     }
-    return changed;
+    return dropTitleWithoutUrl(changed);
 }
 
 function normalizePendingNavTargets(pendingNavTargets) {

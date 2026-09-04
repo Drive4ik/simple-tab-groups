@@ -63,7 +63,8 @@ function check(name, cond, detail) {
 
 const {tabs, setTab, removeTab, getRealTabStateChanged, clear} = await import('./cache.js');
 const {ON_UPDATED_TAB_PROPERTIES} = await import('./constants.js');
-const {planTabContentApply, buildTabContentCacheWrite} = await import('./sync/delta/tab-content-apply.js');
+const {planTabContentApply, buildTabContentCacheWrite, REFUSED_DISCARDED} = await import('./sync/delta/tab-content-apply.js');
+const {recordPendingNav, getPendingNav, planPendingNavOnTabUpdate} = await import('./sync/delta/pending-nav.js');
 
 const TAB_ID = 42;
 
@@ -334,6 +335,54 @@ const applyWrite = (live, target) => buildTabContentCacheWrite(live, planTabCont
     check('the apply write keeps the cached openerTabId',
         tabs[TAB_ID].openerTabId === 7,
         json(tabs[TAB_ID].openerTabId));
+}
+
+// --- 11. a title-only peer target must never become a pushed tab.modify -------------------
+// A tab's title belongs to its page — Firefox has no API to set it. `Tabs.onUpdated` decides
+// whether to append a `DeltaCapture.tabModified` from `changeInfo` carrying `title` or `url`, so
+// the whole question is what the wake leaves armed in `lastTabsState`.
+const contentChangedOf = changeInfo =>
+    !!changeInfo && (Object.hasOwn(changeInfo, 'title') || Object.hasOwn(changeInfo, 'url'));
+
+const PEER_TITLE = 'A title only the peer\'s page ever produced';
+
+{
+    const store = {};
+    const sleeping = baseTab({discarded: true});
+    const target = {title: PEER_TITLE};
+
+    seen({discarded: true});
+
+    const plan = planTabContentApply(sleeping, target);
+    setTab(buildTabContentCacheWrite(sleeping, plan, target));
+    recordPendingNav(store, 'uid-1', sleeping, target, Date.now());
+
+    check('the apply refuses the title-only target and defers nothing for the wake',
+        plan.refusal === REFUSED_DISCARDED && getPendingNav(store, 'uid-1') === null,
+        json({plan, store}));
+
+    const woken = baseTab({discarded: false});
+    setTab(woken);
+
+    const wake = planPendingNavOnTabUpdate(getPendingNav(store, 'uid-1'), woken, {woke: true, now: Date.now()});
+    check('the wake has nothing to deliver, so nothing is written into the cache',
+        wake.clear === false && wake.navigate === false, json(wake));
+
+    const nextEvent = getRealTabStateChanged(baseTab({discarded: false, audible: true}));
+    check('the next event after the wake reports only `audible` — the peer title armed nothing',
+        json(nextEvent) === json({audible: true}), json(nextEvent));
+    check('no content change ⇒ Tabs.onUpdated appends no tab.modify for the peer title',
+        contentChangedOf(nextEvent) === false, json(nextEvent));
+}
+
+{
+    seen({discarded: true});
+    setTab(baseTab({discarded: false}));
+    setTab({...baseTab({discarded: false}), title: PEER_TITLE});
+
+    const nextEvent = getRealTabStateChanged(baseTab({discarded: false, audible: true}));
+    check('contrast: delivering the peer title on wake makes the next event revert and push it',
+        contentChangedOf(nextEvent) === true && nextEvent.title === 'A', json(nextEvent));
 }
 
 console.log(`\npassed: ${passed}, failed: ${failures.length}`);
