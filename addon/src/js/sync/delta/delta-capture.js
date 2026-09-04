@@ -5,7 +5,7 @@ import * as DeltaLog from './delta-log.js';
 import {syncedOptionKeys} from './option-keys.js';
 import {isUrlSyncable, unwrapStubUrl, sanitizeGroupRecordForSync} from './url-sync.js';
 import {computeGroupRelativeIndex} from './group-relative-index.js';
-import {NAVIGATION_COMPLETE_STATUS, isAppliedNavigationEcho, isAppliedNavigationSettled, resolveAppliedNavigationSettlement} from './applied-nav-echo.js';
+import {isAppliedNavigationDiscardedOffTarget, isAppliedNavigationEcho, isAppliedNavigationSettled, resolveAppliedNavigationSettlement} from './applied-nav-echo.js';
 import {isAppliedMoveEcho} from './applied-move-echo.js';
 import {contentMark, isSyncedContent} from './content-marks.js';
 import {forgetContentMark, loadContentMarks, rememberContentMark} from './sync-marks.js';
@@ -39,7 +39,18 @@ export function markAppliedNavigation(tabId, url) {
     appliedNavTabs.set(tabId, {
         expiry: Date.now() + APPLIED_NAV_SAFETY_MS,
         url: unwrapStubUrl(url),
+        targetReached: false,
     });
+}
+
+function observedUrlOf(observedUrl) {
+    return typeof observedUrl === 'string' ? unwrapStubUrl(observedUrl) : observedUrl;
+}
+
+function noteAppliedNavigationReachedTarget(mark, observedUrl) {
+    if (mark != null && mark.url === observedUrl) {
+        mark.targetReached = true;
+    }
 }
 
 export function clearAppliedNavigation(tabId) {
@@ -52,11 +63,14 @@ export function settleAppliedNavigation(tabId, observedUrl, observedStatus) {
         return false;
     }
 
+    const url = observedUrlOf(observedUrl);
+    noteAppliedNavigationReachedTarget(mark, url);
+
     const {retireMark, landedOffTarget} = resolveAppliedNavigationSettlement({
         applying: isApplying(),
         markExpiry: mark.expiry,
         markUrl: mark.url,
-        observedUrl: typeof observedUrl === 'string' ? unwrapStubUrl(observedUrl) : observedUrl,
+        observedUrl: url,
         observedStatus,
         now: Date.now(),
     });
@@ -69,9 +83,21 @@ export function settleAppliedNavigation(tabId, observedUrl, observedStatus) {
 }
 
 export function settleAppliedNavigationOnDiscard(tabId, observedUrl) {
-    const landedOffTarget = settleAppliedNavigation(tabId, observedUrl, NAVIGATION_COMPLETE_STATUS);
+    const mark = appliedNavTabs.get(tabId);
     appliedNavTabs.delete(tabId);
-    return landedOffTarget;
+
+    if (mark == null) {
+        return false;
+    }
+
+    return isAppliedNavigationDiscardedOffTarget({
+        applying: isApplying(),
+        markExpiry: mark.expiry,
+        markUrl: mark.url,
+        markTargetReached: mark.targetReached,
+        observedUrl: observedUrlOf(observedUrl),
+        now: Date.now(),
+    });
 }
 
 const appliedMoveTabs = new Map();
@@ -99,11 +125,13 @@ function consumeAppliedNavigationEcho(tabId, observedUrl, observedStatus) {
     const mark = appliedNavTabs.get(tabId);
     const applying = isApplying();
     const now = Date.now();
+    const url = observedUrlOf(observedUrl);
+    noteAppliedNavigationReachedTarget(mark, url);
     const echo = isAppliedNavigationEcho({
         applying,
         markExpiry: mark?.expiry,
         markUrl: mark?.url,
-        observedUrl: typeof observedUrl === 'string' ? unwrapStubUrl(observedUrl) : observedUrl,
+        observedUrl: url,
         observedStatus,
         now,
     });

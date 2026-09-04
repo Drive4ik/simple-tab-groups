@@ -42,9 +42,18 @@
  * spent either. `applying` enters at exactly ONE place, `isAppliedNavigationSettled`, and both the
  * retirement and the landing verdict come out of a single `resolveAppliedNavigationSettlement`
  * call, so a caller cannot consume a mark and receive no verdict.
+ *
+ * A DISCARD ends the flight, but it does not say whose flight it ended. A discard that interrupts
+ * an applied load before that load committed leaves the tab on the url the apply was navigating
+ * AWAY from — reporting that as a landing pushes the pre-apply url to every peer and reverts the
+ * change this device had just applied. The url the tab holds is evidence only for a navigation
+ * that was seen to reach its target at least once; `markTargetReached` records that observation,
+ * and `isAppliedNavigationDiscardedOffTarget` refuses a verdict without it. Everything else it
+ * inherits from the landing verdict, `applying` included, so the discard cannot disagree with it.
  */
 
 import {
+    isAppliedNavigationDiscardedOffTarget,
     isAppliedNavigationEcho,
     isAppliedNavigationLandedOffTarget,
     isAppliedNavigationSettled,
@@ -72,8 +81,16 @@ const LOADING = NAVIGATION_LOADING_STATUS;
 const COMPLETE = NAVIGATION_COMPLETE_STATUS;
 
 // A faithful pure model of the mark store in delta-capture.js, so mark lifecycle scenarios
-// (supersede / removal / settle) are exercised through the same predicates. `mark` carries the
-// same guards as `markAppliedNavigation`, so the model can only reach states production reaches.
+// (supersede / removal / settle / discard) are exercised through the same predicates. `mark`
+// carries the same guards as `markAppliedNavigation`, and every url-bearing observation records
+// whether the applied navigation was seen at its target, so the model can only reach states
+// production reaches.
+function noteReachedTarget(mark, observedUrl) {
+    if (mark != null && mark.url === observedUrl) {
+        mark.targetReached = true;
+    }
+}
+
 function createMarkStore() {
     const marks = new Map();
     return {
@@ -81,13 +98,29 @@ function createMarkStore() {
             if (!Number.isFinite(tabId) || typeof url !== 'string') {
                 return;
             }
-            marks.set(tabId, {expiry: now + SAFETY_MS, url});
+            marks.set(tabId, {expiry: now + SAFETY_MS, url, targetReached: false});
         },
         clear(tabId) {
             marks.delete(tabId);
         },
+        discard(tabId, observedUrl, now, applying = false) {
+            const mark = marks.get(tabId);
+            marks.delete(tabId);
+            if (mark == null) {
+                return false;
+            }
+            return isAppliedNavigationDiscardedOffTarget({
+                applying,
+                markExpiry: mark.expiry,
+                markUrl: mark.url,
+                markTargetReached: mark.targetReached,
+                observedUrl,
+                now,
+            });
+        },
         consume(tabId, observedUrl, observedStatus, now, applying = false) {
             const mark = marks.get(tabId);
+            noteReachedTarget(mark, observedUrl);
             const echo = isAppliedNavigationEcho({
                 applying,
                 markExpiry: mark?.expiry,
@@ -106,6 +139,7 @@ function createMarkStore() {
             if (mark == null) {
                 return false;
             }
+            noteReachedTarget(mark, observedUrl);
             const {retireMark, landedOffTarget} = resolveAppliedNavigationSettlement({
                 applying,
                 markExpiry: mark.expiry,
@@ -513,15 +547,18 @@ check('in-apply ⇒ silent (our own write, never a user landing)',
 
 // --- scenario: the tab is DISCARDED or REMOVED while still in flight past the bound ------------
 // A mark now outlives the bound whenever the tab keeps reporting `loading`, so what bounds its
-// lifetime is the tab: tabs.js drops it on `changeInfo.discarded === true` and onRemoved drops it
-// unconditionally. Neither leaves an entry behind for a recycled tab id to inherit.
+// lifetime is the tab: tabs.js settles-and-drops it on `changeInfo.discarded === true` and
+// onRemoved drops it unconditionally. Neither leaves an entry behind for a recycled tab id to
+// inherit. The redirect hop here was seen, so the applied navigation did reach its target and the
+// url the tab holds at the discard is evidence.
 {
     const store = createMarkStore();
     store.mark(14, 'http://target', NOW);
     check('in-flight discard: the mark is alive past the bound',
-        store.settle(14, 'http://redirect', LOADING, NOW + SAFETY_MS + 1_000) === false
+        store.settle(14, 'http://target', LOADING, NOW + SAFETY_MS + 1_000) === false
         && store.has(14) === true);
-    store.clear(14);
+    check('in-flight discard: the discard reports the url the tab holds',
+        store.discard(14, 'http://redirect', NOW + SAFETY_MS + 1_500) === true);
     check('in-flight discard: the discard drops it',
         store.has(14) === false);
     check('in-flight discard: a later completion reports no landing',
@@ -591,6 +628,77 @@ check('in-apply ⇒ silent (our own write, never a user landing)',
         store.has(42) === false);
 }
 
+// --- scenario: a discard that CANCELLED the applied load, before it ever committed -------------
+// `browser.tabs.update` resolves when the load STARTS. A group switch with
+// `discardTabsAfterHide`, or Firefox unloading the tab on its own, can end that load before it
+// commits: the tab is left on the url the apply was navigating away from, with `changeInfo`
+// carrying nothing but `discarded`. Reading that as a landing pushes the pre-apply url and
+// reverts, on every peer, the change this device had just applied — and on the pending-nav-wake
+// path the deferred target is already cleared, so nothing is left to retry and the peer's change
+// is lost for good.
+{
+    const store = createMarkStore();
+    store.mark(50, 'http://target', NOW);
+    check('cancelled load: the discard of a load that never committed is no landing',
+        store.discard(50, 'http://before-apply', NOW + 1_000) === false);
+    check('cancelled load: the discard still bounds the mark',
+        store.has(50) === false);
+}
+{
+    const store = createMarkStore();
+    store.mark(51, 'http://target', NOW);
+    check('cancelled load: not even the hop of a redirect that never reached the target counts',
+        store.consume(51, 'http://hop', LOADING, NOW + 500) === true
+        && store.discard(51, 'http://hop', NOW + 800) === false);
+}
+{
+    const store = createMarkStore();
+    store.mark(52, 'http://target', NOW);
+    check('cancelled load: past the bound a navigation that never committed is still no landing',
+        store.discard(52, 'http://before-apply', NOW + SAFETY_MS + 1_000) === false);
+}
+
+// --- scenario: a discard AFTER the applied navigation reached its target -----------------------
+// This is the window 59f339b closed and it must stay closed. Once the tab has been seen at the
+// applied target, the mark can only survive because the settlement was deferred — by an apply
+// pass, or by a completion that carried nothing the cache had not already recorded. Whatever url
+// the tab holds when it discards is then the url it sits on and the one it restores to on wake,
+// so a user navigation made under the surviving mark is not swallowed.
+{
+    const store = createMarkStore();
+    store.mark(53, 'http://target', NOW);
+    check('reached target: the completion inside the apply pass spends nothing',
+        store.settle(53, 'http://target', COMPLETE, NOW + 1_000, true) === false
+        && store.has(53) === true);
+    check('reached target: the user navigation under the surviving mark is suppressed',
+        store.consume(53, 'http://user', LOADING, NOW + 2_000) === true);
+    check('reached target: the discard names the url the user is on',
+        store.discard(53, 'http://user', NOW + 3_000) === true);
+    check('reached target: and spends the mark',
+        store.has(53) === false);
+}
+{
+    const store = createMarkStore();
+    store.mark(54, 'http://target', NOW);
+    check('reached target: a tab discarded where the apply put it asks for no capture',
+        store.settle(54, 'http://target', COMPLETE, NOW + 1_000, true) === false
+        && store.discard(54, 'http://target', NOW + 2_000) === false);
+}
+{
+    const store = createMarkStore();
+    store.mark(55, 'http://target', NOW);
+    check('reached target: a discard INSIDE an apply pass still attributes nothing',
+        store.settle(55, 'http://target', COMPLETE, NOW + 1_000, true) === false
+        && store.discard(55, 'http://user', NOW + 2_000, true) === false);
+    check('reached target: and the discard dropped the mark anyway',
+        store.has(55) === false);
+}
+{
+    const store = createMarkStore();
+    check('discard: with no mark at all there is nothing to have landed off',
+        store.discard(56, 'http://user', NOW) === false);
+}
+
 // --- every prior round, re-run through the mark store now that retirement moved ----------------
 // Each round fixed a real defect; none of them may be traded for the deferral fix.
 {
@@ -644,6 +752,26 @@ check('in-apply ⇒ silent (our own write, never a user landing)',
         && store.has(36) === true
         && store.settle(36, 'http://hop', COMPLETE, NOW + SAFETY_MS + 2_000) === true
         && store.has(36) === false);
+}
+{
+    const store = createMarkStore();
+    store.mark(37, 'http://target', NOW);
+    check('round dd0f724: a discard during an apply pass enters `applying` at the one place too',
+        store.settle(37, 'http://target', COMPLETE, NOW + 1_000, true) === false
+        && store.discard(37, 'http://user', NOW + 2_000, true) === false);
+}
+{
+    const store = createMarkStore();
+    store.mark(38, 'http://target', NOW);
+    check('round 59f339b: a discard after the applied navigation landed still reports the url',
+        store.settle(38, 'http://target', COMPLETE, NOW + 1_000, true) === false
+        && store.discard(38, 'http://user', NOW + 2_000) === true);
+}
+{
+    const store = createMarkStore();
+    store.mark(39, 'http://target', NOW);
+    check('round fix/discard-cancelled-navigation: a discard that cancelled the load reports nothing',
+        store.discard(39, 'http://before-apply', NOW + 1_000) === false);
 }
 
 console.log(`\n${passed} passed, ${failures.length} failed`);
