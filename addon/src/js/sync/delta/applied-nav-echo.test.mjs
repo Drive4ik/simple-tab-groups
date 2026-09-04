@@ -5,13 +5,14 @@
  * Plain `node applied-nav-echo.test.mjs` (STG has no test runner). The module is pure (no
  * `browser.*` / cache), so it imports directly.
  *
- * Regression for the A6 url-capture churn: a url change applied to a LOADED tab by the
- * transport navigates via `browser.tabs.update`, whose `onUpdated` settle/redirect fires
- * ASYNCHRONOUSLY after `endApply()`. That echo must be SUPPRESSED, while a genuine USER
- * navigation made outside the apply's causal window must still SYNC.
+ * Suppression is CAUSAL, not wall-clock: a url applied by the transport via
+ * `browser.tabs.update` suppresses capture for that tab until the navigation reports
+ * `status === 'complete'`. Everything the load does on the way there (redirects, title
+ * settling, url canonicalisation) is a resolution of OUR navigation, not a user edit. The
+ * expiry is only a safety bound for a navigation that never completes.
  */
 
-import {isAppliedNavigationEcho} from './applied-nav-echo.js';
+import {isAppliedNavigationEcho, isAppliedNavigationSettled, NAVIGATION_COMPLETE_STATUS} from './applied-nav-echo.js';
 
 let passed = 0;
 const failures = [];
@@ -27,57 +28,153 @@ function check(name, cond, detail) {
 }
 
 const NOW = 1_000_000; // fixed clock
+const SAFETY_MS = 60_000;
+const LOADING = 'loading';
+const COMPLETE = NAVIGATION_COMPLETE_STATUS;
+
+// A faithful pure model of the mark store in delta-capture.js, so mark lifecycle scenarios
+// (supersede / removal / settle) are exercised through the same two predicates.
+function createMarkStore() {
+    const marks = new Map();
+    return {
+        mark(tabId, url, now) {
+            marks.set(tabId, {expiry: now + SAFETY_MS, url});
+        },
+        clear(tabId) {
+            marks.delete(tabId);
+        },
+        consume(tabId, observedUrl, observedStatus, now, applying = false) {
+            const mark = marks.get(tabId);
+            const echo = isAppliedNavigationEcho({
+                applying,
+                markExpiry: mark?.expiry,
+                markUrl: mark?.url,
+                observedUrl,
+                observedStatus,
+                now,
+            });
+            if (mark != null && isAppliedNavigationSettled({markExpiry: mark.expiry, observedStatus, now})) {
+                marks.delete(tabId);
+            }
+            return echo;
+        },
+        has(tabId) {
+            return marks.has(tabId);
+        },
+    };
+}
 
 // --- in-apply: the synchronous suppression (isApplying) is preserved -----------------------
 check('in-apply, no mark ⇒ ECHO (suppress)',
     isAppliedNavigationEcho({applying: true, markExpiry: undefined, now: NOW}) === true);
 check('in-apply wins even with an expired mark ⇒ ECHO',
     isAppliedNavigationEcho({applying: true, markExpiry: NOW - 1, now: NOW}) === true);
+check('in-apply is an echo regardless of url or status',
+    isAppliedNavigationEcho({applying: true, markExpiry: NOW + SAFETY_MS, markUrl: 'http://x', observedUrl: 'http://y', observedStatus: COMPLETE, now: NOW}) === true);
 
-// --- async settle/redirect AFTER endApply: live mark ⇒ ECHO (the churn we fix) -------------
-check('not applying, live mark (now < expiry) ⇒ ECHO (suppress redirect echo)',
-    isAppliedNavigationEcho({applying: false, markExpiry: NOW + 4_000, now: NOW}) === true);
-check('not applying, live mark at the very edge (now just below expiry) ⇒ ECHO',
-    isAppliedNavigationEcho({applying: false, markExpiry: NOW + 1, now: NOW}) === true);
+// --- in-flight: anything before completion is part of OUR navigation -----------------------
+check('in-flight, loading at the applied url ⇒ ECHO',
+    isAppliedNavigationEcho({applying: false, markExpiry: NOW + SAFETY_MS, markUrl: 'http://x', observedUrl: 'http://x', observedStatus: LOADING, now: NOW}) === true);
+check('in-flight, loading at an INTERMEDIATE redirect url ⇒ ECHO (not a user edit)',
+    isAppliedNavigationEcho({applying: false, markExpiry: NOW + SAFETY_MS, markUrl: 'http://x', observedUrl: 'http://redirect', observedStatus: LOADING, now: NOW}) === true);
+check('in-flight, title settle with no status ⇒ ECHO',
+    isAppliedNavigationEcho({applying: false, markExpiry: NOW + SAFETY_MS, markUrl: 'http://x', observedUrl: 'http://x', now: NOW}) === true);
+check('in-flight far past the OLD 4s wall clock, still before the bound ⇒ ECHO',
+    isAppliedNavigationEcho({applying: false, markExpiry: NOW + SAFETY_MS - 4_000, markUrl: 'http://x', observedUrl: 'http://x', observedStatus: LOADING, now: NOW}) === true);
 
-// --- genuine USER navigation: not applying, no/expired mark ⇒ NOT an echo (must sync) -------
-check('not applying, no mark ⇒ USER nav (capture)',
-    isAppliedNavigationEcho({applying: false, markExpiry: undefined, now: NOW}) === false);
-check('not applying, mark expired exactly (now === expiry) ⇒ USER nav (capture)',
-    isAppliedNavigationEcho({applying: false, markExpiry: NOW, now: NOW}) === false);
-check('not applying, mark long expired ⇒ USER nav (capture)',
-    isAppliedNavigationEcho({applying: false, markExpiry: NOW - 10_000, now: NOW}) === false);
+// --- completion arriving BEFORE the bound --------------------------------------------------
+check('completion at the applied url ⇒ ECHO (our own write)',
+    isAppliedNavigationEcho({applying: false, markExpiry: NOW + SAFETY_MS, markUrl: 'http://x', observedUrl: 'http://x', observedStatus: COMPLETE, now: NOW}) === true);
+check('completion at a DIFFERENT url ⇒ CAPTURE (cloud converges to the redirect target)',
+    isAppliedNavigationEcho({applying: false, markExpiry: NOW + SAFETY_MS, markUrl: 'http://x', observedUrl: 'http://y', observedStatus: COMPLETE, now: NOW}) === false);
+check('completion with a url-less mark ⇒ ECHO (safe default)',
+    isAppliedNavigationEcho({applying: false, markExpiry: NOW + SAFETY_MS, observedUrl: 'http://y', observedStatus: COMPLETE, now: NOW}) === true);
+check('completion RETIRES the mark before the bound',
+    isAppliedNavigationSettled({markExpiry: NOW + SAFETY_MS, observedStatus: COMPLETE, now: NOW}) === true);
+check('a loading event does NOT retire the mark',
+    isAppliedNavigationSettled({markExpiry: NOW + SAFETY_MS, observedStatus: LOADING, now: NOW}) === false);
 
-// --- robustness: a non-finite markExpiry is treated as no mark -----------------------------
-check('not applying, markExpiry = NaN ⇒ USER nav (capture)',
+// --- the BOUND expiring first (navigation that never completes) ----------------------------
+check('bound expired, loading ⇒ CAPTURE (a stuck nav cannot suppress forever)',
+    isAppliedNavigationEcho({applying: false, markExpiry: NOW, markUrl: 'http://x', observedUrl: 'http://x', observedStatus: LOADING, now: NOW}) === false);
+check('bound long expired ⇒ CAPTURE',
+    isAppliedNavigationEcho({applying: false, markExpiry: NOW - 10_000, markUrl: 'http://x', observedUrl: 'http://x', observedStatus: COMPLETE, now: NOW}) === false);
+check('bound expiry RETIRES the mark without any completion',
+    isAppliedNavigationSettled({markExpiry: NOW, observedStatus: LOADING, now: NOW}) === true);
+check('no mark, not applying ⇒ CAPTURE (genuine user navigation)',
+    isAppliedNavigationEcho({applying: false, markExpiry: undefined, observedStatus: COMPLETE, now: NOW}) === false);
+check('markExpiry = NaN is treated as no mark ⇒ CAPTURE',
     isAppliedNavigationEcho({applying: false, markExpiry: NaN, now: NOW}) === false);
-check('not applying, markExpiry = null ⇒ USER nav (capture)',
+check('markExpiry = null is treated as no mark ⇒ CAPTURE',
     isAppliedNavigationEcho({applying: false, markExpiry: null, now: NOW}) === false);
 
-// --- the full echo-vs-user-nav PROOF as a single scenario ----------------------------------
-// 1) apply navigates tab → in-apply onUpdated (the navigation start). applying = true ⇒ echo.
-check('scenario: navigation-start during apply ⇒ suppressed',
-    isAppliedNavigationEcho({applying: true, markExpiry: NOW, now: NOW}) === true);
-// 2) url-less mark, settle after endApply within window ⇒ window-based suppression (legacy default).
-check('scenario: url-less mark settle within window ⇒ suppressed',
-    isAppliedNavigationEcho({applying: false, markExpiry: NOW + 3_000, now: NOW}) === true);
-// 3) later, the user navigates the SAME tab; mark has expired ⇒ NOT echo ⇒ syncs.
-check('scenario: later USER navigation after window ⇒ captured (syncs)',
-    isAppliedNavigationEcho({applying: false, markExpiry: NOW - 5_000, now: NOW}) === false);
+// --- scenario: a slow load that settles LONG after the old 4s window ------------------------
+{
+    const store = createMarkStore();
+    store.mark(1, 'http://x', NOW);
+    check('slow load: loading at +9s ⇒ suppressed',
+        store.consume(1, 'http://x', LOADING, NOW + 9_000) === true);
+    check('slow load: title settle at +18s ⇒ suppressed',
+        store.consume(1, 'http://x', LOADING, NOW + 18_000) === true);
+    check('slow load: completion at +25s ⇒ suppressed',
+        store.consume(1, 'http://x', COMPLETE, NOW + 25_000) === true);
+    check('slow load: mark retired by completion',
+        store.has(1) === false);
+    check('slow load: a later USER navigation is captured',
+        store.consume(1, 'http://user', COMPLETE, NOW + 26_000) === false);
+}
 
-// --- URL-NARROWED suppression (convergence fix for "loads infinitely") ----------------------
-// applied url X; settle observed at X ⇒ plain echo of our own write ⇒ SUPPRESS.
-check('url-narrowed: settle at the EXACT applied url ⇒ suppressed',
-    isAppliedNavigationEcho({applying: false, markExpiry: NOW + 3_000, markUrl: 'http://x', observedUrl: 'http://x', now: NOW}) === true);
-// applied url X; server redirected to Y ⇒ NOT an echo ⇒ CAPTURE so the cloud converges to Y.
-check('url-narrowed: redirect to a DIFFERENT url ⇒ captured (cloud converges, no perpetual re-nav)',
-    isAppliedNavigationEcho({applying: false, markExpiry: NOW + 3_000, markUrl: 'http://x', observedUrl: 'http://y', now: NOW}) === false);
-// in-apply suppression ignores the url entirely (STG's own writes).
-check('url-narrowed: in-apply change is an echo regardless of url',
-    isAppliedNavigationEcho({applying: true, markExpiry: NOW + 3_000, markUrl: 'http://x', observedUrl: 'http://y', now: NOW}) === true);
-// an EXPIRED mark with urls is still not an echo (user nav outside the window syncs).
-check('url-narrowed: expired mark ⇒ captured even with urls',
-    isAppliedNavigationEcho({applying: false, markExpiry: NOW - 1, markUrl: 'http://x', observedUrl: 'http://x', now: NOW}) === false);
+// --- scenario: the BOUND expires first ------------------------------------------------------
+{
+    const store = createMarkStore();
+    store.mark(2, 'http://x', NOW);
+    check('stuck nav: still suppressed just before the bound',
+        store.consume(2, 'http://x', LOADING, NOW + SAFETY_MS - 1) === true);
+    check('stuck nav: captured once the bound passes',
+        store.consume(2, 'http://x', LOADING, NOW + SAFETY_MS) === false);
+    check('stuck nav: mark retired by the bound',
+        store.has(2) === false);
+}
+
+// --- scenario: a redirect resolves to a DIFFERENT url ---------------------------------------
+{
+    const store = createMarkStore();
+    store.mark(3, 'http://x', NOW);
+    check('redirect: intermediate hop suppressed',
+        store.consume(3, 'http://hop', LOADING, NOW + 200) === true);
+    check('redirect: completion at y captured so the cloud converges',
+        store.consume(3, 'http://y', COMPLETE, NOW + 700) === false);
+    check('redirect: mark retired by completion',
+        store.has(3) === false);
+}
+
+// --- scenario: a SUPERSEDING navigation -----------------------------------------------------
+{
+    const store = createMarkStore();
+    store.mark(4, 'http://first', NOW);
+    store.mark(4, 'http://second', NOW + 500);
+    check('supersede: a late event from the ABANDONED first nav is suppressed',
+        store.consume(4, 'http://first', LOADING, NOW + 600) === true);
+    check('supersede: completion at the SECOND applied url ⇒ suppressed',
+        store.consume(4, 'http://second', COMPLETE, NOW + 900) === true);
+    check('supersede: mark retired by completion',
+        store.has(4) === false);
+    check('supersede: the bound is measured from the SECOND navigation',
+        isAppliedNavigationSettled({markExpiry: NOW + 500 + SAFETY_MS, observedStatus: LOADING, now: NOW + SAFETY_MS + 1}) === false);
+}
+
+// --- scenario: the tab is REMOVED mid-flight ------------------------------------------------
+{
+    const store = createMarkStore();
+    store.mark(5, 'http://x', NOW);
+    check('removal: mark exists while the nav is in flight',
+        store.has(5) === true);
+    store.clear(5);
+    check('removal: mark dropped, no state left behind',
+        store.has(5) === false);
+    check('removal: a recycled tab id is treated as a genuine user navigation',
+        store.consume(5, 'http://other', COMPLETE, NOW + 1_000) === false);
+}
 
 console.log(`\n${passed} passed, ${failures.length} failed`);
 if (failures.length) {

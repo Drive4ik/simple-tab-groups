@@ -267,8 +267,14 @@ async function applyTabContentUpdate(liveTab, target, log) {
         if (Object.hasOwn(target, 'url') && liveTab.discarded !== true
             && isUrlSyncable(unwrapStubUrl(target.url))
             && shouldNavigateLiveTabUrl(liveTab.url, target.url)) {
-            await browser.tabs.update(liveId, {url: target.url})
-                .catch(log.onCatch(['cant update tab url', liveId], false));
+            DeltaCapture.markAppliedNavigation(liveId, target.url);
+
+            try {
+                await browser.tabs.update(liveId, {url: target.url});
+            } catch (error) {
+                DeltaCapture.clearAppliedNavigation(liveId);
+                log.onCatch(['cant update tab url', liveId], false)(error);
+            }
         }
     }
 

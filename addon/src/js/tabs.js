@@ -276,9 +276,16 @@ async function onUpdated(tabId, changeInfo, tab) {
         return;
     }
 
-    if ((Object.hasOwn(changeInfo, 'title') || Object.hasOwn(changeInfo, 'url'))
-        && DeltaCapture.shouldArmAppliedNavigation()) {
-        DeltaCapture.markAppliedNavigation(tab.id, tab.url);
+    const contentChanged = Object.hasOwn(changeInfo, 'title') || Object.hasOwn(changeInfo, 'url');
+
+    if (contentChanged && DeltaCapture.shouldArmAppliedNavigation()) {
+        DeltaCapture.armAppliedNavigation(tab.id);
+    }
+
+    if (changeInfo.discarded === true) {
+        DeltaCapture.clearAppliedNavigation(tab.id);
+    } else if (!contentChanged) {
+        DeltaCapture.settleAppliedNavigation(tab.id, changeInfo.status);
     }
 
     if (isPinned(tab) && !Object.hasOwn(changeInfo, 'pinned')) {
@@ -287,7 +294,7 @@ async function onUpdated(tabId, changeInfo, tab) {
                 .catch(log.onCatch(['cant set favIcon (pinned)', tab, changeInfo], false));
         }
 
-        if (Object.hasOwn(changeInfo, 'title') || Object.hasOwn(changeInfo, 'url')) {
+        if (contentChanged) {
             await Cache.setTabLastModified(tab.id, Cache.getTabLastModified(tab.id))
                 .catch(log.onCatch(['cant set lastModified (pinned)', tab, changeInfo], false));
 
@@ -307,7 +314,7 @@ async function onUpdated(tabId, changeInfo, tab) {
             .catch(log.onCatch(['cant set favIcon', tab, changeInfo], false));
     }
 
-    if (Object.hasOwn(changeInfo, 'title') || Object.hasOwn(changeInfo, 'url')) {
+    if (contentChanged) {
         await Cache.setTabLastModified(tab.id, Cache.getTabLastModified(tab.id))
             .catch(log.onCatch(['cant set lastModified', tab, changeInfo], false));
 

@@ -5,7 +5,7 @@ import * as DeltaLog from './delta-log.js';
 import {syncedOptionKeys} from './option-keys.js';
 import {isUrlSyncable, unwrapStubUrl, sanitizeGroupRecordForSync} from './url-sync.js';
 import {computeGroupRelativeIndex} from './group-relative-index.js';
-import {isAppliedNavigationEcho} from './applied-nav-echo.js';
+import {isAppliedNavigationEcho, isAppliedNavigationSettled} from './applied-nav-echo.js';
 import {isAppliedMoveEcho} from './applied-move-echo.js';
 
 const logger = new Logger('DeltaCapture');
@@ -30,27 +30,47 @@ export function isApplying() {
 }
 
 const appliedNavTabs = new Map();
-const APPLIED_NAV_WINDOW_MS = 4_000;
+const APPLIED_ECHO_WINDOW_MS = 4_000;
+const APPLIED_NAV_SAFETY_MS = 60_000;
 let lastApplyEndedAt = 0;
 
 export function shouldArmAppliedNavigation() {
-    return isApplying() || (Date.now() - lastApplyEndedAt) < APPLIED_NAV_WINDOW_MS;
+    return isApplying() || (Date.now() - lastApplyEndedAt) < APPLIED_ECHO_WINDOW_MS;
+}
+
+function isMarkLive(mark, now) {
+    return mark != null && now < mark.expiry;
 }
 
 export function markAppliedNavigation(tabId, url) {
     if (!Number.isFinite(tabId)) {
         return;
     }
-    const existing = appliedNavTabs.get(tabId);
-    const expiry = Date.now() + APPLIED_NAV_WINDOW_MS;
-    const markUrl = (existing && existing.url != null)
-        ? existing.url
-        : (typeof url === 'string' ? unwrapStubUrl(url) : undefined);
-    appliedNavTabs.set(tabId, {expiry, url: markUrl});
+    appliedNavTabs.set(tabId, {
+        expiry: Date.now() + APPLIED_NAV_SAFETY_MS,
+        url: typeof url === 'string' ? unwrapStubUrl(url) : undefined,
+    });
+}
+
+export function armAppliedNavigation(tabId) {
+    if (!Number.isFinite(tabId) || isMarkLive(appliedNavTabs.get(tabId), Date.now())) {
+        return;
+    }
+    markAppliedNavigation(tabId);
 }
 
 export function clearAppliedNavigation(tabId) {
     appliedNavTabs.delete(tabId);
+}
+
+export function settleAppliedNavigation(tabId, observedStatus) {
+    const mark = appliedNavTabs.get(tabId);
+    if (mark == null) {
+        return;
+    }
+    if (isAppliedNavigationSettled({markExpiry: mark.expiry, observedStatus, now: Date.now()})) {
+        appliedNavTabs.delete(tabId);
+    }
 }
 
 const appliedMoveTabs = new Map();
@@ -59,7 +79,7 @@ export function markAppliedMove(tabId) {
     if (!Number.isFinite(tabId)) {
         return;
     }
-    appliedMoveTabs.set(tabId, Date.now() + APPLIED_NAV_WINDOW_MS);
+    appliedMoveTabs.set(tabId, Date.now() + APPLIED_ECHO_WINDOW_MS);
 }
 
 export function consumeAppliedMoveEcho(tabId) {
@@ -74,7 +94,7 @@ export function consumeAppliedMoveEcho(tabId) {
     });
 }
 
-function consumeAppliedNavigationEcho(tabId, observedUrl) {
+function consumeAppliedNavigationEcho(tabId, observedUrl, observedStatus) {
     const mark = appliedNavTabs.get(tabId);
     const now = Date.now();
     const echo = isAppliedNavigationEcho({
@@ -82,9 +102,10 @@ function consumeAppliedNavigationEcho(tabId, observedUrl) {
         markExpiry: mark?.expiry,
         markUrl: mark?.url,
         observedUrl: typeof observedUrl === 'string' ? unwrapStubUrl(observedUrl) : observedUrl,
+        observedStatus,
         now,
     });
-    if (mark != null && now >= mark.expiry) {
+    if (mark != null && isAppliedNavigationSettled({markExpiry: mark.expiry, observedStatus, now})) {
         appliedNavTabs.delete(tabId);
     }
     return echo;
@@ -204,7 +225,7 @@ export async function tabModified(tab, snapshot = null) {
             return;
         }
 
-        if (consumeAppliedNavigationEcho(tab.id, tab.url)) {
+        if (consumeAppliedNavigationEcho(tab.id, tab.url, tab.status)) {
             return;
         }
 
@@ -376,7 +397,7 @@ export async function pinnedModified(tab, snapshot = null) {
             return;
         }
 
-        if (consumeAppliedNavigationEcho(tab.id, tab.url)) {
+        if (consumeAppliedNavigationEcho(tab.id, tab.url, tab.status)) {
             return;
         }
 
