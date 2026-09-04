@@ -94,20 +94,23 @@ const stubFor = url => {
 {
     const NOW = 1_000_000;
     const live = NOW + 2_000; // mark still live
-    // applied X, settle observed at X ⇒ plain echo ⇒ SUPPRESS (don't re-capture our own write).
-    check('(ii) settle at the EXACT applied url is an echo (suppressed)',
-        isAppliedNavigationEcho({applying: false, markExpiry: live, markUrl: 'http://x', observedUrl: 'http://x', now: NOW}) === true);
-    // applied X, server redirected to Y ⇒ NOT an echo ⇒ CAPTURE (cloud learns Y).
-    check('(ii) redirect to a DIFFERENT url is NOT an echo (captured ⇒ cloud converges to Y)',
-        isAppliedNavigationEcho({applying: false, markExpiry: live, markUrl: 'http://x', observedUrl: 'http://y', now: NOW}) === false);
+    // applied X, load COMPLETES at X ⇒ plain echo ⇒ SUPPRESS (don't re-capture our own write).
+    check('(ii) completion at the EXACT applied url is an echo (suppressed)',
+        isAppliedNavigationEcho({applying: false, markExpiry: live, markUrl: 'http://x', observedUrl: 'http://x', observedStatus: 'complete', now: NOW}) === true);
+    // applied X, server redirected to Y ⇒ once the load COMPLETES at Y it is NOT an echo ⇒ CAPTURE.
+    check('(ii) completion at a DIFFERENT url is NOT an echo (captured ⇒ cloud converges to Y)',
+        isAppliedNavigationEcho({applying: false, markExpiry: live, markUrl: 'http://x', observedUrl: 'http://y', observedStatus: 'complete', now: NOW}) === false);
+    // while the load is still in flight the redirect hop is part of OUR navigation ⇒ suppress.
+    check('(ii) an in-flight redirect hop is an echo (no mid-load churn)',
+        isAppliedNavigationEcho({applying: false, markExpiry: live, markUrl: 'http://x', observedUrl: 'http://y', observedStatus: 'loading', now: NOW}) === true);
     // in-apply changes are always echoes regardless of url (STG's own writes).
     check('(ii) any change WHILE applying is an echo',
         isAppliedNavigationEcho({applying: true, markExpiry: live, markUrl: 'http://x', observedUrl: 'http://y', now: NOW}) === true);
-    // a user navigation after the mark expires is captured (A6 preserved).
-    check('(ii) post-window user navigation is captured (not an echo)',
-        isAppliedNavigationEcho({applying: false, markExpiry: NOW - 1, markUrl: 'http://x', observedUrl: 'http://z', now: NOW}) === false);
-    // legacy url-less mark falls back to window-based suppression (safe default).
-    check('(ii) url-less live mark falls back to window suppression',
+    // a user navigation after the safety bound is captured (A6 preserved).
+    check('(ii) user navigation past the safety bound is captured (not an echo)',
+        isAppliedNavigationEcho({applying: false, markExpiry: NOW - 1, markUrl: 'http://x', observedUrl: 'http://z', observedStatus: 'complete', now: NOW}) === false);
+    // a url-less mark suppresses until the bound (safe default).
+    check('(ii) url-less live mark suppresses',
         isAppliedNavigationEcho({applying: false, markExpiry: live, now: NOW}) === true);
 
     // Convergence proof at the planner level: once the cloud has learned the redirect target Y,
