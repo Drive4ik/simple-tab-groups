@@ -16,6 +16,7 @@
 
 import {
     resolveDeferredTruncation,
+    resolveSelfDeltaFile,
     selfFoldedSeq,
     truncateSelfEvents,
 } from './compaction.js';
@@ -89,16 +90,32 @@ function compactionCycle(w, newSelfWatermark) {
 }
 
 // One RECONCILE cycle: given the pulled snapshot watermark, confirm-or-defer. On confirm,
-// truncate the local log + the cloud self-delta and clear the marker. Returns the outcome.
-function reconcileCycle(w) {
+// truncate the local log + the cloud self-delta and clear the marker. `newEvents` are the
+// events captured since the last push — planSync only produces a deltaFileToWrite when the
+// self log actually grew, so an idle confirm cycle has none. Returns the outcome.
+function reconcileCycle(w, {newEvents = []} = {}) {
     const {confirmed, truncateSeq} = resolveDeferredTruncation(
         w.local.pendingTruncate, w.cloud.snapshotWatermark, SELF);
+
+    const cloudSelfTruncateSeq = confirmed ? truncateSeq : 0;
+
+    const deltaFileToWrite = newEvents.length
+        ? {deviceId: SELF, events: w.cloud.selfDelta.concat(newEvents)}
+        : null;
+
+    const selfDeltaFile = resolveSelfDeltaFile(
+        deltaFileToWrite, w.cloud.selfDelta, cloudSelfTruncateSeq, SELF);
+
+    if (selfDeltaFile) {
+        w.cloud.selfDelta = selfDeltaFile.events;
+    }
+
     if (confirmed && truncateSeq > 0) {
         w.local.log = w.local.log.filter(e => e.seq > truncateSeq);     // clearUpTo
-        w.cloud.selfDelta = truncateSelfEvents(w.cloud.selfDelta, truncateSeq);
         w.local.pendingTruncate = 0;                                    // clear marker
     }
-    return {confirmed, truncateSeq};
+
+    return {confirmed, truncateSeq, wroteSelfDelta: !!selfDeltaFile};
 }
 
 // the union of (cloud snapshot folded effect) + (cloud self-delta) must always still represent
@@ -209,6 +226,104 @@ function everyEventRecoverable(w, highestSeq, confirmedFoldSeq) {
     const r = reconcileCycle(w);
     check('two-compactions: confirm truncates up to the latest folded seq (4)',
         r.confirmed === true && r.truncateSeq === 4 && w.local.log.length === 0);
+}
+
+// ===================== the CLOUD self-delta drains too =======================
+// The confirmed truncation used to be applied to the cloud self-delta only as a side effect
+// of a push that was happening anyway: no new events ⇒ no deltaFileToWrite ⇒ the folded
+// prefix stayed in the gist forever, and every later push re-uploaded it. resolveSelfDeltaFile
+// makes the confirmed truncation a write in its own right. It is exactly as safe as the local
+// clearUpTo it already gates: both fire only once the pulled snapshot watermark proves the
+// cloud snapshot durably carries those events.
+{
+    // pure: a push in flight ⇒ push the union, trimmed by a confirmed truncation
+    const pushing = resolveSelfDeltaFile({deviceId: SELF, events: [ev(1), ev(2), ev(3)]}, [ev(1)], 2, SELF);
+    check('selfDeltaFile: pushing ⇒ the union is written, trimmed at the confirmed seq',
+        pushing.deviceId === SELF && pushing.events.map(e => e.seq).join() === '3');
+
+    const pushingUnconfirmed = resolveSelfDeltaFile({deviceId: SELF, events: [ev(1), ev(2)]}, [ev(1)], 0, SELF);
+    check('selfDeltaFile: pushing without a confirmed truncation ⇒ nothing is trimmed',
+        pushingUnconfirmed.events.map(e => e.seq).join() === '1,2');
+
+    // pure: nothing to push, but a confirmed truncation can still shrink the cloud file
+    const drainOnly = resolveSelfDeltaFile(null, [ev(1), ev(2), ev(3)], 2, SELF);
+    check('selfDeltaFile: no push + confirmed truncation ⇒ rewrite the file without the fold',
+        drainOnly?.deviceId === SELF && drainOnly.events.map(e => e.seq).join() === '3');
+
+    check('selfDeltaFile: no push + nothing confirmed ⇒ no write at all',
+        resolveSelfDeltaFile(null, [ev(1), ev(2)], 0, SELF) === null);
+
+    check('selfDeltaFile: no push + already-trimmed cloud file ⇒ no wasted write',
+        resolveSelfDeltaFile(null, [ev(3), ev(4)], 2, SELF) === null);
+
+    check('selfDeltaFile: no push + a fully folded cloud file ⇒ emptied, not left fat',
+        resolveSelfDeltaFile(null, [ev(1), ev(2)], 2, SELF)?.events.length === 0);
+
+    check('selfDeltaFile: no push + no cloud file ⇒ nothing to drain',
+        resolveSelfDeltaFile(null, undefined, 5, SELF) === null);
+
+    // cycle: compaction, then an IDLE confirm cycle (no new events) drains the gist
+    {
+        const w = makeWorld();
+        w.local.log = [ev(1), ev(2), ev(3)];
+        w.local.lastPushedSeq = 3;
+
+        compactionCycle(w, 3);
+        check('drain: the compaction cycle leaves the full log in the gist', w.cloud.selfDelta.length === 3);
+
+        const r = reconcileCycle(w);
+        check('drain: an idle confirm cycle rewrites the gist file without the folded prefix',
+            r.confirmed === true && r.wroteSelfDelta === true && w.cloud.selfDelta.length === 0);
+        check('drain: no event is lost — all three are durably folded into the snapshot',
+            everyEventRecoverable(w, 3, 3) === true);
+
+        const r2 = reconcileCycle(w);
+        check('drain: the next idle cycle writes nothing (converged)', r2.wroteSelfDelta === false);
+    }
+
+    // cycle: a later push after the drain carries only the un-folded tail
+    {
+        const w = makeWorld();
+        w.local.log = [ev(1), ev(2), ev(3)];
+        w.local.lastPushedSeq = 3;
+
+        compactionCycle(w, 3);
+        reconcileCycle(w);
+
+        reconcileCycle(w, {newEvents: [ev(4)]});
+        check('drain: a later push uploads only the tail, not the folded history',
+            w.cloud.selfDelta.map(e => e.seq).join() === '4');
+    }
+
+    // a CLOBBERED snapshot must not drain anything
+    {
+        const w = makeWorld();
+        w.local.log = [ev(1), ev(2), ev(3)];
+        w.local.lastPushedSeq = 3;
+
+        compactionCycle(w, 3);
+        w.cloud.snapshotWatermark = {[SELF]: 1};
+
+        const r = reconcileCycle(w);
+        check('drain: an unconfirmed (clobbered) cycle never shrinks the gist file',
+            r.confirmed === false && r.wroteSelfDelta === false && w.cloud.selfDelta.length === 3);
+        check('drain: every event stays recoverable from the cloud delta',
+            everyEventRecoverable(w, 3, 1) === true);
+    }
+
+    // the un-pushed tail is never drained (the clamp still governs what may go)
+    {
+        const w = makeWorld();
+        w.local.log = [ev(1), ev(2), ev(3), ev(4), ev(5)];
+        w.local.lastPushedSeq = 3;
+
+        compactionCycle(w, 5);
+        const r = reconcileCycle(w);
+        check('drain: only the pushed+folded prefix leaves the gist; 4,5 stay',
+            r.truncateSeq === 3 && w.cloud.selfDelta.map(e => e.seq).join() === '4,5');
+        check('drain: the un-pushed tail survives locally too',
+            w.local.log.map(e => e.seq).join() === '4,5');
+    }
 }
 
 // ============================ summary ========================================

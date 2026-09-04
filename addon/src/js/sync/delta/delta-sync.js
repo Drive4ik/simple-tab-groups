@@ -15,7 +15,7 @@ import {planSync, baselineFromSnapshot} from './plan-sync.js';
 import {
     evaluateCompaction,
     selfFoldedSeq,
-    truncateSelfEvents,
+    resolveSelfDeltaFile,
     resolveDeferredTruncation,
 } from './compaction.js';
 import {mapStateContainers, mapEventContainers} from './container-map.js';
@@ -460,14 +460,18 @@ export async function deltaSynchronization() {
         if (writeSnapshot) {
             filesToWrite[SNAPSHOT_FILE_NAME] = plan.resolvedSnapshot;
         }
-        if (plan.deltaFileToWrite) {
-            const selfEvents = cloudSelfTruncateSeq > 0
-                ? truncateSelfEvents(plan.deltaFileToWrite.events, cloudSelfTruncateSeq)
-                : plan.deltaFileToWrite.events;
+        const selfDeltaFile = resolveSelfDeltaFile(
+            plan.deltaFileToWrite,
+            pulledDeltaLogs.find(deltaLog => deltaLog.deviceId === selfDeviceId)?.events,
+            cloudSelfTruncateSeq,
+            selfDeviceId,
+        );
+
+        if (selfDeltaFile) {
             filesToWrite[deltaFileName(selfDeviceId)] = {
                 v: DeltaLog.SCHEMA_VERSION,
-                deviceId: plan.deltaFileToWrite.deviceId,
-                events: selfEvents,
+                deviceId: selfDeltaFile.deviceId,
+                events: selfDeltaFile.events,
             };
         }
 

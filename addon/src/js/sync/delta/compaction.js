@@ -31,6 +31,26 @@ export function truncateSelfEvents(selfEvents, foldedSeq) {
     return (selfEvents || []).filter(event => event.seq == null || event.seq > foldedSeq);
 }
 
+export function resolveSelfDeltaFile(deltaFileToWrite, pulledSelfEvents, truncateSeq, selfDeviceId) {
+    if (deltaFileToWrite) {
+        return {
+            deviceId: deltaFileToWrite.deviceId,
+            events: truncateSeq > 0
+                ? truncateSelfEvents(deltaFileToWrite.events, truncateSeq)
+                : deltaFileToWrite.events,
+        };
+    }
+
+    if (!(truncateSeq > 0)) {
+        return null;
+    }
+
+    const pulled = pulledSelfEvents || [];
+    const events = truncateSelfEvents(pulled, truncateSeq);
+
+    return events.length < pulled.length ? {deviceId: selfDeviceId, events} : null;
+}
+
 export function resolveDeferredTruncation(pendingTruncateSeq, cloudSnapshotWatermark = {}, selfDeviceId) {
     const pending = Number(pendingTruncateSeq);
     if (!Number.isFinite(pending) || pending <= 0) {
