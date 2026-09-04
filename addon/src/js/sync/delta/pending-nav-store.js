@@ -17,6 +17,6 @@ export function pendingNavTargetsByUid() {
     return PendingNav.pendingNavTargets(storage);
 }
 
-export function gcPendingNavTargets(aliveUids) {
-    return PendingNav.gcPendingNav(storage, {aliveUids, now: Date.now()}).size;
+export function gcPendingNavTargets(aliveUids, awakeUids) {
+    return PendingNav.gcPendingNav(storage, {aliveUids, awakeUids, now: Date.now()}).size;
 }
