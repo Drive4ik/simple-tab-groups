@@ -72,11 +72,15 @@ const LOADING = NAVIGATION_LOADING_STATUS;
 const COMPLETE = NAVIGATION_COMPLETE_STATUS;
 
 // A faithful pure model of the mark store in delta-capture.js, so mark lifecycle scenarios
-// (supersede / removal / settle) are exercised through the same predicates.
+// (supersede / removal / settle) are exercised through the same predicates. `mark` carries the
+// same guards as `markAppliedNavigation`, so the model can only reach states production reaches.
 function createMarkStore() {
     const marks = new Map();
     return {
         mark(tabId, url, now) {
+            if (!Number.isFinite(tabId) || typeof url !== 'string') {
+                return;
+            }
             marks.set(tabId, {expiry: now + SAFETY_MS, url});
         },
         clear(tabId) {
@@ -603,10 +607,15 @@ check('in-apply ⇒ silent (our own write, never a user landing)',
     check('round fix/expired-nav-mark: an expired mark alone neither suppresses nor reports',
         store.settle(31, 'http://target', COMPLETE, NOW + SAFETY_MS) === false
         && store.consume(31, 'http://user', COMPLETE, NOW + SAFETY_MS + 1) === false);
+    // A target-less mark is not a state the store can hold: `markAppliedNavigation` early-returns
+    // without a url, so the scenario "a target-less mark reports nothing past the bound" is
+    // unreachable. The predicate's totality on a target-less observation is covered directly by
+    // `EXPIRED mark with NO recorded target url ⇒ silent` below.
     const urlless = createMarkStore();
     urlless.mark(32, undefined, NOW);
-    check('round fix/expired-nav-mark: a target-less mark reports nothing past the bound',
-        urlless.settle(32, 'http://anything', COMPLETE, NOW + SAFETY_MS) === false);
+    urlless.mark(undefined, 'http://target', NOW);
+    check('round fix/expired-nav-mark: the store never records a mark without an applied target',
+        urlless.has(32) === false && urlless.has(undefined) === false);
 }
 {
     const store = createMarkStore();
