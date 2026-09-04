@@ -1,0 +1,258 @@
+/**
+ * Standalone node test for `Cache.getRealTabStateChanged` — the "did anything we care
+ * about actually change?" guard behind `Tabs.onUpdated`'s early return.
+ *
+ * Plain `node real-tab-state.test.mjs` (STG has no test runner). The contract lives inside
+ * the browser-impure `cache.js`, so the REAL module is loaded and only its browser-bound
+ * imports are stubbed via `real-tab-state.test.loader.mjs` (registered below).
+ * `constants.js` stays real, so the last assertion pins the invariant that every property
+ * in `ON_UPDATED_TAB_PROPERTIES` is also remembered by `setLastTabState`.
+ *
+ * The bug: `setLastTabState` remembered seven properties while the comparison walked
+ * eight, so `discarded` and `audible` compared a live boolean against `undefined` and
+ * always reported a change. `getRealTabStateChanged` therefore never returned `null` for a
+ * known tab, the `onUpdated` early return was dead code, and every recomputed `changeInfo`
+ * carried a phantom `discarded`/`audible` key.
+ */
+
+import {register} from 'node:module';
+
+globalThis.location = {pathname: '/background.html'};
+globalThis.self = globalThis;
+globalThis.fetch = async () => ({text: async () => '<svg></svg>'});
+
+globalThis.browser = {
+    runtime: {
+        getManifest: () => ({version: '5.5.1'}),
+        getURL: path => `moz-extension://stg/${path}`,
+        getBrowserInfo: async () => ({name: 'Firefox', vendor: 'Mozilla', version: '140.0'}),
+        getPlatformInfo: async () => ({os: 'linux'}),
+        PlatformOs: {WIN: 'win', MAC: 'mac'},
+    },
+    storage: {sync: {}},
+    i18n: {getMessage: key => key},
+    tabs: {
+        TabStatus: {LOADING: 'loading', COMPLETE: 'complete'},
+        UpdatePropertyName: {
+            TITLE: 'title',
+            STATUS: 'status',
+            URL: 'url',
+            FAVICONURL: 'favIconUrl',
+            HIDDEN: 'hidden',
+            PINNED: 'pinned',
+            DISCARDED: 'discarded',
+            AUDIBLE: 'audible',
+        },
+    },
+};
+
+register(new URL('./real-tab-state.test.loader.mjs', import.meta.url));
+
+let passed = 0;
+const failures = [];
+
+function check(name, cond, detail) {
+    if (cond) {
+        passed++;
+        console.log(`  PASS  ${name}`);
+    } else {
+        failures.push(name);
+        console.log(`  FAIL  ${name}${detail ? ` — ${detail}` : ''}`);
+    }
+}
+
+const {setTab, removeTab, getRealTabStateChanged, clear} = await import('./cache.js');
+const {ON_UPDATED_TAB_PROPERTIES} = await import('./constants.js');
+
+const TAB_ID = 42;
+
+const baseTab = extra => ({
+    id: TAB_ID,
+    url: 'https://a.test/',
+    title: 'A',
+    status: 'complete',
+    favIconUrl: 'https://a.test/icon.png',
+    hidden: false,
+    pinned: false,
+    discarded: false,
+    audible: false,
+    cookieStoreId: 'firefox-default',
+    ...extra,
+});
+
+function seen(extra) {
+    clear();
+    setTab(baseTab(extra));
+}
+
+const json = value => JSON.stringify(value);
+
+// --- 1. first sighting of an unknown tab -----------------------------------------------
+{
+    clear();
+
+    check('an unknown tab reports no change (nothing remembered to compare against)',
+        getRealTabStateChanged(baseTab()) === null);
+}
+
+// --- 2. the guard is live: an unchanged known tab reports null --------------------------
+{
+    seen();
+
+    check('a known tab whose state did not move reports null',
+        getRealTabStateChanged(baseTab()) === null,
+        json(getRealTabStateChanged(baseTab())));
+}
+
+// --- 3. a real content change reports only that key -------------------------------------
+{
+    seen();
+    const changeInfo = getRealTabStateChanged(baseTab({url: 'https://b.test/'}));
+
+    check('a url change reports only `url`',
+        json(changeInfo) === json({url: 'https://b.test/'}),
+        json(changeInfo));
+}
+
+{
+    seen();
+    const changeInfo = getRealTabStateChanged(baseTab({title: 'B'}));
+
+    check('a title change reports only `title`',
+        json(changeInfo) === json({title: 'B'}),
+        json(changeInfo));
+}
+
+{
+    seen();
+    const changeInfo = getRealTabStateChanged(baseTab({status: 'loading'}));
+
+    check('a status change reports only `status`',
+        json(changeInfo) === json({status: 'loading'}),
+        json(changeInfo));
+}
+
+// --- 4. discard and wake ---------------------------------------------------------------
+{
+    seen();
+    const changeInfo = getRealTabStateChanged(baseTab({discarded: true}));
+
+    check('a real discard reports only `discarded: true`',
+        json(changeInfo) === json({discarded: true}),
+        json(changeInfo));
+}
+
+{
+    seen({discarded: true});
+    const changeInfo = getRealTabStateChanged(baseTab({discarded: false}));
+
+    check('a real wake reports only `discarded: false`',
+        json(changeInfo) === json({discarded: false}),
+        json(changeInfo));
+}
+
+{
+    seen({discarded: true});
+
+    check('a tab that stays discarded reports null',
+        getRealTabStateChanged(baseTab({discarded: true})) === null,
+        json(getRealTabStateChanged(baseTab({discarded: true}))));
+}
+
+// --- 5. audible ------------------------------------------------------------------------
+{
+    seen();
+    const changeInfo = getRealTabStateChanged(baseTab({audible: true}));
+
+    check('a tab starting to play sound reports only `audible: true`',
+        json(changeInfo) === json({audible: true}),
+        json(changeInfo));
+}
+
+{
+    seen({audible: true});
+
+    check('a tab that keeps playing sound reports null',
+        getRealTabStateChanged(baseTab({audible: true})) === null,
+        json(getRealTabStateChanged(baseTab({audible: true}))));
+}
+
+// --- 6. hidden, pinned, favIconUrl ------------------------------------------------------
+{
+    seen();
+    const changeInfo = getRealTabStateChanged(baseTab({hidden: true}));
+
+    check('a hide reports only `hidden`',
+        json(changeInfo) === json({hidden: true}),
+        json(changeInfo));
+}
+
+{
+    seen();
+    const changeInfo = getRealTabStateChanged(baseTab({pinned: true}));
+
+    check('a pin reports only `pinned`',
+        json(changeInfo) === json({pinned: true}),
+        json(changeInfo));
+}
+
+{
+    seen();
+    const changeInfo = getRealTabStateChanged(baseTab({favIconUrl: 'https://b.test/icon.png'}));
+
+    check('a favIcon change reports only `favIconUrl`',
+        json(changeInfo) === json({favIconUrl: 'https://b.test/icon.png'}),
+        json(changeInfo));
+}
+
+// --- 7. several real changes at once ----------------------------------------------------
+{
+    seen();
+    const changeInfo = getRealTabStateChanged(baseTab({url: 'https://b.test/', status: 'loading', discarded: true}));
+
+    check('simultaneous changes report exactly the keys that moved',
+        json(changeInfo) === json({status: 'loading', url: 'https://b.test/', discarded: true}),
+        json(changeInfo));
+}
+
+// --- 8. a forgotten tab is unknown again -------------------------------------------------
+{
+    seen();
+    removeTab(TAB_ID);
+
+    check('a removed tab is unknown again',
+        getRealTabStateChanged(baseTab({url: 'https://b.test/'})) === null);
+}
+
+// --- 9. the invariant: everything compared is also remembered -----------------------------
+{
+    const FLIPPED = {
+        title: 'Z',
+        status: 'loading',
+        url: 'https://z.test/',
+        favIconUrl: 'https://z.test/icon.png',
+        hidden: true,
+        pinned: true,
+        discarded: true,
+        audible: true,
+    };
+
+    check('the flip table covers every compared property',
+        ON_UPDATED_TAB_PROPERTIES.every(key => Object.hasOwn(FLIPPED, key)),
+        json(ON_UPDATED_TAB_PROPERTIES.filter(key => !Object.hasOwn(FLIPPED, key))));
+
+    for (const key of ON_UPDATED_TAB_PROPERTIES) {
+        seen();
+        const changeInfo = getRealTabStateChanged(baseTab({[key]: FLIPPED[key]}));
+
+        check(`moving \`${key}\` reports that key alone — nothing else is a phantom`,
+            json(changeInfo) === json({[key]: FLIPPED[key]}),
+            json(changeInfo));
+    }
+}
+
+console.log(`\npassed: ${passed}, failed: ${failures.length}`);
+
+if (failures.length) {
+    process.exit(1);
+}
