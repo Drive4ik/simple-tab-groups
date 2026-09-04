@@ -5,7 +5,7 @@ import * as DeltaLog from './delta-log.js';
 import {syncedOptionKeys} from './option-keys.js';
 import {isUrlSyncable, unwrapStubUrl, sanitizeGroupRecordForSync} from './url-sync.js';
 import {computeGroupRelativeIndex} from './group-relative-index.js';
-import {isAppliedNavigationEcho, isAppliedNavigationSettled, resolveAppliedNavigationSettlement} from './applied-nav-echo.js';
+import {NAVIGATION_COMPLETE_STATUS, isAppliedNavigationEcho, isAppliedNavigationSettled, resolveAppliedNavigationSettlement} from './applied-nav-echo.js';
 import {isAppliedMoveEcho} from './applied-move-echo.js';
 import {contentMark, isSyncedContent} from './content-marks.js';
 import {forgetContentMark, loadContentMarks, rememberContentMark} from './sync-marks.js';
@@ -15,12 +15,11 @@ const logger = new Logger('DeltaCapture');
 
 let applyDepth = 0;
 
-export function beginApply() {
+export async function runApplying(fn) {
     applyDepth++;
-}
-
-export function endApply() {
-    if (applyDepth > 0) {
+    try {
+        return await fn();
+    } finally {
         applyDepth--;
     }
 }
@@ -66,6 +65,12 @@ export function settleAppliedNavigation(tabId, observedUrl, observedStatus) {
         appliedNavTabs.delete(tabId);
     }
 
+    return landedOffTarget;
+}
+
+export function settleAppliedNavigationOnDiscard(tabId, observedUrl) {
+    const landedOffTarget = settleAppliedNavigation(tabId, observedUrl, NAVIGATION_COMPLETE_STATUS);
+    appliedNavTabs.delete(tabId);
     return landedOffTarget;
 }
 

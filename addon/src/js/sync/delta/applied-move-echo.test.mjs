@@ -7,7 +7,7 @@
  *
  * Regression for the "index storm" echo (#6): reconcile's own reorder emits `onMoved`
  * events that settle ~70ms later — AFTER the transient skip flag is cleared and often after
- * `endApply()`. Captured as fresh `tab.move` ops they bloat the log and trigger another
+ * the apply pass. Captured as fresh `tab.move` ops they bloat the log and trigger another
  * reorder round next sync. A move that lands while apply is in progress OR within the
  * trailing apply window (against a mark armed when apply issued the move) is an echo and
  * must be SUPPRESSED, while a genuine USER move made outside that causal window must sync.
@@ -36,7 +36,7 @@ check('in-apply, no mark ⇒ ECHO (suppress)',
 check('in-apply wins even with an expired mark ⇒ ECHO',
     isAppliedMoveEcho({applying: true, markExpiry: NOW - 1, now: NOW}) === true);
 
-// --- settle AFTER endApply within the trailing window: live mark ⇒ ECHO (the churn we fix) -
+// --- settle AFTER the apply pass, within the trailing window: live mark ⇒ ECHO (the churn) -
 check('not applying, live mark (now < expiry) ⇒ ECHO (suppress reconcile move echo)',
     isAppliedMoveEcho({applying: false, markExpiry: NOW + 4_000, now: NOW}) === true);
 check('not applying, live mark at the very edge (now just below expiry) ⇒ ECHO',

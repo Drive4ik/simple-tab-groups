@@ -36,14 +36,14 @@ globalThis.__appended = [];
 const DeltaCapture = await import('./delta-capture.js');
 const {
     optionsChanged,
-    beginApply,
-    endApply,
+    runApplying,
     isApplying,
     markAppliedMove,
     consumeAppliedMoveEcho,
     markAppliedNavigation,
     clearAppliedNavigation,
     settleAppliedNavigation,
+    settleAppliedNavigationOnDiscard,
     tabModified,
     pinnedModified,
     tabRemoved,
@@ -74,15 +74,15 @@ function reset() {
 // --- 2. a sync-originated write during apply is NOT captured (no echo) -----------------
 {
     reset();
-    beginApply();
-    check('isApplying reflects the active sync', isApplying() === true);
+    await runApplying(async () => {
+        check('isApplying reflects the active sync', isApplying() === true);
 
-    await optionsChanged({closePopupAfterSelectTab: false}, {fromSync: true});
-    check('sync-originated write is skipped (no echo into the log)', globalThis.__appended.length === 0);
+        await optionsChanged({closePopupAfterSelectTab: false}, {fromSync: true});
+        check('sync-originated write is skipped (no echo into the log)', globalThis.__appended.length === 0);
 
-    // --- 3. a USER change during that same apply window is STILL captured (the fix) ----
-    await optionsChanged({closePopupAfterSelectTab: true});
-    endApply();
+        // --- 3. a USER change during that same apply window is STILL captured (the fix) ----
+        await optionsChanged({closePopupAfterSelectTab: true});
+    });
 
     check('user change mid-apply is captured despite the active sync', globalThis.__appended.length === 1);
     check('the mid-apply user change carries the user value',
@@ -103,7 +103,7 @@ function reset() {
 {
     // A move armed by apply and settling within the trailing window ⇒ echo (suppress).
     markAppliedMove(101);
-    check('apply-armed move settling after endApply ⇒ echo (suppress)',
+    check('apply-armed move settling after the apply pass ⇒ echo (suppress)',
         consumeAppliedMoveEcho(101) === true);
     // The mark is consumed on read, so a genuine LATER user move of the SAME tab syncs.
     check('mark consumed on read ⇒ next move of the same tab is a USER move (capture)',
@@ -114,11 +114,9 @@ function reset() {
         consumeAppliedMoveEcho(202) === false);
 
     // While apply is in progress every move is an echo (matches the existing isApplying gate).
-    beginApply();
-    check('in-apply move (no mark) ⇒ echo (suppress)',
-        consumeAppliedMoveEcho(303) === true);
-    endApply();
-    check('after endApply, an unmarked tab is a USER move (capture)',
+    await runApplying(() => check('in-apply move (no mark) ⇒ echo (suppress)',
+        consumeAppliedMoveEcho(303) === true));
+    check('after the apply pass, an unmarked tab is a USER move (capture)',
         consumeAppliedMoveEcho(303) === false);
 }
 
@@ -237,15 +235,14 @@ function reset() {
 }
 
 // --- 13. a deferred wake navigation arms only the tab it navigates ---------------------
-// pending-nav-wake wraps its wake-time navigation in beginApply/endApply. That switch must
-// not leave a post-apply window in which any tab that changes gets suppressed.
+// pending-nav-wake wraps its wake-time navigation in runApplying. That switch must not
+// leave a post-apply window in which any tab that changes gets suppressed.
 {
     reset();
     globalThis.__tabFacts = {14: {uid: 'u14', groupId: 1}, 15: {uid: 'u15', groupId: 1}};
 
     markAppliedNavigation(14, 'https://woken.test/');
-    beginApply();
-    endApply();
+    await runApplying(() => {});
 
     check('arming is not a global switch',
         !Object.hasOwn(DeltaCapture, 'shouldArmAppliedNavigation')
@@ -454,9 +451,9 @@ function reset() {
 }
 
 // --- 18c. a mark now outlives the bound, so the TAB bounds its lifetime ----------------
-// tabs.js clears the mark on `changeInfo.discarded === true` and onRemoved clears it
-// unconditionally, so an in-flight mark that the bound no longer retires still cannot outlive
-// the tab it belongs to, nor be inherited by a recycled tab id.
+// tabs.js settles-and-drops the mark on `changeInfo.discarded === true` and onRemoved clears
+// it unconditionally, so an in-flight mark that the bound no longer retires still cannot
+// outlive the tab it belongs to, nor be inherited by a recycled tab id.
 {
     reset();
     globalThis.__tabFacts = {25: {uid: 'u25', groupId: 1}, 26: {uid: 'u26', groupId: 1}};
@@ -470,7 +467,7 @@ function reset() {
     try {
         check('the discarded tab still holds its in-flight mark before the discard',
             settleAppliedNavigation(25, 'https://hop.test/', 'loading') === false);
-        clearAppliedNavigation(25);
+        settleAppliedNavigationOnDiscard(25, 'https://hop.test/');
         check('the discard drops it, so no later completion reports a landing',
             settleAppliedNavigation(25, 'https://hop.test/', 'complete') === false);
 
@@ -524,10 +521,8 @@ function reset() {
     check('the hop is suppressed as part of the applied navigation',
         globalThis.__appended.length === 0);
 
-    beginApply();
-    check('a completion inside the apply pass asks for no capture',
-        settleAppliedNavigation(27, 'https://hop.test/', 'complete') === false);
-    endApply();
+    await runApplying(() => check('a completion inside the apply pass asks for no capture',
+        settleAppliedNavigation(27, 'https://hop.test/', 'complete') === false));
 
     const landedOffAppliedTarget = settleAppliedNavigation(27, 'https://hop.test/', 'complete');
     check('the apply pass did not spend the mark, so the landing is still reported',
@@ -550,15 +545,198 @@ function reset() {
 
     markAppliedNavigation(28, 'https://target.test/');
 
-    beginApply();
-    check('a loading event inside the apply pass asks for no capture',
-        settleAppliedNavigation(28, 'https://hop.test/', 'loading') === false);
-    endApply();
+    await runApplying(() => check('a loading event inside the apply pass asks for no capture',
+        settleAppliedNavigation(28, 'https://hop.test/', 'loading') === false));
 
     check('the mark survives the apply pass and reports the eventual landing',
         settleAppliedNavigation(28, 'https://hop.test/', 'complete') === true);
     check('nothing reached the log by itself',
         globalThis.__appended.length === 0);
+}
+
+// --- 22. the apply window is owned by `runApplying`, so it can never leak ------------
+// `applyDepth` used to be raised and lowered by two separate exports, and a throw between
+// them left it raised for the rest of the background session: `isApplying()` stayed true,
+// every capture entry point early-returned and no local change ever reached the delta log
+// again. There is no longer a way to raise it without a `finally` that lowers it.
+{
+    reset();
+    globalThis.__tabFacts = {29: {uid: 'u29', groupId: 1}};
+
+    check('there is no unpaired way into the apply window',
+        !Object.hasOwn(DeltaCapture, 'beginApply') && !Object.hasOwn(DeltaCapture, 'endApply'));
+
+    let thrown = null;
+    try {
+        await runApplying(async () => {
+            check('the apply window is open inside the callback', isApplying() === true);
+            throw new Error('storage read failed');
+        });
+    } catch (e) {
+        thrown = e;
+    }
+
+    check('a rejecting apply callback still propagates', thrown?.message === 'storage read failed');
+    check('and the apply window is closed again', isApplying() === false);
+
+    await tabModified({id: 29, url: 'https://after-throw.test/', title: 'A', windowId: 1, discarded: false, status: 'complete'});
+    check('capture keeps working after an apply pass threw',
+        globalThis.__appended.length === 1 && globalThis.__appended[0].tab.url === 'https://after-throw.test/');
+}
+
+// --- 23. a synchronous throw and nesting unwind the counter just as cleanly -----------
+{
+    reset();
+    globalThis.__tabFacts = {30: {uid: 'u30', groupId: 1}};
+
+    await runApplying(async () => {
+        await runApplying(() => {}).catch(() => {});
+        check('the outer apply window survives the inner one closing', isApplying() === true);
+    });
+    check('both windows closed', isApplying() === false);
+
+    await runApplying(() => {
+        throw new Error('sync throw');
+    }).catch(() => {});
+    check('a synchronous throw closes the window too', isApplying() === false);
+
+    await runApplying(async () => {
+        await runApplying(() => {
+            throw new Error('inner throw');
+        }).catch(() => {});
+        check('the inner throw did not close the outer window', isApplying() === true);
+    });
+    check('the outer window closed after the inner throw', isApplying() === false);
+
+    await tabModified({id: 30, url: 'https://nested.test/', title: 'N', windowId: 1, discarded: false, status: 'complete'});
+    check('capture keeps working after nested apply passes threw',
+        globalThis.__appended.length === 1 && globalThis.__appended[0].tab.url === 'https://nested.test/');
+}
+
+// --- 24. a leaked apply window would also freeze every applied-navigation mark --------
+// `applying` gates `isAppliedNavigationSettled`, so a stuck counter makes every mark
+// immortal and `consumeAppliedNavigationEcho` keeps suppressing on those tabs forever.
+{
+    reset();
+    globalThis.__tabFacts = {31: {uid: 'u31', groupId: 1}};
+
+    markAppliedNavigation(31, 'https://target.test/');
+
+    await runApplying(async () => {
+        throw new Error('apply blew up');
+    }).catch(() => {});
+
+    check('the mark can still be settled after the failed apply pass',
+        settleAppliedNavigation(31, 'https://hop.test/', 'complete') === true);
+
+    await tabModified({id: 31, url: 'https://hop.test/', title: 'H', windowId: 1, discarded: false, status: 'complete'});
+    check('and the landing reaches the log',
+        globalThis.__appended.length === 1 && globalThis.__appended[0].tab.url === 'https://hop.test/');
+}
+
+// --- 25. a discard IS a landing: the deferred retirement no longer swallows the url ----
+// Retirement is deferred while applying, so a mark whose completion landed inside an apply
+// pass survives with most of the safety bound left. The user then navigates that tab away:
+// the loading event is suppressed as an echo, and if the tab is discarded before the load
+// completes the mark used to be dropped with no verdict — tabs.js reports no content change
+// on a discard, so the url the user is on never reached the delta log and the next apply
+// pulled the tab back to the applied target. A discard ends the flight: the url the tab
+// holds at that moment is the url it sits on and the one it will restore to.
+{
+    reset();
+    globalThis.__tabFacts = {32: {uid: 'u32', groupId: 1}};
+
+    markAppliedNavigation(32, 'https://applied.test/');
+
+    await runApplying(() => check('the completion inside the apply pass spends nothing',
+        settleAppliedNavigation(32, 'https://applied.test/', 'complete') === false));
+
+    await tabModified({id: 32, url: 'https://user.test/', title: 'U', windowId: 1, discarded: false, status: 'loading'});
+    check('the user navigation under the surviving mark is suppressed',
+        globalThis.__appended.length === 0);
+
+    const landedOffAppliedTarget = settleAppliedNavigationOnDiscard(32, 'https://user.test/');
+    check('the discard is a landing, and it is off the applied target',
+        landedOffAppliedTarget === true);
+
+    if (landedOffAppliedTarget) {
+        await tabModified({id: 32, url: 'https://user.test/', title: 'U', windowId: 1, discarded: true, status: 'complete'});
+    }
+    check('the user url reaches the log instead of being reverted to the applied target',
+        globalThis.__appended.length === 1 && globalThis.__appended[0].tab.url === 'https://user.test/');
+    check('and it is recorded as the sleeping tab it now is',
+        globalThis.__appended[0]?.tab.loaded === false);
+
+    check('the discard spent the mark, so nothing can report on it again',
+        settleAppliedNavigation(32, 'https://user.test/', 'complete') === false);
+}
+
+// --- 26. a discard with no live mark stays out of it -----------------------------------
+{
+    reset();
+    globalThis.__tabFacts = {33: {uid: 'u33', groupId: 1}, 34: {uid: 'u34', groupId: 1}};
+
+    check('a tab no apply ever navigated reports nothing when it discards',
+        settleAppliedNavigationOnDiscard(33, 'https://user.test/') === false);
+
+    markAppliedNavigation(34, 'https://applied.test/');
+    clearAppliedNavigation(34);
+    check('a dropped mark leaves no target the discard could have landed off',
+        settleAppliedNavigationOnDiscard(34, 'https://user.test/') === false);
+
+    check('nothing reached the log', globalThis.__appended.length === 0);
+}
+
+// --- 27. a discard while genuinely on the applied target is not a capture --------------
+{
+    reset();
+    globalThis.__tabFacts = {35: {uid: 'u35', groupId: 1}};
+
+    markAppliedNavigation(35, 'https://applied.test/');
+
+    check('the tab discarded where the apply put it asks for no capture',
+        settleAppliedNavigationOnDiscard(35, 'https://applied.test/') === false);
+    check('and the mark went with the discard',
+        settleAppliedNavigation(35, 'https://elsewhere.test/', 'complete') === false);
+    check('nothing reached the log', globalThis.__appended.length === 0);
+}
+
+// --- 28. a discard INSIDE an apply pass still attributes nothing ------------------------
+// `applying` enters at exactly one place, so no verdict is produced during a pass: the url
+// the tab holds mid-apply may be the one this very pass is navigating away from. The mark
+// is dropped regardless, because the discard bounds its lifetime.
+{
+    reset();
+    globalThis.__tabFacts = {36: {uid: 'u36', groupId: 1}};
+
+    markAppliedNavigation(36, 'https://applied.test/');
+
+    await runApplying(() => check('a discard inside the apply pass reports nothing',
+        settleAppliedNavigationOnDiscard(36, 'https://stale.test/') === false));
+
+    check('the discard still dropped the mark',
+        settleAppliedNavigation(36, 'https://stale.test/', 'complete') === false);
+    check('nothing reached the log', globalThis.__appended.length === 0);
+}
+
+// --- 29. a discard past the safety bound reports the url the tab holds ------------------
+{
+    reset();
+    globalThis.__tabFacts = {37: {uid: 'u37', groupId: 1}};
+
+    markAppliedNavigation(37, 'https://applied.test/');
+
+    const realNow = Date.now;
+    Date.now = () => realNow() + 61_000;
+
+    try {
+        check('an expired mark still names the target the discard landed off',
+            settleAppliedNavigationOnDiscard(37, 'https://user.test/') === true);
+        check('and the mark is spent',
+            settleAppliedNavigation(37, 'https://user.test/', 'complete') === false);
+    } finally {
+        Date.now = realNow;
+    }
 }
 
 // ---------------------------------------------------------------------------
