@@ -16,7 +16,6 @@ import {
     resolveDeferredTruncation,
     resolveSelfDeltaFile,
     selfFoldedSeq,
-    truncateSelfEvents,
 } from './compaction.js';
 
 let passed = 0;
