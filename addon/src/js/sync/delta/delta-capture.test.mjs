@@ -41,6 +41,7 @@ const {
     markAppliedMove,
     consumeAppliedMoveEcho,
     markAppliedNavigation,
+    observeAppliedNavigationUrl,
     clearAppliedNavigation,
     settleAppliedNavigation,
     settleAppliedNavigationOnDiscard,
@@ -849,6 +850,82 @@ function reset() {
     }
     check('so the user url reaches the log instead of being reverted',
         globalThis.__appended.length === 1 && globalThis.__appended[0].tab.url === 'https://user.test/');
+}
+
+// --- 33. an arrival the skipTracking early returns drop is still observed ---------------
+// `onUpdated` bails out before the capture path whenever the tab or its window carries a
+// skipTracking flag, and an apply pass raises exactly those flags: `reconcileGroupTabOrders`
+// and `applyPinnedOps` move and hide tabs through `Tabs.moveNative(..., true)` and
+// `Tabs.hide(..., true)`. The event that carries the applied navigation's arrival at its
+// target can land inside that window and be dropped, leaving `targetReached` false with the
+// mark still live — and a later discard is then read as a load that never committed, which
+// swallows the url the user is actually on. The early returns therefore record the
+// observation before they return, without settling anything or producing a verdict.
+{
+    reset();
+    globalThis.__tabFacts = {42: {uid: 'u42', groupId: 1}};
+
+    markAppliedNavigation(42, 'https://applied.test/');
+
+    check('the observation itself yields no verdict',
+        observeAppliedNavigationUrl(42, 'https://applied.test/') === undefined);
+    check('and appends nothing of its own', globalThis.__appended.length === 0);
+
+    await tabModified({id: 42, url: 'https://user.test/', title: 'U', windowId: 1, discarded: false, status: 'loading'});
+    check('the mark is still live, so the user navigation under it is suppressed',
+        globalThis.__appended.length === 0);
+
+    const landedOffAppliedTarget = settleAppliedNavigationOnDiscard(42, 'https://user.test/');
+    check('the discard after the dropped arrival is a landing',
+        landedOffAppliedTarget === true);
+
+    if (landedOffAppliedTarget) {
+        await tabModified({id: 42, url: 'https://user.test/', title: 'U', windowId: 1, discarded: true, status: 'complete'});
+    }
+    check('so the user url reaches the log instead of being reverted',
+        globalThis.__appended.length === 1 && globalThis.__appended[0].tab.url === 'https://user.test/');
+}
+
+// --- 34. the observation is not a licence to assume the target was reached --------------
+// Only a real arrival counts. A load cancelled before it committed produces events off the
+// applied target — the hop of a redirect that never got there, or the pre-apply url the tab
+// never left — and the discard that ends it must stay silent, whatever the early returns saw.
+{
+    reset();
+    globalThis.__tabFacts = {43: {uid: 'u43', groupId: 1}};
+
+    markAppliedNavigation(43, 'https://applied.test/');
+    observeAppliedNavigationUrl(43, 'https://hop.test/');
+
+    const landedOffAppliedTarget = settleAppliedNavigationOnDiscard(43, 'https://old.test/');
+    check('an observation off the applied target leaves the discard silent',
+        landedOffAppliedTarget === false);
+
+    if (landedOffAppliedTarget) {
+        await tabModified({id: 43, url: 'https://old.test/', title: 'O', windowId: 1, discarded: true, status: 'complete'});
+    }
+    check('the url the apply navigated away from never reaches the log',
+        globalThis.__appended.length === 0);
+}
+
+// --- 35. the observation normalises a stub url and is inert without a mark --------------
+// An unsupported url is applied as the STG stub page carrying the real url in its query, so
+// the arrival reaches the early returns wrapped. `markAppliedNavigation` unwraps what it
+// records, and the observation has to unwrap what it compares or the arrival never matches.
+{
+    reset();
+    globalThis.__tabFacts = {44: {uid: 'u44', groupId: 1}, 45: {uid: 'u45', groupId: 1}};
+
+    markAppliedNavigation(44, 'about:config');
+    observeAppliedNavigationUrl(44, 'moz-extension://abc/help/stg-unsupported-url.html?url=about%3Aconfig');
+    check('a stub-wrapped arrival counts as reaching the applied target',
+        settleAppliedNavigationOnDiscard(44, 'https://user.test/') === true);
+
+    check('observing a tab no apply ever navigated is inert',
+        observeAppliedNavigationUrl(45, 'https://anything.test/') === undefined);
+    check('and creates no mark for a discard to report off',
+        settleAppliedNavigationOnDiscard(45, 'https://anything.test/') === false);
+    check('nothing reached the log', globalThis.__appended.length === 0);
 }
 
 // ---------------------------------------------------------------------------

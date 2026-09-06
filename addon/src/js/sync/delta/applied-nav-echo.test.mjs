@@ -549,7 +549,21 @@ check('in-apply ⇒ silent (our own write, never a user landing)',
 // A mark now outlives the bound whenever the tab keeps reporting `loading`, so what bounds its
 // lifetime is the tab: tabs.js settles-and-drops it on `changeInfo.discarded === true` and
 // onRemoved drops it unconditionally. Neither leaves an entry behind for a recycled tab id to
-// inherit. The redirect hop here was seen, so the applied navigation did reach its target and the
+// inherit. That holds wherever the tab is: a mark still loading at a url OFF the applied target
+// survives the bound just as one sitting on it does, and the discard drops it either way — only
+// the verdict differs, because a navigation never seen at its target has nothing to report.
+{
+    const store = createMarkStore();
+    store.mark(16, 'http://target', NOW);
+    check('in-flight discard: a mark still loading at a DIFFERENT url survives the bound',
+        store.settle(16, 'http://redirect', LOADING, NOW + SAFETY_MS + 1_000) === false
+        && store.has(16) === true);
+    check('in-flight discard: it reports nothing, the applied target was never reached',
+        store.discard(16, 'http://redirect', NOW + SAFETY_MS + 1_500) === false);
+    check('in-flight discard: the discard drops it all the same',
+        store.has(16) === false);
+}
+// The tab below was seen at the applied target, so the applied navigation did reach it and the
 // url the tab holds at the discard is evidence.
 {
     const store = createMarkStore();
