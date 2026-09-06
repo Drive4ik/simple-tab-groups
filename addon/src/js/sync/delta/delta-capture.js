@@ -53,6 +53,10 @@ function noteAppliedNavigationReachedTarget(mark, observedUrl) {
     }
 }
 
+export function observeAppliedNavigationUrl(tabId, observedUrl) {
+    noteAppliedNavigationReachedTarget(appliedNavTabs.get(tabId), observedUrlOf(observedUrl));
+}
+
 export function clearAppliedNavigation(tabId) {
     appliedNavTabs.delete(tabId);
 }

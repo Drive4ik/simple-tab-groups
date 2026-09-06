@@ -246,11 +246,13 @@ async function onUpdated(tabId, changeInfo, tab) {
 
     if (skip.tracking.has(tab.id)) {
         Cache.setTab(tab);
+        DeltaCapture.observeAppliedNavigationUrl(tab.id, tab.url);
         logger.log(onUpdated, '🛑 skip tracking tab:', tab.id);
         return;
     }
 
     if (skipTrackingWindows.has(tab.windowId)) {
+        DeltaCapture.observeAppliedNavigationUrl(tab.id, tab.url);
         logger.log(onUpdated, '🛑 skip tracking tab:', tab.id, 'for window:', tab.windowId);
         return;
     }
@@ -260,6 +262,7 @@ async function onUpdated(tabId, changeInfo, tab) {
 
     if (skip.tracking.has(tab.id) || skipTrackingWindows.has(tab.windowId)) {
         Cache.setTab(tab);
+        DeltaCapture.observeAppliedNavigationUrl(tab.id, tab.url);
         logger.log(onUpdated, '🛑 skip tracking tab (after wait):', tab.id);
         return;
     }
