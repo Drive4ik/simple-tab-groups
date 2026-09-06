@@ -770,13 +770,13 @@ async function restoreNow(groupId) {
         await saveNow(groups);
     });
 
-    const tabs = group.tabs;
-
-    if (tabs.length && !group.isArchive) {
+    if (group.tabs.length && !group.isArchive) {
         await Browser.actionLoading();
-        group.tabs = await Tabs.createMultiple(setNewTabsParams(tabs, group), true);
-        // appended at the end of the strip - they can't be in a live group (docs/TABGROUPS-BEHAVIOR.md §10)
-        await Tabs.hide(group.tabs, true);
+
+        const creation = await Tabs.createMultiple(setNewTabsParams(group.tabs, group));
+
+        group.tabs = await Tabs.settleGroupTabs(group.id, group.tabs, creation);
+
         await Browser.actionLoading(false);
     }
 
@@ -1051,11 +1051,12 @@ async function archiveToggleNow(groupId) {
         }
     }
 
-    const {group, tabsToRemove, needUpdateTabs} = await enqueue(async () => {
+    const {group, tabsToRemove, savedTabs, creation} = await enqueue(async () => {
         const {group, groups} = await load(groupId, true);
 
         let tabsToRemove = [],
-            needUpdateTabs = false;
+            savedTabs = null,
+            creation = null;
 
         log.log('group.isArchive', group.isArchive, '=>', !group.isArchive);
 
@@ -1064,14 +1065,10 @@ async function archiveToggleNow(groupId) {
 
             Extensions.tabsToUUID(group.tabs);
 
-            // the archived tabs carry their groupNativeId - Tabs.create writes it back into sessions
-            const createdTabs = await Tabs.createMultiple(setNewTabsParams(group.tabs, group), true);
-
-            // appended at the end of the strip - they can't be in a live group (docs/TABGROUPS-BEHAVIOR.md §10)
-            await Tabs.hide(createdTabs, true);
+            savedTabs = group.tabs;
+            creation = await Tabs.createMultiple(setNewTabsParams(savedTabs, group));
 
             group.tabs = [];
-            needUpdateTabs = true;
         } else {
             Extensions.tabsToId(group.tabs);
 
@@ -1088,14 +1085,20 @@ async function archiveToggleNow(groupId) {
 
         await saveNow(groups);
 
-        return {group, tabsToRemove, needUpdateTabs};
+        return {group, tabsToRemove, savedTabs, creation};
     });
+
+    if (creation) {
+        // outside the queue turn: the settle takes the window gate, and a native-group apply
+        // holding that gate ends with Groups.update - a turn of this very queue
+        await Tabs.settleGroupTabs(group.id, savedTabs, creation);
+    }
 
     await Tabs.remove(tabsToRemove, true);
 
     sendUpdated(group, group);
 
-    if (needUpdateTabs) {
+    if (creation) {
         Tabs.sendUpdatedGroup(groupId);
     }
 
@@ -1144,8 +1147,12 @@ export function mapForExternalExtension(group) {
     };
 }
 
-export function getNewTabParams({id, newTabContainer, ifDifferentContainerReOpen, excludeContainersForReOpen}) {
-    return {groupId: id, newTabContainer, ifDifferentContainerReOpen, excludeContainersForReOpen};
+export function getContainerParams({newTabContainer, ifDifferentContainerReOpen, excludeContainersForReOpen}) {
+    return {newTabContainer, ifDifferentContainerReOpen, excludeContainersForReOpen};
+}
+
+export function getNewTabParams(group) {
+    return {groupId: group.id, ...getContainerParams(group)};
 }
 
 export function setNewTabsParams(tabs, group) {

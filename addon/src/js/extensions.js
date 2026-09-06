@@ -99,9 +99,9 @@ export function isEnabled(id) {
     return getById(id)?.enabled;
 }
 
-export function hasTreeTabs() {
+/* export function hasTreeTabs() {
     return Constants.TREE_TABS_EXTENSIONS.some(isEnabled);
-}
+} */
 
 export function getConflicted() {
     return Constants.CONFLICTED_EXTENSIONS.map(getById).filter(Boolean);
@@ -160,11 +160,11 @@ export async function loadIconUrl(id, defaultUrl = null, size = 32) {
     return defaultUrl;
 }
 
-export function getByUUID(uuid) {
+export function getByUUID(uuid, onlyEnabled = false) {
     if (Utils.isUUID(uuid)) {
         for (const ext of extensions) {
             if (ext.hostPermissions?.some(url => url.includes(uuid))) {
-                return ext;
+                return onlyEnabled && !ext.enabled ? undefined : ext;
             }
         }
     }

@@ -4,9 +4,9 @@ import {OpenerTest, OPENER_KEYS} from '../opener.js';
 export const quiet = OTHER_ADDON_WAIT;
 
 export const note = `Round 14 — tab.openerTabId as STG has to carry it: set by tabs.create and tabs.update,
-what survives hide/show, discard, a move (same window, across windows), the opener's removal and a
-browser restart. Every cell prints the opener as a suffix right after the name: c1→p means
-c1.openerTabId points at p. Run it twice — in the clean profile, and in a profile with Tree Style
+what survives hide/show, discard, a move (same window, across windows), a pin, the opener's removal
+and a browser restart. Every cell prints the opener as a suffix right after the name: c1→p means
+c1.openerTabId points at p; (p) is a pinned tab. Run it twice — in the clean profile, and in a profile with Tree Style
 Tab and no STG: the expectations are the clean-profile facts, so in the TST profile every MISMATCH
 line is a TST fact (OPENER-BEHAVIOR.md, the Tree Style Tab section). A tree extension acts with a delay, so
 a step here counts as settled only after OTHER_ADDON_WAIT of silence — in both profiles alike.
@@ -17,6 +17,10 @@ class Round14OpenerTest extends OpenerTest {
     constructor(options) {
         super(options);
         this.openerEvents = new Map();
+    }
+
+    suffix(tab) {
+        return super.suffix(tab) + (tab.pinned ? '(p)' : '');
     }
 
     async createChildren(names) {
@@ -557,6 +561,54 @@ export const tests = [
         t.expectRow('child followed (window 1)', ['c2*', 'x']);
         t.expectRow('child followed (window 2)', ['w*', 'p', 'c1']);
         t.expectRow('restored by update (window 2)', ['w*', 'p', 'c1→p']);
+    },
+},
+
+{
+    id: 'R14.17',
+    title: 'pinning a tab that has an opener and a child — do the links to and from it survive the pin, which events; a fresh link set ON the pinned tab, ONTO it, a tab created with the pinned opener; -1 on the pinned tab and on its pre-pin child; what unpin brings back',
+    async run(t) {
+        await t.scene(['x', 'g', 'p', 'c1', 'c2', 'y']);
+        await t.setOpeners([['p', 'g'], ['c1', 'p'], ['c2', 'c1']]);
+
+        t.watch(['tabs.onUpdated', 'tabs.onMoved', 'tabs.onCreated'], {updatedKeys: [...OPENER_KEYS, 'pinned']});
+        await t.snap('before');
+
+        await t.step('tabs.update(p, {pinned: true})  // p → g and c1 → p are the links at stake, c2 → c1 the control', () => browser.tabs.update(t.id('p'), {pinned: true}), {snap: 'pinned'});
+
+        const pinned = await browser.tabs.get(t.id('p'));
+        const afterPin = await t.openers();
+        t.note(`p after the pin: pinned:${pinned.pinned} index:${pinned.index} opener:${t.describeOpener(pinned)}`);
+        t.note(`openers after the pin: ${JSON.stringify(afterPin)}`);
+        t.expect('the pin keeps every link, to and from p (§17)', afterPin, {p: 'g', x: 'absent', g: 'absent', c1: 'p', c2: 'c1', y: 'absent'});
+
+        const setOn = await t.tryStep('tabs.update(p, {openerTabId: x})  // a link p never had, set ON the pinned tab', () => t.setOpener('p', 'x'), {snap: 'p → x set on the pinned tab'});
+        const setOnto = await t.tryStep('tabs.update(y, {openerTabId: p})  // from a tab that never pointed at p, set ONTO the pinned tab', () => t.setOpener('y', 'p'), {snap: 'y → p set onto the pinned tab'});
+
+        const end = (await t.query()).length;
+        const created = await t.tryStep(`tabs.create({url: n, openerTabId: p, index: ${end}})  // the pinned tab as the opener at creation`, () => t.create('n', {openerTabId: t.id('p'), index: end}), {snap: 'created with the pinned opener'});
+
+        const clearedOn = await t.tryStep('tabs.update(p, {openerTabId: -1})  // the clear on the pinned tab, which holds a link', () => t.setOpener('p', null), {snap: 'cleared on the pinned tab'});
+        const clearedChild = await t.tryStep('tabs.update(c1, {openerTabId: -1})  // the clear on its pre-pin child', () => t.setOpener('c1', null), {snap: 'cleared on the child'});
+
+        t.expect('every write on and onto the pinned tab resolves: set on, set onto, create, -1 on it, -1 on its child (§17)', [setOn, setOnto, created, clearedOn, clearedChild].map(result => result !== null), [true, true, true, true, true]);
+
+        await t.step('tabs.update(p, {pinned: false})', () => browser.tabs.update(t.id('p'), {pinned: false}), {snap: 'unpinned'});
+
+        const unpinned = await browser.tabs.get(t.id('p'));
+        const afterUnpin = await t.openers();
+        t.note(`p after the unpin: pinned:${unpinned.pinned} index:${unpinned.index} opener:${t.describeOpener(unpinned)}`);
+        t.note(`openers after the unpin: ${JSON.stringify(afterUnpin)}`);
+        t.expect('unpin brings nothing back: the cleared links stay cleared, the links set while pinned stay (§17)', afterUnpin, {p: 'absent', x: 'absent', g: 'absent', c1: 'absent', c2: 'c1', y: 'p', n: 'p'});
+
+        t.expectRow('before', ['x*', 'g', 'p→g', 'c1→p', 'c2→c1', 'y']);
+        t.expectRow('pinned', ['p→g(p)', 'x*', 'g', 'c1→p', 'c2→c1', 'y']);
+        t.expectRow('p → x set on the pinned tab', ['p→x(p)', 'x*', 'g', 'c1→p', 'c2→c1', 'y']);
+        t.expectRow('y → p set onto the pinned tab', ['p→x(p)', 'x*', 'g', 'c1→p', 'c2→c1', 'y→p']);
+        t.expectRow('created with the pinned opener', ['p→x(p)', 'x*', 'g', 'c1→p', 'c2→c1', 'y→p', '➕n→p']);
+        t.expectRow('cleared on the pinned tab', ['p(p)', 'x*', 'g', 'c1→p', 'c2→c1', 'y→p', '➕n→p']);
+        t.expectRow('cleared on the child', ['p(p)', 'x*', 'g', 'c1', 'c2→c1', 'y→p', '➕n→p']);
+        t.expectRow('unpinned', ['p', 'x*', 'g', 'c1', 'c2→c1', 'y→p', '➕n→p']);
     },
 },
 

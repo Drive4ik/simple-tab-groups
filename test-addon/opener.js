@@ -2,7 +2,7 @@ import {TabsTest} from './tabs.js';
 
 export const OPENER_KEYS = ['openerTabId'];
 
-// the domain class of the opener rounds (round-14, round-16, round-17): every cell prints the opener as a
+// the domain class of the opener rounds (round-14, round-16, round-18): every cell prints the opener as a
 // suffix right after the name - c1→p means c1.openerTabId points at p, no arrow - no opener
 export class OpenerTest extends TabsTest {
     suffix(tab) {
@@ -62,14 +62,14 @@ export class OpenerTest extends TabsTest {
         return browser.tabs.update(this.id(child), {openerTabId: opener === null ? -1 : this.id(opener)});
     }
 
-    async setOpeners(pairs) {
+    async setOpeners(pairs, windowId = this.win) {
         for (const [child, opener] of pairs) {
             await this.setOpener(child, opener);
         }
 
         await this.settled();
 
-        const actual = await this.openers();
+        const actual = await this.openers(windowId);
         const wrong = pairs.filter(([child, opener]) => actual[child] !== opener);
 
         this.require('setup: openers set as requested', !wrong.length, wrong.map(([child]) => `${child}→${actual[child]}`).join(', '));

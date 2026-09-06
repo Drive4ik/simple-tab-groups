@@ -72,6 +72,9 @@ A cell is a tab. Always a **meaningful name**, never a real `tab.id`:
   arrivals obvious in the `after` row.
 - **Suffixes** are plain text on purpose: `*` active, `(h)` hidden, `(p)` pinned. Text and emoji
   are instantly told apart; two emoji next to each other are not.
+- **`→name`** right after the tab's own name is its opener: `c1→p` means `c1.openerTabId` points
+  at `p`; no arrow — no opener. Printed only by rounds whose subject is the opener
+  (OPENER-BEHAVIOR.md); everywhere else the column would be noise.
 
 Emoji are for the two things you scan for — which group a tab is in, and what is new. Everything
 else stays text. Adding a third emoji axis makes the table noise again, which is exactly what this
@@ -97,7 +100,10 @@ were dropped — a fact must never look more complete than it is.
 Every fact carries the run that produced it:
 
 - **`R<round>.<test>`** — confirmed by the API output of that test, e.g. `R1.07` is test 07 of
-  round 1. The table in the doc is the harness output, not a retelling.
+  round 1. The table in the doc is the harness output, not a retelling. A run made on purpose in
+  a profile with another add-on installed — the add-on under study — is cited with that add-on
+  named, `R14.06 (with TST)`, and lives in its own section that describes the environment; the
+  clean-profile run of the same test stays the browser fact.
 - **👁️** — confirmed by eye. Some facts have no API surface at all (a group header staying in the
   tab bar, the empty-title group button, part of the collapsed behavior). For those the run stops
   at the exact frame in question, prints what to look at, and waits for `T.visualAnswer('…')`. The
@@ -139,10 +145,11 @@ The add-on itself is disposable and lives outside the repo; these constraints ar
 test that breaks one of them produces a table that looks like a fact and is not one.
 
 **Environment.** A clean profile, no other add-ons, `test-addon/` loaded through about:debugging
-with the permissions its manifest lists (`tabs`, `tabGroups`, `tabHide`, `sessions`,
-`browserSettings`, `menus`, the `example.com` host permission — the page an injected script asks
-for the microphone on — and the optional `bookmarks` permission, granted by hand where a test
-asks for it). Progress goes to `console.debug`; the report itself opens in a tab at the end
+with the permissions its manifest lists (`tabs`, `tabGroups`, `tabHide`, `sessions`, `storage`,
+`browserSettings`, `menus`, `cookies`, `contextualIdentities`, `webRequest`, `webRequestBlocking`,
+the `<all_urls>` host permission, which covers the `example.com` page an injected script asks for
+the microphone on and lets a `webRequest` listener see every main-frame load, and the optional
+`bookmarks` permission, granted by hand where a test asks for it). Progress goes to `console.debug`; the report itself opens in a tab at the end
 of the run.
 
 **Isolation.** One test = one window it opens itself = one table. Tests never share a window and
@@ -169,7 +176,9 @@ waits until nothing has moved: no watched event for `QUIET_WAIT`, two identical 
 state, and every tab it created showing its own url instead of `about:blank` — a created tab always
 starts blank, and a tab that has not arrived yet cannot be identified. How long that took is
 printed in the action row. A fixed number is used only where the number is the fact itself, and
-then it comes from a named constant of `test-addon/constants.js`.
+then it comes from a named constant of `test-addon/constants.js`. A round that studies another
+add-on's reaction raises the silence window to `OTHER_ADDON_WAIT` (`export const quiet`) — such an
+add-on acts with a delay of its own, and a 200 ms window would snapshot before it moved.
 
 **Events.** Listeners are attached before the action and removed after, filtered to the test's own
 window. Noisy `tabs.onUpdated` (status, url, title, favicon) is dropped and the dropped count is
@@ -191,7 +200,9 @@ Facts about the extension's own lifecycle — `runtime.onInstalled`, updates, en
 uninstall, what each storage survives — cannot be produced by `test-addon/`: the addon under test
 is killed by the very actions being measured. They come from a throwaway stand of two addons (the
 addon under test plus a log collector) that lives outside the repo and is rebuilt from its
-description when a fact is disputed.
+description when a fact is disputed. The exception is browser shutdown: the quit kills the addon
+too, but the evidence lands in its storage and is read back after the restart, so those facts
+come from the regular harness with the usual `R` markers (LIFECYCLE-BEHAVIOR.md §8).
 
 Their document keeps the same rules as the rest (§5), with these deviations:
 

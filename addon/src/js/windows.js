@@ -97,12 +97,14 @@ async function runGrandRestoreNow(restoredWindowIds) {
     log.log('all windows', Array.from(allWindowsMap.keys()));
 
     let tabsToRestoreChanged = false;
-    function deleteTabsToRestoreByGroup({id}) {
-        const lengthBefore = tabsToRestore.length;
-        tabsToRestore = tabsToRestore.filter(tab => tab.groupId !== id);
+    const openersToApply = [];
+    function deleteTabsToRestoreByGroup(group) {
+        const savedTabs = tabsToRestore.filter(tab => tab.groupId === group.id);
 
-        if (!tabsToRestoreChanged) {
-            tabsToRestoreChanged = lengthBefore !== tabsToRestore.length;
+        if (savedTabs.length) {
+            openersToApply.push({group, savedTabs});
+            tabsToRestore = rebuildTabsToRestore(tabsToRestore, tab => tab.groupId !== group.id);
+            tabsToRestoreChanged = true;
         }
     }
 
@@ -125,11 +127,7 @@ async function runGrandRestoreNow(restoredWindowIds) {
 
             const glog = log.start('preparing group', gr.id, 'in window', win.id);
 
-            for (const tab of group.tabs) {
-                if (tab.active && Utils.isUrlEmpty(tab.url)) {
-                    tab.url = Utils.normalizeUrl(Cache.getTabSession(tab.id, 'url'));
-                }
-            }
+            group.tabs.forEach(Tabs.fillEmptyUrl);
 
             group.isLoaded = group.id === win.groupId;
 
@@ -333,52 +331,74 @@ async function runGrandRestoreNow(restoredWindowIds) {
     // перемещаем недостающие вкладки из других окон
     // TODO проверить, надо ли отключать отслеживание вкладок, так как уже трекинг отключен для восстановленных окон
     const skippTrackingTabs = new Set();
-    for (const groupToKeep of groupsAlreadyRestored.values()) {
-        const tabsIntoAnotherWindows = groupToKeep.tabs.filter(tab => tab.windowId !== groupToKeep.window.id);
 
-        if (!tabsIntoAnotherWindows.length) {
-            continue;
-        }
+    try {
+        for (const groupToKeep of groupsAlreadyRestored.values()) {
+            const tabsIntoAnotherWindows = groupToKeep.tabs.filter(tab => tab.windowId !== groupToKeep.window.id);
 
-        Tabs.skipTracking(tabsIntoAnotherWindows, skippTrackingTabs);
-
-        const isLoadedGroup = groupToKeep.window.groupId === groupToKeep.id;
-
-        // native membership travels with the tabs in sessions (restored for discarded tabs by
-        // moveNative's fixSessionAfterMove) - no bookkeeping is needed here
-
-        // the whole group gathers as one block at its own first tab in this window (strays
-        // arrive without joining anyone - docs/TABGROUPS-BEHAVIOR.md §20, §21)
-        const anchorTab = groupToKeep.tabs.find(tab => tab.windowId === groupToKeep.window.id);
-
-        groupToKeep.tabs = await Tabs.moveNative(groupToKeep.tabs, {
-            windowId: groupToKeep.window.id,
-            index: anchorTab?.index ?? await Tabs.resolveMoveIndex(groupToKeep.id, groupToKeep.window.id, groupToKeep.tabs),
-        });
-
-        if (isLoadedGroup) {
-            log.log('showing group tabs, group', groupToKeep.id, 'in window', groupToKeep.window.id);
-            await Tabs.show(groupToKeep.tabs);
-
-            // the array move above can tear live native groups apart - recreate them from sessions
-            await GroupsNative.apply(groupToKeep.window.id, groupToKeep)
-                .catch(log.onCatch(['cant apply native groups', groupToKeep.id], false));
-
-            if (groupToKeep.deleteTabAfterMove) {
-                await Tabs.setActive(null, groupToKeep.tabs.filter(tab => !tabsToDelete.has(tab.id)));
-                await Tabs.remove(groupToKeep.deleteTabAfterMove, true);
+            if (!tabsIntoAnotherWindows.length) {
+                continue;
             }
-        } else {
-            log.log('hiding group tabs, group', groupToKeep.id, 'in window', groupToKeep.window.id);
-            await GroupsNative.ungroup(groupToKeep.tabs);
-            await Tabs.hide(groupToKeep.tabs);
+
+            Tabs.skipTracking(tabsIntoAnotherWindows, skippTrackingTabs);
+
+            const isLoadedGroup = groupToKeep.window.groupId === groupToKeep.id;
+
+            // native membership travels with the tabs in sessions (restored for discarded tabs by
+            // moveNative's fixSessionAfterMove) - no bookkeeping is needed here
+
+            // the whole group gathers as one block at its own first tab in this window (strays
+            // arrive without joining anyone - docs/TABGROUPS-BEHAVIOR.md §20, §21)
+            const anchorTab = groupToKeep.tabs.find(tab => tab.windowId === groupToKeep.window.id);
+
+            groupToKeep.tabs = await Tabs.moveNative(groupToKeep.tabs, {
+                windowId: groupToKeep.window.id,
+                index: anchorTab?.index ?? await Tabs.resolveMoveIndex(groupToKeep.id, groupToKeep.window.id, groupToKeep.tabs),
+            });
+
+            if (isLoadedGroup) {
+                log.log('showing group tabs, group', groupToKeep.id, 'in window', groupToKeep.window.id);
+                await Tabs.show(groupToKeep.tabs);
+
+                // the array move above can tear live native groups apart - recreate them from sessions
+                await GroupsNative.apply(groupToKeep.window.id, groupToKeep)
+                    .catch(log.onCatch(['cant apply native groups', groupToKeep.id], false));
+
+                if (groupToKeep.deleteTabAfterMove) {
+                    await Tabs.setActive(null, groupToKeep.tabs.filter(tab => !tabsToDelete.has(tab.id)));
+                    await Tabs.remove(groupToKeep.deleteTabAfterMove, true);
+                }
+            } else {
+                log.log('hiding group tabs, group', groupToKeep.id, 'in window', groupToKeep.window.id);
+                await GroupsNative.ungroup(groupToKeep.tabs);
+                await Tabs.hide(groupToKeep.tabs);
+            }
         }
+    } finally {
+        Tabs.continueTracking(skippTrackingTabs);
     }
-    Tabs.continueTracking(skippTrackingTabs);
 
     const tabsToDeleteIds = Array.from(tabsToDelete.keys());
     log.log('deleting tabs:', tabsToDeleteIds);
     await Tabs.remove(tabsToDeleteIds, true);
+
+    // the browser brings the window back without the links (docs/OPENER-BEHAVIOR.md §15) - the saved
+    // ones are applied to the live tabs of the group whose entries leave the restore list
+    for (const {group, savedTabs} of openersToApply) {
+        const liveTabs = normalizeTabs(group.tabs.filter(tab => !tabsToDelete.has(tab.id)));
+
+        liveTabs.forEach(Tabs.fillEmptyUrl);
+
+        const used = new Set();
+
+        await Tabs.applyOpeners(savedTabs, savedTabs.map(saved => {
+            const liveTab = liveTabs.find(tab => {
+                return !used.has(tab) && Tabs.isSame(saved, tab, sameTabKeys);
+            });
+            liveTab && used.add(liveTab);
+            return liveTab;
+        }));
+    }
 
     const result = {
         shouldRestoreMissedTabs: false,
@@ -524,9 +544,20 @@ async function onRemoved(windowId) {
     if (tabsToRestore.length) {
         log.info('start merge tabs');
         const prevRestore = await getTabsToRestore();
-        const tabsToRestoreFiltered = tabsToRestore.filter(tab => !prevRestore.some(t => Tabs.isSame(t, tab)));
+        const tabsToRestoreFiltered = tabsToRestore.filter(tab => {
+            const twin = prevRestore.find(t => !t.id && Tabs.isSame(t, tab));
+
+            if (twin) {
+                // the dropped duplicate may be somebody's opener: its id moves onto the kept twin,
+                // getOpenersById resolves the children there and the rebuild strips it again (removeIds)
+                twin.id = tab.id;
+                return false;
+            }
+
+            return true;
+        });
         await Storage.set({
-            tabsToRestore: [...prevRestore, ...tabsToRestoreFiltered],
+            tabsToRestore: rebuildTabsToRestore([...prevRestore, ...tabsToRestoreFiltered]),
         });
 
         removedBatch.add(windowId);
@@ -704,9 +735,28 @@ function normalizeTabs(tabs) {
     return tabs.map(Tabs.normalizeUrl).filter(tab => tab.url);
 }
 
+// tabsToRestore is a flat list of many groups; an openerOffset is relative to the group's own
+// subsequence of it, so every rebuild of the list recomputes the offsets per group and keeps the order
+export function rebuildTabsToRestore(tabs, keep = () => true) {
+    const rebuilt = new Map;
+
+    for (const groupTabs of Map.groupBy(tabs, tab => tab.groupId).values()) {
+        const openers = Tabs.getOpeners(groupTabs);
+        const keptTabs = groupTabs.filter(keep);
+        const savedTabs = Tabs.withOffsets(keptTabs, openers, {removeIds: true});
+
+        for (const [index, tab] of keptTabs.entries()) {
+            rebuilt.set(tab, savedTabs[index]);
+        }
+    }
+
+    return tabs.filter(tab => rebuilt.has(tab)).map(tab => rebuilt.get(tab));
+}
+
 async function getTabsToRestore() {
     const {tabsToRestore} = await Storage.get('tabsToRestore');
-    const normalizedTabsToRestore = normalizeTabs(tabsToRestore ?? []);
+    // not normalizeTabs: dropping a saved entry shifts its neighbors' offsets - the rebuild recomputes them
+    const normalizedTabsToRestore = rebuildTabsToRestore((tabsToRestore ?? []).map(Tabs.normalizeUrl), tab => tab.url);
 
     if (!normalizedTabsToRestore.length && tabsToRestore) {
         await Storage.remove('tabsToRestore');
@@ -744,63 +794,64 @@ async function tryRestoreMissedTabsNow(actionLoading = true) {
 
     const allTabs = await Tabs.get(null, false, null).then(normalizeTabs);
 
-    // normalize blank tab urls
-    for (const tab of allTabs) {
-        if (Tabs.isLoading(tab) && Utils.isUrlEmpty(tab.url)) {
-            tab.url = Utils.normalizeUrl(Cache.getTabSession(tab.id, 'url'));
-        }
-    }
+    allTabs.forEach(Tabs.fillEmptyUrl);
 
     // strict find exist tabs
     const {groups} = await Groups.load();
-    const groupNewTabParams = groups
-            .filter(group => !group.isArchive)
-            .reduce((acc, group) => (acc[group.id] = Groups.getNewTabParams(group), acc), {});
+    const newTabParamsByGroupId = new Map(groups
+        .filter(group => !group.isArchive)
+        .map(group => [group.id, Groups.getNewTabParams(group)]));
 
-    const tabsNeedRestore = [];
     const existTabs = new Set();
+    let needRestoreCount = 0;
 
-    for (const tab of tabsToRestore) {
+    // group by group: the offsets live inside the group's run of the list, the created tabs of a group stay together
+    for (const [groupId, savedTabs] of Map.groupBy(tabsToRestore, tab => tab.groupId)) {
         // if no groupId, or group not found
-        if (!groupNewTabParams[tab.groupId]) {
+        if (!newTabParamsByGroupId.has(groupId)) {
             continue;
         }
 
-        const existTab = allTabs.find(t => !existTabs.has(t) && Tabs.isSame(tab, t));
+        const tabs = savedTabs.map(tab => {
+            const existTab = allTabs.find(t => !existTabs.has(t) && Tabs.isSame(tab, t));
 
-        if (existTab) {
-            existTabs.add(existTab);
+            if (existTab) {
+                existTabs.add(existTab);
+                return existTab;
+            }
+
+            return {
+                ...tab,
+                new: true,
+                ...newTabParamsByGroupId.get(groupId),
+            };
+        });
+
+        const needRestoreGroupCount = tabs.filter(tab => tab.new).length;
+        needRestoreCount += needRestoreGroupCount;
+
+        const logCreate = log.start('creating and settle tabs for group', groupId, 'tabs count:', needRestoreGroupCount);
+        const creation = await Tabs.createMultiple(tabs, {createMissing: true});
+        await Tabs.settleGroupTabs(groupId, savedTabs, creation);
+        logCreate.stop();
+    }
+
+    {
+        log.log('filtering and saving tabs that have already been restored');
+        let tabsInDB = await getTabsToRestore();
+
+        tabsInDB = rebuildTabsToRestore(tabsInDB, tab => !tabsToRestore.some(t => Tabs.isSame(t, tab)));
+
+        if (tabsInDB.length) {
+            await Storage.set({
+                tabsToRestore: tabsInDB,
+            });
         } else {
-            tabsNeedRestore.push(Object.assign(tab, groupNewTabParams[tab.groupId]));
+            await Storage.remove('tabsToRestore');
         }
     }
 
-    log.info('start Tabs.createMultiple for tabs count:', tabsNeedRestore.length, '...');
-
-    const createdTabs = await Tabs.createMultiple(tabsNeedRestore, true);
-    log.log('finish Tabs.createMultiple');
-
-    const loadedGroupIds = groups.filter(group => Groups.isLoaded(group.id)).map(group => group.id);
-    const tabsToHide = createdTabs.filter(tab => !loadedGroupIds.includes(tab.groupId));
-
-    log.log('hide tabs count:', tabsToHide.length);
-    // appended at the end of the strip - they can't be in a live group (docs/TABGROUPS-BEHAVIOR.md §10)
-    await Tabs.hide(tabsToHide, true);
-
-    log.log('filtering and saving tabs that have already been restored');
-    let tabsInDB = await getTabsToRestore();
-
-    tabsInDB = tabsInDB.filter(tab => !tabsToRestore.some(t => Tabs.isSame(t, tab)));
-
-    if (tabsInDB.length) {
-        await Storage.set({
-            tabsToRestore: tabsInDB,
-        });
-    } else {
-        await Storage.remove('tabsToRestore');
-    }
-
-    if (tabsNeedRestore.length) {
+    if (needRestoreCount) {
         Groups.sendUpdatedAll();
     }
 

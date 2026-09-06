@@ -338,46 +338,28 @@ async function sync(trust = null, revision = null, progressFunc = null) {
                 continue;
             }
 
-            const tabsToCreate = group.tabs.filter(tab => tab.new);
-            const groupWindowId = Cache.getWindowId(group.id) || group.tabs.find(tab => !tab.new)?.windowId;
+            const savedTabs = group.tabs;
+            const groupWindowId = Cache.getWindowId(group.id) || savedTabs.find(tab => !tab.new)?.windowId;
 
-            if (tabsToCreate.length) {
-                for (const tabToCreate of tabsToCreate) {
-                    tabToCreate.groupId = group.id;
-                    tabToCreate.windowId = groupWindowId;
+            for (const tab of savedTabs) {
+                if (tab.new) {
+                    tab.groupId = group.id;
+                    tab.windowId = groupWindowId;
                 }
-
-                // the created tabs carry tab.groupNativeId into their sessions
-                const newTabs = await Tabs.createMultiple(tabsToCreate, true);
-
-                group.tabs = group.tabs.map(tab => tab.new ? newTabs.shift() : tab).filter(Boolean);
             }
 
+            // the created tabs carry tab.groupNativeId into their sessions
+            const creation = await Tabs.createMultiple(savedTabs, {createMissing: true});
+
             // per-tab membership: the merge left the final sub-group id on each tab object
-            await Promise.allSettled(group.tabs.map(tab => {
+            await Promise.allSettled(creation.live.map(tab => {
                 if (Cache.getTabNativeGroupId(tab.id) !== tab.groupNativeId) {
                     return Cache.setTabNativeGroupId(tab.id, tab.groupNativeId);
                 }
             }));
 
-            // sort tabs to the synced order (must run even without new tabs - order may have changed,
-            // including for hidden groups: their tabs can be reordered in the addon or the browser)
-            const firstTabIndex = group.tabs[0]?.index;
-            if (Number.isInteger(firstTabIndex)) {
-                group.tabs = await Tabs.moveNative(group.tabs, {index: firstTabIndex}, true);
-            }
-
-            if (Groups.isLoaded(group.id)) {
-                // the sort above may have torn live native groups apart (moving an array of tabs
-                // breaks their groups), and the synced state may differ - apply is a no-op when
-                // the live state still matches
-                await GroupsNative.apply(groupWindowId, group);
-            } else {
-                // the sort above can drop hidden tabs onto live-member slots (docs/TABGROUPS-BEHAVIOR.md §11),
-                // ungroup works on hidden members too (§12); the browser skips the already hidden on hide
-                await GroupsNative.ungroup(group.tabs);
-                await Tabs.hide(group.tabs, true);
-            }
+            // the sort runs even without new tabs - the order may have changed, for hidden groups too
+            group.tabs = await Tabs.settleGroupTabs(group.id, savedTabs, creation);
         }
 
         const {groups} = await Groups.load();
@@ -503,16 +485,15 @@ async function syncGroups(localData, cloudData, sourceOfTruth, changes, newCloud
         }
     }
 
-    const isAvailableFavIconToSync = favIconUrl => favIconUrl?.startsWith('data:');
+    const favIconsByUrl = new Map(
+        Utils.flatTabs(...localGroups, ...cloudGroups.filter(group => group.uploadToCloud))
+            .filter(tab => isFavIconAllowed(tab.favIconUrl))
+            .map(tab => [tab.url, tab.favIconUrl])
+    );
 
-    const favIconUrlsMap = new Map;
-    for (const tab of Utils.flatTabs([...localGroups, ...cloudGroups.filter(group => group.uploadToCloud)])) {
-        if (isAvailableFavIconToSync(tab.favIconUrl)) {
-            favIconUrlsMap.set(tab.url, tab.favIconUrl);
-        }
-    }
-
-    const hasSomeTreeTabsExtension = Extensions.hasTreeTabs();
+    // an archive links by openerOffset, a live group by openerTabId - getOpeners reads both
+    const localOpeners = new Map(localGroups.map(group => [group.id, Tabs.getOpeners(group.tabs)]));
+    const cloudOpeners = new Map(cloudGroups.map(group => [group.id, Tabs.getOpeners(group.tabs ?? [])]));
 
     function prepareForSaveTabs(tabs, prepareFor, groupIsArchive) {
         if (prepareFor !== TRUST_LOCAL && prepareFor !== TRUST_CLOUD) throw new Error('invalid "prepareFor" argument');
@@ -521,32 +502,74 @@ async function syncGroups(localData, cloudData, sourceOfTruth, changes, newCloud
         const includeFavIconUrl = localData.syncTabFavIcons;
 
         if (prepareFor === TRUST_CLOUD && includeFavIconUrl) {
-            for (const tab of tabs) {
-                if (!isAvailableFavIconToSync(tab.favIconUrl)) {
-                    tab.favIconUrl = null;
-                }
-
-                tab.favIconUrl ??= favIconUrlsMap.get(tab.url);
-            }
+            tabs = tabs.map(tab => ({
+                ...tab,
+                favIconUrl: isFavIconAllowed(tab.favIconUrl)
+                    ? tab.favIconUrl
+                    : favIconsByUrl.get(tab.url),
+            }));
         }
 
-        const includeId = hasSomeTreeTabsExtension;
         const includeLastAccessed = prepareFor === TRUST_LOCAL || groupIsArchive === true;
 
-        return Tabs.prepareForSave(tabs, {includeGroupNativeId: true, includeFavIconUrl, includeId, includeLastAccessed});
+        return Tabs.prepareForSave(tabs, {
+            includeGroupNativeId: true,
+            includeFavIconUrl,
+            includeLastAccessed,
+        });
     }
 
-    function prepareCloudGroup(localGroup) {
-        const cloudGroup = JSON.clone(localGroup);
+    function matchTabs(tabs, otherTabs) {
+        const containerOf = tab => tab.cookieStoreId || Constants.DEFAULT_COOKIE_STORE_ID;
+        const free = new Set(otherTabs);
+
+        return tabs.map(tab => {
+            const match = otherTabs.find(other => {
+                return free.has(other) && other.url === tab.url && containerOf(other) === containerOf(tab);
+            });
+
+            free.delete(match);
+
+            return match;
+        });
+    }
+
+    function assignOpeners(groupId, localTabs, cloudTabs) {
+        const own = localOpeners.get(groupId);
+        const cloud = cloudOpeners.get(groupId) ?? new Map;
+        const openers = new Map;
+
+        for (const [index, localTab] of localTabs.entries()) {
+            const cloudOpener = cloud.get(cloudTabs[index]);
+            let opener = cloudOpener && localTabs[cloudTabs.indexOf(cloudOpener)];
+
+            if (own.has(localTab) && (!opener || sourceOfTruth === TRUST_LOCAL)) {
+                opener = own.get(localTab);
+            }
+
+            if (opener && opener !== own.get(localTab)) {
+                changes.local = true;
+            }
+
+            openers.set(localTab, opener);
+        }
+
+        return Tabs.withOffsets(localTabs, openers);
+    }
+
+    function prepareCloudGroup(localGroup, cloudGroup = null) {
+        const resultCloudGroup = JSON.clone(localGroup);
 
         // the cloud gets only sub-groups that still have member tabs
         if (!localGroup.isArchive) {
-            cloudGroup.groupsNative = GroupsNative.referencedGroupsNative(localGroup);
+            resultCloudGroup.groupsNative = GroupsNative.referencedGroupsNative(localGroup);
         }
 
-        cloudGroup.tabs = prepareForSaveTabs(localGroup.tabs, TRUST_CLOUD, cloudGroup.isArchive);
+        localGroup.tabs = assignOpeners(localGroup.id, localGroup.tabs, matchTabs(localGroup.tabs, cloudGroup?.tabs ?? []));
 
-        return cloudGroup;
+        resultCloudGroup.tabs = prepareForSaveTabs(localGroup.tabs, TRUST_CLOUD, resultCloudGroup.isArchive);
+
+        return resultCloudGroup;
     }
 
     const syncUpload = (localGroup, cloudGroup) => syncGroupUpload(localGroup, cloudGroup, {sourceOfTruth, lastSync, prepareCloudGroup}, changes);
@@ -568,7 +591,7 @@ async function syncGroups(localData, cloudData, sourceOfTruth, changes, newCloud
             }
 
             resultLocalGroups.push(localGroup);
-            resultCloudGroups.push(prepareCloudGroup(localGroup));
+            resultCloudGroups.push(prepareCloudGroup(localGroup, cloudGroupById.get(localGroup.id)));
         }
 
         for (const [cloudIndex, cloudGroup] of cloudGroups.entries()) {
@@ -624,7 +647,9 @@ async function syncGroups(localData, cloudData, sourceOfTruth, changes, newCloud
 
                 if (!localGroup.isArchive) {
                     // the tabs carry their groupNativeId - creation writes it into the sessions
-                    localGroup.tabs.forEach(localTab => localTab.new = true);
+                    for (const localTab of localGroup.tabs) {
+                        localTab.new = true;
+                    }
                 }
 
                 resultLocalGroups.push(localGroup);
@@ -640,41 +665,18 @@ async function syncGroups(localData, cloudData, sourceOfTruth, changes, newCloud
             log.log('sync cloud group:', resultCloudGroup.id);
             log.log('group archive state local:', resultLocalGroup.isArchive, 'cloud:', resultCloudGroup.isArchive);
 
-            function findEqualLocalTab(cloudTab, excludeTabs = []) {
-                const cloudCookieStoreId = cloudTab.cookieStoreId || Constants.DEFAULT_COOKIE_STORE_ID;
-
-                const localTab = resultLocalGroup.tabs.find(localTab => {
-                    if (excludeTabs.includes(localTab)) {
-                        return false;
-                    }
-
-                    if (localTab.url !== cloudTab.url) { // url should be normalized
-                        return false;
-                    }
-
-                    const localCookieStoreId = localTab.cookieStoreId || Constants.DEFAULT_COOKIE_STORE_ID;
-
-                    if (localCookieStoreId !== cloudCookieStoreId) {
-                        return false;
-                    }
-
-                    return true;
-                });
-
-                return [localTab, resultLocalGroup.tabs.indexOf(localTab)];
-            }
-
+            // leaves the local and cloud tab lists aligned by index - the openers rely on it
             function syncTabs(prepareFoundLocalTabFunc, eachNotPreparedLocalTabFunc) {
                 const resultLocalTabs = [];
                 const resultCloudTabs = resultCloudGroup.tabs;
+                const matchedLocalTabs = matchTabs(resultCloudTabs, resultLocalGroup.tabs);
 
-                resultCloudGroup.tabs.forEach((cloudTab, cloudIndex) => {
-                    const [localTab, localIndex] = findEqualLocalTab(cloudTab, resultLocalTabs);
+                for (const [cloudIndex, cloudTab] of resultCloudTabs.entries()) {
+                    const localTab = matchedLocalTabs[cloudIndex];
+                    const localIndex = resultLocalGroup.tabs.indexOf(localTab);
 
-                    const preparedLocalTab = prepareFoundLocalTabFunc(localTab, cloudTab, localIndex, cloudIndex);
-
-                    resultLocalTabs.push(preparedLocalTab);
-                });
+                    resultLocalTabs.push(prepareFoundLocalTabFunc(localTab, cloudTab, localIndex, cloudIndex));
+                }
 
                 let offset = 0;
 
@@ -694,8 +696,14 @@ async function syncGroups(localData, cloudData, sourceOfTruth, changes, newCloud
                     }
                 });
 
-                resultLocalGroup.tabs = resultLocalTabs;
-                resultCloudGroup.tabs = resultCloudTabs;
+                const cloudOffsetsBefore = resultCloudTabs.map(tab => tab.openerOffset);
+
+                resultLocalGroup.tabs = assignOpeners(resultLocalGroup.id, resultLocalTabs, resultCloudTabs);
+                resultCloudGroup.tabs = Tabs.withOffsets(resultCloudTabs, Tabs.getOpenersByOffset(resultLocalGroup.tabs, resultCloudTabs));
+
+                if (!isEqual(cloudOffsetsBefore, resultCloudGroup.tabs.map(tab => tab.openerOffset))) {
+                    changes.cloud = true;
+                }
             }
 
             /*
@@ -728,7 +736,7 @@ async function syncGroups(localData, cloudData, sourceOfTruth, changes, newCloud
                 syncTabs(
                     (localTab, cloudTab) => {
                         localTab && syncTabNativeMembership(localTab, cloudTab);
-                        return localTab ?? cloudTab;
+                        return localTab ?? {...cloudTab};
                     },
                     (localTab, localTabIndex, resultLocalTabs, resultCloudTabs) => {
                         // if first time sync archive group (I didn't save lastAccessed key in archived group before)
@@ -754,7 +762,9 @@ async function syncGroups(localData, cloudData, sourceOfTruth, changes, newCloud
                 resultCloudGroup.tabs = prepareForSaveTabs(resultCloudGroup.tabs, TRUST_CLOUD, resultCloudGroup.isArchive);
 
                 if (resultLocalGroup.isArchive) { // UN archive local group
-                    resultLocalGroup.tabs.forEach(tab => tab.new = true);
+                    for (const tab of resultLocalGroup.tabs) {
+                        tab.new = true;
+                    }
                 }
 
             } else if (resultCloudGroup.isArchive && resultLocalGroup.isArchive) {
@@ -1265,6 +1275,10 @@ async function eachGroupContainerKeyMap(group, asyncMapFunc) {
 
 function isEqual(value1, value2) {
     return JSON.stringify(value1) === JSON.stringify(value2);
+}
+
+function isFavIconAllowed(favIconUrl) {
+    return favIconUrl?.startsWith('data:');
 }
 
 // alarm utils

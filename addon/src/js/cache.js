@@ -14,8 +14,8 @@ export const tabs = {};
 export const lastTabsState = {}; // BUG https://bugzilla.mozilla.org/show_bug.cgi?id=1818392
 export const windows = {};
 
-function setLastTabState({id, url, title, status, hidden, pinned, favIconUrl}) {
-    lastTabsState[id] = {id, url, title, status, hidden, pinned, favIconUrl};
+function setLastTabState(tab) {
+    lastTabsState[tab.id] = Utils.extractKeys(tab, ['id', ...Constants.ON_UPDATED_TAB_PROPERTIES]);
 }
 
 // don't forget for pinned tabs events
@@ -41,14 +41,24 @@ export function clear() {
 }
 
 // TABS
-export function setTab({id, url, title, favIconUrl, cookieStoreId, openerTabId, status}) {
+// the mirror, and the diff base only for a tab the base does not know yet. The base moves with
+// the events that change the state - processed in full or the addon's own (tabs.js onUpdated,
+// setTab); a read or a side snapshot inside the 50-70 ms event wait must not overwrite it, or
+// the pending event diffs against its own result and is swallowed
+export function mirrorTab(tab) {
+    const {id, url, title, favIconUrl, cookieStoreId, openerTabId, status} = tab;
+
+    lastTabsState[id] || setLastTabState(tab);
+
     tabs[id] ??= {};
     tabs[id].id ??= id;
     tabs[id].cookieStoreId ??= cookieStoreId;
 
-    setLastTabState(arguments[0]);
-
-    tabs[id].openerTabId = openerTabId;
+    if (openerTabId === undefined) {
+        delete tabs[id].openerTabId;
+    } else {
+        tabs[id].openerTabId = openerTabId;
+    }
 
     if (status === browser.tabs.TabStatus.LOADING && tabs[id].url && Utils.isUrlEmpty(url)) {
         return;
@@ -62,6 +72,16 @@ export function setTab({id, url, title, favIconUrl, cookieStoreId, openerTabId, 
     }
 }
 
+export function setTab(tab) {
+    setLastTabState(tab);
+    mirrorTab(tab);
+}
+
+export function mirrorTabUrl(id, url) {
+    tabs[id] ??= {id};
+    tabs[id].url = url;
+}
+
 export function hasTab(id) {
     return !!tabs[id];
 }
@@ -69,6 +89,24 @@ export function hasTab(id) {
 export function removeTab(id) {
     delete tabs[id];
     delete lastTabsState[id];
+}
+
+// a cross-window move erases every link to and from the tab, with no event (docs/OPENER-BEHAVIOR.md §7, §9)
+export function clearTabOpeners(id) {
+    delete tabs[id]?.openerTabId;
+
+    for (const tab of Object.values(tabs)) {
+        if (tab.openerTabId === id) {
+            delete tab.openerTabId;
+        }
+    }
+}
+
+// who points at these tabs, by the mirror: the recreate re-points them at the copies
+export function getTabChildren(tabIds) {
+    const ids = new Set(tabIds);
+
+    return Object.values(tabs).filter(tab => ids.has(tab.openerTabId));
 }
 
 // groupId
@@ -241,7 +279,7 @@ export function getTabSession(id, key = null) {
 
 export async function loadTabSession(tab, includeFavIconUrl = true, includeThumbnail = true) {
     try {
-        setTab(tab);
+        mirrorTab(tab);
 
         await Promise.all([
             loadTabGroup(tab.id),

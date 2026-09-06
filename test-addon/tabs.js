@@ -71,6 +71,7 @@ export class TabsTest extends Test {
         this.squareByGroupId = new Map();
         this.unknownCount = 0;
         this.internal = [];
+        this.tracked = new Set();
 
         this.listenInternally();
     }
@@ -87,7 +88,7 @@ export class TabsTest extends Test {
             const handler = (...args) => {
                 const windowId = windowOf(args);
 
-                if (this.win === null || windowId === undefined || windowId === this.win) {
+                if (this.win === null || windowId === undefined || windowId === this.win || this.tracked.has(windowId)) {
                     this.bump();
                 }
             };
@@ -95,6 +96,14 @@ export class TabsTest extends Test {
             target.addListener(handler);
             this.internal.push({target, handler});
         }
+    }
+
+    trackWindow(windowId) {
+        this.tracked.add(windowId);
+    }
+
+    untrackWindow(windowId) {
+        this.tracked.delete(windowId);
     }
 
     bind(tabId, name) {
@@ -195,6 +204,14 @@ export class TabsTest extends Test {
         }
 
         const tabs = await this.query();
+
+        for (const windowId of this.tracked) {
+            if (windowId !== this.win) {
+                const extra = await browser.tabs.query({windowId}).catch(() => []);
+                tabs.push(...extra.sort((a, b) => a.index - b.index));
+            }
+        }
+
         const groups = browser.tabGroups ? await browser.tabGroups.query({windowId: this.win}) : [];
 
         return {tabs, groups};

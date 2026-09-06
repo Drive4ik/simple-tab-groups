@@ -19,9 +19,14 @@
         "tabGroups",
         "tabHide",
         "sessions",
+        "storage",
         "browserSettings",
         "menus",
-        "https://example.com/*"
+        "cookies",
+        "contextualIdentities",
+        "webRequest",
+        "webRequestBlocking",
+        "<all_urls>"
     ],
 
     "optional_permissions": [

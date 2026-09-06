@@ -15,7 +15,7 @@ export const DEBUG = Object.freeze({
     AUTO: 'auto',
 });
 
-export const MAX_URL_BYTE_LENGTH = 1048576 - 4; // 1MB - 4 byte (don't know why it's 4 bytes smaller)
+export const MAX_URL_LENGTH = 1048572; // bytes of the serialized url, all ASCII, so also its characters: the last length accepted for the stub page shape, docs/CREATE-TABS-BEHAVIOR.md §20
 
 export const ACTIVE_SYMBOL = '〇';
 export const DISCARDED_SYMBOL = '✱';
@@ -210,10 +210,10 @@ export const POPUP_SETTINGS_MENU_ITEMS = Object.freeze([
     },
 ]);
 
-export const TREE_TABS_EXTENSIONS = Object.freeze([
+/* export const TREE_TABS_EXTENSIONS = Object.freeze([
     'treestyletab@piro.sakura.ne.jp',
     '{8d808887-ed13-4931-9f5a-4c0bff979a5a}',
-]);
+]); */
 
 export const CONFLICTED_EXTENSIONS_FOR_REOPEN_TAB_IN_CONTAINER = Object.freeze([
     '@testpilot-containers', // https://addons.mozilla.org/firefox/addon/multi-account-containers/

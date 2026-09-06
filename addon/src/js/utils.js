@@ -226,9 +226,14 @@ export function isUrlAllowToCreate(url) {
 }
 
 export function isUrlLengthValid(url, out = {}) {
-    out.byteLength = encodeToBytes(url).length;
-    out.maxByteLength = Constants.MAX_URL_BYTE_LENGTH;
-    return out.byteLength <= out.maxByteLength;
+    out.length = url.length;
+    out.maxLength = Constants.MAX_URL_LENGTH;
+    return out.length <= out.maxLength;
+}
+
+const allowNavigateDataUrlRegexp = /^data:(image\/(?!svg\+xml[;,])[^;,]*|application\/pdf|application\/json|text\/json)[;,]/i;
+export function isDataUrlAllowToNavigate(url) {
+    return allowNavigateDataUrlRegexp.test(url);
 }
 
 export function setUrlSearchParams(url, params = {}, baseUrl = Constants.STG_BASE_URL) {
@@ -329,8 +334,8 @@ export async function dataToUUIDv8(data) {
     return bytesToUUIDv8(await sha256Bytes(data));
 }
 
-export function flatTabs(tabCollections) {
-    return tabCollections.flatMap(({tabs}) => tabs);
+export function flatTabs(...tabCollections) {
+    return tabCollections.flat().flatMap(({tabs}) => tabs);
 }
 
 export function getLastActiveTab(tabs) {

@@ -273,15 +273,15 @@ async function openInGroupNow(groupId, info) {
             tabToCreate.windowId = group.tabs[0]?.windowId;
         }
 
-        const createdTabs = await Tabs.createMultiple(Groups.setNewTabsParams(tabsToCreate, group), true, {
+        const {created} = await Tabs.createMultiple(Groups.setNewTabsParams(tabsToCreate, group), {
             startIndex: await Tabs.getNewTabIndex(group.tabs),
         });
 
         if (!Groups.isLoaded(groupId) && !info.button.RIGHT) {
             log.log('hiding created tabs because group is not loaded and left click');
             // the startIndex anchor can land inside a live span (docs/TABGROUPS-BEHAVIOR.md §7)
-            await GroupsNative.ungroup(createdTabs);
-            await Tabs.hide(createdTabs, true);
+            await GroupsNative.ungroup(created);
+            await Tabs.hide(created, true);
         }
 
         await Browser.actionLoading(false);
@@ -289,7 +289,7 @@ async function openInGroupNow(groupId, info) {
         Tabs.sendUpdatedGroup(groupId);
 
         if (info.button.RIGHT) {
-            await Groups.apply(undefined, groupId, createdTabs[0].id);
+            await Groups.apply(undefined, groupId, created[0].id);
         } else {
             // Notification(['tabsCreatedCount', tabsToCreate.length]);
         }
@@ -365,9 +365,9 @@ async function createNewGroupNow(info) {
 
             if (tabsToCreate.length) {
                 const newGroup = await Groups.add(undefined, undefined, folder.title);
-                const createdTabs = await Tabs.createMultiple(Groups.setNewTabsParams(tabsToCreate, newGroup), true);
+                const {created} = await Tabs.createMultiple(Groups.setNewTabsParams(tabsToCreate, newGroup));
                 // appended at the end of the strip - they can't be in a live group (docs/TABGROUPS-BEHAVIOR.md §10)
-                await Tabs.hide(createdTabs, true);
+                await Tabs.hide(created, true);
                 Tabs.sendUpdatedGroup(newGroup.id);
                 groupsCreatedCount++;
             }

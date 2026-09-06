@@ -6,7 +6,7 @@ import Listeners from '/js/listeners.js?runtime.onMessage';
 const autoCloseTimer = self.setTimeout(closeTab, 30_000);
 
 Listeners.runtime.onMessage.add(({action, url}) => {
-    if (action === 'long-url') {
+    if (action === 'real-url') {
         self.clearTimeout(autoCloseTimer);
         self.location.replace(url);
     }

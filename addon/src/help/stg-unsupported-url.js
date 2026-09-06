@@ -1,20 +1,39 @@
 
 import '/js/lang.js?translate-page';
+import Listeners from '/js/listeners.js?runtime.onMessage';
+import * as Utils from '/js/utils.js';
 
 const $ = document.querySelector.bind(document);
 const params = new URLSearchParams(self.location.search);
-const UNSUPPORTED_URL = params.get('url');
 
-if (UNSUPPORTED_URL) {
-    $('#unsupportedUrlBlock').innerText = document.title = UNSUPPORTED_URL;
-    $('#copyButton').addEventListener('click', copyUrl);
-    $('#closeTab').addEventListener('click', closeTab);
+let unsupportedUrl = '';
+
+$('#copyButton').addEventListener('click', copyUrl);
+$('#closeTab').addEventListener('click', closeTab);
+
+if (params.has('url')) {
+    showUrl(params.get('url'));
 } else {
-    closeTab();
+    const autoCloseTimer = self.setTimeout(closeTab, 30_000);
+
+    Listeners.runtime.onMessage.add(({action, url}) => {
+        if (action === 'real-url') {
+            self.clearTimeout(autoCloseTimer);
+            showUrl(url);
+        }
+    });
+}
+
+function showUrl(url) {
+    unsupportedUrl = url;
+
+    $('#unsupportedUrlBlock').innerText = document.title = Utils.isUrlLengthValid(url)
+        ? url
+        : Utils.sliceText(url, 50);
 }
 
 async function copyUrl() {
-    await navigator.clipboard.writeText(UNSUPPORTED_URL);
+    await navigator.clipboard.writeText(unsupportedUrl);
 }
 
 async function closeTab() {

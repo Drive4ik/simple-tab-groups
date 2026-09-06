@@ -36,10 +36,11 @@ A run is not unattended:
   sees it, and waits. Look at the tab bar, then answer in the same console:
   `T.visualAnswer('only gr2 is visible')`. `T.visualAnswer()` with no argument records "not looked
   at" and moves on. The answer goes into the report under its question.
-- **Restarts.** R3.05, R4.03, R14.08 and R14.10 stop and ask for a browser restart. The scene window is left open on
-  purpose — keep it. Restart Firefox, load the add-on again in about:debugging, then run
-  `T.continue()`: the harness finds the scene window by the names in the tab urls and finishes the
-  test in the same table.
+- **Restarts.** R3.05, R4.03, R14.08, R14.10 and R19.01 stop and ask for a browser restart
+  (R19.01 — for a complete quit: the shutdown itself is its subject; the exact ask is printed by
+  the test). The scene window is left open on purpose — keep it. Restart Firefox, load the add-on
+  again in about:debugging, then run `T.continue()`: the harness finds the scene window by the
+  names in the tab urls and finishes the test in the same table.
 
 `T.continue()` also picks a run back up after an add-on reload or a crash — the queue and everything
 measured so far are checkpointed after every test. `T.stop()` ends a run after the current test and
@@ -66,10 +67,14 @@ writes into the report whatever it had to clean up.
 | `round-11` | `browser.menus` registration lifecycle: duplicate ids, cascade removal, `removeAll`, bookmark context vs the optional `bookmarks` permission; R11.06 is MANUAL — permission grants and 👁️ looks at a bookmark's context menu |
 | `round-12` | delivery timing of `tabs.onAttached`/`onDetached` against the `tabs.move()` resolve: paced and rapid cross-window ping-pong, hidden and discarded arrays, a move-then-show chain |
 | `round-13` | removing the last VISIBLE tabs of a window that still holds hidden ones: does the window survive, which hidden tab is revealed, which events announce it; pinned and discarded variants |
-| `round-14` | `tab.openerTabId`: set by `tabs.create` / `tabs.update`, cleared with `-1`, the events; what survives hide/show, discard, same-window and cross-window moves, the opener's removal, a browser restart (R14.08); an update to the opener a tab already has, and the saved links applied again after a restart (R14.09–R14.10); tabs created without an opener and linked afterwards — in parallel, one by one, in reverse, and sorted back after linking (R14.11–R14.14); a change of openerTabId alone against `tabs.onUpdated` listeners — the STG `properties` filter and no filter, and whether openerTabId is accepted as a filter value at all (R14.15); the opener leaving the window while the child stays, the child following, and what `tabs.get` reports right inside onDetached/onAttached (R14.16). Meant to be run twice — clean profile, and a profile with Tree Style Tab and no STG |
+| `round-14` | `tab.openerTabId`: set by `tabs.create` / `tabs.update`, cleared with `-1`, the events; what survives hide/show, discard, same-window and cross-window moves, the opener's removal, a browser restart (R14.08); an update to the opener a tab already has, and the saved links applied again after a restart (R14.09–R14.10); tabs created without an opener and linked afterwards — in parallel, one by one, in reverse, and sorted back after linking (R14.11–R14.14); a change of openerTabId alone against `tabs.onUpdated` listeners — the STG `properties` filter and no filter, and whether openerTabId is accepted as a filter value at all (R14.15); the opener leaving the window while the child stays, the child following, and what `tabs.get` reports right inside onDetached/onAttached (R14.16); a pin on a tab with an opener and a child — do the links to and from it survive the pin, a link set on and onto the pinned tab, a tab created with the pinned opener, a `-1` on the pinned tab and on its child, what unpin brings back (R14.17). Meant to be run twice — clean profile, and a profile with Tree Style Tab and no STG |
 | `round-15` | a plain array `tabs.move` to an explicit index, no native groups — the calls `Tabs.ensureSorted` makes to collect a group into a block: gathered at the first mover's own slot with the rest beyond it and a hidden outsider block in between (R15.01), a reversed set gathered at its smallest index (R15.02), movers standing before the target (R15.03) and on both sides of it (R15.04) |
 | `round-16` | what `tabs.create({openerTabId})` accepts — the opener states a recreate path meets: a hidden / hidden+discarded / discarded opener at an explicit index takes the link (R16.01), an opener in another window rejects the call in both directions (R16.02), a removed opener rejects it too (R16.03), a discarded create carries the link (R16.04); OPENER-BEHAVIOR.md §11–§13 |
-| `round-17` | a foreign `tabs.update({openerTabId: -1})` — the call STG clears a group-boundary link with: on a visible child among siblings (R17.01), on a mid-chain parent (R17.02), on a hidden child, then shown back (R17.03), and a clear followed by the same link again (R17.04). Meant to be run twice — clean profile, and a profile with Tree Style Tab and no STG |
+| `round-18` | `sessions.restore()` and `tab.openerTabId` — the API behind Ctrl+Shift+N / Ctrl+Shift+T: a closed window brought back — what the fresh tabs report as their opener, what the session record itself carries, the hidden member on the way back (R18.01); a closed tab restored while its opener is still alive with the same id (R18.02) |
+| `round-19` | browser shutdown seen from inside the addon: are `tabs.onRemoved {isWindowClosing}` / `windows.onRemoved` delivered while the process goes down, does the storage.local get → set chain started in `windows.onRemoved` land (the STG `tabsToRestore` path), do API calls still answer; R19.01 stops and asks to quit the browser completely |
+| `round-20` | what `tabs.create` accepts and what a page of the add-on may navigate to: the url classes it refuses and with which error, and what a create without url opens (R20.01), the accepted classes in a non-default container (R20.02), which `data:` content types a top-level `location.replace` from an extension page reaches (R20.03), `getBackgroundPage()` from an extension page in the default and in another container, and whether the background's `getViews` sees it (R20.04), the exact byte limit of a `tabs.create` url, bytes versus characters (R20.05), which schemes a `webRequest` main_frame listener sees (R20.06), whether a page can still navigate to a url over the limit and hold it as its tab url (R20.07). Needs the `cookies`, `contextualIdentities`, `webRequest` and `<all_urls>` permissions, creates and removes its own container |
+| `round-21` | the first load of a NEW tab: the order of `tabs.onCreated` and a blocking `webRequest.onBeforeRequest`, the distance between them, what `tabs.get` and `sessions.setTabValue` report from inside the request listener, and whether `tabs.onCreated` and the resolve of `tabs.create` still arrive while the listener holds the request. A tab from `tabs.create` (R21.01), the same under a hold (R21.02), `window.open` from a page of the add-on (R21.03). R21.04 and R21.05 are MANUAL, a middle-click on a link in a page of the add-on and in a web page. Needs the `webRequest`, `webRequestBlocking` and `<all_urls>` permissions |
+| `round-22` | a window appears: what its active tab reports from `windows.onCreated` until the first page is loaded, sampled every `TIGHT_POLL_WAIT`, with the state at `WINDOW_READ_WAIT` marked as the moment STG reads a new window. `windows.create` with one http url (R22.01), with three (R22.02), without a url (R22.03), and a closed window brought back by `sessions.restore` (R22.04) |
 
 ## Files
 
@@ -81,8 +86,12 @@ writes into the report whatever it had to clean up.
 | `opener.js` | `class OpenerTest extends TabsTest` — the opener suffix in every cell (`c1→p`), opener readers and setters, `tryStep` for a call that may be refused; shared by the opener rounds |
 | `menus.js` | `class MenusTest extends Test` — `browser.menus` wrappers that return `{ok, error}`, existence probing, the `bookmarks` permission helpers |
 | `grant.html` + `grant.js` | the page R11.06 opens — a button that calls `permissions.request` from a real user click |
+| `sessions.js` | `sessions.getRecentlyClosed` helpers: the session ids known before a close, the record of a window or a tab closed by the test, shared by the rounds that restore through the API |
 | `harness.js` | the runner, checkpoints, `globalThis.T` |
 | `tab.html` + `tab.js` | the page every scene tab loads — it names itself from `?tab=` so the tab strip shows the tab's test name |
+| `navigate.html` + `navigate.js` | a page that calls `location.replace(?to=)` as soon as it loads, round-20 uses it to see which top-level navigations the browser lets an extension page make |
+| `link.html` + `link.js` | a page with one link to `?to=`, for a user's middle-click. On a `{action: 'open'}` message it calls `window.open` on the same address and replies whether the browser returned a window, round-21 |
+| `probe.html` + `probe.js` | a page that asks for the background page (`runtime.getBackgroundPage`, `extension.getBackgroundPage`, `getViews`) and reports the answers to the background with `runtime.sendMessage`, round-20 opens it in the default container and in another one |
 | `results.html` + `results.js` | the report page — it reads the last run out of `localStorage` itself |
 
 A round for another API brings its own domain class next to `tabs.js` and names it:
@@ -183,6 +192,8 @@ Imported by a round from `../constants.js`:
 | `POLL_WAIT` 250 | how often the harness re-checks while waiting |
 | `TIGHT_POLL_WAIT` 25 | how often a stress loop re-checks while draining its own events |
 | `ACTION_WAIT` 500 | the old fixed pause, for a step that wants a number |
+| `HOLD_WAIT` 500 | how long a blocking `webRequest` listener keeps a request suspended when the hold itself is the subject |
+| `WINDOW_READ_WAIT` 1000 | how long STG waits after `windows.onCreated` before it reads the new window, the moment a round marks in its samples |
 | `LOAD_WAIT` 2000 | a real page load, where the number is the fact |
 | `SETTING_WAIT` 100 | a `browserSettings` write to land |
 | `SETTLE_TIMEOUT` 20000 | when waiting gives up and says so in the report |

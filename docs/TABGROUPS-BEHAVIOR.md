@@ -548,6 +548,9 @@ still has members. (R10.01)
 - **The array lands as one contiguous block in array order, starting at the requested index** —
   not tab-by-tab. Movers taken from beyond the target index would come out reversed under a
   one-by-one model; the real result keeps the array order. (R1.19; the §11 landing agrees.)
+  "Starting at the requested index" holds while every other mover stands beyond it: a mover
+  standing before the target slides the block one slot left — MOVE-TABS-BEHAVIOR.md §5
+  (R15.03, R15.04).
 
 - **A block that lands between the members of a live span is swallowed whole.** The first mover —
   the span's own first member — was "moved" to its own slot; the free tabs of the block slid in

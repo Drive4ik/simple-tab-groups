@@ -192,7 +192,7 @@ export class Test {
         return answer;
     }
 
-    async restart(message = 'restart the browser, load the add-on again, then run:  T.continue()') {
+    async restart(message = 'restart Firefox, load the add-on again in about:debugging, then run:  T.continue()') {
         this.flushEvents();
         throw new RestartRequested(message);
     }
@@ -251,6 +251,8 @@ export class Test {
     }
 
     watch(specs, {updatedKeys} = {}) {
+        this.data.updatedKeys = updatedKeys ?? null;
+
         for (const spec of specs) {
             const [namespace, event] = spec.split('.');
             const target = browser[namespace]?.[event];
@@ -294,9 +296,11 @@ export class Test {
     }
 
     flushEvents() {
+        const width = Math.max(22, ...this.queued.map(({spec}) => spec.length + 2));
+
         for (const {at, spec, text} of this.queued) {
             const rendered = typeof text === 'function' ? text() : text;
-            this.data.events.push(`${String(at).padStart(5)}ms  ${spec.padEnd(22)}${rendered}`);
+            this.data.events.push(`${String(at).padStart(5)}ms  ${spec.padEnd(width)}${rendered}`);
         }
 
         this.queued = [];
@@ -369,7 +373,9 @@ export class Test {
             lines.push(...(this.data.events.length ? this.data.events : ['(none)']));
 
             if (this.data.dropped) {
-                lines.push(`(${this.data.dropped} noisy tabs.onUpdated dropped: ${NOISY_UPDATE_KEYS.join('/')})`);
+                lines.push(this.data.updatedKeys
+                    ? `(${this.data.dropped} tabs.onUpdated dropped, only these keys were kept: ${this.data.updatedKeys.join('/')})`
+                    : `(${this.data.dropped} noisy tabs.onUpdated dropped: ${NOISY_UPDATE_KEYS.join('/')})`);
             }
 
             lines.push('```');

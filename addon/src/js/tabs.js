@@ -2,7 +2,7 @@
 import Listeners from '/js/listeners.js\
 ?tabs.onActivated\
 &tabs.onCreated\
-&tabs.onUpdated=[{"properties":["title","status","favIconUrl","hidden","pinned","discarded","audible","groupId"]}]\
+&tabs.onUpdated\
 &tabs.onRemoved\
 &tabs.onMoved\
 &tabs.onDetached\
@@ -39,7 +39,7 @@ const skip = {
     tracking: new Set(),
     removed: new Set(),
 };
-const longUrls = {}; // tabId: url
+const pendingRealUrls = new Map(); // tabId -> url
 
 Listeners.storage.local.onChanged.add(onStorageChanged, {waitListener: false});
 
@@ -128,7 +128,31 @@ export function isSkippedTracking(tab) {
     return skip.tracking.has(extractId(tab));
 }
 
+// the first load of a new tab reaches onBeforeTabRequest a few ms after this event
+// (docs/CREATE-TABS-BEHAVIOR.md §23): the request handler waits for the group decision here
+const pendingOnCreatedById = new Map();
+
 async function onCreated(tab) {
+    const tabId = tab.id;
+    const {promise, resolve} = Promise.withResolvers();
+
+    pendingOnCreatedById.set(tabId, promise);
+
+    try {
+        await processCreated(tab);
+    } catch (error) {
+        logger.logError(['onCreated failed for tab:', tabId], error);
+    } finally {
+        pendingOnCreatedById.delete(tabId);
+        resolve();
+    }
+}
+
+export function waitOnCreated(tabId) {
+    return pendingOnCreatedById.get(tabId) ?? Promise.resolve();
+}
+
+async function processCreated(tab) {
     await Utils.wait(50);
 
     if (skip.removed.has(tab.id)) {
@@ -201,12 +225,12 @@ async function onActivated({tabId, windowId, previousTabId = null}) {
     }
 }
 
-async function processLongUrls(tabId, changeInfo) {
-    if (longUrls[tabId] && isLoaded(changeInfo)) {
+async function processPendingRealUrls(tabId, changeInfo) {
+    if (pendingRealUrls.has(tabId) && isLoaded(changeInfo)) {
         sendMessage(tabId, {
-            action: 'long-url',
-            url: longUrls[tabId],
-        }).finally(() => delete longUrls[tabId]);
+            action: 'real-url',
+            url: pendingRealUrls.get(tabId),
+        }).finally(() => pendingRealUrls.delete(tabId));
     }
 }
 
@@ -216,7 +240,7 @@ async function onUpdated(tabId, changeInfo, tab) {
         return;
     }
 
-    processLongUrls(tabId, changeInfo);
+    processPendingRealUrls(tabId, changeInfo);
 
     if (skip.tracking.has(tab.id)) {
         Cache.setTab(tab);
@@ -225,7 +249,19 @@ async function onUpdated(tabId, changeInfo, tab) {
     }
 
     if (skipTrackingWindows.has(tab.windowId)) {
+        Cache.setTab(tab);
         logger.log(onUpdated, '🛑 skip tracking tab:', tab.id, 'for window:', tab.windowId);
+        return;
+    }
+
+    // the subscription is unfiltered (docs/OPENER-BEHAVIOR.md Implications 9), so the event fires
+    // on every tab property; no tracked key changed - drop it before the wait and the extra
+    // tabs.get. The tab argument already carries the new values, openerTabId included
+    // (docs/OPENER-BEHAVIOR.md §10), and it feeds the mirror, not the diff base: the snapshot may
+    // hold tracked keys of an event that is still waiting to be processed
+    if (!Object.hasOwn(changeInfo, 'groupId') && !Constants.ON_UPDATED_TAB_PROPERTIES.some(key => Object.hasOwn(changeInfo, key))) {
+        Cache.mirrorTab(tab);
+        logger.log(onUpdated, '🛑 skip event without tracked keys:', tab.id, Object.keys(changeInfo));
         return;
     }
 
@@ -238,9 +274,9 @@ async function onUpdated(tabId, changeInfo, tab) {
 
     // an addon operation could start while we were waiting, and the event snapshot is stale by
     // now anyway - diffing it against lastTabsState would fabricate transitions that never
-    // happened. The event is only a signal, the state comes fresh from the browser
+    // happened, and writing it anywhere would roll back what the muted events of that operation
+    // have already recorded. The event is only a signal, the state comes fresh from the browser
     if (skip.tracking.has(tab.id)) {
-        Cache.setTab(tab);
         logger.log(onUpdated, '🛑 skip tracking tab:', tab.id);
         return;
     }
@@ -259,7 +295,7 @@ async function onUpdated(tabId, changeInfo, tab) {
     Cache.setTab(tab);
 
     if (!changeInfo) {
-        log.stop('🛑 changeInfo keys was not changed');
+        log.stop('🛑 changeInfo keys have not changed');
         return;
     }
 
@@ -402,12 +438,6 @@ async function onMoved(tabId, {windowId, fromIndex, toIndex}) {
 
     // a move can change native membership (join/leave a span) - let the mirror resync the window
     GroupsNative.scheduleMirrorWindow(windowId);
-
-    /*
-    if (Cache.getTabGroup(tabId)) {
-        clearTimeout(openerTabTimer);
-        openerTabTimer = setTimeout(() => Tabs.get().catch(() => {}), 500); // load visible tabs of current window for set openerTabId
-    } */
 }
 
 // onDetached/onAttached are never muted per-window: the addon's own moves are muted per-tab, a
@@ -416,6 +446,9 @@ async function onMoved(tabId, {windowId, fromIndex, toIndex}) {
 // late. An unmuted attach is a user move and must be mirrored immediately: GrandRestore reads the
 // window a second later and relies on the arrived tabs being already unbound from their groups
 async function onDetached(tabId, {oldWindowId}) { // notice: called before onAttached
+    // ahead of the mutes: the addon's own moves erase the links just the same (docs/OPENER-BEHAVIOR.md §7, §9)
+    Cache.clearTabOpeners(tabId);
+
     if (skip.removed.has(tabId)) {
         logger.log(onDetached, '🛑 skip removed tab:', tabId);
         return;
@@ -490,14 +523,12 @@ export async function create({url, active, pinned, title, index, windowId, opene
 
     const tab = {};
 
-    let longUrl;
+    let realUrl;
 
     if (url) {
-        if (url.length > 100_000) {
-            if (!Utils.isUrlLengthValid(url)) {
-                longUrl = url;
-                url = Constants.PAGES.HELP.DUMMY;
-            }
+        if (Utils.isDataUrlAllowToNavigate(url)) {
+            realUrl = url;
+            url = Constants.PAGES.HELP.DUMMY;
         }
 
         if (Utils.isUrlAllowToCreate(url)) {
@@ -515,6 +546,11 @@ export async function create({url, active, pinned, title, index, windowId, opene
         } else if (url !== 'about:newtab') {
             tab.url = createUnsupportedUrlPage(url);
         }
+
+        if (tab.url && !Utils.isUrlLengthValid(tab.url)) {
+            realUrl = url;
+            tab.url = Constants.PAGES.HELP.UNSUPPORTED_URL;
+        }
     }
 
     tab.active = !!active;
@@ -523,7 +559,7 @@ export async function create({url, active, pinned, title, index, windowId, opene
         tab.pinned = true;
     }
 
-    if (!tab.active && !tab.pinned && tab.url && !tab.url.startsWith('about:') && !longUrl) {
+    if (!tab.active && !tab.pinned && tab.url && !tab.url.startsWith('about:') && !realUrl) {
         tab.discarded = true;
     }
 
@@ -537,11 +573,11 @@ export async function create({url, active, pinned, title, index, windowId, opene
 
     windowId = Cache.getWindowId(groupId) || windowId;
 
-    if (Number.isSafeInteger(windowId) && windowId >= 1) {
+    if (Number.isSafeInteger(windowId) && windowId > 0) {
         tab.windowId = windowId;
     }
 
-    if (Number.isSafeInteger(openerTabId) && openerTabId >= 1) {
+    if (Number.isSafeInteger(openerTabId) && openerTabId > 0) {
         tab.openerTabId = openerTabId;
     }
 
@@ -563,9 +599,9 @@ export async function create({url, active, pinned, title, index, windowId, opene
 
     GroupsNative.detachTabGroupId(newTab);
 
-    if (longUrl) {
-        longUrls[newTab.id] = longUrl;
-        self.setTimeout(() => delete longUrls[newTab.id], 30_000);
+    if (realUrl) {
+        pendingRealUrls.set(newTab.id, realUrl);
+        self.setTimeout(() => pendingRealUrls.delete(newTab.id), 30_000);
     }
 
     await Cache.setTabSession(newTab, {groupId, groupNativeId, favIconUrl, thumbnail});
@@ -580,144 +616,290 @@ export async function create({url, active, pinned, title, index, windowId, opene
 }
 
 function createUnsupportedUrlPage(url) {
-    const urlObj = createUnsupportedUrlPage.urlObj ??= new URL(Constants.PAGES.HELP.UNSUPPORTED_URL);
-    urlObj.searchParams.set('url', url);
-    return urlObj.href;
+    const unsupportedUrlObj = new URL(Constants.PAGES.HELP.UNSUPPORTED_URL);
+    unsupportedUrlObj.searchParams.set('url', url);
+    return unsupportedUrlObj.href;
 }
 
-function isStrictlyAscendingBy(arr, key) {
-    return arr.every((item, i) => i === 0 || item[key] > arr[i - 1][key]);
-}
+/*
+tabsToCreate - the tabs to create; with createMissing - a mixed list, where only the tabs marked "new: true" are created, the rest are alive already and are kept as they are, an empty slot stays empty
+startIndex - the index of the first created tab in its window, the rest follow it
+createMissing - see tabsToCreate
+sort - true: the tabs come out in the list order - explicit ascending indexes per window, from startIndex or the end of the window, created inactive and activated afterwards, the order enforced. false: every tab lands where its own index says, active as asked, startIndex is refused
+skipCreateListenerAndTracking - true: the created tabs are muted for the addon's own create listener and for the tracking of the sort moves, the caller settles them itself. false: they go through the listener like the user's own tabs
+returns {created, live, aligned}: created - the tabs this call created. live - every tab of the list alive after the call, the created and the kept ones. aligned - live laid over tabsToCreate, undefined where a creation failed
+*/
+export async function createMultiple(
+    tabsToCreate,
+    {
+        startIndex = null,
+        createMissing = false,
+        sort = true,
+        skipCreateListenerAndTracking = true,
+    } = {}) {
 
-// explicit ascending indexes per window: a no-index batch comes out reversed (docs/CREATE-TABS-BEHAVIOR.md §4-5)
-async function assignPlacement(tabsToCreate, startIndex) {
-    const nextIndexByWindow = new Map();
-    let fallbackWindowId = null;
-
-    for (const tab of tabsToCreate) {
-        tab.windowId = Cache.getWindowId(tab.groupId) || tab.windowId
-            || (fallbackWindowId ??= await Windows.getLastFocusedNormalWindow());
-
-        if (tab.pinned) {
-            continue;
-        }
-
-        tab.active = false;
-
-        tab.index = nextIndexByWindow.get(tab.windowId)
-            ?? startIndex
-            ?? (await browser.tabs.query({windowId: tab.windowId})).length;
-
-        nextIndexByWindow.set(tab.windowId, tab.index + 1);
-    }
-}
-
-export async function createMultiple(tabsToCreate, skipCreateListenerAndTracking = false, {startIndex = null} = {}) {
     if (!Array.isArray(tabsToCreate)) {
         throw new Error('tabs must be an array');
     }
 
-    const log = logger.start(createMultiple, 'count:', tabsToCreate.length, {skipCreateListenerAndTracking, startIndex});
-
-    if (!tabsToCreate.length) {
-        log.stop('no tabs');
-        return [];
+    if (!sort && startIndex !== null) {
+        throw new Error('startIndex is a placement, it contradicts sort: false');
     }
 
-    const tabsToCreateBackup = tabsToCreate.map(tab => ({...tab}));
+    const newTabs = createMissing ? tabsToCreate.filter(tab => tab?.new) : tabsToCreate;
 
-    for (const tab of tabsToCreate) {
-        delete tab.openerTabId;
+    const log = logger.start(createMultiple, 'count:', newTabs.length, {
+        startIndex,
+        createMissing,
+        sort,
+        skipCreateListenerAndTracking,
+    });
+
+    if (!newTabs.length) {
+        log.stop('no tabs to create');
+
+        const aligned = tabsToCreate.map(tab => tab?.new ? undefined : tab);
+
+        return {created: [], live: aligned.filter(Boolean), aligned};
     }
 
-    await assignPlacement(tabsToCreate, startIndex);
+    // explicit ascending indexes per window: a no-index batch comes out reversed (docs/CREATE-TABS-BEHAVIOR.md §4-5)
+    const placements = [];
 
-    const hasTreeTabs = Extensions.hasTreeTabs();
-    const createdTabsByWindow = new Map();
+    {
+        const nextIndexByWindow = new Map();
+        let fallbackWindowId = null;
 
-    const settled = await Promise.allSettled(tabsToCreate.map(tab => create(tab, skipCreateListenerAndTracking)));
+        for (const [index, tab] of newTabs.entries()) {
+            // the window is resolved first and for EVERY tab - a pinned one skips only the index arithmetic
+            const windowId = Cache.getWindowId(tab.groupId) || tab.windowId
+                || (fallbackWindowId ??= await Windows.getLastFocusedNormalWindow());
 
-    for (const [index, {status, value: createdTab, reason}] of settled.entries()) {
-        if (status === 'fulfilled') {
-            createdTabsByWindow.getOrInsert(createdTab.windowId, []).push(createdTab);
-
-            if (!createdTab.pinned) {
-                tabsToCreateBackup[index].newId = createdTab.id; // map id for restore openerTabId
+            if (tab.pinned || !sort) {
+                placements[index] = {windowId};
+                continue;
             }
-        } else {
-            log.logError(['failed to create tab:', tabsToCreateBackup[index], 'reason:'], reason);
+
+            const tabIndex = nextIndexByWindow.get(windowId)
+                ?? startIndex
+                ?? (await browser.tabs.query({windowId})).length;
+
+            nextIndexByWindow.set(windowId, tabIndex + 1);
+
+            placements[index] = {windowId, index: tabIndex, active: false};
         }
     }
 
-    // update openerTabIds for newly created tab ids
-    for (const tabToCreate of tabsToCreateBackup) {
-        if (tabToCreate.openerTabId > 0) {
-            const openerTab = tabsToCreateBackup.find(t => t.id === tabToCreate.openerTabId);
-
-            if (tabToCreate !== openerTab && openerTab?.newId) {
-                tabToCreate.newOpenerTabId = openerTab.newId;
-            }
+    // the openers are applied afterwards by applyOpeners (docs/OPENER-BEHAVIOR.md §3): a saved opener may not exist yet
+    let created = await Promise.all(newTabs.map(async (tab, index) => {
+        try {
+            return await create({
+                ...tab,
+                ...placements[index],
+                openerTabId: undefined,
+            }, skipCreateListenerAndTracking);
+        } catch (error) {
+            log.logError(['failed to create tab:', tab, 'reason:'], error);
+            return undefined;
         }
-    }
+    }));
 
-    // sort tabs by previous order in each window and restore openerTabId for newly created tabs
-    for (let [windowId, createdTabs] of createdTabsByWindow) {
-        const needSorting = createdTabs.length > 1 && !isStrictlyAscendingBy(createdTabs, 'index');
+    if (sort) {
+        const createdTabsByWindow = Map.groupBy(created.filter(Boolean), tab => tab.windowId);
 
         // safety net: explicit indexes must keep the order (docs/CREATE-TABS-BEHAVIOR.md §2)
-        if (needSorting) {
-            log.warn('needSorting fired despite explicit indexes, tabs:', createdTabs.map(extractId));
-            const minIndex = Math.min(...createdTabs.map(tab => tab.index));
-            createdTabs = await moveNative(createdTabs, {index: minIndex}, skipCreateListenerAndTracking);
-        }
-
-        if (hasTreeTabs) {
-            log.log('start restoring openerTabIds for tabs (count):', createdTabs.length);
-            // restore openerTabId only if opener tab in the same window
-            const createdTabIds = new Set(createdTabs.map(extractId));
-
-            for (const [index, tab] of createdTabs.entries()) {
-                if (tab.pinned) {
-                    log.log('skip pinned tab', tab.id);
-                    continue;
+        for (const windowTabs of createdTabsByWindow.values()) {
+            const sorted = await ensureSorted(windowTabs, {byMinIndex: true}, skipCreateListenerAndTracking);
+            const sortedById = new Map(sorted.map(tab => [tab.id, tab]));
+            created = created.map(tab => {
+                if (tab?.id && sortedById.has(tab.id)) {
+                    return Cache.applyTabSession(sortedById.get(tab.id));
                 }
-
-                const {newOpenerTabId} = tabsToCreateBackup.find(t => t.newId === tab.id);
-
-                if (createdTabIds.has(newOpenerTabId)) {
-                    try {
-                        [createdTabs[index]] = await tabsAction({action: 'update'}, tab, {
-                            openerTabId: newOpenerTabId,
-                        }); // no need skipListener, addon don't track openerTabId changes
-                    } catch (e) {
-                        log.logError(['failed to restore openerTabId for tab:', tab.id, 'newOpenerTabId:', newOpenerTabId], e);
-
-                        const invalidTabId = /\d+/.exec(e.message)?.[0];
-
-                        if (invalidTabId == tab.id) { // "Invalid tab ID: 123"
-                            createdTabs[index] = null;
-                        } else if (invalidTabId == newOpenerTabId) {
-                            // do nothing
-                        }
-                    }
-                }
-            }
-
-            createdTabs = createdTabs.filter(Boolean);
+                return tab;
+            });
         }
-
-        createdTabsByWindow.set(windowId, createdTabs);
     }
 
-    for (const {active, newId} of tabsToCreateBackup) {
-        if (active === true && newId) {
-            await setActive(newId);
+    for (const [index, tab] of created.entries()) {
+        if (newTabs[index].active === true && tab && !tab.active) {
+            await setActive(tab.id);
         }
     }
+
+    let next = 0;
+
+    const aligned = createMissing
+        ? tabsToCreate.map(tab => tab?.new ? created[next++] : tab)
+        : created;
 
     log.stop();
 
-    return [...createdTabsByWindow.values()].flat();
+    return {
+        created: created.filter(Boolean),
+        live: aligned.filter(Boolean),
+        aligned: aligned,
+    };
+}
+
+// the offsets are read from "fromTabs", the links are given to "toTabs" - the same tabs at the same indexes
+export function getOpenersByOffset(fromTabs, toTabs = fromTabs) {
+    if (fromTabs.length !== toTabs.length) {
+        throw new Error('fromTabs and toTabs must have the same length');
+    }
+
+    const openers = new Map;
+
+    // dont't do fromTabs.filter(Boolean) because the indexes must match toTabs
+    for (const [index, tab] of fromTabs.entries()) {
+        if (tab?.openerOffset && toTabs[index]) {
+            openers.set(toTabs[index], toTabs[index + tab.openerOffset]);
+        }
+    }
+
+    return openers;
+}
+
+export function getOpenersById(tabs) {
+    const openers = new Map;
+    const byId = new Map(tabs.map(tab => [tab?.id, tab]));
+
+    for (const tab of tabs) {
+        if (tab?.openerTabId > 0) {
+            openers.set(tab, byId.get(tab.openerTabId));
+        }
+    }
+
+    return openers;
+}
+
+export function getOpeners(tabs) {
+    return new Map([...getOpenersById(tabs), ...getOpenersByOffset(tabs)]);
+}
+
+// "openerOffset" is always the last key of a saved tab (see prepareForSaveTab) - delete + add keeps it there
+export function withOffsets(tabs, openers = getOpeners(tabs), {removeIds = false} = {}) {
+    return tabs.map((tab, index) => {
+        const openerIndex = tabs.indexOf(openers.get(tab));
+
+        tab = {...tab};
+
+        delete tab.openerOffset;
+
+        if (removeIds) {
+            delete tab.id;
+            delete tab.openerTabId;
+        }
+
+        if (openerIndex >= 0 && openerIndex !== index) {
+            tab.openerOffset = openerIndex - index;
+        }
+
+        return tab;
+    });
+}
+
+// the single writer of the links; the browser is the judge - a refused link costs nothing,
+// the tab stays (docs/OPENER-BEHAVIOR.md §3, §7, Implications 10). Every accepted write feeds
+// the mirror right here: Cache.getTabChildren and the tabsToRestore of a closing window read
+// the links from it
+async function setOpeners(links) {
+    const updated = new Map;
+
+    if (links.length) {
+        logger.log(setOpeners, links);
+
+        await Promise.all(links.map(async ([tabId, openerTabId]) => {
+            try {
+                const tab = await browser.tabs.update(tabId, {openerTabId});
+                GroupsNative.detachTabGroupId(tab);
+                Cache.mirrorTab(tab);
+                updated.set(tabId, tab);
+            } catch (e) {
+                logger.warn('cant set opener', openerTabId, 'for tab', tabId, e);
+            }
+        }));
+    }
+
+    return updated;
+}
+
+/*
+savedTabs - the tabs as they were saved, with "openerOffset" relative to this very list
+aligned - the "aligned" list createMultiple returned for savedTabs: the browser tabs at the same indexes
+every live tab gets its saved opener, without comparing with the current one: the tab objects may be stale by now,
+and re-applying the link a tab already has is a no-op for a tree extension (docs/OPENER-BEHAVIOR.md T5); a link is never removed
+*/
+export async function applyOpeners(savedTabs, aligned) {
+    const links = [];
+
+    for (const [tab, opener] of getOpenersByOffset(savedTabs, aligned)) {
+        if (opener && opener.id !== tab.id && opener.windowId === tab.windowId) {
+            links.push([tab.id, opener.id]);
+        }
+    }
+
+    await setOpeners(links);
+}
+
+// the tail of a restore, after createMultiple: the group's live tabs are sorted into the saved
+// order, then the native groups - a loaded group gets GroupsNative.apply over its WHOLE live list,
+// an unloaded one is stripped (the sort can drop hidden tabs onto live-member slots,
+// docs/TABGROUPS-BEHAVIOR.md §11, §12) and hidden - and the links go last: sort first, link last
+// (docs/OPENER-BEHAVIOR.md Implications 8)
+export async function settleGroupTabs(groupId, savedTabs, {live, aligned}) {
+    const tabs = await ensureSorted(live);
+
+    if (Groups.isLoaded(groupId)) {
+        const {group} = await Groups.load(groupId, true);
+
+        await GroupsNative.apply(Cache.getWindowId(groupId), group)
+            .catch(logger.onCatch(['cant apply native groups', groupId], false));
+    } else {
+        await GroupsNative.ungroup(tabs);
+        await hide(tabs, true);
+    }
+
+    await applyOpeners(savedTabs, aligned);
+
+    return tabs.map(Cache.applyTabSession);
+}
+
+// docs/OPENER-BEHAVIOR.md "How STG carries the link" - A transfer (§3, §6, §7, Implications 10)
+// a copy that could not be created is an empty slot in the result: its original stays where it is, with its links
+export async function recreate(tabs, buildTabFunc, skipListener = true, silentRemove = true) {
+    const log = logger.start(recreate, 'tabs:', tabs.map(extractId), {skipListener, silentRemove});
+
+    const {aligned: newTabs} = await createMultiple(tabs.map(buildTabFunc), {sort: false, skipCreateListenerAndTracking: skipListener});
+
+    const newIdByOldId = new Map;
+
+    for (const [index, tab] of tabs.entries()) {
+        if (newTabs[index]) {
+            newIdByOldId.set(tab.id, newTabs[index].id);
+        }
+    }
+
+    const links = [];
+
+    for (const tab of tabs) {
+        if (newIdByOldId.has(tab.id) && tab.openerTabId > 0 && tab.openerTabId !== tab.id) {
+            links.push([newIdByOldId.get(tab.id), newIdByOldId.get(tab.openerTabId) ?? tab.openerTabId]);
+        }
+    }
+
+    for (const child of Cache.getTabChildren(newIdByOldId.keys())) {
+        if (!newIdByOldId.has(child.id)) {
+            links.push([child.id, newIdByOldId.get(child.openerTabId)]);
+        }
+    }
+
+    await setOpeners(links);
+
+    await remove(Array.from(newIdByOldId.keys()), silentRemove);
+
+    log.stop('new tabs:', newTabs.map(tab => tab?.id ?? null));
+
+    return newTabs;
 }
 
 export async function createUrlOnce(url) {
@@ -871,8 +1053,16 @@ export async function getOne(tabId) {
     }
 }
 
-async function getList(tabIds) {
-    return Promise.all(tabIds.map(getOne)).then(tabs => tabs.filter(Boolean));
+async function getList(tabIds, {sort = false} = {}) {
+    let tabs = await Promise.all(tabIds.map(getOne))
+        .then(tabs => tabs.filter(Boolean));
+
+    if (sort) {
+        tabs = [...Map.groupBy(tabs, tab => tab.windowId).values()]
+            .flatMap(windowTabs => windowTabs.toSorted(Utils.sortBy('index')));
+    }
+
+    return tabs;
 }
 
 export async function createTempActiveTab(windowId, createPinnedTab = true, newTabUrl) {
@@ -992,6 +1182,8 @@ export function move(...args) {
 }
 
 async function moveNow(tabIds, groupId, params = {}) {
+    params.sort ??= true;
+
     const log = logger.start(moveNow, {tabIds, groupId, params});
 
     const groupWindowId = Cache.getWindowId(groupId);
@@ -1002,8 +1194,9 @@ async function moveNow(tabIds, groupId, params = {}) {
         return [];
     }
 
-    let tabs = await getList(tabIds);
+    let tabs = await getList(tabIds, {sort: params.sort});
     tabs = await Promise.all(tabs.map(tab => Cache.loadTabSession(tab, true, settings.showTabsWithThumbnailsInManageGroups)));
+    tabs.forEach(fillEmptyUrl);
 
     if (tabs.length) {
         tabIds = tabs.map(extractId);
@@ -1053,54 +1246,60 @@ async function moveNow(tabIds, groupId, params = {}) {
 
     log.log('active tabs', activeTabs, 'tabs to move COUNT:', tabs.length);
 
-    if (tabs.length) {
-        const destGroupNativeId = resolveDestSubGroupId(group, groupWindowId, tabs, params.newTabIndex);
+    let destGroupNativeId = null;
+    let membershipSnapshot = null;
 
-        await activateOtherTabs(activeTabs, tabs, windowId, log);
-        activeTabs.length = 0; // reset active tabs
+    try {
+        if (tabs.length) {
+            destGroupNativeId = resolveDestSubGroupId(group, groupWindowId, tabs, params.newTabIndex);
 
-        // the movers' sub-group fate is decided on the ORIGINAL tabs (a drop onto a sub-group
-        // tab is dictated by destGroupNativeId instead): the container recreation below swaps
-        // tab ids and pre-binds the new tab to the target group, which would hide it from the
-        // snapshot
-        const membershipSnapshot = destGroupNativeId
-            ? null
-            : await GroupsNative.snapshotMembership(tabs, groups, groupId);
+            await activateOtherTabs(activeTabs, tabs, windowId, log);
+            activeTabs.length = 0; // reset active tabs
 
-        tabs = await recreateTabsForContainer(tabs, group, windowId, activeTabs, membershipSnapshot, skippedTabs, log);
+            // the movers' sub-group fate is decided on the ORIGINAL tabs (a drop onto a sub-group
+            // tab is dictated by destGroupNativeId instead): the container recreation below swaps
+            // tab ids and maps the snapshot onto the copies
+            membershipSnapshot = destGroupNativeId
+                ? null
+                : await GroupsNative.snapshotMembership(tabs, groups, groupId);
 
-        tabs = await moveNative(tabs, {
-            index: params.newTabIndex ?? await resolveMoveIndex(groupId, windowId, tabs),
-            windowId,
-        });
-
-        if (groupWindowId) {
-            await show(tabs.filter(tab => tab.hidden));
-        } else {
-            // the anchor can drop any mover, hidden ones included, onto a live-member slot
-            // (docs/TABGROUPS-BEHAVIOR.md §1, §4 R2.14, §11, §20) - strip the whole set
-            await GroupsNative.ungroup(tabs);
-            await hide(tabs.filter(tab => !tab.hidden));
+            tabs = await recreateTabsForContainer(tabs, group, activeTabs, membershipSnapshot, skippedTabs, log);
         }
 
-        await Promise.all(tabs.map(tab => Cache.setTabGroup(tab.id, groupId)));
+        if (tabs.length) {
+            tabs = await moveNative(tabs, {
+                index: params.newTabIndex ?? await resolveMoveIndex(groupId, windowId, tabs),
+                windowId,
+            });
 
-        if (destGroupNativeId) {
-            // dropped onto a tab of an unloaded group's sub-group - it wins over the carried membership
-            await Promise.allSettled(tabs.map(tab => {
-                tab.groupNativeId = destGroupNativeId;
-                return Cache.setTabNativeGroupId(tab.id, destGroupNativeId);
-            }));
-        } else {
-            await GroupsNative.restoreMembership(group, tabs, membershipSnapshot);
+            if (groupWindowId) {
+                await show(tabs.filter(tab => tab.hidden));
+            } else {
+                // the anchor can drop any mover, hidden ones included, onto a live-member slot
+                // (docs/TABGROUPS-BEHAVIOR.md §1, §4 R2.14, §11, §20) - strip the whole set
+                await GroupsNative.ungroup(tabs);
+                await hide(tabs.filter(tab => !tab.hidden));
+            }
+
+            await Promise.all(tabs.map(tab => Cache.setTabGroup(tab.id, groupId)));
+
+            if (destGroupNativeId) {
+                // dropped onto a tab of an unloaded group's sub-group - it wins over the carried membership
+                await Promise.allSettled(tabs.map(tab => {
+                    tab.groupNativeId = destGroupNativeId;
+                    return Cache.setTabNativeGroupId(tab.id, destGroupNativeId);
+                }));
+            } else {
+                await GroupsNative.restoreMembership(group, tabs, membershipSnapshot);
+            }
+
+            Groups.sendUpdatedAll();
+
+            log.log('end moving');
         }
-
-        Groups.sendUpdatedAll();
-
-        log.log('end moving');
+    } finally {
+        continueTracking(skippedTabs);
     }
-
-    continueTracking(skippedTabs);
 
     if (showPinnedMessage) {
         log.log('notify pinnedTabsAreNotSupported');
@@ -1191,9 +1390,9 @@ async function activateOtherTabs(activeTabs, movingTabs, windowId, log) {
                 activeTabNotInGroup = !Cache.getWindowGroup(activeTab.windowId);
             }
 
-            log.log('create condition', {
+            log.log('create temp tab condition:', {
                 differentWindows,
-                otherHiddenAndVisibleTabsInActiveTabWindow,
+                otherHiddenAndVisibleTabsInActiveTabWindowCount: otherHiddenAndVisibleTabsInActiveTabWindow.length,
                 activeTabIsLastInSrcGroup,
                 activeTabIsInLoadedGroup,
                 activeTabNotInGroup,
@@ -1211,36 +1410,46 @@ async function activateOtherTabs(activeTabs, movingTabs, windowId, log) {
     }));
 }
 
-async function recreateTabsForContainer(tabs, group, windowId, activeTabs, membershipSnapshot, skippedTabs, log) {
-    const tabIdsToRemove = [];
-    const newTabParams = Groups.getNewTabParams(group);
+async function recreateTabsForContainer(tabs, group, activeTabs, membershipSnapshot, skippedTabs, log) {
+    const containerParams = Groups.getContainerParams(group);
+    const containerOf = new Map(tabs.map(tab => [tab, getNewTabContainer(tab, containerParams)]));
+    const tabsToRecreate = tabs.filter(tab => tab.cookieStoreId !== containerOf.get(tab));
 
-    tabs = await Promise.all(tabs.map(async tab => {
-        const newTabContainer = getNewTabContainer(tab, group);
+    if (!tabsToRecreate.length) {
+        activeTabs.push(...tabs.filter(tab => tab.active));
+        return tabs;
+    }
 
-        if (tab.cookieStoreId === newTabContainer) {
+    log.log('recreating tabs for new containers, count:', tabsToRecreate.length);
+
+    const newTabs = await recreate(tabsToRecreate, tab => ({
+        ...tab,
+        cookieStoreId: containerOf.get(tab),
+        groupId: undefined,
+        groupNativeId: undefined,
+        active: false,
+    }), true);
+
+    skipTracking(newTabs.filter(Boolean), skippedTabs);
+
+    const newTabByOldId = new Map(tabsToRecreate.map((tab, index) => [tab.id, newTabs[index]]));
+
+    return tabs.flatMap(tab => {
+        if (!newTabByOldId.has(tab.id)) {
             if (tab.active) {
                 activeTabs.push(tab);
             }
-            return tab;
-        } else {
-            tab.cookieStoreId = newTabContainer;
+
+            return [tab];
         }
 
-        log.log('create new tab with newTabContainer', newTabContainer);
+        const newTab = newTabByOldId.get(tab.id);
 
-        tabIdsToRemove.push(tab.id);
-
-        const newTab = await create({
-            ...tab,
-            ...Cache.getTabSession(tab.id), // apply session, because we can move tab from onBeforeTabRequest
-            active: false,
-            openerTabId: null,
-            windowId,
-            ...newTabParams,
-        }, true);
-
-        skipTracking([newTab], skippedTabs);
+        if (!newTab) {
+            continueTracking([tab], skippedTabs);
+            log.log('cant move tab, the copy was not created', tab.id);
+            return [];
+        }
 
         if (membershipSnapshot?.has(tab.id)) {
             membershipSnapshot.set(newTab.id, membershipSnapshot.get(tab.id));
@@ -1251,12 +1460,8 @@ async function recreateTabsForContainer(tabs, group, windowId, activeTabs, membe
             activeTabs.push({...newTab, active: true});
         }
 
-        return newTab;
-    }));
-
-    await remove(tabIdsToRemove, true);
-
-    return tabs;
+        return [newTab];
+    });
 }
 
 async function applyGroupAndNotify(group, groupId, windowId, tabs, activeTabs, params, log) {
@@ -1313,39 +1518,24 @@ export async function moveNative(tabs, moveProperties = {}, skipTrackingFlag = f
     tabs = await Promise.all(tabs.map(tab => Cache.loadTabSession(tab, true, true)));
     const tabsBeforeMoveMap = new Map(tabs.map(tab => [tab.id, tab]));
 
-    let updateOpenerTabIds = moveProperties.windowId && Extensions.hasTreeTabs();
-    const openerTabIds = {};
-
-    if (updateOpenerTabIds) {
-        tabs.forEach(tab => openerTabIds[tab.id] = tab.openerTabId);
-        updateOpenerTabIds = tabs.some(tab => tab.windowId !== moveProperties.windowId);
-    }
-
     tabs = await tabsAction({action: 'move', skipTrackingFlag}, tabs, moveProperties);
 
-    if (updateOpenerTabIds) {
-        log.log('updating openerTabIds...');
+    /* a cross-window move erases the opener even when it moved along - restore it manually;
+    the browser is the judge: an opener that is in the tab's new window is accepted, one
+    left in another window is refused (docs/OPENER-BEHAVIOR.md §7, §9) */
+    const links = [];
 
-        const tabIds = tabs.map(extractId);
+    for (const tab of tabs) {
+        const beforeMove = tabsBeforeMoveMap.get(tab.id);
 
-        tabs = await Promise.all(tabs.map(async tab => {
-            if (openerTabIds[tab.id] > 0 && tabIds.includes(openerTabIds[tab.id])) {
-                /* Tabs moved across windows always lose their openerTabId even
-                if it is also moved to the same window together, thus we need
-                to restore it manually.
-                https://github.com/piroor/treestyletab/issues/2546#issuecomment-733488187 */
-                try {
-                    [tab] = await tabsAction({action: 'update'}, tab, {
-                        openerTabId: openerTabIds[tab.id],
-                    });
-                } catch {
-                    //
-                }
-            }
-
-            return tab;
-        }));
+        if (beforeMove?.windowId !== tab.windowId && beforeMove?.openerTabId > 0 && beforeMove.openerTabId !== tab.id) {
+            links.push([tab.id, beforeMove.openerTabId]);
+        }
     }
+
+    const updated = await setOpeners(links);
+
+    tabs = tabs.map(tab => updated.get(tab.id) ?? tab);
 
     // BUG brorser.session values are lost after moving DISCARDED tabs to ANOTHER window
     const tabAfterMoveNeedFixing = tabAfterMove => {
@@ -1446,9 +1636,11 @@ async function tabsAction({action, skipTrackingFlag = false, silentRemove = fals
         }
     }
 
-    if (skipTrackingFlag) {
-        skipTracking(tabIds);
-    }
+    const skipped = skipTrackingFlag
+        ? new Set(tabIds).difference(skip.tracking)
+        : new Set;
+
+    skipTracking(skipped);
 
     async function sendOneByOne() {
         const settled = await Promise.allSettled(tabIds.map(tabId => {
@@ -1496,9 +1688,7 @@ async function tabsAction({action, skipTrackingFlag = false, silentRemove = fals
             log.throwError('invalid schema config');
         }
     } finally {
-        if (skipTrackingFlag) {
-            continueTracking(tabIds);
-        }
+        continueTracking(skipped);
     }
 
     if (schema.processGroupId) {
@@ -1547,7 +1737,7 @@ export async function reload(tabs, bypassCache = false) {
 export async function setMute(tabs, muted) {
     logger.log('setMute', {muted});
 
-    tabs = await getList(tabs.map(extractId), false, false);
+    tabs = await getList(tabs.map(extractId));
     muted = Boolean(muted);
 
     tabs = tabs.filter(tab => muted ? tab.audible : tab.mutedInfo.muted);
@@ -1578,7 +1768,11 @@ export async function sendMessage(tabId, message = {}) {
     return browser.tabs.sendMessage(tabId, message).catch(() => {});
 }
 
-export function prepareForSave(tabs, options) {
+export function prepareForSave(tabs, options = {}) {
+    if (options.includeOpener !== false) {
+        tabs = withOffsets(tabs);
+    }
+
     return tabs.map(tab => prepareForSaveTab(tab, options));
 }
 
@@ -1589,21 +1783,13 @@ export function prepareForSaveTab(
             includeGroupNativeId = false,
             includeFavIconUrl = false,
             includeThumbnail = false,
-            includeId = true,
+            includeOpener = true,
             includeLastAccessed = true,
         } = {}
     ) {
-    const {id, url, title, cookieStoreId, favIconUrl, openerTabId, groupId, groupNativeId, thumbnail, lastAccessed} = sourceTab;
+    const {url, title, cookieStoreId, favIconUrl, openerOffset, groupId, groupNativeId, thumbnail, lastAccessed} = sourceTab;
 
     const tab = {url};
-
-    if (includeId && id) {
-        tab.id = id;
-
-        if (openerTabId > 0) {
-            tab.openerTabId = openerTabId;
-        }
-    }
 
     if (title) {
         tab.title = title;
@@ -1633,20 +1819,22 @@ export function prepareForSaveTab(
         tab.lastAccessed = lastAccessed;
     }
 
+    // last on purpose: withOffsets rewrites this key on an already saved tab (delete + add puts it last),
+    // and the cloud compares saved tabs as JSON strings - both writers must produce the same key order
+    if (includeOpener && openerOffset) {
+        tab.openerOffset = openerOffset;
+    }
+
     return tab;
 }
 
 export function getNewTabContainer(
-        {url, cookieStoreId, status},
+        {cookieStoreId},
         {newTabContainer = Constants.DEFAULT_COOKIE_STORE_ID, ifDifferentContainerReOpen, excludeContainersForReOpen = []}
     ) {
 
     if (cookieStoreId === newTabContainer || Containers.isTemporary(cookieStoreId)) {
         return cookieStoreId;
-    }
-
-    if (url && !url.startsWith('http') && !url.startsWith('ftp') && status !== browser.tabs.TabStatus.LOADING) {
-        return Constants.DEFAULT_COOKIE_STORE_ID;
     }
 
     if (ifDifferentContainerReOpen) {
@@ -1734,6 +1922,18 @@ export function normalizeUrl(tab) {
     return tab;
 }
 
+// the active tab of a window that has just appeared shows an empty url with status complete for
+// its first tens of ms, the load starts later (docs/CREATE-TABS-BEHAVIOR.md §26)
+export function fillEmptyUrl(tab) {
+    const knownUrl = Cache.getTabSession(tab.id, 'url');
+
+    if (knownUrl && Utils.isUrlEmpty(tab.url) && (isLoading(tab) || tab.active)) {
+        tab.url = Utils.normalizeUrl(knownUrl);
+    }
+
+    return tab;
+}
+
 export function normalizeFavIcon(tab) {
     if (!Utils.isAvailableFavIconUrl(tab.favIconUrl)) {
         tab.favIconUrl = ConstantsBrowser.DEFAULT_FAVICON;
@@ -1784,12 +1984,11 @@ export async function reconcile(groups, allTabs) {
 
         const newTabParams = Groups.getNewTabParams(group);
         const groupWindowId = Cache.getWindowId(group.id) || group.tabs[0]?.windowId;
-
-        let tabs = [];
-        let newTabs = [];
         const sessionPromises = [];
+        const savedTabs = group.tabs;
+        const tabs = [];
 
-        for (const tab of group.tabs) {
+        for (const tab of savedTabs) {
             tab.groupId = group.id;
             tab.cookieStoreId = await Containers.findExistOrCreateSimilar(tab.cookieStoreId, null, containersStorageMap);
 
@@ -1803,14 +2002,12 @@ export async function reconcile(groups, allTabs) {
                 sessionPromises.push(Cache.setTabSession(winTab, tab));
                 tabs.push(winTab);
             } else {
-                tabs.push(null);
-
-                newTabs.push({
+                tabs.push({
                     ...tab,
+                    new: true,
                     windowId: groupWindowId,
                     active: null,
                     index: null,
-                    ...Cache.applySession({}, tab),
                     ...newTabParams,
                 });
             }
@@ -1818,22 +2015,47 @@ export async function reconcile(groups, allTabs) {
 
         await Promise.allSettled(sessionPromises);
 
-        if (newTabs.length) {
-            log.log('new tabs count:', newTabs.length);
-            newTabs = await createMultiple(newTabs, true);
-            tabs = tabs.map(tab => tab ?? newTabs.shift()).filter(Boolean);
-        }
+        const {live, aligned} = await createMultiple(tabs, {createMissing: true});
 
-        group.tabs = tabs;
+        group.tabs = await ensureSorted(live);
 
-        const firstTabIndex = group.tabs[0]?.index;
-        if (Number.isInteger(firstTabIndex)) {
-            log.log('sorting tabs');
-            group.tabs = await moveNative(group.tabs, {index: firstTabIndex}, true);
-        }
+        await applyOpeners(savedTabs, aligned);
     }
 
     log.stop();
 
     return groups;
+}
+
+export async function ensureSorted(tabs, {byMinIndex = false} = {}, skipTrackingFlag = true) {
+    let liveTabs = await getList(tabs.map(extractId));
+
+    const isBlock = liveTabs.every((tab, i) => {
+        if (i === 0) {
+            return true;
+        }
+
+        const prevTab = liveTabs[i - 1];
+
+        if (tab.windowId !== prevTab.windowId) {
+            return false;
+        }
+
+        return tab.index === prevTab.index + 1;
+    });
+
+    const startIndex = byMinIndex
+        ? Math.min(...liveTabs.map(tab => tab.index))
+        : liveTabs[0]?.index;
+
+    const log = logger.start(ensureSorted, 'tabs:', liveTabs.map(extractId), {isBlock, startIndex: String(startIndex)});
+
+    // the array lands as one block in list order around its first tab (docs/MOVE-TABS-BEHAVIOR.md §5)
+    if (!isBlock && Number.isInteger(startIndex)) {
+        liveTabs = await moveNative(liveTabs, {index: startIndex}, skipTrackingFlag);
+    }
+
+    log.stop();
+
+    return liveTabs;
 }

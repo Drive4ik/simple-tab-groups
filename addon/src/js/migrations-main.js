@@ -242,7 +242,7 @@ export default [{
                 group.afterAutoMoveShowNotification = data.showNotificationAfterMoveTab;
             }
 
-            group.tabs = group.tabs.filter(Boolean);
+            group.tabs = Tabs.withOffsets(group.tabs.filter(Boolean), undefined, {removeIds: true});
 
             for (const tab of group.tabs) {
                 if (tab.session) {
@@ -275,6 +275,11 @@ export default [{
                     group[key] = JSON.clone(exampleGroup[key]);
                 }
             }
+        }
+
+        for (const tab of data.pinnedTabs ?? []) {
+            delete tab.id;
+            delete tab.openerTabId;
         }
 
         // defaultGroupProps, by data shape
@@ -357,7 +362,10 @@ export default [{
                     Tabs.normalizeUrl(tab);
                 }
 
-                await Tabs.createMultiple(stgNewTabs, true);
+                const savedTabs = Tabs.withOffsets(stgNewTabs);
+                const {aligned} = await Tabs.createMultiple(stgNewTabs);
+
+                await Tabs.applyOpeners(savedTabs, aligned);
 
                 await Tabs.remove(stgNewTabs);
             }
@@ -436,6 +444,24 @@ export default [{
 
         for (const hotkey of data.hotkeys) {
             hotkey.groupId = getNewGroupId(hotkey.groupId);
+        }
+
+        // the tabs of closed windows waiting to be restored: their groups get the new ids, their id/openerTabId become offsets
+        if (data.tabsToRestore) {
+            for (const tab of data.tabsToRestore) {
+                tab.groupId = getNewGroupId(tab.groupId);
+            }
+
+            data.tabsToRestore = Windows.rebuildTabsToRestore(data.tabsToRestore, tab => tab.groupId);
+
+            if (!data.tabsToRestore.length) {
+                delete data.tabsToRestore;
+
+                if (applyToCurrentInstance) {
+                    // the pre-6 storage key must go away too - migrate() collects the list after this entry runs
+                    this.remove.push('tabsToRestore');
+                }
+            }
         }
 
         if (applyToCurrentInstance) {

@@ -10,6 +10,15 @@ const loadRun = () => JSON.parse(localStorage.getItem(RUN_KEY) ?? 'null');
 const saveRun = state => localStorage.setItem(RUN_KEY, JSON.stringify(state));
 const dropRun = () => localStorage.removeItem(RUN_KEY);
 
+{
+    const state = loadRun();
+
+    if (state?.pending) {
+        state.pending.rebirths = (state.pending.rebirths ?? 0) + 1;
+        saveRun(state);
+    }
+}
+
 const loadRound = round => import(`${browser.runtime.getURL(`tests/${round}.js`)}?v=${Date.now()}`);
 
 async function openResults() {
@@ -44,6 +53,8 @@ async function askUser(test, question) {
 }
 
 async function cleanup(state, test) {
+    globalThis.shutdownProbe?.remove?.();
+
     const closed = await closeHarnessWindows();
     const cleared = [];
 
@@ -89,13 +100,13 @@ async function runTest(state, spec, TestClass, round, {url, quiet}) {
 
     await cleanup(state, test);
 
-    let suspended = false;
+    let suspended = null;
 
     try {
         await spec.run(test);
     } catch (error) {
         if (error instanceof RestartRequested) {
-            suspended = true;
+            suspended = error.message;
         } else {
             test.data.failed = error.message;
         }
@@ -112,7 +123,7 @@ async function runTest(state, spec, TestClass, round, {url, quiet}) {
         console.debug([
             `⏸  ${spec.id} needs a browser restart`,
             'the scene window is left open on purpose — keep it',
-            'restart Firefox, load the add-on again in about:debugging, then run:  T.continue()',
+            suspended,
         ].join('\n'));
 
         return false;
@@ -135,6 +146,8 @@ async function resumeRestart(state) {
     const spec = module.tests.find(test => test.id === data.id);
     const TestClass = module.testClass ?? TabsTest;
     const test = new TestClass({id: data.id, title: data.title, url: spec?.url ?? module.url, round, onQuestion: askUser, data, quiet: module.quiet});
+
+    test.rebirths = state.pending.rebirths ?? 0;
 
     try {
         await test.reattach();
@@ -318,6 +331,7 @@ async function report(title = 'current state') {
 }
 
 function forget() {
+    globalThis.shutdownProbe?.remove?.();
     dropRun();
     return 'checkpoint dropped';
 }

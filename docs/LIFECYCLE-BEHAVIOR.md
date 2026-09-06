@@ -5,9 +5,12 @@ update, enable/disable, browser restart and uninstall. The version system of the
 these facts: when the stored version marker can be missing, when `previousVersion` is available to
 heal it, and which storage survives what.
 
-Facts here are produced by a throwaway two-addon stand (§6), not by `test-addon/` — the addon under
-test is killed by every install and update these facts are about, so it cannot host a harness.
-Markers are `L<n>`; the format is registered in `BEHAVIOR-NOTATION.md` §4 and §7.
+Install/update facts here are produced by a throwaway two-addon stand (§6), not by `test-addon/` —
+the addon under test is killed by every install and update those facts are about, so it cannot
+host a harness; their markers are `L<n>`, the format is registered in `BEHAVIOR-NOTATION.md` §4
+and §7. The shutdown facts (§8) are the exception: the shutdown kills the addon too, but the
+evidence lands in its storage and is read back after the restart, so the regular harness hosts
+them — their markers are the usual `R<round>.<test>`.
 
 Recorded run: 2026-08-07, Firefox 154, clean profile, no Firefox account, MV2 background,
 permanent installs of unsigned zips (`xpinstall.signatures.required=false`), temporary loads via
@@ -109,3 +112,43 @@ e6t8 v1.0  temporary load over installed v1.2 (downgrade): NO onInstalled; sees 
 zltx v1.2  Remove of temporary:     permanent v1.2 restored: onInstalled {update, previousVersion:"1.0",
            temporary:false} +6ms; storage of the id wiped by the temporary's uninstall
 ```
+
+## 8. Browser shutdown delivers the close events, and a storage write started from them lands — R19.01
+
+A quit (≡ menu → Exit) with two windows open: the harness scene window (one tab hidden by
+tabHide) and the user's own window. The probe mirrors the STG `tabsToRestore` path: the close
+events feed an in-memory list, `windows.onRemoved` snapshots it, reads `storage.local` and writes
+the merge back. Delivery was recorded synchronously into the background page's localStorage, the
+async chain proved itself by what was readable from `storage.local` after the restart.
+
+- Every window gets the same close shape as a manual window close: `tabs.onRemoved
+  {isWindowClosing: true}` for **every** tab — the hidden one included — then that window's
+  `windows.onRemoved`.
+- The windows go down one by one (the second window's events came ~75 ms after the first's).
+- The `storage.local.get → set` chain started inside `windows.onRemoved` completes and the write
+  survives the restart — **for the last window too** (get resolved +0 ms, set resolved +1 ms
+  after its `windows.onRemoved`).
+- `browser.windows.getAll()` called inside `windows.onRemoved` still answers during the shutdown:
+  it resolved (1 window left) for the first window. For the last window neither a resolve nor a
+  reject line survived — either the promise never settled or the final localStorage flush lost
+  the tail; the two are indistinguishable from inside the process.
+
+The recorded log (times count from the probe's registration; `foreignA` is the user's window):
+
+```text
++12794ms  tabs.onRemoved  foreign  isWindowClosing:true  [foreignA]
++12794ms  tabs.onRemoved  foreign  isWindowClosing:true  [foreignA]
++12794ms  windows.onRemoved  foreignA  collected tabs: foreign, foreign
++12802ms  storage.local.get resolved  foreignA  +8ms
++12805ms  storage.local.set resolved  foreignA  +11ms
++12847ms  windows.getAll resolved  foreignA  1 window(s) left
++12869ms  tabs.onRemoved  s1  isWindowClosing:true  [scene]
++12869ms  tabs.onRemoved  s2  isWindowClosing:true  [scene]
++12869ms  tabs.onRemoved  sh1  isWindowClosing:true  [scene]
++12870ms  windows.onRemoved  scene  collected tabs: s1, s2, sh1
++12870ms  storage.local.get resolved  scene  +0ms
++12871ms  storage.local.set resolved  scene  +1ms
+```
+
+`storage.local` after the restart:
+`[{"window":"foreignA","tabs":["foreign","foreign"]},{"window":"scene","tabs":["s1","s2","sh1"]}]`.

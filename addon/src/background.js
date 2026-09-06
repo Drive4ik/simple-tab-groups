@@ -105,43 +105,79 @@ const moveTabsBatch = new BatchProcessor(async (tabIds, groupId) => {
     log.stop();
 });
 
-const canceledRequests = new Set;
-const onBeforeTabRequest = catchFunc(async function onBeforeTabRequest({tabId, url, cookieStoreId, originUrl, requestId, frameId}) {
-    const log = logger.start('onBeforeTabRequest', {tabId, url, cookieStoreId, originUrl, requestId, frameId});
+// https://bugzilla.mozilla.org/show_bug.cgi?id=1683646
+// only onBeforeNavigate can detect view-source, but it's need new permission "webNavigation" in manifest
+const canceledRequests = new Map;
+const reopenedForExtension = new Map;
 
-    if (frameId !== 0 || tabId === browser.tabs.TAB_ID_NONE || Containers.isTemporary(cookieStoreId)) {
+async function getRequestedTab(tabId, requestedUrl) {
+    const tab = await Tabs.getOne(tabId);
+
+    if (!tab) {
+        return null;
+    }
+
+    tab.url = requestedUrl;
+
+    if (Utils.isUrlEmpty(tab.url)) {
+        delete tab.title;
+    }
+
+    Cache.applyTabSession(tab);
+
+    return tab;
+}
+
+const onBeforeTabRequest = catchFunc(async function onBeforeTabRequest({
+    tabId,
+    url: requestedUrl,
+    cookieStoreId,
+    originUrl = '',
+    requestId,
+    frameId,
+    method,
+}) {
+    const log = logger.start(onBeforeTabRequest, {
+        tabId,
+        requestedUrl,
+        cookieStoreId,
+        originUrl,
+        requestId,
+        frameId,
+        method,
+    });
+
+    if (frameId !== 0 || tabId === browser.tabs.TAB_ID_NONE) {
         log.stop('exclude');
+        return {};
+    }
+
+    Cache.mirrorTabUrl(tabId, requestedUrl);
+
+    if (Containers.isTemporary(cookieStoreId)) {
+        log.stop('exclude temporary container');
         return {};
     }
 
     if (canceledRequests.has(requestId)) {
         log.stop('stop by requestId', requestId);
-        return {
-            cancel: true,
-        };
+        return {cancel: true};
     }
-
-    originUrl = originUrl || '';
 
     if (originUrl.startsWith(Constants.STG_BASE_URL)) {
         originUrl = 'stg://';
     }
 
+    log.log('final originUrl', originUrl);
+
     if (Tabs.isSkippedTracking(tabId)) {
-        log.stop('🛑 tab was skiped from tracking', {tabId, url, originUrl});
+        log.stop('🛑 tab was skiped from tracking');
         return {};
     }
 
-    if (!Cache.getTabGroup(tabId)) {
-        log.stop("tab doesn't have a group", {tabId, url, originUrl});
-        return {};
-    }
+    await Tabs.waitOnCreated(tabId);
 
-    log.log({tabId, url, originUrl});
-
-    await Utils.wait(100);
-
-    let tab = await Tabs.getOne(tabId);
+    let tab = await getRequestedTab(tabId, requestedUrl);
 
     if (!tab) {
         log.stopWarn('tab not found', tabId);
@@ -153,14 +189,6 @@ const onBeforeTabRequest = catchFunc(async function onBeforeTabRequest({tabId, u
         return {};
     }
 
-    tab.url = url;
-
-    if (Utils.isUrlEmpty(tab.url)) {
-        delete tab.title;
-    }
-
-    Cache.applyTabSession(tab);
-
     if (!tab.groupId) {
         log.stop('tab does not have group id');
         return {};
@@ -168,14 +196,16 @@ const onBeforeTabRequest = catchFunc(async function onBeforeTabRequest({tabId, u
 
     log.log(tab);
 
-    const {
-        group: tabGroup,
-        notArchivedGroups,
-    } = await Groups.load(tab.groupId);
-
+    const canRecreateTab = method === 'GET';
+    const {group: tabGroup, notArchivedGroups} = await Groups.load(tab.groupId);
     const destGroup = Groups.getCatchedForTab(notArchivedGroups, tabGroup, tab);
 
     if (destGroup) {
+        if (!canRecreateTab && Tabs.getNewTabContainer(tab, destGroup) !== tab.cookieStoreId) {
+            log.stop('skip move: only GET request can be reopened in another container', {method, destGroupId: destGroup.id});
+            return {};
+        }
+
         tab = await Tabs.getOne(tabId);
 
         if (!tab) {
@@ -183,12 +213,12 @@ const onBeforeTabRequest = catchFunc(async function onBeforeTabRequest({tabId, u
             return {};
         }
 
-        if (new URL(tab.url).origin !== new URL(url).origin) {
+        if (new URL(tab.url).origin !== new URL(requestedUrl).origin) {
             tab.favIconUrl = null;
             Cache.removeTabThumbnail(tab.id).catch(() => {});
         }
 
-        tab.url = url;
+        tab.url = requestedUrl;
         tab.status = browser.tabs.TabStatus.COMPLETE;
         Cache.setTab(tab);
 
@@ -204,8 +234,17 @@ const onBeforeTabRequest = catchFunc(async function onBeforeTabRequest({tabId, u
         return {};
     }
 
-    const originExt = Extensions.getByUUID(Extensions.extractUUID(originUrl));
-    const originExtEnabled = originExt && Extensions.isEnabled(originExt.id);
+    if (!canRecreateTab) {
+        log.stop('only GET request can be reopened in another container', method);
+        return {};
+    }
+
+    const originExt = Extensions.getByUUID(Extensions.extractUUID(originUrl), true);
+
+    function rememberFor(map, key, ms) {
+        clearTimeout(map.get(key));
+        map.set(key, setTimeout(() => map.delete(key), ms));
+    }
 
     function getNewAddonTabUrl(asInfo) {
         const params = {
@@ -223,7 +262,7 @@ const onBeforeTabRequest = catchFunc(async function onBeforeTabRequest({tabId, u
         return Utils.setUrlSearchParams(Constants.PAGES.HELP.OPEN_IN_CONTAINER, params);
     }
 
-    if (originExtEnabled && Constants.CONFLICTED_EXTENSIONS_FOR_REOPEN_TAB_IN_CONTAINER.includes(originExt.id)) {
+    if (originExt && Constants.CONFLICTED_EXTENSIONS_FOR_REOPEN_TAB_IN_CONTAINER.includes(originExt.id)) {
         let showNotif = storage.ignoreExtensionsForReopenTabInContainer ?? 0;
 
         if (showNotif < 3) {
@@ -246,8 +285,18 @@ const onBeforeTabRequest = catchFunc(async function onBeforeTabRequest({tabId, u
         return {};
     }
 
-    canceledRequests.add(requestId);
-    setTimeout(requestId => canceledRequests.delete(requestId), 2000, requestId);
+    if (Constants.CONFLICTED_EXTENSIONS_FOR_REOPEN_TAB_IN_CONTAINER.some(Extensions.isEnabled)) {
+        await Utils.wait(100);
+
+        tab = await getRequestedTab(tabId, requestedUrl);
+
+        if (!tab) {
+            log.stop('tab was reopened by another extension');
+            return {};
+        }
+    }
+
+    rememberFor(canceledRequests, requestId, 2000);
 
     // this block must be async
     Operations.run('reopen-tab-container', async () => {
@@ -257,21 +306,26 @@ const onBeforeTabRequest = catchFunc(async function onBeforeTabRequest({tabId, u
             ...Groups.getNewTabParams(tabGroup),
         };
 
-        if (originUrl.startsWith('moz-extension')) {
-            if (tab.hidden) {
-                //
-            } else if (originExtEnabled) {
-                if (!ignoreExtForReopenContainer.has(originExt.id)) {
-                    newTabParams.active = true;
-                    newTabParams.url = getNewAddonTabUrl();
-                }
-            }
+        const mayAskUser = !tab.hidden && originExt && !ignoreExtForReopenContainer.has(originExt.id);
+        const reopenKey = mayAskUser ? `${originExt.id} ${requestedUrl}` : null;
+        const alreadyReopened = reopenedForExtension.has(reopenKey);
+
+        if (reopenKey) {
+            rememberFor(reopenedForExtension, reopenKey, 10_000);
         }
 
-        const newTab = await Tabs.create(newTabParams, true);
+        if (alreadyReopened) {
+            log.log('extension reopened the tab in its container again, ask the user', originExt.id);
+            newTabParams.active = true;
+            newTabParams.url = getNewAddonTabUrl();
+        }
 
-        log.log('remove tab', tab);
-        Tabs.remove(tab);
+        const [newTab] = await Tabs.recreate([tab], () => newTabParams, true, false);
+
+        if (!newTab) {
+            log.warn('cant reopen tab in container');
+            return;
+        }
 
         if (tab.hidden) {
             log.log('hide tab', newTab);
@@ -282,9 +336,7 @@ const onBeforeTabRequest = catchFunc(async function onBeforeTabRequest({tabId, u
     });
 
     log.stop('reopen tab');
-    return {
-        cancel: true,
-    };
+    return {cancel: true};
 }, logger);
 
 const onPermissionsAdded = catchFunc(async function onPermissionsAdded(permissions) {
@@ -1260,7 +1312,7 @@ async function createBackup(includeTabFavIcons, includeTabThumbnails, isAutoBack
 
     if (pinnedTabs.length) {
         Extensions.tabsToId(pinnedTabs);
-        data.pinnedTabs = Tabs.prepareForSave(pinnedTabs); // TODO remove from all
+        data.pinnedTabs = Tabs.prepareForSave(pinnedTabs, {includeOpener: false});
     }
 
     data.groups = groups.map(group => {
@@ -1301,6 +1353,21 @@ async function createBackup(includeTabFavIcons, includeTabThumbnails, isAutoBack
 
 // data may not be a full backup, but a partial of it
 async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
+    // before any teardown: a separately downloaded gist restored as a backup holds cloud stubs
+    // {id, uploadToCloud: false} without tabs (migration.js header) - they are not groups and are
+    // dropped; anything else without tabs is a broken file, refuse it while nothing is touched yet
+    data.groups = data.groups?.filter(group => {
+        if (group.uploadToCloud === false && !group.tabs) {
+            return false;
+        }
+
+        if (!group.tabs) {
+            throw new Error(`group "${group.id}" has no tabs and is not a cloud stub`);
+        }
+
+        return true;
+    });
+
     removeEvents();
 
     sendMessageFromBackground('lock-addon');
@@ -1458,7 +1525,7 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
 
         if (data.pinnedTabs.length) {
             Extensions.tabsToUUID(data.pinnedTabs);
-            await Tabs.createMultiple(data.pinnedTabs, true);
+            await Tabs.createMultiple(data.pinnedTabs);
         }
     }
 

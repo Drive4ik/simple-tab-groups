@@ -8,6 +8,7 @@ import * as Containers from '/js/containers.js';
 import * as Utils from '/js/utils.js';
 import * as Tabs from '/js/tabs.js';
 import * as Groups from '/js/groups.js';
+import * as GroupsNative from '/js/groups-native.js';
 import * as Windows from '/js/windows.js';
 import * as Storage from '/js/storage.js';
 import Notification from '/js/notification.js';
@@ -235,9 +236,11 @@ export async function openInTemporaryContainer(info, tab) {
     }
 
     await Tabs.create({
-        ...tab,
+        ...GroupsNative.detachTabGroupId(tab),
         index: null,
         active: info.button.RIGHT,
+        // the original opens its copy: relatedAfterCurrent puts it right after (docs/CREATE-TABS-BEHAVIOR.md §14), a tree makes it a child
+        openerTabId: tab.id,
         cookieStoreId: Constants.TEMPORARY_CONTAINER,
     });
 
