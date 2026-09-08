@@ -281,7 +281,9 @@ async function onUpdated(tabId, changeInfo, tab) {
         return;
     }
 
-    tab = await getOne(tabId);
+    // past the cache: this handler is what moves the cache, and a read with the session would
+    // hand it the cache's own url for a blank tab (fillEmptyUrl)
+    tab = await get(tabId, {withSession: false});
 
     if (!tab) {
         logger.log(onUpdated, '🛑 tab not found:', tabId);
@@ -487,7 +489,7 @@ async function onAttached(tabId, {newWindowId}) { // called when tabs.move()
     // a single moved tab arrives ungrouped, a group moved whole arrives with its membership and
     // the same live id, both without any groupId event (docs/TABGROUPS-BEHAVIOR.md §16, §17) -
     // the arrived tab's own groupId is the only signal
-    const attachedTab = await browser.tabs.get(tabId).catch(() => null);
+    const attachedTab = await get(tabId, {raw: true});
 
     if (attachedTab?.groupId === GroupsNative.TAB_GROUP_ID_NONE) {
         await Cache.removeTabNativeGroupId(tabId).catch(() => {});
@@ -680,6 +682,9 @@ export async function createMultiple(
                 continue;
             }
 
+            // BUG https://bugzilla.mozilla.org/show_bug.cgi?id=1396758
+            // the browser's own count, closing tabs included: a tab the user has just closed holds its slot
+            // for ~110 ms after onRemoved, and query() would leave it out (docs/REMOVE-TABS-BEHAVIOR.md §4)
             const tabIndex = nextIndexByWindow.get(windowId)
                 ?? startIndex
                 ?? (await browser.tabs.query({windowId})).length;
@@ -711,12 +716,7 @@ export async function createMultiple(
         for (const windowTabs of createdTabsByWindow.values()) {
             const sorted = await ensureSorted(windowTabs, {byMinIndex: true}, skipCreateListenerAndTracking);
             const sortedById = new Map(sorted.map(tab => [tab.id, tab]));
-            created = created.map(tab => {
-                if (tab?.id && sortedById.has(tab.id)) {
-                    return Cache.applyTabSession(sortedById.get(tab.id));
-                }
-                return tab;
-            });
+            created = created.map(tab => sortedById.has(tab?.id) ? Cache.applyTabSession(sortedById.get(tab.id)) : tab);
         }
     }
 
@@ -812,7 +812,7 @@ async function setOpeners(links) {
             try {
                 const tab = await browser.tabs.update(tabId, {openerTabId});
                 GroupsNative.detachTabGroupId(tab);
-                Cache.mirrorTab(tab);
+                Cache.mirrorTab(tab, true);
                 updated.set(tabId, tab);
             } catch (e) {
                 logger.warn('cant set opener', openerTabId, 'for tab', tabId, e);
@@ -903,10 +903,12 @@ export async function recreate(tabs, buildTabFunc, skipListener = true, silentRe
 }
 
 export async function createUrlOnce(url) {
-    let [tab] = await browser.tabs.query({
+    // the addon's own page: in a window of any type, with its url as the browser holds it
+    let [tab] = await query({
         url: url.includes('#') ? url.slice(0, url.indexOf('#')) : url,
         hidden: false,
-    });
+        windowType: null,
+    }, {raw: true});
 
     if (tab) {
         const updateProperties = {
@@ -956,9 +958,7 @@ export async function setActive(tabId = null, tabs = []) {
 }
 
 export async function getActive(windowId = browser.windows.WINDOW_ID_CURRENT) {
-    const [activeTab] = await get(windowId, null, null, {
-        active: true,
-    });
+    const [activeTab] = await query({windowId, active: true});
 
     return activeTab;
 }
@@ -982,9 +982,7 @@ export async function getNewTabIndex(tabs) {
 }
 
 export async function getHighlightedIds(windowId = browser.windows.WINDOW_ID_CURRENT, clickedTab = null, pinned = false) {
-    let tabs = await get(windowId, pinned, false, {
-        highlighted: true,
-    });
+    let tabs = await query({windowId, pinned, hidden: false, highlighted: true});
 
     if (clickedTab && !tabs.some(tab => tab.id === clickedTab.id)) { // if clicked tab not in selected tabs - add it
         tabs.push(clickedTab);
@@ -997,65 +995,64 @@ export async function getHighlightedIds(windowId = browser.windows.WINDOW_ID_CUR
     return tabs.map(extractId);
 }
 
-export async function get(
-        windowId = browser.windows.WINDOW_ID_CURRENT,
-        pinned = false,
-        hidden = false,
-        otherProps = {},
-        includeFavIconUrl = false,
-        includeThumbnail = false
-    ) {
-    const query = {
-        windowId,
-        pinned,
-        hidden,
+export async function query(queryInfo = {}, options) {
+    const queryParams = {
         windowType: browser.windows.WindowType.NORMAL,
-        ...otherProps,
+        ...queryInfo,
     };
 
-    for (const key in query) {
-        if (query[key] == null) {
-            delete query[key];
+    for (const key in queryParams) {
+        if (queryParams[key] == null) {
+            delete queryParams[key];
         }
     }
 
-    const log = logger.start(get, query);
+    const log = logger.start(query, queryParams);
 
-    let tabs = await browser.tabs.query(query);
+    const tabs = await prepare(await browser.tabs.query(queryParams), options);
 
-    tabs = tabs.filter(tab => !skip.removed.has(tab.id)); // BUG https://bugzilla.mozilla.org/show_bug.cgi?id=1396758
+    log.stop('count:', tabs.length);
 
-    if (!query.pinned) {
-        tabs.forEach(GroupsNative.detachTabGroupId);
-
-        tabs = await Promise.all(
-            tabs.map(tab => Cache.loadTabSession(normalizeUrl(tab), includeFavIconUrl, includeThumbnail))
-        );
-    }
-
-    tabs = tabs.filter(Boolean);
-
-    log.stop('found tabs count:', tabs.length);
     return tabs;
 }
 
-export async function getOne(tabId) {
-    try {
-        if (skip.removed.has(tabId)) { // BUG https://bugzilla.mozilla.org/show_bug.cgi?id=1396758
-            return null;
-        }
+async function prepare(tabs, {
+    raw = false,
+    withSession = true,
+    includeFavIconUrl = false,
+    includeThumbnail = false,
+} = {}) {
+    // BUG https://bugzilla.mozilla.org/show_bug.cgi?id=1396758
+    // a tab the user closes lingers in tabs.query after onRemoved (docs/REMOVE-TABS-BEHAVIOR.md §4)
+    tabs = tabs.filter(tab => !skip.removed.has(tab.id));
 
-        const tab = await browser.tabs.get(tabId);
-        GroupsNative.detachTabGroupId(tab);
-        return normalizeUrl(tab);
-    } catch {
-        return null;
+    if (raw) {
+        return tabs;
     }
+
+    tabs.forEach(GroupsNative.detachTabGroupId);
+    tabs.forEach(normalizeUrl);
+
+    if (!withSession) {
+        return tabs;
+    }
+
+    tabs = await Promise.all(tabs.map(tab => Cache.loadTabSession(tab, includeFavIconUrl, includeThumbnail)));
+    tabs = tabs.filter(Boolean);
+    tabs.forEach(fillEmptyUrl);
+
+    return tabs;
 }
 
-async function getList(tabIds, {sort = false} = {}) {
-    let tabs = await Promise.all(tabIds.map(getOne))
-        .then(tabs => tabs.filter(Boolean));
+export async function get(tab, options) {
+    const [found] = await list([tab], options);
+    return found;
+}
+
+export async function list(tabs, {sort = false, ...options} = {}) {
+    const found = await Promise.all(tabs.map(tab => browser.tabs.get(extractId(tab)).catch(() => null)));
+
+    tabs = await prepare(found.filter(Boolean), options);
 
     if (sort) {
         tabs = [...Map.groupBy(tabs, tab => tab.windowId).values()]
@@ -1068,7 +1065,7 @@ async function getList(tabIds, {sort = false} = {}) {
 export async function createTempActiveTab(windowId, createPinnedTab = true, newTabUrl) {
     const log = logger.start(createTempActiveTab, {windowId, createPinnedTab, newTabUrl});
 
-    const pinnedTabs = await get(windowId, true, null);
+    const pinnedTabs = await query({windowId, pinned: true}, {withSession: false});
 
     if (pinnedTabs.length) {
         if (!pinnedTabs.some(tab => tab.active)) {
@@ -1128,7 +1125,7 @@ async function addNow(groupId, cookieStoreId, url, title) {
 export async function updateThumbnail(tabId) {
     const log = logger.start(updateThumbnail, {tabId});
 
-    const tab = await getOne(tabId);
+    const tab = await get(tabId, {withSession: false});
 
     if (!tab) {
         log.stop('!tab');
@@ -1194,9 +1191,11 @@ async function moveNow(tabIds, groupId, params = {}) {
         return [];
     }
 
-    let tabs = await getList(tabIds, {sort: params.sort});
-    tabs = await Promise.all(tabs.map(tab => Cache.loadTabSession(tab, true, settings.showTabsWithThumbnailsInManageGroups)));
-    tabs.forEach(fillEmptyUrl);
+    let tabs = await list(tabIds, {
+        sort: params.sort,
+        includeFavIconUrl: true,
+        includeThumbnail: settings.showTabsWithThumbnailsInManageGroups,
+    });
 
     if (tabs.length) {
         tabIds = tabs.map(extractId);
@@ -1329,7 +1328,7 @@ async function moveNow(tabIds, groupId, params = {}) {
 // mover swallows the whole block (§21), and the snapshot taken before carries the sub-groups
 export async function resolveMoveIndex(groupId, windowId, movingTabs) {
     const movingIds = new Set(movingTabs.map(extractId));
-    const groupTabs = (await get(windowId, false, null)).filter(tab => !movingIds.has(tab.id) && tab.groupId === groupId);
+    const groupTabs = (await query({windowId, pinned: false})).filter(tab => !movingIds.has(tab.id) && tab.groupId === groupId);
     const anchor = await getNewTabIndex(groupTabs);
 
     if (anchor != null) {
@@ -1344,9 +1343,12 @@ export async function resolveMoveIndex(groupId, windowId, movingTabs) {
         }
 
         await GroupsNative.ungroup(movingTabs);
-        return (await getOne(movingTabs[0].id))?.index ?? movingTabs[0].index;
+        return (await get(movingTabs[0], {withSession: false}))?.index ?? movingTabs[0].index;
     }
 
+    // BUG https://bugzilla.mozilla.org/show_bug.cgi?id=1396758
+    // the browser's own count, closing tabs included: a tab the user has just closed holds its slot
+    // for ~110 ms after onRemoved, and query() would leave it out (docs/REMOVE-TABS-BEHAVIOR.md §4)
     return (await browser.tabs.query({windowId})).length;
 }
 
@@ -1368,7 +1370,7 @@ async function activateOtherTabs(activeTabs, movingTabs, windowId, log) {
     const excludeMovingTabs = tab => !movingTabs.some(t => t.id === tab.id);
 
     await Promise.all(activeTabs.map(async activeTab => {
-        const allTabsInActiveTabWindow = await get(activeTab.windowId, null, null);
+        const allTabsInActiveTabWindow = await query({windowId: activeTab.windowId});
         const tabsToActive = allTabsInActiveTabWindow.filter(tab => !tab.hidden && excludeMovingTabs(tab));
 
         if (tabsToActive.length) {
@@ -1514,8 +1516,7 @@ export async function moveNative(tabs, moveProperties = {}, skipTrackingFlag = f
     const tabsLengthBefore = tabs.length;
     const log = logger.start(moveNative, 'tabs:', tabs.map(extractId), {moveProperties, skipTrackingFlag, fixSessionAfterMove});
 
-    tabs = await getList(tabs.map(extractId));
-    tabs = await Promise.all(tabs.map(tab => Cache.loadTabSession(tab, true, true)));
+    tabs = await list(tabs, {includeFavIconUrl: true, includeThumbnail: true});
     const tabsBeforeMoveMap = new Map(tabs.map(tab => [tab.id, tab]));
 
     tabs = await tabsAction({action: 'move', skipTrackingFlag}, tabs, moveProperties);
@@ -1737,7 +1738,7 @@ export async function reload(tabs, bypassCache = false) {
 export async function setMute(tabs, muted) {
     logger.log('setMute', {muted});
 
-    tabs = await getList(tabs.map(extractId));
+    tabs = await list(tabs, {withSession: false});
     muted = Boolean(muted);
 
     tabs = tabs.filter(tab => muted ? tab.audible : tab.mutedInfo.muted);
@@ -1749,7 +1750,7 @@ export async function setMute(tabs, muted) {
 // give it a temp tab first; the state is read live, the caller's snapshot may be stale
 export async function keepWindowsAlive(tabsToRemove) {
     const removedIds = new Set(Array.from(tabsToRemove, tab => tab.id));
-    const visibleTabs = await browser.tabs.query({hidden: false}).catch(() => []);
+    const visibleTabs = await query({hidden: false}, {withSession: false});
 
     for (const [windowId, windowTabs] of Map.groupBy(visibleTabs, tab => tab.windowId)) {
         if (windowTabs.every(tab => removedIds.has(tab.id))) {
@@ -1947,9 +1948,11 @@ export function isSame(tab1, tab2, keys = ['url', 'cookieStoreId', 'groupId']) {
 }
 
 export async function restoreOldExtensionUrls(parseUrlFunc = null) {
-    const tabs = await browser.tabs.query({
+    // the addon's own pages: in a window of any type, with their urls as the browser holds them
+    const tabs = await query({
         url: Constants.STG_HELP_PAGES.map(page => `moz-extension://*/help/${page}.html*`),
-    });
+        windowType: null,
+    }, {raw: true});
 
     await Promise.allSettled(tabs.map(async tab => {
         const oldUrl = tab.url;
@@ -2028,7 +2031,7 @@ export async function reconcile(groups, allTabs) {
 }
 
 export async function ensureSorted(tabs, {byMinIndex = false} = {}, skipTrackingFlag = true) {
-    let liveTabs = await getList(tabs.map(extractId));
+    let liveTabs = await list(tabs, {withSession: false});
 
     const isBlock = liveTabs.every((tab, i) => {
         if (i === 0) {

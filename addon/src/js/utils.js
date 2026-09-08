@@ -272,7 +272,9 @@ export function normalizeUrl(url) {
 
     if (url.startsWith('moz-extension') || url.startsWith(readerProtocol)) {
         const urlObj = new URL(url);
-        const urlStr = urlObj.searchParams.get('url') || urlObj.searchParams.get('u') || urlObj.searchParams.get('go');
+        const urlStr = urlObj.searchParams.get('url') ||
+            urlObj.searchParams.get('u') ||
+            urlObj.searchParams.get('go');
 
         return urlStr ? normalizeUrl(urlStr) : url;
     }

@@ -583,7 +583,7 @@ export async function load(withTabs = false, includeFavIconUrl, includeThumbnail
     const log = logger.start(load, {withTabs, includeFavIconUrl, includeThumbnail});
 
     let [tabs, windows] = await Promise.all([
-        withTabs ? Tabs.get(null, false, null, undefined, includeFavIconUrl, includeThumbnail) : false,
+        withTabs ? Tabs.query({pinned: false}, {includeFavIconUrl, includeThumbnail}) : false,
         browser.windows.getAll({
             windowTypes: [browser.windows.WindowType.NORMAL],
         }).catch(() => []),
@@ -792,9 +792,7 @@ async function tryRestoreMissedTabsNow(actionLoading = true) {
         await Browser.actionLoading();
     }
 
-    const allTabs = await Tabs.get(null, false, null).then(normalizeTabs);
-
-    allTabs.forEach(Tabs.fillEmptyUrl);
+    const allTabs = await Tabs.query({pinned: false});
 
     // strict find exist tabs
     const {groups} = await Groups.load();

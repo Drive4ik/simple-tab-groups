@@ -197,6 +197,11 @@ export function detachTabGroupId(tab) {
     return tab;
 }
 
+// the browser's own tab objects: the live membership is their groupId, and the addon's view strips it
+function queryWindowTabs(windowId) {
+    return Tabs.query({windowId, pinned: false, hidden: false}, {raw: true});
+}
+
 function toEntry(stableId, {title, collapsed, color}) {
     return {id: stableId, title, collapsed, color};
 }
@@ -282,7 +287,7 @@ async function mirrorWindowNow(windowId) {
     }
 
     const [winTabs, liveGroups] = await Promise.all([
-        browser.tabs.query({windowId, pinned: false, hidden: false}),
+        queryWindowTabs(windowId),
         browser.tabGroups.query({windowId}),
     ]);
 
@@ -430,7 +435,7 @@ async function clearWindowSessionsNow(windowId) {
 
     clearCandidatesByWindow.delete(windowId);
 
-    const winTabs = await browser.tabs.query({windowId, pinned: false, hidden: false});
+    const winTabs = await queryWindowTabs(windowId);
 
     // an operation that started while we were reading makes the nomination stale - put it back
     if (Operations.isBusy()) {
@@ -517,7 +522,7 @@ async function isLiveStateSame(windowId, {tabs: groupTabs, groupsNative = []}) {
         return [tab.id, entryIds.has(tab.groupNativeId) ? tab.groupNativeId : undefined];
     }));
 
-    const winTabs = await browser.tabs.query({windowId, pinned: false, hidden: false});
+    const winTabs = await queryWindowTabs(windowId);
 
     return winTabs.every(tab => {
         const liveStableId = tab.groupId === TAB_GROUP_ID_NONE ? undefined : stableIdByLiveId.get(tab.groupId);
@@ -672,9 +677,7 @@ export async function snapshotMembership(movedTabs, groups, targetGroupId) {
         }
     }
 
-    const allTabs = await browser.tabs.query({pinned: false});
-
-    await Promise.allSettled(allTabs.map(tab => Cache.loadTabNativeGroupId(tab.id)));
+    const allTabs = await Tabs.query({pinned: false});
 
     const memberIdsByStableId = new Map;
 
@@ -751,7 +754,7 @@ export async function restoreMembership(group, movedTabs, snapshot = null) {
     if (windowId) {
         await withWindowGate(windowId, async () => {
             const [winTabs, liveGroups] = await Promise.all([
-                browser.tabs.query({windowId, pinned: false, hidden: false}),
+                queryWindowTabs(windowId),
                 browser.tabGroups.query({windowId}),
             ]);
 

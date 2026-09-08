@@ -111,7 +111,7 @@ const canceledRequests = new Map;
 const reopenedForExtension = new Map;
 
 async function getRequestedTab(tabId, requestedUrl) {
-    const tab = await Tabs.getOne(tabId);
+    const tab = await Tabs.get(tabId);
 
     if (!tab) {
         return null;
@@ -122,8 +122,6 @@ async function getRequestedTab(tabId, requestedUrl) {
     if (Utils.isUrlEmpty(tab.url)) {
         delete tab.title;
     }
-
-    Cache.applyTabSession(tab);
 
     return tab;
 }
@@ -206,7 +204,9 @@ const onBeforeTabRequest = catchFunc(async function onBeforeTabRequest({
             return {};
         }
 
-        tab = await Tabs.getOne(tabId);
+        // past the cache: the origin check wants the url the tab really shows, not the cache's
+        // one for a blank tab (fillEmptyUrl), and the object only goes to Cache.setTab
+        tab = await Tabs.get(tabId, {withSession: false});
 
         if (!tab) {
             log.stopWarn('tab not found', tabId);
@@ -1197,9 +1197,7 @@ async function saveOptions(_options) {
     Object.assign(options, optionsToSave);
 
     if (optionsKeys.includes('hotkeys')) {
-        const tabs = await Tabs.get(null, null, null, {
-                discarded: false,
-            }),
+        const tabs = await Tabs.query({discarded: false}),
             actionData = JSON.clone({
                 action: 'update-hotkeys',
                 hotkeys: options.hotkeys,
@@ -1306,9 +1304,7 @@ async function createBackup(includeTabFavIcons, includeTabThumbnails, isAutoBack
         includeTabThumbnails = options.showTabsWithThumbnailsInManageGroups;
     }
 
-    let pinnedTabs = await Tabs.get(null, true, null);
-
-    pinnedTabs = pinnedTabs.filter(tab => Utils.isUrlAllowToCreate(tab.url));
+    const pinnedTabs = await Tabs.query({pinned: true}, {withSession: false});
 
     if (pinnedTabs.length) {
         Extensions.tabsToId(pinnedTabs);
@@ -1509,12 +1505,15 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
 
     delete data.containers;
 
-    const allTabs = await Tabs.get(null, false, null, undefined, true, options.showTabsWithThumbnailsInManageGroups);
+    const allTabs = await Tabs.query({pinned: false}, {
+        includeFavIconUrl: true,
+        includeThumbnail: options.showTabsWithThumbnailsInManageGroups,
+    });
 
     await Tabs.reconcile(data.groups, allTabs);
 
     if (Array.isArray(data.pinnedTabs)) {
-        const currentPinnedTabs = await Tabs.get(null, true, null);
+        const currentPinnedTabs = await Tabs.query({pinned: true}, {withSession: false});
 
         Extensions.tabsToId(currentPinnedTabs);
 
@@ -1560,7 +1559,7 @@ async function clearAddon(reloadAddonOnFinish = true) {
 
     removeEvents();
 
-    const [tabs, windows] = await Promise.all([Tabs.get(null, null, null), Windows.load()]);
+    const [tabs, windows] = await Promise.all([Tabs.query(), Windows.load()]);
 
     await Promise.all(tabs.map(tab => Cache.removeTabSession(tab.id)));
     await Promise.all(windows.map(win => Cache.removeWindowSession(win.id)));

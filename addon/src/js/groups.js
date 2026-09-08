@@ -185,7 +185,7 @@ async function applyNow(windowId, groupId, activeTabId, applyFromHistory = false
                 await Tabs.setActive(activeTabId);
 
                 if (!groupToHide) {
-                    let tabs = await Tabs.get(windowId);
+                    let tabs = await Tabs.query({windowId, pinned: false, hidden: false});
 
                     tabs = tabs.filter(tab => !tab.groupId);
 
@@ -201,7 +201,7 @@ async function applyNow(windowId, groupId, activeTabId, applyFromHistory = false
 
                     if (!tabToActive) {
                         // group to show has no any tabs, try select pinned tab or create new one
-                        let pinnedTabs = await Tabs.get(windowId, true),
+                        let pinnedTabs = await Tabs.query({windowId, pinned: true, hidden: false}, {withSession: false}),
                             activePinnedTab = await Tabs.setActive(null, pinnedTabs);
 
                         if (!activePinnedTab) {
@@ -216,7 +216,7 @@ async function applyNow(windowId, groupId, activeTabId, applyFromHistory = false
                     // some pinned tab active, do nothing
                 }
             } else {
-                let tabs = await Tabs.get(windowId, null); // get tabs with pinned
+                let tabs = await Tabs.query({windowId, hidden: false}); // get tabs with pinned
 
                 // remove tabs without group
                 tabs = tabs.filter(tab => !tab.groupId);
@@ -366,7 +366,7 @@ export async function load(groupId = null, withTabs = false, includeFavIconUrl, 
         allTabs,
         {groups},
     ] = await Promise.all([
-        withTabs ? Tabs.get(null, false, null, undefined, includeFavIconUrl, includeThumbnail) : false,
+        withTabs ? Tabs.query({pinned: false}, {includeFavIconUrl, includeThumbnail}) : false,
         Storage.get('groups')
     ]);
 
@@ -576,7 +576,7 @@ async function addNow(windowId, tabIds = [], title = null) {
     }
 
     if (windowId && !tabIds.length) {
-        tabIds = await Tabs.get(windowId).then(tabs => tabs.map(Tabs.extractId));
+        tabIds = await Tabs.query({windowId, pinned: false, hidden: false}).then(tabs => tabs.map(Tabs.extractId));
     }
 
     if (tabIds.length) {
@@ -995,7 +995,7 @@ async function unloadNow(groupId) {
 
     await Cache.removeWindowSession(windowId);
 
-    let tabs = await Tabs.get(windowId, false, true);
+    let tabs = await Tabs.query({windowId, pinned: false, hidden: true});
     // remove tabs without group
     tabs = tabs.filter(tab => !tab.groupId);
 
@@ -1118,7 +1118,7 @@ export async function removeArchivedGroupsTabs(groups) {
         return;
     }
 
-    const tabsToRemove = await Tabs.get(null, false, null)
+    const tabsToRemove = await Tabs.query({pinned: false})
         .then(tabs => tabs.filter(tab => archivedGroupIds.has(tab.groupId)));
 
     if (!tabsToRemove.length) {

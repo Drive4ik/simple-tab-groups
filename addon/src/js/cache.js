@@ -44,8 +44,10 @@ export function clear() {
 // the mirror, and the diff base only for a tab the base does not know yet. The base moves with
 // the events that change the state - processed in full or the addon's own (tabs.js onUpdated,
 // setTab); a read or a side snapshot inside the 50-70 ms event wait must not overwrite it, or
-// the pending event diffs against its own result and is swallowed
-export function mirrorTab(tab) {
+// the pending event diffs against its own result and is swallowed. A read (isRead) never makes
+// the mirror know less either: an empty url replaces a known one only through an event, and
+// only once the tab has settled on it
+export function mirrorTab(tab, isRead = false) {
     const {id, url, title, favIconUrl, cookieStoreId, openerTabId, status} = tab;
 
     lastTabsState[id] || setLastTabState(tab);
@@ -60,7 +62,7 @@ export function mirrorTab(tab) {
         tabs[id].openerTabId = openerTabId;
     }
 
-    if (status === browser.tabs.TabStatus.LOADING && tabs[id].url && Utils.isUrlEmpty(url)) {
+    if (tabs[id].url && Utils.isUrlEmpty(url) && (isRead || status === browser.tabs.TabStatus.LOADING)) {
         return;
     }
 
@@ -279,7 +281,7 @@ export function getTabSession(id, key = null) {
 
 export async function loadTabSession(tab, includeFavIconUrl = true, includeThumbnail = true) {
     try {
-        mirrorTab(tab);
+        mirrorTab(tab, true);
 
         await Promise.all([
             loadTabGroup(tab.id),

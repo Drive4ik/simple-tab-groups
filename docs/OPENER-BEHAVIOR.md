@@ -701,11 +701,12 @@ keeps it.
 **A live tab.** The browser's `openerTabId` is the single truth. A self-pointer is "detached"
 (T4); a live opener outside the tab's group is "no parent" in the group's coordinates — both are
 an explicit "no". A live link never points into another window (§3, §7, §9); after a browser
-restart nobody has an opener (§8). The tab cache mirrors the live opener — the closed-window
+restart nobody has an opener (§8). The tab cache (`js/cache.js`) mirrors the live opener — the closed-window
 save reads only the cache — fed by the `tabs.onUpdated` subscription without a `properties`
-filter (§10, Implications 9), refreshed by every list read (`Tabs.get`; the single-tab
-`getOne` reads past the mirror), and by the single writer itself: `setOpeners` mirrors every
-link it writes. A cross-window move erases every
+filter (§10, Implications 9), refreshed by every read with the session (`Tabs.query`,
+`Tabs.get`, `Tabs.list`; `onUpdated` reads without it and feeds the mirror itself through
+`Cache.setTab`), and by the single writer itself: `setOpeners` mirrors every link it writes. A
+cross-window move erases every
 link to and from the moved tab with no event (§7, §9) — the cache drops those links the moment
 the tab detaches, ahead of the per-tab mutes: the addon's own moves erase them just the same
 (Implications 3).

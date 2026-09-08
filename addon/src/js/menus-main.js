@@ -114,7 +114,10 @@ export function reopenTabsWithTemporaryContainers(...args) {
 async function reopenTabsWithTemporaryContainersNow(info) {
     const log = logger.start(reopenTabsWithTemporaryContainers, info);
 
-    const allTabs = await Tabs.get(null, null, null, undefined, true, true);
+    const allTabs = await Tabs.query({}, {
+        includeFavIconUrl: true,
+        includeThumbnail: true,
+    });
     const tabsToCreate = [];
     const tabsToRemove = [];
 
