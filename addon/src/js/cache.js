@@ -10,6 +10,8 @@ export const FAVICON_KEY = 'favIconUrl';
 export const THUMBNAIL_KEY = 'thumbnail';
 export const KEYS = [GROUP_KEY, GROUP_NATIVE_KEY, FAVICON_KEY, THUMBNAIL_KEY];
 
+const PROMISES = Symbol.for('promises');
+
 export const tabs = {};
 export const lastTabsState = {}; // BUG https://bugzilla.mozilla.org/show_bug.cgi?id=1818392
 export const windows = {};
@@ -111,177 +113,113 @@ export function getTabChildren(tabIds) {
     return Object.values(tabs).filter(tab => ids.has(tab.openerTabId));
 }
 
-// groupId
-async function loadTabGroup(id) {
-    if (tabs[id]) {
-        await waitPromises(tabs[id]);
+// session values: a record field has three states - no key means not read yet, null means read
+// and the session has no value, anything else is the value. Only the load checks the mark; the
+// getters and the copies never let null out of the module
+async function loadTabValue(id, key) {
+    tabs[id] ??= {id};
 
-        if (tabs[id].groupId) {
-            return tabs[id].groupId;
-        }
+    await waitPromises(tabs[id]);
 
-        return tabs[id].groupId = await addPromise(tabs[id], browser.sessions.getTabValue(id, GROUP_KEY));
+    if (tabs[id][key] === undefined) {
+        tabs[id][key] = await addPromise(tabs[id], browser.sessions.getTabValue(id, key)) ?? null;
     }
+
+    return getTabValue(id, key);
 }
 
+async function setTabValue(id, key, value) {
+    tabs[id] ??= {id};
+
+    await waitPromises(tabs[id]);
+
+    await addPromise(tabs[id], browser.sessions.setTabValue(id, key, value));
+
+    tabs[id][key] = value;
+}
+
+async function removeTabValue(id, key) {
+    await waitPromises(tabs[id]);
+    await addPromise(tabs[id], browser.sessions.removeTabValue(id, key));
+    tabs[id] && (tabs[id][key] = null);
+}
+
+export function getTabValue(id, key) {
+    return tabs[id]?.[key] ?? undefined;
+}
+
+// groupId
 export async function setTabGroup(id, groupId = null, windowId = null) {
     groupId ??= getWindowGroup(windowId);
 
     if (groupId) {
-        tabs[id] ??= {id};
-
-        await waitPromises(tabs[id]);
-
-        await addPromise(tabs[id], browser.sessions.setTabValue(id, GROUP_KEY, groupId));
-
-        tabs[id].groupId = groupId;
+        await setTabValue(id, GROUP_KEY, groupId);
     } else if (getTabGroup(id)) {
         await removeTabGroup(id).catch(() => {});
     }
 }
 
 export function getTabGroup(id) {
-    return tabs[id]?.groupId;
+    return getTabValue(id, GROUP_KEY);
 }
 
 export async function removeTabGroup(id) {
-    await waitPromises(tabs[id]);
-    await addPromise(tabs[id], browser.sessions.removeTabValue(id, GROUP_KEY));
-    delete tabs[id]?.groupId;
+    await removeTabValue(id, GROUP_KEY);
 }
 
 // groupNativeId - membership in a native tab group: the stable string id of the sub-group
 // (GroupsNative.createSubGroupId), never the ephemeral browser group id. The single source of
 // truth: survives addon and browser restarts and travels with the tab.
 export async function loadTabNativeGroupId(id) {
-    tabs[id] ??= {id};
-
-    await waitPromises(tabs[id]);
-
-    if (tabs[id].groupNativeId) {
-        return tabs[id].groupNativeId;
-    }
-
-    return tabs[id].groupNativeId = await addPromise(tabs[id], browser.sessions.getTabValue(id, GROUP_NATIVE_KEY));
+    return await loadTabValue(id, GROUP_NATIVE_KEY);
 }
 
 export async function setTabNativeGroupId(id, groupNativeId) {
     if (groupNativeId) {
-        tabs[id] ??= {id};
-
-        await waitPromises(tabs[id]);
-
-        await addPromise(tabs[id], browser.sessions.setTabValue(id, GROUP_NATIVE_KEY, groupNativeId));
-
-        tabs[id].groupNativeId = groupNativeId;
+        await setTabValue(id, GROUP_NATIVE_KEY, groupNativeId);
     } else {
         await removeTabNativeGroupId(id).catch(() => {});
     }
 }
 
 export function getTabNativeGroupId(id) {
-    return tabs[id]?.groupNativeId;
+    return getTabValue(id, GROUP_NATIVE_KEY);
 }
 
 export async function removeTabNativeGroupId(id) {
-    await waitPromises(tabs[id]);
-    await addPromise(tabs[id], browser.sessions.removeTabValue(id, GROUP_NATIVE_KEY));
-    delete tabs[id]?.groupNativeId;
+    await removeTabValue(id, GROUP_NATIVE_KEY);
 }
 
 // favIconUrl
-async function loadTabFavIcon(id) {
-    if (tabs[id]) {
-        await waitPromises(tabs[id]);
-
-        if (tabs[id].favIconUrl) {
-            return tabs[id].favIconUrl;
-        }
-
-        return tabs[id].favIconUrl = await addPromise(tabs[id], browser.sessions.getTabValue(id, FAVICON_KEY));
-    }
-}
-
 export async function setTabFavIcon(id, favIconUrl) {
     if (favIconUrl?.startsWith('data:')) {
-        tabs[id] ??= {id};
-
-        await waitPromises(tabs[id]);
-
-        await addPromise(tabs[id], browser.sessions.setTabValue(id, FAVICON_KEY, favIconUrl));
-
-        tabs[id].favIconUrl = favIconUrl;
+        await setTabValue(id, FAVICON_KEY, favIconUrl);
     }
-}
-
-export function getTabFavIcon(id) {
-    return tabs[id]?.favIconUrl;
 }
 
 export async function removeTabFavIcon(id) {
-    await waitPromises(tabs[id]);
-    await addPromise(tabs[id], browser.sessions.removeTabValue(id, FAVICON_KEY));
-    delete tabs[id]?.favIconUrl;
+    await removeTabValue(id, FAVICON_KEY);
 }
 
 // thumbnail
 async function loadTabThumbnail(id) {
-    if (!backgroundSelf.options.showTabsWithThumbnailsInManageGroups) {
-        return;
-    }
-
-    if (tabs[id]) {
-        await waitPromises(tabs[id]);
-
-        if (tabs[id].thumbnail) {
-            return tabs[id].thumbnail;
-        }
-
-        return tabs[id].thumbnail = await addPromise(tabs[id], browser.sessions.getTabValue(id, THUMBNAIL_KEY));
+    if (backgroundSelf.options.showTabsWithThumbnailsInManageGroups) {
+        return await loadTabValue(id, THUMBNAIL_KEY);
     }
 }
 
 export async function setTabThumbnail(id, thumbnail) {
-    if (!backgroundSelf.options.showTabsWithThumbnailsInManageGroups) {
-        return;
+    if (thumbnail && backgroundSelf.options.showTabsWithThumbnailsInManageGroups) {
+        await setTabValue(id, THUMBNAIL_KEY, thumbnail);
     }
-
-    if (thumbnail) {
-        tabs[id] ??= {id};
-
-        await waitPromises(tabs[id]);
-
-        await addPromise(tabs[id], browser.sessions.setTabValue(id, THUMBNAIL_KEY, thumbnail));
-
-        tabs[id].thumbnail = thumbnail;
-    }
-}
-
-export function getTabThumbnail(id) {
-    return tabs[id]?.thumbnail;
 }
 
 export async function removeTabThumbnail(id) {
-    await waitPromises(tabs[id]);
-    await addPromise(tabs[id], browser.sessions.removeTabValue(id, THUMBNAIL_KEY));
-    delete tabs[id]?.thumbnail;
+    await removeTabValue(id, THUMBNAIL_KEY);
 }
 
 // tab
-export function getTabSession(id, key = null) {
-    if (key) {
-        return tabs[id]?.[key];
-    }
-
-    const session = {...tabs[id] ?? {id}};
-    delete session.promises;
-
-    return session;
-}
-
 export async function loadTabSession(tab, {
-    includeGroupId = true,
-    includeGroupNativeId = true,
     includeFavIconUrl = false,
     includeThumbnail = false,
 } = {}) {
@@ -289,9 +227,9 @@ export async function loadTabSession(tab, {
         mirrorTab(tab, true);
 
         await Promise.all([
-            includeGroupId && loadTabGroup(tab.id),
-            includeGroupNativeId && loadTabNativeGroupId(tab.id),
-            includeFavIconUrl && loadTabFavIcon(tab.id),
+            loadTabValue(tab.id, GROUP_KEY),
+            loadTabValue(tab.id, GROUP_NATIVE_KEY),
+            includeFavIconUrl && loadTabValue(tab.id, FAVICON_KEY),
             includeThumbnail && loadTabThumbnail(tab.id),
         ]);
 
@@ -317,17 +255,15 @@ export async function setTabSession(tab, session = null) {
 }
 
 export function clearTabSessionCache(id) {
-    delete tabs[id]?.groupId;
-    delete tabs[id]?.groupNativeId;
-    delete tabs[id]?.favIconUrl;
-    delete tabs[id]?.thumbnail;
+    for (const key of KEYS) {
+        delete tabs[id]?.[key];
+    }
 }
 
 export function applySession(toObj, fromObj) {
-    fromObj?.groupId && (toObj.groupId = fromObj.groupId);
-    fromObj?.groupNativeId && (toObj.groupNativeId = fromObj.groupNativeId);
-    fromObj?.favIconUrl && (toObj.favIconUrl = fromObj.favIconUrl);
-    fromObj?.thumbnail && (toObj.thumbnail = fromObj.thumbnail);
+    for (const key of KEYS) {
+        fromObj?.[key] && (toObj[key] = fromObj[key]);
+    }
 
     return toObj;
 }
@@ -348,14 +284,9 @@ export async function removeTabSession(id) {
 export function getTabsSessionAndRemove(ids) {
     return ids
         .map(id => {
-            if (!tabs[id]?.groupId || !tabs[id]?.url) {
-                removeTab(id);
-                return false;
-            }
-
-            const session = {...tabs[id]};
-
-            delete session.promises;
+            const session = tabs[id]?.groupId && tabs[id].url
+                ? Object.fromEntries(Object.entries(tabs[id]).filter(([, value]) => value !== null))
+                : false;
 
             removeTab(id);
 
@@ -428,16 +359,16 @@ export async function removeWindowSession(id) {
 }
 
 async function waitPromises(obj) {
-    if (obj?.promises) {
-        await Promise.allSettled([...obj.promises]);
+    if (obj?.[PROMISES]) {
+        await Promise.allSettled([...obj[PROMISES]]);
     }
 }
 
 async function addPromise(obj, promise) {
     if (obj) {
-        obj.promises ??= new Set;
-        obj.promises.add(promise);
+        obj[PROMISES] ??= new Set;
+        obj[PROMISES].add(promise);
     }
 
-    return promise.finally(() => obj?.promises.delete(promise));
+    return promise.finally(() => obj?.[PROMISES].delete(promise));
 }

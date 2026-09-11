@@ -5,6 +5,7 @@ import JSON from '/js/json.js';
 import * as Constants from '/js/constants.js';
 import * as Extensions from '/js/extensions.js';
 import * as Utils from '/js/utils.js';
+import * as Cache from '/js/cache.js';
 import * as Tabs from '/js/tabs.js';
 import * as Windows from '/js/windows.js';
 import * as Messages from '/js/messages.js';
@@ -529,9 +530,9 @@ export default [{
 
                 if (groupId) {
                     if (newGroupId) {
-                        await browser.sessions.setTabValue(tab.id, 'groupId', newGroupId);
+                        await Cache.setTabGroup(tab.id, newGroupId);
                     } else {
-                        await browser.sessions.removeTabValue(tab.id, 'groupId');
+                        await Cache.removeTabGroup(tab.id);
                     }
                 }
             }));
@@ -590,7 +591,7 @@ export default [{
                         }
                     }
 
-                    await browser.sessions.setTabValue(tab.id, 'groupNativeId', stableId);
+                    await Cache.setTabNativeGroupId(tab.id, stableId);
                 }
             }));
 

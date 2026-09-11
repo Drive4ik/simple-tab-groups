@@ -110,8 +110,8 @@ const moveTabsBatch = new BatchProcessor(async (tabIds, groupId) => {
 const canceledRequests = new Map;
 const reopenedForExtension = new Map;
 
-async function getRequestedTab(tabId, requestedUrl, params) {
-    const tab = await Tabs.get(tabId, params);
+async function getRequestedTab(tabId, requestedUrl) {
+    const tab = await Tabs.get(tabId);
 
     if (!tab) {
         return null;
@@ -175,7 +175,7 @@ const onBeforeTabRequest = catchFunc(async function onBeforeTabRequest({
 
     await Tabs.waitOnCreated(tabId);
 
-    let tab = await getRequestedTab(tabId, requestedUrl, {includeGroupNativeId: false});
+    let tab = await getRequestedTab(tabId, requestedUrl);
 
     if (!tab) {
         log.stopWarn('tab not found', tabId);

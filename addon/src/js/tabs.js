@@ -1922,7 +1922,7 @@ export function normalizeUrl(tab) {
 // the active tab of a window that has just appeared shows an empty url with status complete for
 // its first tens of ms, the load starts later (docs/CREATE-TABS-BEHAVIOR.md §26)
 export function fillEmptyUrl(tab) {
-    const knownUrl = Cache.getTabSession(tab.id, 'url');
+    const knownUrl = Cache.getTabValue(tab.id, 'url');
 
     if (knownUrl && Utils.isUrlEmpty(tab.url) && (isLoading(tab) || tab.active)) {
         tab.url = Utils.normalizeUrl(knownUrl);

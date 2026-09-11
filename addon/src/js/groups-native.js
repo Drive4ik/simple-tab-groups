@@ -677,7 +677,7 @@ export async function snapshotMembership(movedTabs, groups, targetGroupId) {
         }
     }
 
-    const allTabs = await Tabs.query({pinned: false}, {includeGroupId: false});
+    const allTabs = await Tabs.query({pinned: false});
 
     const memberIdsByStableId = new Map;
 
