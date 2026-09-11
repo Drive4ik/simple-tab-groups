@@ -217,7 +217,7 @@ export default {
             this.openedWindows = windows ?? await this.sendMessageModule('Windows.load');
         },
         async loadGroups({groups} = {}) {
-            groups ??= await this.sendMessageModule('Groups.load', null, true, true, this.includeTabThumbnails)
+            groups ??= await this.sendMessageModule('Groups.load', null, true, {includeFavIconUrl: true, includeThumbnail: this.includeTabThumbnails})
                 .then(({groups}) => groups);
 
             this.groups = groups.map(this.mapGroup, this);
@@ -226,7 +226,7 @@ export default {
         },
         async loadUnsyncedTabs({windows = null, windowId = null} = {}) {
             if (!windowId || this.currentWindow?.id === windowId) {
-                windows ??= await this.sendMessageModule('Windows.load', true, true, this.includeTabThumbnails);
+                windows ??= await this.sendMessageModule('Windows.load', true, {includeFavIconUrl: true, includeThumbnail: this.includeTabThumbnails});
 
                 const win = windows.find(w => windowId ? w.id === windowId : w.id === this.currentWindow.id);
 
@@ -407,7 +407,7 @@ export default {
         },
 
         async loadGroupTabs(groupId) {
-            const {group: {tabs}} = await this.sendMessageModule('Groups.load', groupId, true, true, this.includeTabThumbnails);
+            const {group: {tabs}} = await this.sendMessageModule('Groups.load', groupId, true, {includeFavIconUrl: true, includeThumbnail: this.includeTabThumbnails});
             const group = this.groups.find(gr => gr.id === groupId);
 
             group.tabs = tabs.map(tab => this.mapTab(tab, group.isArchive));

@@ -279,15 +279,20 @@ export function getTabSession(id, key = null) {
     return session;
 }
 
-export async function loadTabSession(tab, includeFavIconUrl = true, includeThumbnail = true) {
+export async function loadTabSession(tab, {
+    includeGroupId = true,
+    includeGroupNativeId = true,
+    includeFavIconUrl = false,
+    includeThumbnail = false,
+} = {}) {
     try {
         mirrorTab(tab, true);
 
         await Promise.all([
-            loadTabGroup(tab.id),
-            loadTabNativeGroupId(tab.id),
-            includeFavIconUrl === true ? loadTabFavIcon(tab.id) : null,
-            includeThumbnail === true ? loadTabThumbnail(tab.id) : null,
+            includeGroupId && loadTabGroup(tab.id),
+            includeGroupNativeId && loadTabNativeGroupId(tab.id),
+            includeFavIconUrl && loadTabFavIcon(tab.id),
+            includeThumbnail && loadTabThumbnail(tab.id),
         ]);
 
         return applyTabSession(tab);

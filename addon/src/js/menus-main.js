@@ -135,7 +135,7 @@ async function reopenTabsWithTemporaryContainersNow(info) {
     if (tabsToCreate.length) {
         await Browser.actionLoading();
 
-        const newTabs = await Promise.all(tabsToCreate.map(tab => Tabs.create(tab, true)));
+        const newTabs = await Promise.all(tabsToCreate.map(tab => Tabs.create(tab)));
 
         const tabsToHide = [];
 
@@ -151,7 +151,7 @@ async function reopenTabsWithTemporaryContainersNow(info) {
 
         // recreated at their originals' slots - they can inherit a live group (docs/TABGROUPS-BEHAVIOR.md §7)
         await GroupsNative.ungroup(tabsToHide);
-        await Tabs.hide(tabsToHide, true);
+        await Tabs.hide(tabsToHide);
 
         await Tabs.remove(tabsToRemove);
 

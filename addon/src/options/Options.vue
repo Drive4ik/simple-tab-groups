@@ -385,8 +385,8 @@ export default {
 
         exportAddonSettings() {
             this.sendMessage('create-backup', {
-                includeTabFavIcons: this.includeTabFavIconsIntoBackup,
-                includeTabThumbnails: this.includeTabThumbnailsIntoBackup,
+                includeFavIconUrl: this.includeTabFavIconsIntoBackup,
+                includeThumbnail: this.includeTabThumbnailsIntoBackup,
             });
         },
 

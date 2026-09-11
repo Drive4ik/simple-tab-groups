@@ -547,14 +547,14 @@ async function applyNow(windowId, group) {
         return;
     }
 
-    await Promise.all(group.tabs.map(tab => Cache.loadTabSession(tab, false, false)));
+    await Promise.all(group.tabs.map(tab => Cache.loadTabSession(tab)));
 
     if (await isLiveStateSame(windowId, group)) {
         log.stop('live state already matches');
         return;
     }
 
-    await Tabs.ungroup(group.tabs, true);
+    await Tabs.ungroup(group.tabs);
 
     const memberTabsByEntryId = new Map(groupsNative.map(entry => [entry.id, []]));
 
@@ -577,7 +577,7 @@ async function applyNow(windowId, group) {
         }
 
         try {
-            const liveId = await Tabs.group(visibleMemberTabs, windowId, true);
+            const liveId = await Tabs.group(visibleMemberTabs, windowId);
 
             await browser.tabGroups.update(liveId, {
                 collapsed: entry.collapsed,
@@ -636,9 +636,9 @@ export async function ungroup(tabs) {
 
     await Promise.all([
         ...[...tabsByWindow].map(([windowId, windowTabs]) => {
-            return withWindowGate(windowId, () => Tabs.ungroup(windowTabs, true));
+            return withWindowGate(windowId, () => Tabs.ungroup(windowTabs));
         }),
-        noWindowTabs.length ? Tabs.ungroup(noWindowTabs, true) : null,
+        noWindowTabs.length ? Tabs.ungroup(noWindowTabs) : null,
     ]);
 
     log.stop();
@@ -677,7 +677,7 @@ export async function snapshotMembership(movedTabs, groups, targetGroupId) {
         }
     }
 
-    const allTabs = await Tabs.query({pinned: false});
+    const allTabs = await Tabs.query({pinned: false}, {includeGroupId: false});
 
     const memberIdsByStableId = new Map;
 
@@ -793,7 +793,7 @@ export async function restoreMembership(group, movedTabs, snapshot = null) {
                     const existingLiveId = liveIdByStableId.get(meta.id);
                     const joinLiveId = liveIdsInWindow.has(existingLiveId) ? existingLiveId : null;
 
-                    const liveId = await Tabs.group(memberTabs, windowId, true, joinLiveId);
+                    const liveId = await Tabs.group(memberTabs, windowId, {joinLiveGroupId: joinLiveId});
 
                     if (!joinLiveId) {
                         await browser.tabGroups.update(liveId, {

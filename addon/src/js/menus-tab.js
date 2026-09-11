@@ -242,7 +242,7 @@ export async function openInTemporaryContainer(info, tab) {
         // the original opens its copy: relatedAfterCurrent puts it right after (docs/CREATE-TABS-BEHAVIOR.md §14), a tree makes it a child
         openerTabId: tab.id,
         cookieStoreId: Constants.TEMPORARY_CONTAINER,
-    });
+    }, {skipTrackingCreated: false});
 
     log.stop();
 }

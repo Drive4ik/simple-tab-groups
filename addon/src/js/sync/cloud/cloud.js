@@ -322,7 +322,7 @@ async function sync(trust = null, revision = null, progressFunc = null) {
         // a whole live span closed in one call would be saved by the browser into its saved groups
         await GroupsNative.ungroup(Array.from(syncResult.changes.tabsToRemove));
         // if has local changes - do silent remove. "Cloud.sync-end" event will trigger "Groups.updated.all" event and reload all groups with tabs
-        await Tabs.remove(Array.from(syncResult.changes.tabsToRemove), syncResult.changes.local);
+        await Tabs.remove(Array.from(syncResult.changes.tabsToRemove), {silentRemove: syncResult.changes.local});
     }
 
     await Groups.removeArchivedGroupsTabs(syncResult.localData.groups);
@@ -513,7 +513,6 @@ async function syncGroups(localData, cloudData, sourceOfTruth, changes, newCloud
         const includeLastAccessed = prepareFor === TRUST_LOCAL || groupIsArchive === true;
 
         return Tabs.prepareForSave(tabs, {
-            includeGroupNativeId: true,
             includeFavIconUrl,
             includeLastAccessed,
         });

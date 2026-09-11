@@ -340,12 +340,12 @@ async function runGrandRestoreNow(restoredWindowIds) {
                 continue;
             }
 
-            Tabs.skipTracking(tabsIntoAnotherWindows, skippTrackingTabs);
+            Tabs.skipTrackingTabs(tabsIntoAnotherWindows, skippTrackingTabs);
 
             const isLoadedGroup = groupToKeep.window.groupId === groupToKeep.id;
 
-            // native membership travels with the tabs in sessions (restored for discarded tabs by
-            // moveNative's fixSessionAfterMove) - no bookkeeping is needed here
+            // native membership travels with the tabs in sessions (moveNative restores it for
+            // discarded tabs after a cross-window move) - no bookkeeping is needed here
 
             // the whole group gathers as one block at its own first tab in this window (strays
             // arrive without joining anyone - docs/TABGROUPS-BEHAVIOR.md §20, §21)
@@ -366,7 +366,7 @@ async function runGrandRestoreNow(restoredWindowIds) {
 
                 if (groupToKeep.deleteTabAfterMove) {
                     await Tabs.setActive(null, groupToKeep.tabs.filter(tab => !tabsToDelete.has(tab.id)));
-                    await Tabs.remove(groupToKeep.deleteTabAfterMove, true);
+                    await Tabs.remove(groupToKeep.deleteTabAfterMove, {silentRemove: true});
                 }
             } else {
                 log.log('hiding group tabs, group', groupToKeep.id, 'in window', groupToKeep.window.id);
@@ -375,12 +375,16 @@ async function runGrandRestoreNow(restoredWindowIds) {
             }
         }
     } finally {
-        Tabs.continueTracking(skippTrackingTabs);
+        Tabs.continueTrackingTabs(skippTrackingTabs);
     }
 
     const tabsToDeleteIds = Array.from(tabsToDelete.keys());
     log.log('deleting tabs:', tabsToDeleteIds);
-    await Tabs.remove(tabsToDeleteIds, true);
+    await Tabs.remove(tabsToDeleteIds, {silentRemove: true});
+
+    for (const groupId of groupsAlreadyRestored.keys()) {
+        Tabs.sendUpdatedGroup(groupId);
+    }
 
     // the browser brings the window back without the links (docs/OPENER-BEHAVIOR.md §15) - the saved
     // ones are applied to the live tabs of the group whose entries leave the restore list
@@ -579,11 +583,11 @@ function onStorageChanged(changes) {
 
 
 // methods
-export async function load(withTabs = false, includeFavIconUrl, includeThumbnail) {
-    const log = logger.start(load, {withTabs, includeFavIconUrl, includeThumbnail});
+export async function load(withTabs = false, params) {
+    const log = logger.start(load, {withTabs, params});
 
     let [tabs, windows] = await Promise.all([
-        withTabs ? Tabs.query({pinned: false}, {includeFavIconUrl, includeThumbnail}) : false,
+        withTabs ? Tabs.query({pinned: false}, params) : false,
         browser.windows.getAll({
             windowTypes: [browser.windows.WindowType.NORMAL],
         }).catch(() => []),
@@ -952,7 +956,7 @@ async function initializeGroupsNow(groups, afterRestoring = false) {
     tabsToHide = remapToFreshTabs(tabsToHide);
 
     if (tabsToShow.size) {
-        await Tabs.show([...tabsToShow], true);
+        await Tabs.show([...tabsToShow]);
 
         for (const tab of tabsToShow) {
             tab.hidden = false;
@@ -977,7 +981,7 @@ async function initializeGroupsNow(groups, afterRestoring = false) {
         }
 
         await GroupsNative.ungroup([...tabsToHide]);
-        await Tabs.hide([...tabsToHide], true);
+        await Tabs.hide([...tabsToHide]);
 
         log.log('tabsToHide count', tabsToHide.size);
     }

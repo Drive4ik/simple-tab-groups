@@ -223,7 +223,7 @@ export async function openInTemporaryContainer(info) {
         title: bookmark.title,
         active: info.button.RIGHT,
         cookieStoreId: Constants.TEMPORARY_CONTAINER,
-    });
+    }, {skipTrackingCreated: false});
 
     log.stop();
 }
@@ -281,7 +281,7 @@ async function openInGroupNow(groupId, info) {
             log.log('hiding created tabs because group is not loaded and left click');
             // the startIndex anchor can land inside a live span (docs/TABGROUPS-BEHAVIOR.md §7)
             await GroupsNative.ungroup(created);
-            await Tabs.hide(created, true);
+            await Tabs.hide(created);
         }
 
         await Browser.actionLoading(false);
@@ -367,7 +367,7 @@ async function createNewGroupNow(info) {
                 const newGroup = await Groups.add(undefined, undefined, folder.title);
                 const {created} = await Tabs.createMultiple(Groups.setNewTabsParams(tabsToCreate, newGroup));
                 // appended at the end of the strip - they can't be in a live group (docs/TABGROUPS-BEHAVIOR.md §10)
-                await Tabs.hide(created, true);
+                await Tabs.hide(created);
                 Tabs.sendUpdatedGroup(newGroup.id);
                 groupsCreatedCount++;
             }

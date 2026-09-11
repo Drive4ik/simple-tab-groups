@@ -182,7 +182,7 @@ export async function openInTemporaryContainer(info) {
         title: info.linkText,
         active: info.button.RIGHT,
         cookieStoreId: Constants.TEMPORARY_CONTAINER,
-    });
+    }, {skipTrackingCreated: false});
 
     log.stop();
 }

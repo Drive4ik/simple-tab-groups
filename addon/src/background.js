@@ -110,8 +110,8 @@ const moveTabsBatch = new BatchProcessor(async (tabIds, groupId) => {
 const canceledRequests = new Map;
 const reopenedForExtension = new Map;
 
-async function getRequestedTab(tabId, requestedUrl) {
-    const tab = await Tabs.get(tabId);
+async function getRequestedTab(tabId, requestedUrl, params) {
+    const tab = await Tabs.get(tabId, params);
 
     if (!tab) {
         return null;
@@ -175,7 +175,7 @@ const onBeforeTabRequest = catchFunc(async function onBeforeTabRequest({
 
     await Tabs.waitOnCreated(tabId);
 
-    let tab = await getRequestedTab(tabId, requestedUrl);
+    let tab = await getRequestedTab(tabId, requestedUrl, {includeGroupNativeId: false});
 
     if (!tab) {
         log.stopWarn('tab not found', tabId);
@@ -277,7 +277,7 @@ const onBeforeTabRequest = catchFunc(async function onBeforeTabRequest({
                     active: true,
                     url: getNewAddonTabUrl(true),
                     groupId: tabGroup.id,
-                }],
+                }, {skipTrackingCreated: false}],
             });
         }
 
@@ -287,13 +287,14 @@ const onBeforeTabRequest = catchFunc(async function onBeforeTabRequest({
 
     if (Constants.CONFLICTED_EXTENSIONS_FOR_REOPEN_TAB_IN_CONTAINER.some(Extensions.isEnabled)) {
         await Utils.wait(100);
+    }
 
-        tab = await getRequestedTab(tabId, requestedUrl);
+    // the copy is built from this object: the whole session of the original goes with it
+    tab = await getRequestedTab(tabId, requestedUrl);
 
-        if (!tab) {
-            log.stop('tab was reopened by another extension');
-            return {};
-        }
+    if (!tab) {
+        log.stop('tab not found, maybe reopened by another extension', tabId);
+        return {};
     }
 
     rememberFor(canceledRequests, requestId, 2000);
@@ -320,7 +321,7 @@ const onBeforeTabRequest = catchFunc(async function onBeforeTabRequest({
             newTabParams.url = getNewAddonTabUrl();
         }
 
-        const [newTab] = await Tabs.recreate([tab], () => newTabParams, true, false);
+        const [newTab] = await Tabs.recreate([tab], () => newTabParams);
 
         if (!newTab) {
             log.warn('cant reopen tab in container');
@@ -331,7 +332,7 @@ const onBeforeTabRequest = catchFunc(async function onBeforeTabRequest({
             log.log('hide tab', newTab);
             // recreated at the original's slot - it can inherit a live group (docs/TABGROUPS-BEHAVIOR.md §7)
             await GroupsNative.ungroup(newTab);
-            await Tabs.hide(newTab, true);
+            await Tabs.hide(newTab);
         }
     });
 
@@ -371,7 +372,10 @@ async function onAlarm({name}) {
     const log = logger.start('onAlarm', {name});
 
     if (name === LOCAL_BACKUP_ALARM_NAME) {
-        await createBackup(options.autoBackupIncludeTabFavIcons, options.autoBackupIncludeTabThumbnails, true)
+        await createBackup({
+            includeFavIconUrl: options.autoBackupIncludeTabFavIcons,
+            includeThumbnail: options.autoBackupIncludeTabThumbnails,
+        }, true)
             .catch(log.onCatch(["can't createBackup()", {
                 autoBackupIncludeTabFavIcons: options.autoBackupIncludeTabFavIcons,
                 autoBackupIncludeTabThumbnails: options.autoBackupIncludeTabThumbnails,
@@ -1078,7 +1082,7 @@ async function onBackgroundMessage(message, sender) {
                 await Tabs.create({
                     active: data.active,
                     cookieStoreId: Constants.TEMPORARY_CONTAINER,
-                });
+                }, {skipTrackingCreated: false});
 
                 result.ok = true;
 
@@ -1120,7 +1124,10 @@ async function onBackgroundMessage(message, sender) {
 
                 break;
             case 'create-backup':
-                result.ok = await createBackup(data.includeTabFavIcons === true, data.includeTabThumbnails === true);
+                result.ok = await createBackup({
+                    includeFavIconUrl: data.includeFavIconUrl === true,
+                    includeThumbnail: data.includeThumbnail === true,
+                });
                 break;
             case 'get-startup-data':
                 {
@@ -1132,8 +1139,8 @@ async function onBackgroundMessage(message, sender) {
                         result.windows,
                         {groups: result.groups},
                     ] = await Promise.all([
-                        Windows.load(true, true, includeThumbnail),
-                        Groups.load(null, true, true, includeThumbnail),
+                        Windows.load(true, {includeFavIconUrl: true, includeThumbnail}),
+                        Groups.load(null, true, {includeFavIconUrl: true, includeThumbnail}),
                     ]);
 
                     result.ok = true;
@@ -1289,19 +1296,17 @@ async function resetAlarm(
     log.stop();
 }
 
-async function createBackup(includeTabFavIcons, includeTabThumbnails, isAutoBackup = false) {
-    const log = logger.start('createBackup', {includeTabFavIcons, includeTabThumbnails, isAutoBackup});
+async function createBackup(params = {}, isAutoBackup = false) {
+    const includeThumbnail = (params.includeThumbnail ?? false) && options.showTabsWithThumbnailsInManageGroups;
+
+    const log = logger.start('createBackup', {params, isAutoBackup});
 
     const data = stampVersion(await Storage.get());
-    const {groups} = await Groups.load(null, true, includeTabFavIcons, includeTabThumbnails);
+    const {groups} = await Groups.load(null, true, {...params, includeThumbnail});
 
     if (isAutoBackup && (!groups.length || groups.filter(gr => !gr.isArchive).every(gr => !gr.tabs.length))) {
         log.stopWarn('skip create auto backup, groups are empty');
         return false;
-    }
-
-    if (includeTabThumbnails) {
-        includeTabThumbnails = options.showTabsWithThumbnailsInManageGroups;
     }
 
     const pinnedTabs = await Tabs.query({pinned: true}, {withSession: false});
@@ -1317,11 +1322,7 @@ async function createBackup(includeTabFavIcons, includeTabThumbnails, isAutoBack
             group.groupsNative = GroupsNative.referencedGroupsNative(group);
         }
 
-        group.tabs = Tabs.prepareForSave(group.tabs, {
-            includeGroupNativeId: true,
-            includeFavIconUrl: includeTabFavIcons,
-            includeThumbnail: includeTabThumbnails,
-        });
+        group.tabs = Tabs.prepareForSave(group.tabs, {...params, includeThumbnail});
 
         return group;
     });
@@ -1401,7 +1402,7 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
             {groups: currentData.groups},
         ] = await Promise.all([
             Storage.get('hotkeys'),
-            Groups.load(null, true, true, options.showTabsWithThumbnailsInManageGroups),
+            Groups.load(null, true, {includeFavIconUrl: true, includeThumbnail: options.showTabsWithThumbnailsInManageGroups}),
         ]);
     }
 
@@ -1689,7 +1690,7 @@ Listeners.runtime.onInstalled.add(async ({reason, previousVersion, temporary}) =
         await Tabs.create({
             url: Constants.PAGES.HELP.WELCOME,
             active: true,
-        });
+        }, {skipTrackingCreated: false});
     }
 
     log.stop();
@@ -1808,7 +1809,7 @@ async function init() {
         sendExternalMessage('i-am-back');
 
         log.log('loading groups for creating cache...');
-        await Groups.load(null, true, true); // load favIconUrls, speed up first run popup
+        await Groups.load(null, true, {includeFavIconUrl: true}); // load favIconUrls, speed up first run popup
 
         log.stop();
     } catch (e) {

@@ -468,7 +468,7 @@ export default [{
             // pre-4.0 model: tabs of not loaded groups exist only in the saved data - adopt the
             // live tabs and create the missing ones, otherwise the commit strips them away forever
             if (data.groups.some(group => !group.isArchive && group.tabs.length)) {
-                const preWindows = await Windows.load(true, true, true);
+                const preWindows = await Windows.load(true, {includeFavIconUrl: true, includeThumbnail: true});
 
                 // Windows.load swallows API errors into an empty list; committing without the
                 // materialization would strip these tabs away forever - abort instead, the
@@ -481,7 +481,7 @@ export default [{
 
                 const allTabs = Utils.flatTabs(preWindows);
 
-                await Tabs.hide(allTabs, true);
+                await Tabs.hide(allTabs);
 
                 data.groups = await Tabs.reconcile(data.groups, allTabs);
             }
