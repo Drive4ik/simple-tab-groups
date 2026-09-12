@@ -37,18 +37,36 @@ export async function nativeGet(area, keysData, log, errorCounter = 0) {
     }
 }
 
-export function isChangedBooleanKey(key, changes) {
-    if (typeof changes[key]?.newValue !== 'boolean' || typeof changes[key]?.oldValue !== 'boolean') {
+const TYPE_CHECKS = new Map([
+    [Boolean, value => typeof value === 'boolean'],
+    [String, value => typeof value === 'string'],
+    [Number, value => typeof value === 'number'],
+    [Array, value => Array.isArray(value)],
+    [Object, value => typeof value === 'object' && value !== null && !Array.isArray(value)],
+]);
+
+// the first write of a key comes with oldValue present as undefined, a removal without newValue,
+// and an unchanged write fires just the same (docs/STORAGE-BEHAVIOR.md §1, §2): a change is a
+// new value of the type that differs from the old one, or that has no old one at all
+export function isChangedKey(key, changes, type) {
+    const {newValue, oldValue} = changes[key] ?? {};
+    const isType = TYPE_CHECKS.get(type);
+
+    if (!isType(newValue)) {
         return false;
     }
 
-    return changes[key].newValue !== changes[key].oldValue;
-}
+    if (oldValue === undefined) {
+        return true;
+    }
 
-export function isChangedStringKey(key, changes) {
-    if (typeof changes[key]?.newValue !== 'string' || typeof changes[key]?.oldValue !== 'string') {
+    if (!isType(oldValue)) {
         return false;
     }
 
-    return changes[key].newValue !== changes[key].oldValue;
+    if (type === Array || type === Object) {
+        return JSON.stringify(newValue) !== JSON.stringify(oldValue);
+    }
+
+    return newValue !== oldValue;
 }

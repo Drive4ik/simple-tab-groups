@@ -379,7 +379,7 @@ export async function load(groupId = null, withTabs = false, params) {
                     groupTabs.get(tab.groupId).push(tab);
                 } else {
                     delete tab.groupId;
-                    await Cache.removeTabGroup(tab.id).catch(() => {});
+                    await Cache.removeTabGroup(tab.id);
                 }
             }
         }));

@@ -254,8 +254,9 @@ export class Test {
         this.data.updatedKeys = updatedKeys ?? null;
 
         for (const spec of specs) {
-            const [namespace, event] = spec.split('.');
-            const target = browser[namespace]?.[event];
+            const path = spec.split('.');
+            const event = path.pop();
+            const target = path.reduce((api, part) => api?.[part], browser)?.[event];
 
             if (!target?.addListener) {
                 this.note(`event API missing: ${spec}`);
@@ -320,8 +321,8 @@ export class Test {
         clearTimeout(this.quietTimer);
         this.quietTimer = null;
 
-        this.flushEvents();
         this.stopWatching();
+        this.flushEvents();
         await this.clearSettings();
     }
 

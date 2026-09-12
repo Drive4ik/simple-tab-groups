@@ -440,7 +440,7 @@ async function onCreated(win) {
         return;
     }
 
-    Cache.setWindow(win);
+    Cache.setWindow(win.id);
 
     if (skip.nextCreation) {
         skip.nextCreation = false;
@@ -576,7 +576,7 @@ async function onRemoved(windowId) {
 }
 
 function onStorageChanged(changes) {
-    if (Storage.isChangedBooleanKey('createNewGroupWhenOpenNewWindow', changes)) {
+    if (Storage.isChangedKey('createNewGroupWhenOpenNewWindow', changes, Boolean)) {
         settings.createNewGroupWhenOpenNewWindow = changes.createNewGroupWhenOpenNewWindow.newValue;
     }
 }
@@ -902,7 +902,7 @@ async function initializeGroupsNow(groups, afterRestoring = false) {
         await Promise.all(win.tabs.map(async tab => {
             if (tab.groupId && !currentGroupIdsSet.has(tab.groupId)) {
                 delete tab.groupId;
-                await Cache.removeTabGroup(tab.id).catch(log.onCatch(['cant removeTabGroup', tab.id], false));
+                await Cache.removeTabGroup(tab.id);
             }
 
             if (tab.groupId) {

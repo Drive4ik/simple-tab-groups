@@ -176,7 +176,7 @@ async function onPermissionsChanged(permissions) {
 }
 
 async function onStorageChanged(changes) {
-    if (Storage.isChangedBooleanKey('showArchivedGroups', changes)) {
+    if (Storage.isChangedKey('showArchivedGroups', changes, Boolean)) {
         const hasPermission = await Bookmarks.hasPermission();
 
         if (!hasPermission) {

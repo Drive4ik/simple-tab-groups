@@ -1,7 +1,7 @@
 # STG behavior test harness
 
 The add-on that produced every fact in `docs/TABGROUPS-BEHAVIOR.md`, `docs/CREATE-TABS-BEHAVIOR.md`,
-`docs/MOVE-TABS-BEHAVIOR.md` and `docs/OPENER-BEHAVIOR.md`. It is committed so those facts can be re-run and disputed: a
+`docs/MOVE-TABS-BEHAVIOR.md`, `docs/OPENER-BEHAVIOR.md` and `docs/STORAGE-BEHAVIOR.md`. It is committed so those facts can be re-run and disputed: a
 marker like `R5.16` points at the test with that id in `tests/round-05.js`, and running it must
 reproduce the table printed next to the fact.
 
@@ -76,6 +76,8 @@ writes into the report whatever it had to clean up.
 | `round-21` | the first load of a NEW tab: the order of `tabs.onCreated` and a blocking `webRequest.onBeforeRequest`, the distance between them, what `tabs.get` and `sessions.setTabValue` report from inside the request listener, and whether `tabs.onCreated` and the resolve of `tabs.create` still arrive while the listener holds the request. A tab from `tabs.create` (R21.01), the same under a hold (R21.02), `window.open` from a page of the add-on (R21.03). R21.04 and R21.05 are MANUAL, a middle-click on a link in a page of the add-on and in a web page. Needs the `webRequest`, `webRequestBlocking` and `<all_urls>` permissions |
 | `round-22` | a window appears: what its active tab reports from `windows.onCreated` until the first page is loaded, sampled every `TIGHT_POLL_WAIT`, with the state at `WINDOW_READ_WAIT` marked as the moment STG reads a new window. `windows.create` with one http url (R22.01), with three (R22.02), without a url (R22.03), and a closed window brought back by `sessions.restore` (R22.04) |
 | `round-23` | a tab that is being removed, seen through `tabs.query` (bugzilla 1396758): is it still returned from inside `tabs.onRemoved`, at the resolve of `tabs.remove`, and for how long after (R23.01); does a closing tab still occupy an index slot for `tabs.create` — a create from inside the onRemoved handler at the count WITH the closing tab (R23.02) and WITHOUT it (R23.03), the closing tab standing in the middle so the two hypotheses land in different slots; the same WITHOUT-count create when the removed tab was the ACTIVE one (R23.04); the addon's own shape — `tabs.remove` awaited, then the WITHOUT-count create (R23.05); R23.06 and R23.07 are MANUAL — the user closes the tab with the close button of an inactive tab and with Ctrl+W on the active one, the gestures the bug report ties to the closing animation, with the same sampling and the same WITHOUT-count create from the handler. REMOVE-TABS-BEHAVIOR.md §3 and §4: the appending index of `Tabs.createMultiple` / `Tabs.resolveMoveIndex` is the browser's own count, a read that filters closing tabs out lands one short after a user's close |
+| `round-24` | `sessions.setTabValue` values across `sessions.restore()`: does the value set on the closed tab's old id come back on the fresh one, and is it readable already inside `tabs.onCreated` — a single closed tab (R24.01); a closed window with a loaded active tab, a background tab that comes back discarded and a hidden member (R24.02); a `setTabValue` from inside `tabs.onCreated` of the restored tab against the value the restore brings, the shape of the STG onCreated handler (R24.03); a `sessions.setWindowValue` value across the restore of its window, probed from every `tabs.onCreated` of the restored window and from `windows.onCreated` (R24.04) |
+| `round-25` | `storage.onChanged` for a key of `storage.local`: the change object of the FIRST write (is `oldValue` absent or present as undefined), of the same value written again, of a change and of a removal, as seen by `storage.onChanged` and by `storage.local.onChanged`; one test per value type — boolean (R25.01), string (R25.02), number (R25.03), array (R25.04), object (R25.05). The facts behind `Storage.isChangedKey` |
 
 ## Files
 
@@ -86,6 +88,7 @@ writes into the report whatever it had to clean up.
 | `tabs.js` | `class TabsTest extends Test` — windows, tabs, groups, and the `tabs.*` / `tabGroups.*` event formatters |
 | `opener.js` | `class OpenerTest extends TabsTest` — the opener suffix in every cell (`c1→p`), opener readers and setters, `tryStep` for a call that may be refused; shared by the opener rounds |
 | `menus.js` | `class MenusTest extends Test` — `browser.menus` wrappers that return `{ok, error}`, existence probing, the `bookmarks` permission helpers |
+| `storage.js` | `class StorageTest extends Test` — formatters for `storage.onChanged` and `storage.local.onChanged` printing every change object property as absent or as type and value; every action goes into the event log as its own line, there is no state table |
 | `grant.html` + `grant.js` | the page R11.06 opens — a button that calls `permissions.request` from a real user click |
 | `sessions.js` | `sessions.getRecentlyClosed` helpers: the session ids known before a close, the record of a window or a tab closed by the test, shared by the rounds that restore through the API |
 | `harness.js` | the runner, checkpoints, `globalThis.T` |
@@ -222,6 +225,8 @@ The `t` passed to a test:
 | `t.setting('newTabPosition', 'atEnd')` | sets a browser setting and reports what actually applied; the harness restores it after the test |
 | `t.note('…')` | a line under the table |
 | `t.query()` / `t.groupsInfo()` / `t.hiddenFlags()` / `t.cell(tab)` | the window as the API sees it |
+| `t.snapWindow('label', windowId)` | a state row of another window the test built or a gesture produced |
+| `t.settleRestored(windowId, names)` / `t.bindFresh(tabs)` / `t.bindAsOld(tabs)` | a window repopulated by `sessions.restore`: wait for the named tabs and for quiet, then read the window again; bind the fresh tabs by the names in their urls; rename the dead pre-close ids to `old-…` |
 | `t.id('name')` / `t.ids([…])` | real tab ids, for a raw API call — they never reach the printed output |
 
 `t.query()` uses `tabs.query`, not `windows.getAll({populate: true})` — only the former is known to

@@ -504,9 +504,9 @@ export default [{
                 const newGroupId = getNewGroupId(groupId);
 
                 if (newGroupId) {
-                    await browser.sessions.setWindowValue(win.id, 'groupId', newGroupId);
+                    await Cache.setWindowGroup(win.id, newGroupId);
                 } else {
-                    await browser.sessions.removeWindowValue(win.id, 'groupId');
+                    await Cache.removeWindowGroup(win.id);
                 }
             }));
 

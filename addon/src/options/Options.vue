@@ -291,12 +291,6 @@ export default {
                     return self.findIndex(h => h.value === hotkey.value) === index;
                 });
             }, {deep: true});
-
-            this.optionsWatch('showTabsWithThumbnailsInManageGroups', value => {
-                if (!value) {
-                    this.options.autoBackupIncludeTabThumbnails = this.includeTabThumbnailsIntoBackup = false;
-                }
-            });
         },
 
         async loadGroups() {

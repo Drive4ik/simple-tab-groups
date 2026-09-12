@@ -156,7 +156,7 @@ async function saveConsoleLogs() {
     loadedWindows = loadedWindows.filter(Boolean);
 
     tabs.forEach(GroupsNative.detachTabGroupId);
-    let loadedTabs = await Promise.all(tabs.map(Cache.loadTabSession));
+    let loadedTabs = await Promise.all(tabs.map(tab => Cache.loadTabSession(tab)));
     loadedTabs = loadedTabs.filter(Boolean);
 
     const filteredExtensions = (function() {

@@ -58,7 +58,7 @@ export default {
     },
     computed: {
         includeTabThumbnails() {
-            return this.PAGES.isManage && this.options.showTabsWithThumbnailsInManageGroups;
+            return this.PAGES.isManage;
         },
         availableTabKeys() {
             return [...this.defaultAvailableTabKeys, ...this.extraAvailableTabKeys ?? []];

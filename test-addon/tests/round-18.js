@@ -81,27 +81,6 @@ class RestoreOpenerTest extends OpenerTest {
         };
     }
 
-    bindAsOld(tabs) {
-        for (const tab of tabs) {
-            const name = nameFromUrl(tab.url);
-            name && this.bind(tab.id, `old-${name}`);
-        }
-    }
-
-    async settleRestored(windowId, names) {
-        this.trackWindow(windowId);
-
-        const tabs = await this.waitWindowLoaded(windowId, names);
-        const settled = await this.settled();
-        const action = this.data.rows.findLast(row => row.kind === 'action');
-
-        if (action && !action.timing) {
-            action.timing = `settled ${settled.ms} ms`;
-        }
-
-        return tabs;
-    }
-
     describeSessionTab(tab) {
         const name = nameFromUrl(tab.url) ?? '(foreign)';
         const opener = 'openerTabId' in tab ? `openerTabId ${this.known(tab.openerTabId)}` : 'no openerTabId field';
@@ -164,15 +143,10 @@ export const tests = [
         openedWindows.add(restoredWinId);
         t.nameWindow(restoredWinId, 'restored');
 
-        const tabs = await t.settleRestored(restoredWinId, ['p', 'c1', 'c2', 'x']);
-        t.require('the restored window is populated', tabs !== null, 'the visible tabs never finished loading');
+        const after = await t.settleRestored(restoredWinId, ['p', 'c1', 'c2', 'x']);
+        t.require('the restored window is populated', after !== null, 'the visible tabs never finished loading');
 
-        const after = (await browser.tabs.query({windowId: restoredWinId})).sort((a, b) => a.index - b.index);
-
-        for (const tab of after) {
-            const name = nameFromUrl(tab.url);
-            name && t.bind(tab.id, name);
-        }
+        t.bindFresh(after);
 
         await t.snapWindow('restored (second window)', restoredWinId);
         await t.snap('after (scene window)');

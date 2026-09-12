@@ -139,25 +139,27 @@ export function removeListeners() {
 }
 
 async function onStorageChanged(changes) {
-    if (Storage.isChangedBooleanKey('showContextMenuOnLinks', changes)) {
-        logger.log('onStorageChanged', {showContextMenuOnLinks: changes.showContextMenuOnLinks.newValue});
+    if (Storage.isChangedKey('showContextMenuOnLinks', changes, Boolean)) {
+        logger.log('onStorageChanged', {showContextMenuOnLinks: changes.showContextMenuOnLinks});
+
+        const exists = await Menus.has(PARENT_ID);
 
         if (changes.showContextMenuOnLinks.newValue) {
-            await createMenus();
+            exists || await createMenus();
         } else {
-            await removeMenus();
+            exists && await removeMenus();
             return;
         }
     }
 
-    if (Storage.isChangedBooleanKey('showArchivedGroups', changes)) {
+    if (Storage.isChangedKey('showArchivedGroups', changes, Boolean)) {
         const settings = await loadSettings();
 
         if (!settings.showContextMenuOnLinks) {
             return
         }
 
-        logger.log('onStorageChanged', {showArchivedGroups: changes.showArchivedGroups.newValue});
+        logger.log('onStorageChanged', {showArchivedGroups: changes.showArchivedGroups});
 
         const {groups} = await Groups.load();
 

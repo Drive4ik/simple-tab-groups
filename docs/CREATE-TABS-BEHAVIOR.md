@@ -768,6 +768,132 @@ navigation to an empty page is fooled by a single sample.
 (7 tabs.onUpdated dropped, only these keys were kept: url/status)
 ```
 
+### 29. A `sessions.setTabValue` value rides through `sessions.restore()` onto the fresh tab, is readable inside its `tabs.onCreated`, and a write from inside that handler wins over it; a `sessions.setWindowValue` value does the same for a restored window (R24.01–R24.04)
+
+A tab restored by `sessions.restore()` — a closed tab or a whole closed window — comes back with a
+fresh id (OPENER-BEHAVIOR.md §15, §16) and with the value that was set on the OLD id: for a loaded
+active tab, for a background tab that comes back discarded (§27) and for a hidden member alike.
+The value is already there when `tabs.onCreated` fires: a `sessions.getTabValue` started inside
+the handler returns it, 6–7 ms for a single restored tab, 40–52 ms for the three tabs of a
+restored window read at once. The dead id rejects the read (`Invalid tab ID`). A
+`sessions.setTabValue` issued from inside the handler right after that read is what the tab
+holds once the restore has settled: the restore does not write its value again afterwards.
+
+A window value behaves the same (R24.04): the restored window gets a fresh id, the dead id rejects
+the read (`Invalid window ID`), and `sessions.getWindowValue` returns the value from inside the
+first `tabs.onCreated` of the restored window — the one delivered before `windows.onCreated`
+(TABGROUPS-BEHAVIOR.md §18) — as well as from inside `windows.onCreated` and after the restore
+has settled, 51–73 ms per read with the three reads in flight together.
+
+R24.01, a single closed tab:
+
+| tab index | 0 | 1 |
+| - | - | - |
+| before | keep* | c |
+| `tabs.remove(c)` — settled 281 ms | | |
+| closed | keep* | |
+| `sessions.restore(sessionId of the tab)` — settled 227 ms | | |
+| restored | keep | c* |
+
+```text
+    2ms  tabs.onRemoved        c  isWindowClosing:false
+    7ms  tabs.onCreated        c  index:1 active:true discarded:false hidden:false
+    7ms  tabs.onActivated      c
+    7ms  probe getTabValue     c  "value-c", took 7 ms
+(9 tabs.onUpdated dropped, only these keys were kept: hidden/discarded)
+```
+
+- c after the close, read on the OLD id: rejected, Invalid tab ID: `<id>`
+- restored c: a fresh id, index:1, discarded:false hidden:false status:complete
+- inside tabs.onCreated of the restored tab: "value-c"
+- after the restore settled: "value-c"
+
+R24.02, a closed window with a loaded active tab, a background tab and a hidden member:
+
+| tab index | 0 | 1 | 2 |
+| - | - | - | - |
+| before (second window) | p* | q | h1(h) |
+| before (scene window) | keep* | | |
+| `windows.remove(second)` — settled 283 ms | | | |
+| `sessions.restore(sessionId of the window)` — settled 223 ms | | | |
+| restored (second window) | p* | q | h1(h) |
+| after (scene window) | keep* | | |
+
+```text
+    9ms  tabs.onRemoved        p  isWindowClosing:true  [second]
+    9ms  tabs.onRemoved        q  isWindowClosing:true  [second]
+    9ms  tabs.onRemoved        h1  isWindowClosing:true  [second]
+    9ms  windows.onRemoved     closed
+   90ms  tabs.onCreated        p  index:0 active:true discarded:false hidden:false  [restored]
+   90ms  tabs.onActivated      p  [restored]
+   91ms  windows.onCreated     type:normal
+   97ms  tabs.onCreated        q  index:1 active:false discarded:true hidden:false  [restored]
+   98ms  tabs.onCreated        h1  index:2 active:false discarded:true hidden:true  [restored]
+   98ms  tabs.onUpdated        h1  {hidden: true}  [restored]
+   90ms  probe getTabValue     p  "value-p", took 40 ms
+   97ms  probe getTabValue     q  "value-q", took 52 ms
+   98ms  probe getTabValue     h1  "value-h1", took 51 ms
+(11 tabs.onUpdated dropped, only these keys were kept: hidden/discarded)
+```
+
+- tabs in the session record: p, q, h1
+- restored p: discarded:false hidden:false status:complete
+- restored q: discarded:true hidden:false status:complete
+- restored h1: discarded:true hidden:true status:complete
+- inside tabs.onCreated: p "value-p", q "value-q", h1 "value-h1"
+- after the restore settled: p "value-p", q "value-q", h1 "value-h1"
+
+R24.03, the same single tab with a write from inside `tabs.onCreated`:
+
+| tab index | 0 | 1 |
+| - | - | - |
+| before | keep* | c |
+| `tabs.remove(c)` — settled 278 ms | | |
+| closed | keep* | |
+| `sessions.restore(sessionId of the tab)` — settled 230 ms | | |
+| restored | keep | c* |
+
+```text
+    2ms  tabs.onRemoved        c  isWindowClosing:false
+   11ms  tabs.onCreated        c  index:1 active:true discarded:false hidden:false
+   11ms  tabs.onActivated      c
+   11ms  probe getTabValue     c  "value-c", took 6 ms
+   20ms  probe setTabValue     c  ok
+(9 tabs.onUpdated dropped, only these keys were kept: hidden/discarded)
+```
+
+- inside tabs.onCreated of the restored tab, before the write: "value-c"
+- after the restore settled: "written-inside-onCreated" (the handler wrote "written-inside-onCreated")
+
+R24.04, a `sessions.setWindowValue` value across the restore of its window:
+
+| tab index | 0 | 1 |
+| - | - | - |
+| before (second window) | p* | q |
+| before (scene window) | keep* | |
+| `windows.remove(second)` — settled 278 ms | | |
+| `sessions.restore(sessionId of the window)` — settled 234 ms | | |
+| restored (second window) | p* | q |
+| after (scene window) | keep* | |
+
+```text
+   10ms  tabs.onRemoved        p  isWindowClosing:true  [second]
+   10ms  tabs.onRemoved        q  isWindowClosing:true  [second]
+   10ms  windows.onRemoved     closed
+   93ms  tabs.onCreated        p  index:0 active:true discarded:false hidden:false  [restored]
+   93ms  tabs.onActivated      p  [restored]
+   93ms  windows.onCreated     type:normal
+   99ms  tabs.onCreated        q  index:1 active:false discarded:true hidden:false  [restored]
+   93ms  probe getWindowValue  from tabs.onCreated of p  "value-window", took 51 ms  [restored]
+   93ms  probe getWindowValue  from windows.onCreated  "value-window", took 51 ms  [restored]
+   99ms  probe getWindowValue  from tabs.onCreated of q  "value-window", took 73 ms  [restored]
+(10 tabs.onUpdated dropped, only these keys were kept: hidden/discarded)
+```
+
+- after the close, read on the OLD window id: rejected, Invalid window ID: `<id>`
+- restored window: a fresh id
+- after the restore settled: "value-window"
+
 ---
 
 ## Conclusions for the add-on
@@ -827,6 +953,15 @@ navigation to an empty page is fooled by a single sample.
   add-on measures is already serialized: a tab url comes from the browser that way, and the
   address of the stub page is built with `URLSearchParams`. For such urls `url.length` is the
   exact measure, no byte counting.
+- **An undo-closed tab is a new tab with an old session** (§29): it reaches `Tabs.onCreated`
+  under a fresh id, but `groupId` and `groupNativeId` of the closed tab are already on it, and
+  discarded and hidden members of a restored window carry theirs too. The handler may decide
+  from that value right away, and whatever it writes there stays: `setTabGroup` binding the tab
+  to the window's group is not undone by the restore. A window without a group is the case to
+  handle explicitly: nothing overwrites the old group, so it has to be read or removed, not
+  assumed absent. The window's own `groupId` session value is there just as early: a cache that
+  reads a window session once, at the first `Windows.load` after `windows.onCreated`, never
+  reads it too soon.
 
 ## Open questions
 

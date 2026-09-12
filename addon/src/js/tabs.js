@@ -33,6 +33,7 @@ export {on, off} from './broadcast.js?channel=tabs';
 const logger = new Logger('Tabs');
 const mainStorage = localStorage.create(Constants.MODULES.BACKGROUND);
 const settings = await Storage.get(['showTabsWithThumbnailsInManageGroups', 'colorScheme']);
+Cache.setUseThumbnails(settings.showTabsWithThumbnailsInManageGroups);
 const skipTrackingWindows = new Set();
 const skip = {
     created: new Set(),
@@ -319,11 +320,11 @@ async function onUpdated(tabId, changeInfo, tab) {
             changeInfo.hidden && log.log('remove group for hidden tab', tab.id);
 
             tabGroupId = Cache.getTabGroup(tab.id);
-            await Cache.removeTabGroup(tab.id).catch(() => {});
+            await Cache.removeTabGroup(tab.id);
 
             if (changeInfo.pinned) {
                 // pinned tabs can't be in a native group, and the mirror doesn't see pinned tabs - clean up here
-                await Cache.removeTabNativeGroupId(tab.id).catch(() => {});
+                await Cache.removeTabNativeGroupId(tab.id);
             }
         } else if (changeInfo.pinned === false) {
             log.log('tab is unpinned', tab.id);
@@ -362,7 +363,7 @@ async function onUpdated(tabId, changeInfo, tab) {
         changeInfo,
     });
 
-    if (settings.showTabsWithThumbnailsInManageGroups && isLoaded(changeInfo)) {
+    if (isLoaded(changeInfo)) {
         await updateThumbnail(tab.id);
     }
 
@@ -492,7 +493,7 @@ async function onAttached(tabId, {newWindowId}) { // called when tabs.move()
     const attachedTab = await get(tabId, {raw: true});
 
     if (attachedTab?.groupId === GroupsNative.TAB_GROUP_ID_NONE) {
-        await Cache.removeTabNativeGroupId(tabId).catch(() => {});
+        await Cache.removeTabNativeGroupId(tabId);
     }
 
     const groupId = Cache.getTabGroup(tabId);
@@ -507,10 +508,11 @@ async function onAttached(tabId, {newWindowId}) { // called when tabs.move()
 }
 
 function onStorageChanged(changes) {
-    if (Storage.isChangedBooleanKey('showTabsWithThumbnailsInManageGroups', changes)) {
+    if (Storage.isChangedKey('showTabsWithThumbnailsInManageGroups', changes, Boolean)) {
         settings.showTabsWithThumbnailsInManageGroups = changes.showTabsWithThumbnailsInManageGroups.newValue;
+        Cache.setUseThumbnails(settings.showTabsWithThumbnailsInManageGroups);
     }
-    if (Storage.isChangedStringKey('colorScheme', changes)) {
+    if (Storage.isChangedKey('colorScheme', changes, String)) {
         settings.colorScheme = changes.colorScheme.newValue;
     }
 }
@@ -1121,6 +1123,10 @@ async function addNow(groupId, cookieStoreId, url, title) {
 }
 
 export async function updateThumbnail(tabId) {
+    if (!settings.showTabsWithThumbnailsInManageGroups) {
+        return;
+    }
+
     const log = logger.start(updateThumbnail, {tabId});
 
     const tab = await get(tabId, {withSession: false});
@@ -1197,7 +1203,7 @@ async function moveNow(tabIds, groupId, params = {}) {
     let tabs = await list(tabIds, {
         sortByIndex: true,
         includeFavIconUrl: true,
-        includeThumbnail: settings.showTabsWithThumbnailsInManageGroups,
+        includeThumbnail: true,
     });
 
     if (tabs.length) {
@@ -1543,7 +1549,7 @@ export async function moveNative(tabs, moveProperties = {}, params = {}) {
                 return tabAfterMove;
             }
 
-            Cache.clearTabSessionCache(tabAfterMove.id);
+            Cache.forgetTab(tabAfterMove.id);
             tabAfterMove = await Cache.loadTabSession(tabAfterMove, {includeFavIconUrl: true, includeThumbnail: true});
 
             const tabBeforeMove = tabsBeforeMoveMap.get(tabAfterMove.id);

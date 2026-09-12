@@ -215,7 +215,7 @@ const onBeforeTabRequest = catchFunc(async function onBeforeTabRequest({
 
         if (new URL(tab.url).origin !== new URL(requestedUrl).origin) {
             tab.favIconUrl = null;
-            Cache.removeTabThumbnail(tab.id).catch(() => {});
+            Cache.removeTabThumbnail(tab.id);
         }
 
         tab.url = requestedUrl;
@@ -1088,7 +1088,7 @@ async function onBackgroundMessage(message, sender) {
 
                 break;
             case 'get-current-group':
-                if (data.windowId) {
+                if (Number.isSafeInteger(data.windowId) && data.windowId > 0) {
                     let groupId = Cache.getWindowGroup(data.windowId),
                         group = groups.find(gr => gr.id === groupId);
 
@@ -1099,7 +1099,7 @@ async function onBackgroundMessage(message, sender) {
                     result.group = group || null;
                     result.ok = true;
                 } else {
-                    throw new Error('windowId is required');
+                    throw new Error(data.windowId ? 'Invalid window id' : 'windowId is required');
                 }
 
                 break;
@@ -1131,9 +1131,7 @@ async function onBackgroundMessage(message, sender) {
                 break;
             case 'get-startup-data':
                 {
-                    const includeThumbnail = data.isManage
-                        ? options.showTabsWithThumbnailsInManageGroups
-                        : false;
+                    const includeThumbnail = data.isManage === true;
 
                     [
                         result.windows,
@@ -1297,12 +1295,10 @@ async function resetAlarm(
 }
 
 async function createBackup(params = {}, isAutoBackup = false) {
-    const includeThumbnail = (params.includeThumbnail ?? false) && options.showTabsWithThumbnailsInManageGroups;
-
     const log = logger.start('createBackup', {params, isAutoBackup});
 
     const data = stampVersion(await Storage.get());
-    const {groups} = await Groups.load(null, true, {...params, includeThumbnail});
+    const {groups} = await Groups.load(null, true, params);
 
     if (isAutoBackup && (!groups.length || groups.filter(gr => !gr.isArchive).every(gr => !gr.tabs.length))) {
         log.stopWarn('skip create auto backup, groups are empty');
@@ -1322,7 +1318,7 @@ async function createBackup(params = {}, isAutoBackup = false) {
             group.groupsNative = GroupsNative.referencedGroupsNative(group);
         }
 
-        group.tabs = Tabs.prepareForSave(group.tabs, {...params, includeThumbnail});
+        group.tabs = Tabs.prepareForSave(group.tabs, params);
 
         return group;
     });
@@ -1385,6 +1381,7 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
         await Containers.updateTemporaryContainerTitle(data.temporaryContainerTitle);
     }
 
+    // the backup's thumbnails option applies to the restore itself, ahead of the storage write
     if (clearAddonDataBeforeRestore) {
         options.showTabsWithThumbnailsInManageGroups = Constants.DEFAULT_OPTIONS.showTabsWithThumbnailsInManageGroups;
     }
@@ -1392,6 +1389,8 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
     if (data.hasOwnProperty('showTabsWithThumbnailsInManageGroups')) {
         options.showTabsWithThumbnailsInManageGroups = data.showTabsWithThumbnailsInManageGroups;
     }
+
+    Cache.setUseThumbnails(options.showTabsWithThumbnailsInManageGroups);
 
     if (clearAddonDataBeforeRestore) {
         currentData.groups = [];
@@ -1402,7 +1401,7 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
             {groups: currentData.groups},
         ] = await Promise.all([
             Storage.get('hotkeys'),
-            Groups.load(null, true, {includeFavIconUrl: true, includeThumbnail: options.showTabsWithThumbnailsInManageGroups}),
+            Groups.load(null, true, {includeFavIconUrl: true, includeThumbnail: true}),
         ]);
     }
 
@@ -1508,7 +1507,7 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
 
     const allTabs = await Tabs.query({pinned: false}, {
         includeFavIconUrl: true,
-        includeThumbnail: options.showTabsWithThumbnailsInManageGroups,
+        includeThumbnail: true,
     });
 
     await Tabs.reconcile(data.groups, allTabs);

@@ -21,7 +21,7 @@ const settings = await Storage.get(['cloneSubGroupsWhenMovingTabs']);
 Listeners.storage.local.onChanged.add(onStorageChanged, {waitListener: false});
 
 function onStorageChanged(changes) {
-    if (Storage.isChangedBooleanKey('cloneSubGroupsWhenMovingTabs', changes)) {
+    if (Storage.isChangedKey('cloneSubGroupsWhenMovingTabs', changes, Boolean)) {
         settings.cloneSubGroupsWhenMovingTabs = changes.cloneSubGroupsWhenMovingTabs.newValue;
     }
 }
@@ -460,7 +460,7 @@ async function clearWindowSessionsNow(windowId) {
         }
 
         cleared++;
-        await Cache.removeTabNativeGroupId(tab.id).catch(() => {});
+        await Cache.removeTabNativeGroupId(tab.id);
     }
 
     if (!cleared) {

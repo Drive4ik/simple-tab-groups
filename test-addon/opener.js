@@ -53,11 +53,6 @@ export class OpenerTest extends TabsTest {
         return Object.fromEntries(Object.keys(openers).sort().map(name => [name, openers[name]]));
     }
 
-    async snapWindow(label, windowId) {
-        const tabs = (await browser.tabs.query({windowId})).sort((a, b) => a.index - b.index);
-        this.row(label, tabs.map(tab => this.cell(tab)));
-    }
-
     async setOpener(child, opener) {
         return browser.tabs.update(this.id(child), {openerTabId: opener === null ? -1 : this.id(opener)});
     }

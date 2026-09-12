@@ -338,6 +338,45 @@ export class TabsTest extends Test {
         return null;
     }
 
+    // a window repopulated by sessions.restore: wait for the named tabs, then for quiet, and read
+    // the window again - the list waitWindowLoaded saw is the transient state of the arrival
+    async settleRestored(windowId, names) {
+        this.trackWindow(windowId);
+
+        const loaded = await this.waitWindowLoaded(windowId, names);
+        const settled = await this.settled();
+        const action = this.data.rows.findLast(row => row.kind === 'action');
+
+        if (action && !action.timing) {
+            action.timing = `settled ${settled.ms} ms`;
+        }
+
+        if (loaded === null) {
+            return null;
+        }
+
+        return (await browser.tabs.query({windowId})).sort((a, b) => a.index - b.index);
+    }
+
+    async snapWindow(label, windowId) {
+        const tabs = (await browser.tabs.query({windowId})).sort((a, b) => a.index - b.index);
+        this.row(label, tabs.map(tab => this.cell(tab)));
+    }
+
+    bindFresh(tabs) {
+        for (const tab of tabs) {
+            const name = nameFromUrl(tab.url);
+            name && this.bind(tab.id, name);
+        }
+    }
+
+    bindAsOld(tabs) {
+        for (const tab of tabs) {
+            const name = nameFromUrl(tab.url);
+            name && this.bind(tab.id, `old-${name}`);
+        }
+    }
+
     async reattach() {
         const names = this.data.scene;
         let best = null;

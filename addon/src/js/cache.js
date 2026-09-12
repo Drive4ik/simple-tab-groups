@@ -1,8 +1,6 @@
 
-import './prefixed-storage.js';
 import * as Constants from './constants.js';
 import * as Utils from './utils.js';
-import backgroundSelf from './background.js';
 
 export const GROUP_KEY = 'groupId';
 export const GROUP_NATIVE_KEY = 'groupNativeId';
@@ -10,23 +8,51 @@ export const FAVICON_KEY = 'favIconUrl';
 export const THUMBNAIL_KEY = 'thumbnail';
 export const KEYS = [GROUP_KEY, GROUP_NATIVE_KEY, FAVICON_KEY, THUMBNAIL_KEY];
 
-const PROMISES = Symbol.for('promises');
+const PENDING = Symbol('pending');
 
-export const tabs = {};
-export const lastTabsState = {}; // BUG https://bugzilla.mozilla.org/show_bug.cgi?id=1818392
-export const windows = {};
+export const tabs = new Map;
+export const lastTabsState = new Map; // BUG https://bugzilla.mozilla.org/show_bug.cgi?id=1818392
+export const windows = new Map;
+
+const SESSIONS_API = new Map([
+    [tabs, {
+        load: browser.sessions.getTabValue,
+        set: browser.sessions.setTabValue,
+        remove: browser.sessions.removeTabValue,
+    }],
+    [windows, {
+        load: browser.sessions.getWindowValue,
+        set: browser.sessions.setWindowValue,
+        remove: browser.sessions.removeWindowValue,
+    }],
+]);
+
+// the thumbnails option: tabs.js sets it from storage, restoreBackup from the backup being
+// restored. While off, thumbnails are neither read, written, removed nor handed out - the ones
+// already in the records wait for the option to come back; removeTabSession clears them regardless
+let useThumbnails = false;
+
+export function setUseThumbnails(value) {
+    useThumbnails = value;
+}
+
+function createRecord(id) {
+    return {id};
+}
 
 function setLastTabState(tab) {
-    lastTabsState[tab.id] = Utils.extractKeys(tab, ['id', ...Constants.ON_UPDATED_TAB_PROPERTIES]);
+    lastTabsState.set(tab.id, Utils.extractKeys(tab, ['id', ...Constants.ON_UPDATED_TAB_PROPERTIES]));
 }
 
 // don't forget for pinned tabs events
 export function getRealTabStateChanged(tab) {
     let changeInfo = null;
 
-    if (lastTabsState[tab.id]) {
+    const lastState = lastTabsState.get(tab.id);
+
+    if (lastState) {
         for (const key of Constants.ON_UPDATED_TAB_PROPERTIES) {
-            if (tab[key] !== lastTabsState[tab.id][key]) {
+            if (tab[key] !== lastState[key]) {
                 changeInfo ??= {};
                 changeInfo[key] = tab[key];
             }
@@ -37,9 +63,9 @@ export function getRealTabStateChanged(tab) {
 }
 
 export function clear() {
-    for (const key in tabs) delete tabs[key];
-    for (const key in lastTabsState) delete lastTabsState[key];
-    for (const key in windows) delete windows[key];
+    tabs.clear();
+    lastTabsState.clear();
+    windows.clear();
 }
 
 // TABS
@@ -52,27 +78,27 @@ export function clear() {
 export function mirrorTab(tab, isRead = false) {
     const {id, url, title, favIconUrl, cookieStoreId, openerTabId, status} = tab;
 
-    lastTabsState[id] || setLastTabState(tab);
+    lastTabsState.has(id) || setLastTabState(tab);
 
-    tabs[id] ??= {};
-    tabs[id].id ??= id;
-    tabs[id].cookieStoreId ??= cookieStoreId;
+    const record = tabs.getOrInsertComputed(id, createRecord);
+
+    record.cookieStoreId ??= cookieStoreId;
 
     if (openerTabId === undefined) {
-        delete tabs[id].openerTabId;
+        delete record.openerTabId;
     } else {
-        tabs[id].openerTabId = openerTabId;
+        record.openerTabId = openerTabId;
     }
 
-    if (tabs[id].url && Utils.isUrlEmpty(url) && (isRead || status === browser.tabs.TabStatus.LOADING)) {
+    if (record.url && Utils.isUrlEmpty(url) && (isRead || status === browser.tabs.TabStatus.LOADING)) {
         return;
     }
 
-    tabs[id].url = url;
-    tabs[id].title = title || url;
+    record.url = url;
+    record.title = title || url;
 
     if (Utils.isAvailableFavIconUrl(favIconUrl)) {
-        tabs[id].favIconUrl = favIconUrl;
+        record.favIconUrl = favIconUrl;
     }
 }
 
@@ -82,24 +108,23 @@ export function setTab(tab) {
 }
 
 export function mirrorTabUrl(id, url) {
-    tabs[id] ??= {id};
-    tabs[id].url = url;
+    tabs.getOrInsertComputed(id, createRecord).url = url;
 }
 
 export function hasTab(id) {
-    return !!tabs[id];
+    return tabs.has(id);
 }
 
 export function removeTab(id) {
-    delete tabs[id];
-    delete lastTabsState[id];
+    tabs.delete(id);
+    lastTabsState.delete(id);
 }
 
 // a cross-window move erases every link to and from the tab, with no event (docs/OPENER-BEHAVIOR.md §7, §9)
 export function clearTabOpeners(id) {
-    delete tabs[id]?.openerTabId;
+    delete tabs.get(id)?.openerTabId;
 
-    for (const tab of Object.values(tabs)) {
+    for (const tab of tabs.values()) {
         if (tab.openerTabId === id) {
             delete tab.openerTabId;
         }
@@ -110,42 +135,58 @@ export function clearTabOpeners(id) {
 export function getTabChildren(tabIds) {
     const ids = new Set(tabIds);
 
-    return Object.values(tabs).filter(tab => ids.has(tab.openerTabId));
+    return [...tabs.values()].filter(tab => ids.has(tab.openerTabId));
 }
 
-// session values: a record field has three states - no key means not read yet, null means read
-// and the session has no value, anything else is the value. Only the load checks the mark; the
-// getters and the copies never let null out of the module
-async function loadTabValue(id, key) {
-    tabs[id] ??= {id};
+// session values, the same for tabs and windows: a record field has three states - no key means
+// not read yet, null means read and the session has no value, anything else is the value. Only
+// the load and the remove check the mark (a known "no value" is not read and not removed again);
+// the getters and the copies never let null out of the module. Operations on one record and one
+// key run one after another (queueByKey), different keys in parallel. A record deleted from the
+// store (forgetTab, removeTab, removeWindow) while an operation waits its turn is dead: the load
+// skips it, a write lands in it and nobody reads it again
+async function loadValue(store, id, key) {
+    const record = store.getOrInsertComputed(id, createRecord);
 
-    await waitPromises(tabs[id]);
+    await queueByKey(record, key, async () => {
+        if (record !== store.get(id)) {
+            return;
+        }
 
-    if (tabs[id][key] === undefined) {
-        tabs[id][key] = await addPromise(tabs[id], browser.sessions.getTabValue(id, key)) ?? null;
-    }
+        if (record[key] === undefined) {
+            record[key] = await SESSIONS_API.get(store).load(id, key) ?? null;
+        }
+    });
 
-    return getTabValue(id, key);
+    return getValue(store, id, key);
 }
 
-async function setTabValue(id, key, value) {
-    tabs[id] ??= {id};
+async function setValue(store, id, key, value) {
+    const record = store.getOrInsertComputed(id, createRecord);
 
-    await waitPromises(tabs[id]);
-
-    await addPromise(tabs[id], browser.sessions.setTabValue(id, key, value));
-
-    tabs[id][key] = value;
+    await queueByKey(record, key, async () => {
+        await SESSIONS_API.get(store).set(id, key, value);
+        record[key] = value;
+    });
 }
 
-async function removeTabValue(id, key) {
-    await waitPromises(tabs[id]);
-    await addPromise(tabs[id], browser.sessions.removeTabValue(id, key));
-    tabs[id] && (tabs[id][key] = null);
+async function removeValue(store, id, key) {
+    const record = store.get(id) ?? createRecord(id);
+
+    await queueByKey(record, key, async () => {
+        if (record[key] !== null) {
+            await SESSIONS_API.get(store).remove(id, key);
+            record[key] = null;
+        }
+    }).catch(() => {});
+}
+
+function getValue(store, id, key) {
+    return store.get(id)?.[key] ?? undefined;
 }
 
 export function getTabValue(id, key) {
-    return tabs[id]?.[key] ?? undefined;
+    return getValue(tabs, id, key);
 }
 
 // groupId
@@ -153,69 +194,71 @@ export async function setTabGroup(id, groupId = null, windowId = null) {
     groupId ??= getWindowGroup(windowId);
 
     if (groupId) {
-        await setTabValue(id, GROUP_KEY, groupId);
-    } else if (getTabGroup(id)) {
-        await removeTabGroup(id).catch(() => {});
+        await setValue(tabs, id, GROUP_KEY, groupId);
+    } else {
+        await removeTabGroup(id);
     }
 }
 
 export function getTabGroup(id) {
-    return getTabValue(id, GROUP_KEY);
+    return getValue(tabs, id, GROUP_KEY);
 }
 
 export async function removeTabGroup(id) {
-    await removeTabValue(id, GROUP_KEY);
+    await removeValue(tabs, id, GROUP_KEY);
 }
 
 // groupNativeId - membership in a native tab group: the stable string id of the sub-group
 // (GroupsNative.createSubGroupId), never the ephemeral browser group id. The single source of
 // truth: survives addon and browser restarts and travels with the tab.
 export async function loadTabNativeGroupId(id) {
-    return await loadTabValue(id, GROUP_NATIVE_KEY);
+    return await loadValue(tabs, id, GROUP_NATIVE_KEY);
 }
 
 export async function setTabNativeGroupId(id, groupNativeId) {
     if (groupNativeId) {
-        await setTabValue(id, GROUP_NATIVE_KEY, groupNativeId);
+        await setValue(tabs, id, GROUP_NATIVE_KEY, groupNativeId);
     } else {
-        await removeTabNativeGroupId(id).catch(() => {});
+        await removeTabNativeGroupId(id);
     }
 }
 
 export function getTabNativeGroupId(id) {
-    return getTabValue(id, GROUP_NATIVE_KEY);
+    return getValue(tabs, id, GROUP_NATIVE_KEY);
 }
 
 export async function removeTabNativeGroupId(id) {
-    await removeTabValue(id, GROUP_NATIVE_KEY);
+    await removeValue(tabs, id, GROUP_NATIVE_KEY);
 }
 
 // favIconUrl
 export async function setTabFavIcon(id, favIconUrl) {
     if (favIconUrl?.startsWith('data:')) {
-        await setTabValue(id, FAVICON_KEY, favIconUrl);
+        await setValue(tabs, id, FAVICON_KEY, favIconUrl);
     }
 }
 
 export async function removeTabFavIcon(id) {
-    await removeTabValue(id, FAVICON_KEY);
+    await removeValue(tabs, id, FAVICON_KEY);
 }
 
 // thumbnail
-async function loadTabThumbnail(id) {
-    if (backgroundSelf.options.showTabsWithThumbnailsInManageGroups) {
-        return await loadTabValue(id, THUMBNAIL_KEY);
-    }
-}
-
 export async function setTabThumbnail(id, thumbnail) {
-    if (thumbnail && backgroundSelf.options.showTabsWithThumbnailsInManageGroups) {
-        await setTabValue(id, THUMBNAIL_KEY, thumbnail);
+    if (!useThumbnails) {
+        return;
+    }
+
+    if (thumbnail) {
+        await setValue(tabs, id, THUMBNAIL_KEY, thumbnail);
+    } else {
+        await removeTabThumbnail(id);
     }
 }
 
 export async function removeTabThumbnail(id) {
-    await removeTabValue(id, THUMBNAIL_KEY);
+    if (useThumbnails) {
+        await removeValue(tabs, id, THUMBNAIL_KEY);
+    }
 }
 
 // tab
@@ -227,13 +270,15 @@ export async function loadTabSession(tab, {
         mirrorTab(tab, true);
 
         await Promise.all([
-            loadTabValue(tab.id, GROUP_KEY),
-            loadTabValue(tab.id, GROUP_NATIVE_KEY),
-            includeFavIconUrl && loadTabValue(tab.id, FAVICON_KEY),
-            includeThumbnail && loadTabThumbnail(tab.id),
+            loadValue(tabs, tab.id, GROUP_KEY),
+            loadValue(tabs, tab.id, GROUP_NATIVE_KEY),
+            includeFavIconUrl && loadValue(tabs, tab.id, FAVICON_KEY),
+            includeThumbnail && useThumbnails && loadValue(tabs, tab.id, THUMBNAIL_KEY),
         ]);
 
-        return applyTabSession(tab);
+        if (tabs.has(tab.id)) {
+            return applyTabSession(tab);
+        }
     } catch {
         removeTab(tab?.id);
     }
@@ -254,38 +299,40 @@ export async function setTabSession(tab, session = null) {
     return tab;
 }
 
-export function clearTabSessionCache(id) {
-    for (const key of KEYS) {
-        delete tabs[id]?.[key];
-    }
+// forget the tab, the reads still in flight included: they land in the dropped record, the load
+// that follows mirrors the tab again at once. lastTabsState stays, it is the onUpdated diff base
+export function forgetTab(id) {
+    tabs.delete(id);
 }
 
 export function applySession(toObj, fromObj) {
     for (const key of KEYS) {
-        fromObj?.[key] && (toObj[key] = fromObj[key]);
+        if (key === THUMBNAIL_KEY && !useThumbnails) {
+            continue;
+        }
+
+        if (fromObj?.[key]) {
+            toObj[key] = fromObj[key];
+        }
     }
 
     return toObj;
 }
 
 export function applyTabSession(tab) {
-    return applySession(tab, tabs[tab.id]);
+    return applySession(tab, tabs.get(tab.id));
 }
 
 export async function removeTabSession(id) {
-    await Promise.allSettled([
-        removeTabGroup(id),
-        removeTabNativeGroupId(id),
-        removeTabFavIcon(id),
-        removeTabThumbnail(id),
-    ]);
+    await Promise.all(KEYS.map(key => removeValue(tabs, id, key)));
 }
 
 export function getTabsSessionAndRemove(ids) {
     return ids
         .map(id => {
-            const session = tabs[id]?.groupId && tabs[id].url
-                ? Object.fromEntries(Object.entries(tabs[id]).filter(([, value]) => value !== null))
+            const record = tabs.get(id);
+            const session = record?.groupId && record.url
+                ? Object.fromEntries(Object.entries(record).filter(([, value]) => value !== null))
                 : false;
 
             removeTab(id);
@@ -296,51 +343,39 @@ export function getTabsSessionAndRemove(ids) {
 }
 
 // WINDOWS
-export function setWindow({id}) {
-    windows[id] ??= {id};
+export function setWindow(id) {
+    windows.getOrInsertComputed(id, createRecord);
 }
 
 export async function setWindowGroup(id, groupId) {
-    windows[id] ??= {id};
-
-    await waitPromises(windows[id]);
-
-    await addPromise(windows[id], browser.sessions.setWindowValue(id, GROUP_KEY, groupId));
-
-    windows[id].groupId = groupId;
+    await setValue(windows, id, GROUP_KEY, groupId);
 }
 
 export function getWindowId(groupId) {
-    for (const id in windows) {
-        if (groupId && windows[id].groupId === groupId) {
-            return Number(id);
+    if (groupId) {
+        for (const [id, win] of windows) {
+            if (win.groupId === groupId) {
+                return id;
+            }
         }
     }
 }
 
 export function getWindowGroup(id) {
-    return windows[id]?.groupId;
+    return getValue(windows, id, GROUP_KEY);
 }
 
 export function removeWindow(id) {
-    delete windows[id];
+    windows.delete(id);
 }
 
 export async function removeWindowGroup(id) {
-    await waitPromises(windows[id]);
-    await addPromise(windows[id], browser.sessions.removeWindowValue(id, GROUP_KEY));
-    delete windows[id].groupId;
+    await removeValue(windows, id, GROUP_KEY);
 }
 
 export async function loadWindowSession(win) {
     try {
-        const id = win.id;
-
-        windows[id] ??= {id};
-
-        await waitPromises(windows[id]);
-
-        windows[id].groupId = win.groupId = await addPromise(windows[id], browser.sessions.getWindowValue(id, GROUP_KEY));
+        win.groupId = await loadValue(windows, win.id, GROUP_KEY);
 
         return win; // TODO check in stg-debug.js and others
     } catch {
@@ -349,26 +384,19 @@ export async function loadWindowSession(win) {
 }
 
 export async function removeWindowSession(id) {
+    await removeWindowGroup(id);
+    removeWindow(id);
+}
+
+async function queueByKey(record, key, fn) {
+    const pending = record[PENDING] ??= new Map;
+    const turn = (pending.get(key) ?? Promise.resolve()).catch(() => {}).then(fn);
+
+    pending.set(key, turn);
+
     try {
-        await removeWindowGroup(id);
-    } catch {
-        //
+        return await turn;
     } finally {
-        removeWindow(id);
+        pending.get(key) === turn && pending.delete(key);
     }
-}
-
-async function waitPromises(obj) {
-    if (obj?.[PROMISES]) {
-        await Promise.allSettled([...obj[PROMISES]]);
-    }
-}
-
-async function addPromise(obj, promise) {
-    if (obj) {
-        obj[PROMISES] ??= new Set;
-        obj[PROMISES].add(promise);
-    }
-
-    return promise.finally(() => obj?.[PROMISES].delete(promise));
 }
