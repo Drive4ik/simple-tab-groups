@@ -474,7 +474,7 @@ export default {
             if (this.currentGroup) {
                 await this.sendMessageModule('Tabs.move', [tab.id], this.currentGroup.id);
             } else {
-                await this.sendMessageModule('Tabs.show', tab.id, {skipTracking: false});
+                await this.sendMessageModule('Tabs.show', tab.id);
                 await this.sendMessageModule('Tabs.setActive', tab.id);
             }
 

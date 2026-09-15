@@ -318,11 +318,7 @@ async function sync(trust = null, revision = null, progressFunc = null) {
 
     // remove unnecessary tabs
     if (syncResult.changes.tabsToRemove.size) {
-        await Tabs.keepWindowsAlive(syncResult.changes.tabsToRemove);
-        // a whole live span closed in one call would be saved by the browser into its saved groups
-        await GroupsNative.ungroup(Array.from(syncResult.changes.tabsToRemove));
-        // if has local changes - do silent remove. "Cloud.sync-end" event will trigger "Groups.updated.all" event and reload all groups with tabs
-        await Tabs.remove(Array.from(syncResult.changes.tabsToRemove), {silentRemove: syncResult.changes.local});
+        await Tabs.remove(Array.from(syncResult.changes.tabsToRemove));
     }
 
     await Groups.removeArchivedGroupsTabs(syncResult.localData.groups);
@@ -349,7 +345,7 @@ async function sync(trust = null, revision = null, progressFunc = null) {
             }
 
             // the created tabs carry tab.groupNativeId into their sessions
-            const creation = await Tabs.createMultiple(savedTabs, {createMissing: true});
+            const creation = await Tabs.createMultiple(savedTabs, {createMissing: true, hideUnloaded: false});
 
             // per-tab membership: the merge left the final sub-group id on each tab object
             await Promise.allSettled(creation.live.map(tab => {

@@ -114,16 +114,7 @@ async function applyNow(windowId, groupId, activeTabId, applyFromHistory = false
             // show tabs
             if (groupToShow.tabs.length) {
                 if (groupToShow.tabs.some(tab => tab.windowId !== windowId)) {
-                    // the whole group gathers as one block at its own first tab in this window:
-                    // strays arrive without joining anyone, the in-window part can be swallowed
-                    // by a live span (docs/TABGROUPS-BEHAVIOR.md §20, §21) - GroupsNative.apply
-                    // below rebuilds the sub-groups either way
-                    const anchorTab = groupToShow.tabs.find(tab => tab.windowId === windowId);
-
-                    groupToShow.tabs = await Tabs.moveNative(groupToShow.tabs, {
-                        index: anchorTab?.index ?? await Tabs.resolveMoveIndex(groupToShow.id, windowId, groupToShow.tabs),
-                        windowId: windowId,
-                    });
+                    groupToShow.tabs = await Tabs.moveToWindow(groupToShow.tabs, groupToShow.id, windowId);
                 }
 
                 await Tabs.show(groupToShow.tabs);
@@ -145,7 +136,6 @@ async function applyNow(windowId, groupId, activeTabId, applyFromHistory = false
             const activeTabGroupToHide = groupToHide?.tabs.find(tab => tab.active);
 
             async function hideTabs(tabs = []) {
-                await GroupsNative.ungroup(tabs);
                 await Tabs.hide(tabs);
 
                 if (groupToHide) {
@@ -169,7 +159,6 @@ async function applyNow(windowId, groupId, activeTabId, applyFromHistory = false
                 }
 
                 // unsync tabs are managed by the addon: their native groups are consciously destroyed
-                await GroupsNative.ungroup(tabs);
                 await Tabs.hide(tabs);
                 await GroupsNative.clearMembership(tabs);
 
@@ -630,7 +619,7 @@ async function removeNow(groupIds) {
 
         // the tabs close before the storage cut: an abort in between leaves an empty group,
         // never hidden orphan tabs whose group is already gone
-        await Tabs.remove(groupsToRemove.flatMap(group => group.isArchive ? [] : group.tabs), {silentRemove: true});
+        await Tabs.remove(groupsToRemove.flatMap(group => group.isArchive ? [] : group.tabs), {ungroupNative: false, keepWindowsAlive: false});
 
         let defaultGroupPropsChanged = false;
 
@@ -772,7 +761,7 @@ async function restoreNow(groupId) {
     if (group.tabs.length && !group.isArchive) {
         await Browser.actionLoading();
 
-        const creation = await Tabs.createMultiple(setNewTabsParams(group.tabs, group));
+        const creation = await Tabs.createMultiple(setNewTabsParams(group.tabs, group), {hideUnloaded: false});
 
         group.tabs = await Tabs.settleGroupTabs(group.id, group.tabs, creation);
 
@@ -994,20 +983,12 @@ async function unloadNow(groupId) {
 
     await Cache.removeWindowSession(windowId);
 
-    let tabs = await Tabs.query({windowId, pinned: false, hidden: true});
-    // remove tabs without group
-    tabs = tabs.filter(tab => !tab.groupId);
+    const unsyncTabs = (await Tabs.query({windowId, hidden: true})).filter(tab => !tab.groupId);
 
-    if (tabs.length) {
-        await Tabs.show(tabs);
-        await Tabs.setActive(null, tabs);
-    } else {
-        await Tabs.createTempActiveTab(windowId, false);
-    }
+    await Tabs.show(unsyncTabs);
 
     // sessions keep the membership of hidden tabs - nothing to save here
-    await GroupsNative.ungroup(group.tabs);
-    await Tabs.hide(group.tabs);
+    await Tabs.hide(group.tabs, {activateOther: true});
 
     if (group.discardTabsAfterHide) {
         log.log('run discard tabs');
@@ -1065,7 +1046,7 @@ async function archiveToggleNow(groupId) {
             Extensions.tabsToUUID(group.tabs);
 
             savedTabs = group.tabs;
-            creation = await Tabs.createMultiple(setNewTabsParams(savedTabs, group));
+            creation = await Tabs.createMultiple(setNewTabsParams(savedTabs, group), {hideUnloaded: false});
 
             group.tabs = [];
         } else {
@@ -1092,13 +1073,9 @@ async function archiveToggleNow(groupId) {
         await Tabs.settleGroupTabs(group.id, savedTabs, creation);
     }
 
-    await Tabs.remove(tabsToRemove, {silentRemove: true});
+    await Tabs.remove(tabsToRemove, {ungroupNative: false, keepWindowsAlive: false});
 
     sendUpdated(group, group);
-
-    if (creation) {
-        Tabs.sendUpdatedGroup(groupId);
-    }
 
     await Browser.actionLoading(false);
 
@@ -1125,10 +1102,7 @@ export async function removeArchivedGroupsTabs(groups) {
 
     const log = logger.start('removeArchivedGroupsTabs', tabsToRemove.map(tab => tab.id));
 
-    await Tabs.keepWindowsAlive(tabsToRemove);
-    // a whole live span closed in one call would be saved by the browser into its saved groups
-    await GroupsNative.ungroup(tabsToRemove);
-    await Tabs.remove(tabsToRemove, {silentRemove: true});
+    await Tabs.remove(tabsToRemove);
 
     log.stop();
 }

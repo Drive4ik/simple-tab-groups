@@ -553,12 +553,13 @@ export const ALL_OPTION_KEYS = Object.freeze(DEFAULT_OPTION_KEYS.filter(key => !
 export const ON_UPDATED_TAB_PROPERTIES = Object.freeze([ // browser.tabs not defined into web page scripts
     browser.tabs?.UpdatePropertyName.TITLE, // for cache
     browser.tabs?.UpdatePropertyName.STATUS, // for check update url and thumbnail
-    // browser.tabs?.UpdatePropertyName.URL, // for check update url and thumbnail
+    browser.tabs?.UpdatePropertyName.URL,
     browser.tabs?.UpdatePropertyName.FAVICONURL, // for session
     browser.tabs?.UpdatePropertyName.HIDDEN,
     browser.tabs?.UpdatePropertyName.PINNED,
     browser.tabs?.UpdatePropertyName.DISCARDED,
     browser.tabs?.UpdatePropertyName.AUDIBLE,
+    browser.tabs?.UpdatePropertyName.MUTEDINFO,
 ]);
 
 export const MODULES = Object.freeze({

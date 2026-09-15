@@ -6,13 +6,13 @@ export default class BatchProcessor {
     #processPromise = null;
     #processCallback;
     #batchDelay;
-    #processEmpty;
+    #useMap;
     #singletonId = Symbol.for('singletonId');
 
-    constructor(processCallback = null, batchDelay = 100, processEmpty = false) {
+    constructor(processCallback = null, {batchDelay = 100, useMap = false} = {}) {
         this.#processCallback = processCallback;
         this.#batchDelay = batchDelay;
-        this.#processEmpty = processEmpty;
+        this.#useMap = useMap;
     }
 
     async #processQueue() {
@@ -33,7 +33,7 @@ export default class BatchProcessor {
                     callbackResult: null,
                 };
 
-                if (batch.items.size || this.#processEmpty) {
+                if (batch.items.size) {
                     result.callbackResult = await this.#processCallback?.(batch.items, batch.id);
                 }
 
@@ -57,14 +57,22 @@ export default class BatchProcessor {
     }
 
     add(item, id = this.#singletonId) {
+        if (this.#useMap && (!Array.isArray(item) || item.length !== 2)) {
+            throw new Error('the item of a map batch must be a [key, value] pair');
+        }
+
         const batch = this.#batches.getOrInsertComputed(id, id => ({
             id,
-            items: new Set,
+            items: this.#useMap ? new Map : new Set,
             timer: null,
             ...Promise.withResolvers(),
         }));
 
-        batch.items.add(item);
+        if (this.#useMap) {
+            batch.items.set(item[0], item[1]);
+        } else {
+            batch.items.add(item);
+        }
 
         clearTimeout(batch.timer);
 

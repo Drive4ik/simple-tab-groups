@@ -231,7 +231,7 @@ export function referencedGroupsNative({tabs, groupsNative = []}) {
 
 const mirrorBatch = new BatchProcessor((_windowIds, windowId) => {
     return mirrorWindow(windowId).catch(logger.onCatch(['mirrorWindow failed', windowId], false));
-}, 150);
+}, {batchDelay: 150});
 
 // the mirror reads only settled states: while a composite operation is in flight, every trigger
 // parks its window here and one pass per window runs on idle. Without this the mirror observes
@@ -392,55 +392,50 @@ async function mirrorWindowNow(windowId) {
 // pass - the tab must still be visible, still out of every live group and still carry the same
 // id. Anything that changed in between (rehidden, regrouped, moved away, session rewritten)
 // silently drops the candidate; a still-real pull-out is re-nominated by any next mirror pass
-const clearCandidatesByWindow = new Map; // windowId → Map(tabId → sessionId)
-const deferredClearWindows = new Set;
+const deferredClearCandidates = new Map; // windowId → Map(tabId → sessionId)
 
-const clearBatch = new BatchProcessor((_windowIds, windowId) => {
-    return clearWindowSessions(windowId).catch(logger.onCatch(['clearWindowSessions failed', windowId], false));
-}, 150);
+const clearBatch = new BatchProcessor((candidates, windowId) => {
+    return clearWindowSessions(windowId, candidates)
+        .catch(logger.onCatch(['clearWindowSessions failed', windowId], false));
+}, {batchDelay: 150, useMap: true});
 
 Operations.onIdle(function clearDeferredWindows() {
-    for (const windowId of deferredClearWindows) {
-        clearBatch.add(windowId, windowId);
+    for (const [windowId, candidates] of deferredClearCandidates) {
+        scheduleClearWindow(windowId, candidates);
     }
 
-    deferredClearWindows.clear();
+    deferredClearCandidates.clear();
 });
 
 function scheduleClearWindow(windowId, candidates) {
-    const pending = clearCandidatesByWindow.getOrInsertComputed(windowId, () => new Map);
+    for (const candidate of candidates) {
+        clearBatch.add(candidate, windowId);
+    }
+}
+
+function deferClearWindow(windowId, candidates) {
+    const deferred = deferredClearCandidates.getOrInsertComputed(windowId, () => new Map);
 
     for (const [tabId, sessionId] of candidates) {
-        pending.set(tabId, sessionId);
+        deferred.set(tabId, sessionId);
     }
-
-    clearBatch.add(windowId, windowId);
 }
 
-function clearWindowSessions(windowId) {
-    return withWindowGate(windowId, () => clearWindowSessionsNow(windowId));
+function clearWindowSessions(windowId, candidates) {
+    return withWindowGate(windowId, () => clearWindowSessionsNow(windowId, candidates));
 }
 
-async function clearWindowSessionsNow(windowId) {
+async function clearWindowSessionsNow(windowId, pending) {
     if (Operations.isBusy()) {
-        deferredClearWindows.add(windowId);
+        deferClearWindow(windowId, pending);
         return;
     }
-
-    const pending = clearCandidatesByWindow.get(windowId);
-
-    if (!pending?.size) {
-        return;
-    }
-
-    clearCandidatesByWindow.delete(windowId);
 
     const winTabs = await queryWindowTabs(windowId);
 
     // an operation that started while we were reading makes the nomination stale - put it back
     if (Operations.isBusy()) {
-        clearCandidatesByWindow.set(windowId, pending);
-        deferredClearWindows.add(windowId);
+        deferClearWindow(windowId, pending);
         return;
     }
 
@@ -484,8 +479,7 @@ async function clearWindowSessionsNow(windowId) {
 // the window is gone - its per-window bookkeeping goes with it
 export function forgetWindow(windowId) {
     materializedByWindow.delete(windowId);
-    clearCandidatesByWindow.delete(windowId);
-    deferredClearWindows.delete(windowId);
+    deferredClearCandidates.delete(windowId);
     deferredWindows.delete(windowId);
 }
 
@@ -603,45 +597,9 @@ async function applyNow(windowId, group) {
     log.stop();
 }
 
-// detach tabs from LIVE native groups; the membership sessions stay untouched, so the sub-groups
-// are recreated on the next apply. Mandatory before Tabs.hide of a tab that can sit in a live
-// group: the header of a group whose tabs are all hidden stays in the tab bar
-// (docs/TABGROUPS-BEHAVIOR.md §4). Works on hidden members too (§12)
 export async function hasLiveGroups(windowId) {
     const liveGroups = await browser.tabGroups.query({windowId});
     return liveGroups.length > 0;
-}
-
-export async function ungroup(tabs) {
-    tabs = Array.isArray(tabs) ? tabs : [tabs];
-
-    const log = logger.start(ungroup, 'count:', tabs.length);
-
-    if (!tabs.length) {
-        log.stop('tabs are empty');
-        return;
-    }
-
-    const tabsByWindow = new Map;
-    const noWindowTabs = [];
-
-    for (const tab of tabs) {
-        if (tab.windowId) {
-            tabsByWindow.getOrInsert(tab.windowId, []).push(tab);
-        } else {
-            // bare ids carry no window to gate - the mirror will resync after the fact
-            noWindowTabs.push(tab);
-        }
-    }
-
-    await Promise.all([
-        ...[...tabsByWindow].map(([windowId, windowTabs]) => {
-            return withWindowGate(windowId, () => Tabs.ungroup(windowTabs));
-        }),
-        noWindowTabs.length ? Tabs.ungroup(noWindowTabs) : null,
-    ]);
-
-    log.stop();
 }
 
 // the sub-groups are consciously destroyed for these tabs (unsync tabs policy)

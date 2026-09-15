@@ -1,6 +1,6 @@
 import {TAB_GROUP_ID_NONE, LOAD_WAIT, NETWORK_URL} from '../constants.js';
 import {wait} from '../test.js';
-import {TabsTest, sceneUrl} from '../tabs.js';
+import {sceneUrl} from '../tabs.js';
 
 export const note = `Round 10 — API pinning, the facts behind pin-and-detach of tabs that cannot be hidden.
 (A) tabs.update({pinned: true}) on a native-group member: membership, events, session values, where unpin returns the tab — recorded as TABGROUPS-BEHAVIOR.md §19;
@@ -15,14 +15,6 @@ const WATCH = [
     'tabGroups.onCreated', 'tabGroups.onUpdated', 'tabGroups.onRemoved',
 ];
 const UPDATED_KEYS = ['pinned', 'groupId', 'hidden'];
-
-class PinTest extends TabsTest {
-    cell(tab) {
-        return super.cell(tab) + (tab.pinned ? '(p)' : '');
-    }
-}
-
-export const testClass = PinTest;
 
 export const tests = [
 

@@ -127,7 +127,7 @@ export default {
 
             list.add(Tabs.on('updated', ({tabId, changeInfo}) => {
                 const tab = this.allTabs[tabId] ?? this.unSyncTabs.find(tab => tab.id === tabId);
-                tab && Object.assign(tab, changeInfo);
+                tab && Tabs.normalizeFavIcon(Object.assign(tab, changeInfo));
             }));
             list.add(Tabs.on('updated.group', ({groupId}) => {
                 this.loadGroupTabs(groupId);
@@ -213,7 +213,9 @@ export default {
         },
 
         async loadWindows({windows} = {}) {
-            this.currentWindow = await Windows.get();
+            const {id} = await browser.windows.getCurrent();
+
+            this.currentWindow = await this.sendMessageModule('Windows.get', id);
             this.openedWindows = windows ?? await this.sendMessageModule('Windows.load');
         },
         async loadGroups({groups} = {}) {

@@ -718,12 +718,15 @@ copy is created clean — an inherited opener can kill the whole creation (Impli
 then every link of the original lands on the new id, and every live child of the original,
 pinned or not, is re-pointed at it; an original is removed only once its copy exists — a copy
 that could not be created leaves its original where it is, with its links, and out of the
-transfer. The copy is born in place, in the original's window and slot, in the container the
-target group's rules chose for the original, and with no binding at all: no group, no native
-sub-group, nothing of the original's session but its icon, its thumbnail and the url the mirror
-knows for a tab still loading its first page (`Tabs.fillEmptyUrl`). So the links `recreate`
-writes never cross a window, and a transfer to another window is the move's business, once the
-copy exists; the group and the sub-group are written after the move, once. A window change
+transfer. The copy is born in place, in the original's window, at its slot (the copy of a live
+sub-group's first member one slot further, TABGROUPS-BEHAVIOR.md §7), with whatever the caller
+builds for it: the transfer builds it with no binding at all — no group, no native sub-group,
+nothing of the original's session but its icon, its thumbnail and the url the mirror knows for a
+tab still loading its first page (`Tabs.fillEmptyUrl`); a container reopen (`onBeforeTabRequest`,
+the temporary-container menu item) keeps the original's group and sub-group, and the copy of a
+hidden tab, or of an unloaded group's tab, is hidden. So the links `recreate` writes never cross a window, and a
+transfer to another window is the move's business, once the copy exists; the group and the
+sub-group are written after the move, once. A window change
 goes through `Tabs.moveNative`: the browser erases the mover's link (§7), STG writes it back
 and the browser judges — an opener now in the same window is accepted, one left behind is
 refused, so a link travels only when parent and child move in one call, and the children an

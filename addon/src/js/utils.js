@@ -202,17 +202,10 @@ export function getSupportedExternalExtensionName(extId) {
     return Constants.EXTENSIONS_WHITE_LIST[extId] ? Constants.EXTENSIONS_WHITE_LIST[extId].title : 'Unknown';
 }
 
-const invalidBrowserFavIconUrlsRegExp = /^chrome:\/\/(mozapps|devtools)\/skin\//;
+// only protocols `chrome:`, `about:`, `resource:` and `data`:
+const availableFavIconUrlRegExp = /^(data:|chrome:\/\/(global|browser|branding)\/content\/)/;
 export function isAvailableFavIconUrl(favIconUrl) {
-    if (!favIconUrl) {
-        return false;
-    }
-
-    if (invalidBrowserFavIconUrlsRegExp.test(favIconUrl)) {
-        return false;
-    }
-
-    return true;
+    return availableFavIconUrlRegExp.test(favIconUrl ?? '');
 }
 
 const emptyUrls = new Set(['about:blank', 'about:newtab', 'about:home']);

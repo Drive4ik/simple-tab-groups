@@ -57,7 +57,7 @@ function addRestoreTabOnRemoved({tabId}) {
     restoreTabsOnRemoved.push(tabId);
 }
 
-const grandRestoreBatch = new BatchProcessor(runGrandRestore, 10);
+const grandRestoreBatch = new BatchProcessor(runGrandRestore, {batchDelay: 10});
 
 export async function GrandRestore(windowId) {
     const {promise} = enqueueGrandRestore(windowId);
@@ -346,15 +346,7 @@ async function runGrandRestoreNow(restoredWindowIds) {
 
             // native membership travels with the tabs in sessions (moveNative restores it for
             // discarded tabs after a cross-window move) - no bookkeeping is needed here
-
-            // the whole group gathers as one block at its own first tab in this window (strays
-            // arrive without joining anyone - docs/TABGROUPS-BEHAVIOR.md §20, §21)
-            const anchorTab = groupToKeep.tabs.find(tab => tab.windowId === groupToKeep.window.id);
-
-            groupToKeep.tabs = await Tabs.moveNative(groupToKeep.tabs, {
-                windowId: groupToKeep.window.id,
-                index: anchorTab?.index ?? await Tabs.resolveMoveIndex(groupToKeep.id, groupToKeep.window.id, groupToKeep.tabs),
-            });
+            groupToKeep.tabs = await Tabs.moveToWindow(groupToKeep.tabs, groupToKeep.id, groupToKeep.window.id);
 
             if (isLoadedGroup) {
                 log.log('showing group tabs, group', groupToKeep.id, 'in window', groupToKeep.window.id);
@@ -366,11 +358,10 @@ async function runGrandRestoreNow(restoredWindowIds) {
 
                 if (groupToKeep.deleteTabAfterMove) {
                     await Tabs.setActive(null, groupToKeep.tabs.filter(tab => !tabsToDelete.has(tab.id)));
-                    await Tabs.remove(groupToKeep.deleteTabAfterMove, {silentRemove: true});
+                    await Tabs.remove(groupToKeep.deleteTabAfterMove, {ungroupNative: false, keepWindowsAlive: false});
                 }
             } else {
                 log.log('hiding group tabs, group', groupToKeep.id, 'in window', groupToKeep.window.id);
-                await GroupsNative.ungroup(groupToKeep.tabs);
                 await Tabs.hide(groupToKeep.tabs);
             }
         }
@@ -380,7 +371,7 @@ async function runGrandRestoreNow(restoredWindowIds) {
 
     const tabsToDeleteIds = Array.from(tabsToDelete.keys());
     log.log('deleting tabs:', tabsToDeleteIds);
-    await Tabs.remove(tabsToDeleteIds, {silentRemove: true});
+    await Tabs.remove(tabsToDeleteIds);
 
     for (const groupId of groupsAlreadyRestored.keys()) {
         Tabs.sendUpdatedGroup(groupId);
@@ -427,10 +418,10 @@ const createdBatch = new BatchProcessor(async (windowIds) => {
     windowIds = Array.from(windowIds);
     logger.log('run createdBatch with windowIds:', windowIds);
     send('opened', {windowIds});
-}, 250);
+}, {batchDelay: 250});
 
 // align the flow of windows.onCreated events on multiple restore windows, because they can be fired with a delay up to 0-1000ms between events, dependent on user computer performance and number of tabs in windows
-const createdFlowAlignmentBatch = new BatchProcessor(null, 1000);
+const createdFlowAlignmentBatch = new BatchProcessor(null, {batchDelay: 1000});
 
 async function onCreated(win) {
     const log = logger.start(['info', onCreated], win.id);
@@ -528,7 +519,7 @@ const removedBatch = new BatchProcessor(async (windowIds) => {
     logger.log('removedBatch, starting tryRestoreMissedTabs...');
     await tryRestoreMissedTabs(true);
     send('closed', {windowIds});
-}, 250);
+}, {batchDelay: 250});
 
 async function onRemoved(windowId) {
     const log = logger.start(['info', onRemoved], windowId);
@@ -805,7 +796,6 @@ async function tryRestoreMissedTabsNow(actionLoading = true) {
         .map(group => [group.id, Groups.getNewTabParams(group)]));
 
     const existTabs = new Set();
-    let needRestoreCount = 0;
 
     // group by group: the offsets live inside the group's run of the list, the created tabs of a group stay together
     for (const [groupId, savedTabs] of Map.groupBy(tabsToRestore, tab => tab.groupId)) {
@@ -830,10 +820,9 @@ async function tryRestoreMissedTabsNow(actionLoading = true) {
         });
 
         const needRestoreGroupCount = tabs.filter(tab => tab.new).length;
-        needRestoreCount += needRestoreGroupCount;
 
         const logCreate = log.start('creating and settle tabs for group', groupId, 'tabs count:', needRestoreGroupCount);
-        const creation = await Tabs.createMultiple(tabs, {createMissing: true});
+        const creation = await Tabs.createMultiple(tabs, {createMissing: true, hideUnloaded: false});
         await Tabs.settleGroupTabs(groupId, savedTabs, creation);
         logCreate.stop();
     }
@@ -851,10 +840,6 @@ async function tryRestoreMissedTabsNow(actionLoading = true) {
         } else {
             await Storage.remove('tabsToRestore');
         }
-    }
-
-    if (needRestoreCount) {
-        Groups.sendUpdatedAll();
     }
 
     if (actionLoading) {
@@ -939,11 +924,7 @@ async function initializeGroupsNow(groups, afterRestoring = false) {
     }
 
     for (const [windowId, tabs] of moveTabsToWin) {
-        await Tabs.moveNative(tabs, {
-            // the arrivals line up at their group's tail instead of the end of the strip
-            index: await Tabs.resolveMoveIndex(tabs[0].groupId, windowId, tabs),
-            windowId,
-        });
+        await Tabs.moveToWindow(tabs, tabs[0].groupId, windowId);
 
         log.log('tabs count', tabs.length, 'moved to window', windowId);
     }
@@ -966,22 +947,7 @@ async function initializeGroupsNow(groups, afterRestoring = false) {
     }
 
     if (tabsToHide.size) {
-        const activeTabsToHide = [...tabsToHide].filter(tab => tab.active);
-
-        for (const tabToHide of activeTabsToHide) {
-            const visibleTabs = windows.flatMap(win =>
-                win.tabs.filter(tab => tabToHide.windowId === tab.windowId && !tab.hidden && !tabsToHide.has(tab))
-            );
-
-            if (visibleTabs.length) {
-                await Tabs.setActive(null, visibleTabs);
-            } else {
-                await Tabs.createTempActiveTab(tabToHide.windowId, false);
-            }
-        }
-
-        await GroupsNative.ungroup([...tabsToHide]);
-        await Tabs.hide([...tabsToHide]);
+        await Tabs.hide([...tabsToHide], {activateOther: true});
 
         log.log('tabsToHide count', tabsToHide.size);
     }

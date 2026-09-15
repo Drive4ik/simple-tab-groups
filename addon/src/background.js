@@ -105,6 +105,16 @@ const moveTabsBatch = new BatchProcessor(async (tabIds, groupId) => {
     log.stop();
 });
 
+const reopenTabsBatch = new BatchProcessor(async (paramsByTabId, groupId) => {
+    const tabIds = Array.from(paramsByTabId.keys());
+    const log = logger.start('reopenTabsBatch', {tabIds, groupId});
+    await Operations.run('reopen-tab-container', () => {
+            return Tabs.recreate(tabIds, tab => paramsByTabId.get(tab.id));
+        })
+        .catch(log.onCatch('Tabs.recreate'));
+    log.stop();
+}, {useMap: true});
+
 // https://bugzilla.mozilla.org/show_bug.cgi?id=1683646
 // only onBeforeNavigate can detect view-source, but it's need new permission "webNavigation" in manifest
 const canceledRequests = new Map;
@@ -299,42 +309,27 @@ const onBeforeTabRequest = catchFunc(async function onBeforeTabRequest({
 
     rememberFor(canceledRequests, requestId, 2000);
 
-    // this block must be async
-    Operations.run('reopen-tab-container', async () => {
-        const newTabParams = {
-            ...tab,
-            cookieStoreId: newTabContainer,
-            ...Groups.getNewTabParams(tabGroup),
-        };
+    const newTabParams = {
+        ...tab,
+        cookieStoreId: newTabContainer,
+        ...Groups.getNewTabParams(tabGroup),
+    };
 
-        const mayAskUser = !tab.hidden && originExt && !ignoreExtForReopenContainer.has(originExt.id);
-        const reopenKey = mayAskUser ? `${originExt.id} ${requestedUrl}` : null;
-        const alreadyReopened = reopenedForExtension.has(reopenKey);
+    const mayAskUser = !tab.hidden && originExt && !ignoreExtForReopenContainer.has(originExt.id);
+    const reopenKey = mayAskUser ? `${originExt.id} ${requestedUrl}` : null;
+    const alreadyReopened = reopenedForExtension.has(reopenKey);
 
-        if (reopenKey) {
-            rememberFor(reopenedForExtension, reopenKey, 10_000);
-        }
+    if (reopenKey) {
+        rememberFor(reopenedForExtension, reopenKey, 10_000);
+    }
 
-        if (alreadyReopened) {
-            log.log('extension reopened the tab in its container again, ask the user', originExt.id);
-            newTabParams.active = true;
-            newTabParams.url = getNewAddonTabUrl();
-        }
+    if (alreadyReopened) {
+        log.log('extension reopened the tab in its container again, ask the user', originExt.id);
+        newTabParams.active = true;
+        newTabParams.url = getNewAddonTabUrl();
+    }
 
-        const [newTab] = await Tabs.recreate([tab], () => newTabParams);
-
-        if (!newTab) {
-            log.warn('cant reopen tab in container');
-            return;
-        }
-
-        if (tab.hidden) {
-            log.log('hide tab', newTab);
-            // recreated at the original's slot - it can inherit a live group (docs/TABGROUPS-BEHAVIOR.md §7)
-            await GroupsNative.ungroup(newTab);
-            await Tabs.hide(newTab);
-        }
-    });
+    reopenTabsBatch.add([tab.id, newTabParams], tabGroup.id);
 
     log.stop('reopen tab');
     return {cancel: true};

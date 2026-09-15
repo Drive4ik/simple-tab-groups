@@ -6,8 +6,6 @@ import * as MenusTab from './menus-tab.js';
 import * as MenusLink from './menus-link.js';
 import * as Containers from '/js/containers.js';
 import * as Tabs from '/js/tabs.js';
-import * as Groups from '/js/groups.js';
-import * as GroupsNative from '/js/groups-native.js';
 import * as Operations from '/js/operations.js';
 import * as Browser from '/js/browser.js';
 // import * as Cache from '/js/cache.js';
@@ -118,49 +116,22 @@ async function reopenTabsWithTemporaryContainersNow(info) {
         includeFavIconUrl: true,
         includeThumbnail: true,
     });
-    const tabsToCreate = [];
-    const tabsToRemove = [];
+    const tabsToReopen = allTabs.filter(tab => Containers.isTemporary(tab.cookieStoreId));
 
-    for (const tab of allTabs) {
-        if (Containers.isTemporary(tab.cookieStoreId)) {
-            tabsToCreate.push({
-                ...tab,
-                cookieStoreId: Constants.TEMPORARY_CONTAINER,
-            });
-
-            tabsToRemove.push(tab);
-        }
-    }
-
-    if (tabsToCreate.length) {
+    if (tabsToReopen.length) {
         await Browser.actionLoading();
 
-        const newTabs = await Promise.all(tabsToCreate.map(tab => Tabs.create(tab)));
-
-        const tabsToHide = [];
-
-        for (const tab of newTabs) {
-            if (tab.groupId) {
-                const groupIsLoaded = await Groups.isLoaded(tab.groupId);
-
-                if (!groupIsLoaded) {
-                    tabsToHide.push(tab);
-                }
-            }
-        }
-
-        // recreated at their originals' slots - they can inherit a live group (docs/TABGROUPS-BEHAVIOR.md §7)
-        await GroupsNative.ungroup(tabsToHide);
-        await Tabs.hide(tabsToHide);
-
-        await Tabs.remove(tabsToRemove);
+        const newTabs = await Tabs.recreate(tabsToReopen, tab => ({
+            ...tab,
+            cookieStoreId: Constants.TEMPORARY_CONTAINER,
+        }));
 
         if (info.button.RIGHT) {
-            await Containers.removeUnusedTemporaryContainers(newTabs);
+            await Containers.removeUnusedTemporaryContainers(newTabs.map((tab, index) => tab ?? tabsToReopen[index]));
         }
 
         await Browser.actionLoading(false);
     }
 
-    log.stop('reopened tabs count:', tabsToCreate.length);
+    log.stop('reopened tabs count:', tabsToReopen.length);
 }

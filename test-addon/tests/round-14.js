@@ -19,10 +19,6 @@ class Round14OpenerTest extends OpenerTest {
         this.openerEvents = new Map();
     }
 
-    suffix(tab) {
-        return super.suffix(tab) + (tab.pinned ? '(p)' : '');
-    }
-
     async createChildren(names) {
         await this.createMany(names.map((name, index) => ({name, index: CHILDREN_START_INDEX + index})));
         await this.settled();

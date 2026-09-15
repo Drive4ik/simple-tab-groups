@@ -161,6 +161,10 @@ export class TabsTest extends Test {
             text += '(h)';
         }
 
+        if (tab.pinned) {
+            text += '(p)';
+        }
+
         return text;
     }
 
@@ -439,11 +443,13 @@ export class TabsTest extends Test {
     }
 
     async joinGroup(names, groupId, {settle = true} = {}) {
-        await browser.tabs.group({tabIds: this.ids(names), groupId});
+        const joinedGroupId = await browser.tabs.group({tabIds: this.ids(names), groupId});
 
         if (settle) {
             await this.settled();
         }
+
+        return joinedGroupId;
     }
 
     async ungroup(names, {settle = true} = {}) {

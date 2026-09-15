@@ -52,7 +52,7 @@ export function getRealTabStateChanged(tab) {
 
     if (lastState) {
         for (const key of Constants.ON_UPDATED_TAB_PROPERTIES) {
-            if (tab[key] !== lastState[key]) {
+            if (!isSameTabState(tab[key], lastState[key])) {
                 changeInfo ??= {};
                 changeInfo[key] = tab[key];
             }
@@ -60,6 +60,12 @@ export function getRealTabStateChanged(tab) {
     }
 
     return changeInfo;
+}
+
+function isSameTabState(value, lastValue) {
+    return Utils.isPrimitive(value)
+        ? value === lastValue
+        : Utils.isEqualByKeys(value, lastValue, Object.keys(value));
 }
 
 export function clear() {
@@ -235,6 +241,8 @@ export async function removeTabNativeGroupId(id) {
 export async function setTabFavIcon(id, favIconUrl) {
     if (favIconUrl?.startsWith('data:')) {
         await setValue(tabs, id, FAVICON_KEY, favIconUrl);
+    } else if (getValue(tabs, id, FAVICON_KEY)) {
+        await removeTabFavIcon(id);
     }
 }
 

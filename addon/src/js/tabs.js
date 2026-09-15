@@ -77,26 +77,43 @@ export function sendUpdatedGroup(groupId) {
 }
 
 // listeners
+const deferredUpdatedKeys = new Set;
+
+function unsyncKey(windowId) {
+    return `unsync:${windowId}`;
+}
+
+function updatedKey(groupId, windowId) {
+    return groupId || unsyncKey(windowId);
+}
+
 const updatedBatch = new BatchProcessor(async (tabIds, groupKey) => {
+    if (Operations.isBusy()) {
+        deferredUpdatedKeys.add(groupKey);
+        return;
+    }
+
     logger.log('updatedBatch', groupKey);
 
-    // 'unsync:<windowId>'
     if (groupKey.startsWith('unsync:')) {
         const windowId = Number(groupKey.split(':', 2)[1]);
         send('updated.unsync', {windowId});
         return;
     }
 
-    if (groupKey === 'unsync') {
-        // fallback: broadcast per-window unsync for all windows
-        const windows = await Windows.load(false);
-        for (const win of windows) {
-            send('updated.unsync', {windowId: win.id});
-        }
-        return;
+    const {group} = await Groups.load(groupKey);
+
+    if (group) {
+        sendUpdatedGroup(groupKey);
+    }
+});
+
+Operations.onIdle(function sendDeferredUpdated() {
+    for (const groupKey of deferredUpdatedKeys) {
+        updatedBatch.add(groupKey, groupKey);
     }
 
-    sendUpdatedGroup(groupKey);
+    deferredUpdatedKeys.clear();
 });
 
 export function skipTrackingWindow(windowId) {
@@ -156,6 +173,8 @@ export function waitOnCreated(tabId) {
 async function processCreated(tab) {
     await Utils.wait(50);
 
+    const skipCreated = skip.created.delete(tab.id);
+
     if (skip.removed.has(tab.id)) {
         logger.log(onCreated, '🛑 skip removed tab:', tab.id);
         return;
@@ -173,7 +192,7 @@ async function processCreated(tab) {
         GroupsNative.scheduleMirrorWindow(tab.windowId);
     }
 
-    if (skip.created.has(tab.id)) {
+    if (skipCreated) {
         logger.log(onCreated, '🛑 skip created tab:', tab.id);
         return;
     }
@@ -193,7 +212,7 @@ async function processCreated(tab) {
 
     Cache.applyTabSession(tab);
 
-    updatedBatch.add(tab.id, tab.groupId || `unsync:${tab.windowId}`);
+    updatedBatch.add(tab.id, updatedKey(tab.groupId, tab.windowId));
 }
 
 async function onActivated({tabId, windowId, previousTabId = null}) {
@@ -243,15 +262,14 @@ async function onUpdated(tabId, changeInfo, tab) {
 
     processPendingRealUrls(tabId, changeInfo);
 
-    if (skip.tracking.has(tab.id)) {
+    if (skip.tracking.has(tab.id) || skipTrackingWindows.has(tab.windowId)) {
         Cache.setTab(tab);
-        logger.log(onUpdated, '🛑 skip tracking tab:', tab.id);
-        return;
-    }
 
-    if (skipTrackingWindows.has(tab.windowId)) {
-        Cache.setTab(tab);
-        logger.log(onUpdated, '🛑 skip tracking tab:', tab.id, 'for window:', tab.windowId);
+        if (Object.hasOwn(changeInfo, 'pinned') || Object.hasOwn(changeInfo, 'hidden')) {
+            updatedBatch.add(tab.id, updatedKey(Cache.getTabGroup(tab.id), tab.windowId));
+        }
+
+        logger.log(onUpdated, '🛑 skip tracking tab:', tab.id, 'window:', tab.windowId);
         return;
     }
 
@@ -307,9 +325,14 @@ async function onUpdated(tabId, changeInfo, tab) {
         return;
     }
 
-    if (changeInfo.favIconUrl) {
-        await Cache.setTabFavIcon(tab.id, changeInfo.favIconUrl)
-            .catch(log.onCatch(['cant set favIcon', tab, changeInfo], false));
+    if (Utils.isAvailableFavIconUrl(tab.favIconUrl)) {
+        if (changeInfo.favIconUrl) {
+            await Cache.setTabFavIcon(tab.id, changeInfo.favIconUrl)
+                .catch(log.onCatch(['cant set favIcon', tab, changeInfo], false));
+        }
+    } else if (isLoaded(tab) && !tab.discarded) {
+        await Cache.removeTabFavIcon(tab.id);
+        changeInfo.favIconUrl = null;
     }
 
     if (Object.hasOwn(changeInfo, 'pinned') || Object.hasOwn(changeInfo, 'hidden')) {
@@ -352,7 +375,7 @@ async function onUpdated(tabId, changeInfo, tab) {
         }
 
         tabGroupId && updatedBatch.add(tab.id, tabGroupId);
-        updatedBatch.add(tab.id, `unsync:${tab.windowId}`);
+        updatedBatch.add(tab.id, unsyncKey(tab.windowId));
 
         log.stop();
         return;
@@ -374,16 +397,19 @@ function onRemoved(tabId, {isWindowClosing, windowId}) {
     const silent = skip.removed.has(tabId);
 
     skip.removed.add(tabId); // BUG https://bugzilla.mozilla.org/show_bug.cgi?id=1396758
+    skip.created.delete(tabId);
 
     const groupId = Cache.getTabGroup(tabId);
-
-    updatedBatch.delete(tabId, groupId || `unsync:${windowId}`);
+    const groupKey = updatedKey(groupId, windowId);
 
     if (silent) {
         Cache.removeTab(tabId);
+        updatedBatch.add(tabId, groupKey);
         logger.log(onRemoved, '🛑 silent removed tab:', tabId);
         return;
     }
+
+    updatedBatch.delete(tabId, groupKey);
 
     if (skipTrackingWindows.has(windowId)) {
         logger.log(onRemoved, '🛑 skip tracking tab:', tabId, 'for window:', windowId);
@@ -424,6 +450,7 @@ async function onMoved(tabId, {windowId, fromIndex, toIndex}) {
     }
 
     if (skip.tracking.has(tabId)) {
+        updatedBatch.add(tabId, updatedKey(Cache.getTabGroup(tabId), windowId));
         logger.log(onMoved, '🛑 skip tracking tab:', tabId);
         return;
     }
@@ -437,7 +464,7 @@ async function onMoved(tabId, {windowId, fromIndex, toIndex}) {
 
     logger.log(onMoved, {tabId, windowId, groupId, fromIndex, toIndex});
 
-    updatedBatch.add(tabId, groupId || `unsync:${windowId}`);
+    updatedBatch.add(tabId, updatedKey(groupId, windowId));
 
     // a move can change native membership (join/leave a span) - let the mirror resync the window
     GroupsNative.scheduleMirrorWindow(windowId);
@@ -458,6 +485,7 @@ async function onDetached(tabId, {oldWindowId}) { // notice: called before onAtt
     }
 
     if (skip.tracking.has(tabId)) {
+        updatedBatch.add(tabId, updatedKey(Cache.getTabGroup(tabId), oldWindowId));
         logger.log(onDetached, '🛑 skip tracking tab:', tabId);
         return;
     }
@@ -466,7 +494,7 @@ async function onDetached(tabId, {oldWindowId}) { // notice: called before onAtt
 
     logger.log(onDetached, {tabId, oldWindowId, groupId});
 
-    updatedBatch.add(tabId, groupId || `unsync:${oldWindowId}`);
+    updatedBatch.add(tabId, updatedKey(groupId, oldWindowId));
 
     GroupsNative.scheduleMirrorWindow(oldWindowId);
 }
@@ -478,6 +506,7 @@ async function onAttached(tabId, {newWindowId}) { // called when tabs.move()
     }
 
     if (skip.tracking.has(tabId)) {
+        updatedBatch.add(tabId, updatedKey(Cache.getTabGroup(tabId), newWindowId));
         logger.log(onAttached, '🛑 skip tracking tab:', tabId);
         return;
     }
@@ -500,7 +529,7 @@ async function onAttached(tabId, {newWindowId}) { // called when tabs.move()
 
     log.log('groupId', groupId);
 
-    updatedBatch.add(tabId, groupId || `unsync:${newWindowId}`);
+    updatedBatch.add(tabId, updatedKey(groupId, newWindowId));
 
     GroupsNative.scheduleMirrorWindow(newWindowId);
 
@@ -614,6 +643,7 @@ export async function create({url, active, pinned, title, index, windowId, opene
     await Cache.setTabSession(newTab, {groupId, groupNativeId, favIconUrl, thumbnail});
 
     if (skipTrackingCreated) {
+        updatedBatch.add(newTab.id, updatedKey(groupId, newTab.windowId));
         logger.log('created', newTab.id);
     } else {
         logger.log('created', newTab);
@@ -630,23 +660,20 @@ function createUnsupportedUrlPage(url) {
 
 /*
 tabsToCreate - the tabs to create; with createMissing - a mixed list, where only the tabs marked "new: true" are created, the rest are alive already and are kept as they are, an empty slot stays empty
-startIndex - the index of the first created tab in its window, the rest follow it
+startIndex - the index of the first created tab in its window, the rest follow it; without it the tabs are appended at the end of the window
 createMissing - see tabsToCreate
-ensureOrder - true: the tabs come out in the list order - explicit ascending indexes per window, from startIndex or the end of the window, created inactive and activated afterwards, the order enforced. false: every tab lands where its own index says, active as asked, startIndex is refused
+hideUnloaded - true: the created tabs of an unloaded group are hidden. false: the caller hides them itself, after its own sort (settleGroupTabs)
+the tabs come out in the list order - explicit ascending indexes per window, created inactive and activated afterwards, the order enforced
 the created tabs are muted for the addon's own create listener: the caller settles them itself
 returns {created, live, aligned}: created - the tabs this call created. live - every tab of the list alive after the call, the created and the kept ones. aligned - live laid over tabsToCreate, undefined where a creation failed
 */
 export async function createMultiple(tabsToCreate, params = {}) {
     const startIndex = params.startIndex ?? null;
     const createMissing = params.createMissing ?? false;
-    const ensureOrder = params.ensureOrder ?? true;
+    const hideUnloaded = params.hideUnloaded ?? true;
 
     if (!Array.isArray(tabsToCreate)) {
         throw new Error('tabs must be an array');
-    }
-
-    if (!ensureOrder && startIndex !== null) {
-        throw new Error('startIndex is a placement, it contradicts ensureOrder: false');
     }
 
     const newTabs = createMissing ? tabsToCreate.filter(tab => tab?.new) : tabsToCreate;
@@ -654,7 +681,7 @@ export async function createMultiple(tabsToCreate, params = {}) {
     const log = logger.start(createMultiple, 'count:', newTabs.length, {
         startIndex,
         createMissing,
-        ensureOrder,
+        hideUnloaded,
     });
 
     if (!newTabs.length) {
@@ -677,7 +704,7 @@ export async function createMultiple(tabsToCreate, params = {}) {
             const windowId = Cache.getWindowId(tab.groupId) || tab.windowId
                 || (fallbackWindowId ??= await Windows.getLastFocusedNormalWindow());
 
-            if (tab.pinned || !ensureOrder) {
+            if (tab.pinned) {
                 placements[index] = {windowId};
                 continue;
             }
@@ -692,6 +719,10 @@ export async function createMultiple(tabsToCreate, params = {}) {
             nextIndexByWindow.set(windowId, tabIndex + 1);
 
             placements[index] = {windowId, index: tabIndex, active: false};
+        }
+
+        if (startIndex !== null && nextIndexByWindow.size > 1) {
+            throw new Error('startIndex is a placement in one window, the tabs are in several');
         }
     }
 
@@ -709,7 +740,8 @@ export async function createMultiple(tabsToCreate, params = {}) {
         }
     }));
 
-    if (ensureOrder) {
+    // ensureOrder
+    {
         const createdTabsByWindow = Map.groupBy(created.filter(Boolean), tab => tab.windowId);
 
         // safety net: explicit indexes must keep the order (docs/CREATE-TABS-BEHAVIOR.md §2)
@@ -724,6 +756,11 @@ export async function createMultiple(tabsToCreate, params = {}) {
         if (newTabs[index].active === true && tab && !tab.active) {
             await setActive(tab.id);
         }
+    }
+
+    if (hideUnloaded) {
+        // appended past the end of the strip the tabs join nothing (docs/TABGROUPS-BEHAVIOR.md §10), an anchor inside the group can land in a span (§7)
+        await hide(created.filter(tab => tab?.groupId && !Cache.getWindowId(tab.groupId)), {ungroupNative: startIndex !== null});
     }
 
     let next = 0;
@@ -855,7 +892,6 @@ export async function settleGroupTabs(groupId, savedTabs, {live, aligned}) {
         await GroupsNative.apply(Cache.getWindowId(groupId), group)
             .catch(logger.onCatch(['cant apply native groups', groupId], false));
     } else {
-        await GroupsNative.ungroup(tabs);
         await hide(tabs);
     }
 
@@ -864,38 +900,98 @@ export async function settleGroupTabs(groupId, savedTabs, {live, aligned}) {
     return tabs.map(Cache.applyTabSession);
 }
 
+async function queryLiveMembers(windowIds) {
+    const members = [];
+
+    for (const windowId of windowIds) {
+        const tabs = await query({windowId, pinned: false, hidden: false}, {raw: true});
+        members.push(...tabs.filter(tab => tab.groupId !== GroupsNative.TAB_GROUP_ID_NONE));
+    }
+
+    return members;
+}
+
 // docs/OPENER-BEHAVIOR.md "How STG carries the link" - A transfer (§3, §6, §7, Implications 10)
 // a copy that could not be created is an empty slot in the result: its original stays where it is, with its links
-export async function recreate(tabs, buildTabFunc, params = {}) {
-    const log = logger.start(recreate, 'tabs:', tabs.map(extractId), {params});
+export async function recreate(tabs, buildTabFunc) {
+    const log = logger.start(recreate, 'tabs:', tabs.map(extractId));
 
-    const {aligned: newTabs} = await createMultiple(tabs.map(buildTabFunc), {...params, ensureOrder: false});
+    const originals = await list(tabs, {sortByIndex: true});
+    const windowIds = new Set(originals.map(tab => tab.windowId));
 
-    const newIdByOldId = new Map;
+    // the copy takes the original's slot and its live sub-group by the occupant rule; the first
+    // member's slot is the boundary of the span (docs/TABGROUPS-BEHAVIOR.md §7) - its copy goes
+    // one slot further, a span of one member is a boundary too (§25); the copies the rule still
+    // leaves out stand right next to the span and join in place below (§23)
+    const membersBefore = await queryLiveMembers(windowIds);
+    const liveIdByOldId = new Map(membersBefore.map(tab => [tab.id, tab.groupId]));
+    const firstMemberIds = new Set(
+        [...Map.groupBy(membersBefore, tab => tab.groupId).values()]
+            .filter(members => members.length > 1)
+            .map(members => members.toSorted(Utils.sortBy('index'))[0].id)
+    );
 
-    for (const [index, tab] of tabs.entries()) {
-        if (newTabs[index]) {
-            newIdByOldId.set(tab.id, newTabs[index].id);
+    const copyByOldId = new Map;
+    const insertedByWindow = new Map;
+
+    for (const tab of originals) {
+        const inserted = insertedByWindow.get(tab.windowId) ?? 0;
+        const index = tab.index + inserted + (firstMemberIds.has(tab.id) ? 1 : 0);
+
+        try {
+            const copy = await create({
+                ...buildTabFunc(tab),
+                index,
+                windowId: tab.windowId,
+                openerTabId: undefined,
+            });
+
+            copyByOldId.set(tab.id, copy);
+            insertedByWindow.set(tab.windowId, inserted + 1);
+        } catch (error) {
+            log.logError(['failed to create tab:', tab, 'reason:'], error);
         }
+    }
+
+    const liveIdByCopyId = new Map((await queryLiveMembers(windowIds)).map(tab => [tab.id, tab.groupId]));
+    const copiesByLiveId = new Map;
+
+    for (const [oldId, copy] of copyByOldId) {
+        const liveId = liveIdByOldId.get(oldId);
+
+        if (liveId && liveIdByCopyId.get(copy.id) !== liveId) {
+            copiesByLiveId.getOrInsert(liveId, []).push(copy);
+        }
+    }
+
+    for (const [liveId, copies] of copiesByLiveId) {
+        await group(copies, copies[0].windowId, {joinLiveGroupId: liveId});
     }
 
     const links = [];
 
-    for (const tab of tabs) {
-        if (newIdByOldId.has(tab.id) && tab.openerTabId > 0 && tab.openerTabId !== tab.id) {
-            links.push([newIdByOldId.get(tab.id), newIdByOldId.get(tab.openerTabId) ?? tab.openerTabId]);
+    for (const tab of originals) {
+        if (copyByOldId.has(tab.id) && tab.openerTabId > 0 && tab.openerTabId !== tab.id) {
+            links.push([copyByOldId.get(tab.id).id, copyByOldId.get(tab.openerTabId)?.id ?? tab.openerTabId]);
         }
     }
 
-    for (const child of Cache.getTabChildren(newIdByOldId.keys())) {
-        if (!newIdByOldId.has(child.id)) {
-            links.push([child.id, newIdByOldId.get(child.openerTabId)]);
+    for (const child of Cache.getTabChildren(copyByOldId.keys())) {
+        if (!copyByOldId.has(child.id)) {
+            links.push([child.id, copyByOldId.get(child.openerTabId).id]);
         }
     }
 
     await setOpeners(links);
 
-    await remove(Array.from(newIdByOldId.keys()), params);
+    const copiesToHide = originals
+        .filter(tab => copyByOldId.has(tab.id) && (tab.hidden || (tab.groupId && !Cache.getWindowId(tab.groupId))))
+        .map(tab => copyByOldId.get(tab.id));
+
+    await hide(copiesToHide);
+    await remove([...copyByOldId.keys()]);
+
+    const newTabs = tabs.map(tab => copyByOldId.get(extractId(tab)));
 
     log.stop('new tabs:', newTabs.map(tab => tab?.id ?? null));
 
@@ -1082,6 +1178,7 @@ export async function createTempActiveTab(windowId, createPinnedTab = true, newT
             active: true,
             index: 0, // never joins a span there (docs/TABGROUPS-BEHAVIOR.md §7, R7.12/R7.13)
             windowId: windowId,
+            groupId: createPinnedTab ? undefined : Cache.getWindowGroup(windowId),
         });
 
         log.stop('created temp tab', tempTab);
@@ -1110,13 +1207,8 @@ async function addNow(groupId, cookieStoreId, url, title) {
     });
 
     if (!windowId) {
-        // the anchor index can land inside a live span and the tab joins it from birth
-        // (docs/TABGROUPS-BEHAVIOR.md §7, §10)
-        await GroupsNative.ungroup(tab);
         await hide(tab);
     }
-
-    sendUpdatedGroup(groupId);
 
     log.stop(tab);
     return tab;
@@ -1217,10 +1309,8 @@ async function moveNow(tabIds, groupId, params = {}) {
 
     const tabsCantHide = new Set;
     const windowId = groupWindowId || (group.tabs[0]?.windowId) || await Windows.getLastFocusedNormalWindow();
-    const activeTabs = [];
 
     log.log('vars', {groupWindowId, windowId});
-    log.log('filter active');
 
     let showPinnedMessage = false;
 
@@ -1239,15 +1329,15 @@ async function moveNow(tabIds, groupId, params = {}) {
             return false;
         }
 
-        if (tab.active && tab.groupId !== groupId) {
-            activeTabs.push(tab);
-        }
-
         return true;
     });
 
-    log.log('active tabs', activeTabs, 'tabs to move COUNT:', tabs.length);
+    log.log('tabs to move COUNT:', tabs.length);
 
+    tabs.forEach(tab => updatedBatch.add(tab.id, updatedKey(tab.groupId, tab.windowId)));
+
+    const activeTabs = [];
+    let tempTabs = [];
     let destGroupNativeId = null;
     let membershipSnapshot = null;
 
@@ -1255,8 +1345,7 @@ async function moveNow(tabIds, groupId, params = {}) {
         if (tabs.length) {
             destGroupNativeId = resolveDestSubGroupId(group, groupWindowId, tabs, newTabIndex);
 
-            await activateOtherTabs(activeTabs, tabs, windowId, log);
-            activeTabs.length = 0; // reset active tabs
+            tempTabs = await activateOutside(tabs.filter(tab => tab.windowId !== groupWindowId));
 
             // the movers' sub-group fate is decided on the ORIGINAL tabs (a drop onto a sub-group
             // tab is dictated by destGroupNativeId instead): the container recreation below swaps
@@ -1278,12 +1367,12 @@ async function moveNow(tabIds, groupId, params = {}) {
                 await show(tabs.filter(tab => tab.hidden));
             } else {
                 // the anchor can drop any mover, hidden ones included, onto a live-member slot
-                // (docs/TABGROUPS-BEHAVIOR.md §1, §4 R2.14, §11, §20) - strip the whole set
-                await GroupsNative.ungroup(tabs);
-                await hide(tabs.filter(tab => !tab.hidden));
+                // (docs/TABGROUPS-BEHAVIOR.md §1, §4 R2.14, §11, §20) - the whole set goes through hide
+                await hide(tabs);
             }
 
             await Promise.all(tabs.map(tab => Cache.setTabGroup(tab.id, groupId)));
+            tabs.forEach(tab => updatedBatch.add(tab.id, groupId));
 
             if (destGroupNativeId) {
                 // dropped onto a tab of an unloaded group's sub-group - it wins over the carried membership
@@ -1294,8 +1383,6 @@ async function moveNow(tabIds, groupId, params = {}) {
             } else {
                 await GroupsNative.restoreMembership(group, tabs, membershipSnapshot);
             }
-
-            Groups.sendUpdatedAll();
 
             log.log('end moving');
         }
@@ -1318,7 +1405,19 @@ async function moveNow(tabIds, groupId, params = {}) {
         return [];
     }
 
-    return applyGroupAndNotify(group, groupId, windowId, tabs, activeTabs, {showTab, showOnlyActiveTab, showNotification}, log);
+    return applyGroupAndNotify(group, groupId, windowId, tabs, activeTabs, tempTabs, {showTab, showOnlyActiveTab, showNotification}, log);
+}
+
+// the group's tabs gather as one block in the window at their own first tab there, or at the
+// group's anchor: strays arrive without joining anyone, the in-window part can be swallowed by
+// a live span (docs/TABGROUPS-BEHAVIOR.md §20, §21) - the caller rebuilds the sub-groups after
+export async function moveToWindow(tabs, groupId, windowId) {
+    const anchorTab = tabs.find(tab => tab.windowId === windowId);
+
+    return moveNative(tabs, {
+        index: anchorTab?.index ?? await resolveMoveIndex(groupId, windowId, tabs),
+        windowId,
+    });
 }
 
 // no explicit index - the movers line up at the group's tail (or after its last-accessed tab,
@@ -1329,7 +1428,7 @@ async function moveNow(tabIds, groupId, params = {}) {
 // from other windows append at the end of the strip; movers already in the window gather at
 // the first mover's own slot, their live membership stripped first - a member as the first
 // mover swallows the whole block (§21), and the snapshot taken before carries the sub-groups
-export async function resolveMoveIndex(groupId, windowId, movingTabs) {
+async function resolveMoveIndex(groupId, windowId, movingTabs) {
     const movingIds = new Set(movingTabs.map(extractId));
     const groupTabs = (await query({windowId, pinned: false})).filter(tab => !movingIds.has(tab.id) && tab.groupId === groupId);
     const anchor = await getNewTabIndex(groupTabs);
@@ -1345,7 +1444,7 @@ export async function resolveMoveIndex(groupId, windowId, movingTabs) {
             return movingTabs[0].index;
         }
 
-        await GroupsNative.ungroup(movingTabs);
+        await ungroup(movingTabs);
         return (await get(movingTabs[0], {withSession: false}))?.index ?? movingTabs[0].index;
     }
 
@@ -1369,56 +1468,10 @@ function resolveDestSubGroupId(group, groupWindowId, tabs, newTabIndex) {
     }
 }
 
-async function activateOtherTabs(activeTabs, movingTabs, windowId, log) {
-    const excludeMovingTabs = tab => !movingTabs.some(t => t.id === tab.id);
-
-    await Promise.all(activeTabs.map(async activeTab => {
-        const allTabsInActiveTabWindow = await query({windowId: activeTab.windowId});
-        const tabsToActive = allTabsInActiveTabWindow.filter(tab => !tab.hidden && excludeMovingTabs(tab));
-
-        if (tabsToActive.length) {
-            log.log('set active some other');
-            await setActive(undefined, tabsToActive);
-        } else { // if not found other visible (include pinned) tabs in window
-            const differentWindows = activeTab.windowId !== windowId;
-            const otherHiddenAndVisibleTabsInActiveTabWindow = allTabsInActiveTabWindow.filter(excludeMovingTabs);
-            let activeTabIsLastInSrcGroup = false;
-            let activeTabIsInLoadedGroup = false;
-            let activeTabNotInGroup = false;
-
-            if (activeTab.groupId) {
-                activeTabIsLastInSrcGroup = !otherHiddenAndVisibleTabsInActiveTabWindow
-                    .some(tab => tab.groupId === activeTab.groupId);
-
-                activeTabIsInLoadedGroup = activeTab.groupId === Cache.getWindowGroup(activeTab.windowId);
-            } else {
-                activeTabNotInGroup = !Cache.getWindowGroup(activeTab.windowId);
-            }
-
-            log.log('create temp tab condition:', {
-                differentWindows,
-                otherHiddenAndVisibleTabsInActiveTabWindowCount: otherHiddenAndVisibleTabsInActiveTabWindow.length,
-                activeTabIsLastInSrcGroup,
-                activeTabIsInLoadedGroup,
-                activeTabNotInGroup,
-            });
-
-            if (
-                (differentWindows && !otherHiddenAndVisibleTabsInActiveTabWindow.length) ||
-                (activeTabIsLastInSrcGroup && activeTabIsInLoadedGroup) ||
-                (activeTabNotInGroup)
-            ) {
-                log.log('create temp')
-                await createTempActiveTab(activeTab.windowId, false);
-            }
-        }
-    }));
-}
-
 async function recreateTabsForContainer(tabs, group, activeTabs, membershipSnapshot, skippedTabs, log) {
     const containerParams = Groups.getContainerParams(group);
-    const containerOf = new Map(tabs.map(tab => [tab, getNewTabContainer(tab, containerParams)]));
-    const tabsToRecreate = tabs.filter(tab => tab.cookieStoreId !== containerOf.get(tab));
+    const containerOf = new Map(tabs.map(tab => [tab.id, getNewTabContainer(tab, containerParams)]));
+    const tabsToRecreate = tabs.filter(tab => tab.cookieStoreId !== containerOf.get(tab.id));
 
     if (!tabsToRecreate.length) {
         activeTabs.push(...tabs.filter(tab => tab.active));
@@ -1429,11 +1482,11 @@ async function recreateTabsForContainer(tabs, group, activeTabs, membershipSnaps
 
     const newTabs = await recreate(tabsToRecreate, tab => ({
         ...tab,
-        cookieStoreId: containerOf.get(tab),
+        cookieStoreId: containerOf.get(tab.id),
         groupId: undefined,
         groupNativeId: undefined,
         active: false,
-    }), {silentRemove: true});
+    }));
 
     skipTrackingTabs(newTabs.filter(Boolean), skippedTabs);
 
@@ -1469,14 +1522,17 @@ async function recreateTabsForContainer(tabs, group, activeTabs, membershipSnaps
     });
 }
 
-async function applyGroupAndNotify(group, groupId, windowId, tabs, activeTabs, {showTab, showOnlyActiveTab, showNotification}, log) {
+async function applyGroupAndNotify(group, groupId, windowId, tabs, activeTabs, tempTabs, {showTab, showOnlyActiveTab, showNotification}, log) {
     let [firstTab] = activeTabs.length ? activeTabs : tabs;
 
     const applyGroup = showTab && (!showOnlyActiveTab || activeTabs.length > 0);
 
     if (applyGroup) {
         log.log('apply group', windowId, groupId, firstTab.id);
-        await Groups.apply(windowId, groupId, firstTab.id);
+
+        if (await Groups.apply(windowId, groupId, firstTab.id)) {
+            await remove(tempTabs.filter(tab => tab.windowId === windowId), {ungroupNative: false, keepWindowsAlive: false});
+        }
     }
 
     if (applyGroup || !showNotification) {
@@ -1615,7 +1671,6 @@ async function tabsAction({action, ...params}, tabs, ...funcArgs) {
     }
 
     const skipTracking = params.skipTracking ?? schema.skipTracking ?? false;
-    const silentRemove = params.silentRemove ?? false;
 
     if (!tabs) {
         throw new Error(`invalid tabs`);
@@ -1626,14 +1681,14 @@ async function tabsAction({action, ...params}, tabs, ...funcArgs) {
     let result = schema.defaultValue ?? [];
 
     const tabIds = tabs.map(extractId);
-    const log = logger.start(tabsAction, `browser.tabs.${action}(`,tabIds,...funcArgs,')', {skipTracking, silentRemove});
+    const log = logger.start(tabsAction, `browser.tabs.${action}(`,tabIds,...funcArgs,')', {skipTracking});
 
     if (!tabs.length) {
         log.stop('tabs are empty');
         return result;
     }
 
-    if (action === 'remove' && silentRemove) {
+    if (action === 'remove' && skipTracking) {
         tabIds.forEach(tabId => skip.removed.add(tabId));
     }
 
@@ -1705,9 +1760,51 @@ export async function show(tabs, params = {}) {
     return await tabsAction({action: 'show', ...params}, tabs);
 }
 
-// a tab that can sit in a live native group must be detached first - GroupsNative.ungroup
-// before hide (docs/TABGROUPS-BEHAVIOR.md §4); freshly appended tabs don't need it (§10)
+async function activateOutside(tabs) {
+    const ids = new Set(tabs.map(extractId));
+    const tempTabs = [];
+
+    if (!ids.size) {
+        return tempTabs;
+    }
+
+    const activeTabs = await query({active: true}, {withSession: false});
+
+    for (const activeTab of activeTabs.filter(tab => ids.has(tab.id))) {
+        const visibleTabs = await query({windowId: activeTab.windowId, hidden: false}, {withSession: false});
+        const otherTabs = visibleTabs.filter(tab => !ids.has(tab.id));
+
+        if (otherTabs.length) {
+            await setActive(null, otherTabs);
+        } else {
+            tempTabs.push(await createTempActiveTab(activeTab.windowId, false));
+        }
+    }
+
+    return tempTabs.filter(Boolean);
+}
+
+// the tabs leave their live native groups first (ungroupNative): the header of a group whose tabs
+// are all hidden stays in the tab bar (docs/TABGROUPS-BEHAVIOR.md §4). tabs.hide skips the window's
+// active tab (§9) - activateOther hands the activity to another visible tab before
 export async function hide(tabs, params = {}) {
+    const activateOther = params.activateOther ?? false;
+    const ungroupNative = params.ungroupNative ?? true;
+
+    tabs = Array.isArray(tabs) ? tabs : [tabs];
+
+    if (!tabs.length) {
+        return [];
+    }
+
+    if (activateOther) {
+        await activateOutside(tabs);
+    }
+
+    if (ungroupNative) {
+        await ungroup(tabs);
+    }
+
     return await tabsAction({action: 'hide', ...params}, tabs);
 }
 
@@ -1750,8 +1847,8 @@ export async function setMute(tabs, muted) {
 
 // removing all visible tabs closes the window with its hidden tabs (REMOVE-TABS-BEHAVIOR.md §1) -
 // give it a temp tab first; the state is read live, the caller's snapshot may be stale
-export async function keepWindowsAlive(tabsToRemove) {
-    const removedIds = new Set(Array.from(tabsToRemove, tab => tab.id));
+async function ensureWindowsAlive(tabsToRemove) {
+    const removedIds = new Set(tabsToRemove.map(extractId));
     const visibleTabs = await query({hidden: false}, {withSession: false});
 
     for (const [windowId, windowTabs] of Map.groupBy(visibleTabs, tab => tab.windowId)) {
@@ -1762,7 +1859,29 @@ export async function keepWindowsAlive(tabsToRemove) {
     }
 }
 
+// keepWindowsAlive - see ensureWindowsAlive.
+// A caller that knows better passes false: hidden tabs that were stripped when hidden, a window
+// that keeps a visible tab for sure
 export async function remove(tabs, params = {}) {
+    const ungroupNative = params.ungroupNative ?? true;
+    const keepWindowsAlive = params.keepWindowsAlive ?? true;
+
+    tabs = Array.isArray(tabs) ? tabs : [tabs];
+
+    if (!tabs.length) {
+        return [];
+    }
+
+    // closing a whole live native group in one call leaves a SAVED group in the browser that no API
+    // can remove (docs/TABGROUPS-BEHAVIOR.md §26) - the tabs leave their groups first
+    if (ungroupNative) {
+        await ungroup(tabs);
+    }
+
+    if (keepWindowsAlive) {
+        await ensureWindowsAlive(tabs);
+    }
+
     return await tabsAction({action: 'remove', ...params}, tabs);
 }
 
@@ -2020,7 +2139,7 @@ export async function reconcile(groups, allTabs) {
 
         await Promise.allSettled(sessionPromises);
 
-        const {live, aligned} = await createMultiple(tabs, {createMissing: true});
+        const {live, aligned} = await createMultiple(tabs, {createMissing: true, hideUnloaded: false});
 
         group.tabs = await ensureSorted(live);
 

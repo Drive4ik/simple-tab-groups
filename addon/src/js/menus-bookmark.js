@@ -7,7 +7,6 @@ import * as Containers from '/js/containers.js';
 import * as Utils from '/js/utils.js';
 import * as Tabs from '/js/tabs.js';
 import * as Groups from '/js/groups.js';
-import * as GroupsNative from '/js/groups-native.js';
 import * as Operations from '/js/operations.js';
 import * as Storage from '/js/storage.js';
 import * as Browser from '/js/browser.js';
@@ -277,16 +276,7 @@ async function openInGroupNow(groupId, info) {
             startIndex: await Tabs.getNewTabIndex(group.tabs),
         });
 
-        if (!Groups.isLoaded(groupId) && !info.button.RIGHT) {
-            log.log('hiding created tabs because group is not loaded and left click');
-            // the startIndex anchor can land inside a live span (docs/TABGROUPS-BEHAVIOR.md §7)
-            await GroupsNative.ungroup(created);
-            await Tabs.hide(created);
-        }
-
         await Browser.actionLoading(false);
-
-        Tabs.sendUpdatedGroup(groupId);
 
         if (info.button.RIGHT) {
             await Groups.apply(undefined, groupId, created[0].id);
@@ -365,10 +355,7 @@ async function createNewGroupNow(info) {
 
             if (tabsToCreate.length) {
                 const newGroup = await Groups.add(undefined, undefined, folder.title);
-                const {created} = await Tabs.createMultiple(Groups.setNewTabsParams(tabsToCreate, newGroup));
-                // appended at the end of the strip - they can't be in a live group (docs/TABGROUPS-BEHAVIOR.md §10)
-                await Tabs.hide(created);
-                Tabs.sendUpdatedGroup(newGroup.id);
+                await Tabs.createMultiple(Groups.setNewTabsParams(tabsToCreate, newGroup));
                 groupsCreatedCount++;
             }
         }

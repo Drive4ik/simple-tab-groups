@@ -9,10 +9,6 @@ Asserts the recorded facts: REMOVE-TABS-BEHAVIOR.md §1 (the window closes, hidd
 reveal) and §2 (a pinned tab keeps the window alive).`;
 
 class WindowLifeTest extends TabsTest {
-    suffix(tab) {
-        return super.suffix(tab) + (tab.pinned ? '(p)' : '');
-    }
-
     eventFormatters() {
         return {
             ...super.eventFormatters(),

@@ -153,9 +153,10 @@ them by number (`docs/REMOVE-TABS-BEHAVIOR.md §1`).
 
 1. **Any addon flow that removes tabs can close a user's window as a side effect** (§1): if the
    removal covers all visible tabs of a window that stores hidden tabs of unloaded groups, the
-   window dies and takes them along. `Tabs.createTempActiveTab` before such a removal is the
-   existing prevention pattern; a pinned tab also prevents the closure by itself (§2), and
-   `Tabs.createTempActiveTab` already prefers activating a pinned tab over creating a temp one.
+   window dies and takes them along. `Tabs.remove` gives such a window a temp tab first by
+   default (`keepWindowsAlive`; a caller sure that the window keeps a visible tab passes `false`);
+   a pinned tab also prevents the closure by itself (§2), and `Tabs.createTempActiveTab` already
+   prefers activating a pinned tab over creating a temp one.
 2. **The closure is announced only by `tabs.onRemoved {isWindowClosing: true}` plus
    `windows.onRemoved`** (§1) — never by a `{hidden: false}` update. Bookkeeping that waits for a
    reveal event will never see one.

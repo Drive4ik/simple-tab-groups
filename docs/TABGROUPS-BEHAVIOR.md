@@ -573,13 +573,152 @@ still has members. (R10.01)
     2ms  tabs.onUpdated        free2  {groupId: 🟥}
   ```
 
+## 22. `tabs.ungroup` of a tab outside any group, pinned or not
+
+- **The call resolves and touches nothing: no event, no move** — for a plain outsider (R26.01)
+  and for a pinned one (R26.03). A member in the same array leaves the group normally, the
+  outsider next to it is left alone (R26.02, R26.04).
+
+  | tab index | 0 | 1 | 2 | 3 |
+  | - | - | - | - | - |
+  | before | x* | 🟥 gr1 | 🟥 gr2 | y |
+  | `tabs.ungroup([gr2, y])  — gr2 is a member, y is not` | | | | |
+  | after | x* | 🟥 gr1 | gr2 | y |
+
+  events:
+
+  ```text
+    2ms  tabs.onUpdated        gr2  {groupId: -1}
+  ```
+
+  | tab index | 0 | 1 | 2 | 3 |
+  | - | - | - | - | - |
+  | before | p1*(p) | x | 🟥 gr1 | 🟥 gr2 |
+  | `tabs.ungroup([gr2, p1])  — gr2 is a member, p1 is pinned` | | | | |
+  | after | p1*(p) | x | 🟥 gr1 | gr2 |
+
+## 23. `tabs.group({tabIds, groupId})` joining an EXISTING group
+
+- **A tab standing right next to the span, on either side, joins IN PLACE: no move, only
+  `tabs.onUpdated {groupId}`** (R26.05, R26.06). An array of such tabs from both sides does the
+  same, whatever the array order (R26.13). The §3 rule "the first tabId does not move, the rest
+  are pulled to it" is about creation; on a join the span is the anchor.
+
+  | tab index | 0 | 1 | 2 | 3 | 4 |
+  | - | - | - | - | - | - |
+  | before | k* | x | 🟥 gr1 | 🟥 gr2 | y |
+  | `tabs.group({tabIds: [x], groupId: 🟥})  — x is right before the first member` | | | | | |
+  | after | k* | 🟥 x | 🟥 gr1 | 🟥 gr2 | y |
+
+  | tab index | 0 | 1 | 2 | 3 | 4 |
+  | - | - | - | - | - | - |
+  | before | k* | x | 🟥 gr1 | 🟥 gr2 | y |
+  | `tabs.group({tabIds: [y, x], groupId: 🟥})  — y after the span, x before it, y first in the array` | | | | | |
+  | after | k* | 🟥 x | 🟥 gr1 | 🟥 gr2 | 🟥 y |
+
+  events:
+
+  ```text
+    3ms  tabs.onUpdated        x  {groupId: 🟥}
+    3ms  tabs.onUpdated        y  {groupId: 🟥}
+  ```
+
+- **A tab standing away from the span is moved to the span's near edge and joins** — coming
+  from before, it lands right before the first member (R26.07).
+
+  | tab index | 0 | 1 | 2 | 3 | 4 | 5 |
+  | - | - | - | - | - | - | - |
+  | before | x* | k1 | k2 | 🟥 gr1 | 🟥 gr2 | y |
+  | `tabs.group({tabIds: [x], groupId: 🟥})  — two outsiders between x and the span` | | | | | | |
+  | after | k1 | k2 | 🟥 x* | 🟥 gr1 | 🟥 gr2 | y |
+
+  events:
+
+  ```text
+    2ms  tabs.onMoved          x  0 → 2
+    2ms  tabs.onUpdated        x  {groupId: 🟥}
+  ```
+
+- **A tab that already is a member: the call resolves with the group id, nothing moves, no
+  event** — the first member and a middle one alike (R26.08).
+
+## 24. `tabs.hide` of an already hidden tab
+
+- **Resolves with an empty list, no event.** In an array with a visible tab it resolves with the
+  visible one only, and only that one gets `tabs.onUpdated {hidden: true}` (R26.09).
+
+  | tab index | 0 | 1 | 2 |
+  | - | - | - | - |
+  | before | a* | b(h) | c |
+  | `tabs.hide([b])  — b is hidden already` | | | |
+  | after | a* | b(h) | c |
+  | `tabs.hide([b, c])  — b hidden, c visible` | | | |
+  | after 2 | a* | b(h) | c(h) |
+
+  events:
+
+  ```text
+    2ms  tabs.onUpdated        c  {hidden: true}
+  ```
+
+## 25. `tabs.create` at the slot of a SINGLE-member span
+
+- **The boundary rule of §7 holds for a span of one: the new tab lands before it and joins
+  nothing** (R26.10).
+
+  | tab index | 0 | 1 | 2 | 3 |
+  | - | - | - | - | - |
+  | before | x* | 🟥 gr1 | y | |
+  | `tabs.create(new1, {index: 1})  — that slot held 🟥 gr1, the only member` | | | | |
+  | after | x* | ➕new1 | 🟥 gr1 | y |
+
+  events:
+
+  ```text
+    7ms  tabs.onCreated        new1  index:1 group:-1
+  ```
+
+## 26. Closing every member of a live group
+
+- **One `tabs.remove` with the whole span leaves a SAVED group in the "List all tabs" menu (the
+  ⌄ button at the right end of the tab strip)**, with the group's title; no API lists or removes
+  it, the user deletes it by hand (R26.11 + 👁️). The members closed one by one, two
+  `tabs.remove` calls — the group dies without a trace (R26.14 + 👁️); ungrouped first, then
+  closed in one call — no trace either (R26.12 + 👁️). A window closed with a live group inside
+  leaves a saved group too (R26.15 + 👁️).
+
+  | tab index | 0 | 1 | 2 |
+  | - | - | - | - |
+  | before | keep* | 🟥 gr1 | 🟥 gr2 |
+  | `tabs.remove([gr1, gr2])  — the whole span in one call` | | | |
+  | after | keep* | | |
+
+  events:
+
+  ```text
+    6ms  tabs.onRemoved        gr1  isWindowClosing:false
+    6ms  tabs.onRemoved        gr2  isWindowClosing:false
+    6ms  tabGroups.onRemoved   🟥  title:"SAVED-BY-ONE-REMOVE" collapsed:false
+  ```
+
+  | tab index | 0 | 1 | 2 |
+  | - | - | - | - |
+  | before | keep* | 🟥 gr1 | 🟥 gr2 |
+  | `tabs.remove([gr1])  — the first member alone` | | | |
+  | after | keep* | 🟥 gr2 | |
+  | `tabs.remove([gr2])  — the last member, the group dies now` | | | |
+  | after 2 | keep* | | |
+
 ## Implications for STG code
 
 1. **Do not move tabs as an array to `{index: -1}`/`{index: 0}` if their native groups must be
    preserved.** For "reorder without changing positions" (creating an STG group from all window
    tabs) — `tabs.move(ids, {index: tabs[0].index})` or do not move them at all.
 2. **Never do `move(allWindowTabs, {index: -1})`** — §2, the bug that assigns the group to them all.
-3. Group (`tabs.group`) only visible tabs; before `hide` — ungroup (§3, §4).
+3. Group (`tabs.group`) only visible tabs; before `hide` — ungroup (§3, §4), and before a
+   `tabs.remove` of a whole span — ungroup too, or the browser keeps it as a saved group (§26):
+   `Tabs.hide` and `Tabs.remove` do it themselves by default (`ungroupNative`); an ungroup of a
+   tab outside any group costs nothing (§22).
 4. Membership on insertion is decided by **the tab that currently occupies the target index**, for
    both `tabs.move` and `tabs.create` (§1, §7) — with one creation-only exception: at the FIRST
    member's slot `tabs.create` lands before the span and joins nothing, while `tabs.move` joins
@@ -591,10 +730,11 @@ still has members. (R10.01)
 6. **`tabs.hide` never hides the window's active tab** (§9) — hiding a whole group takes two
    steps (hide the rest, hand activity to another tab, hide the former active tab), and the state
    between the steps is observable from outside: the former active tab sits visible and ungrouped.
+   `Tabs.hide` with `activateOther` hands the activity over first.
 7. **Tabs appended past the end of the strip with explicit indexes can never join a live group**
-   (§10) — hiding freshly appended tabs (restore, unarchive, bookmark import) needs no ungroup.
-   A tab created WITHOUT an index CAN be born inside a group under `afterCurrent` (§10) — those
-   paths must ungroup before hide.
+   (§10). A tab created WITHOUT an index CAN be born inside a group under `afterCurrent` (§10) —
+   `Tabs.hide` ungroups first by default; `Tabs.createMultiple` passes `ungroupNative: false` only
+   for the tabs it appended past the end.
 8. **`tabs.onAttached` must not treat every arrival as a membership loss**: a group moved to
    another window arrives with its members and the same live id (§16), while a single dragged
    member arrives ungrouped with no `groupId` event (§16) — the arrived tab's own `groupId` is
@@ -624,3 +764,7 @@ still has members. (R10.01)
 15. **Gathering an in-window array at its first tab's slot is not membership-neutral** (§21):
     a first mover inside a live span swallows the whole set. A same-window gather is safe only
     with a span-free first mover and final positions equal to the initial ones (§2).
+16. **A join into an existing span keeps an adjacent tab in place and pulls a distant one to the
+    near edge; a join of a member is a no-op** (§23) — `Tabs.recreate` places a copy at its
+    original's slot, one slot further for the first member of a span (§7, §25), and joins the
+    copies the occupant rule left out: they stand next to the span, so the join moves nothing.
