@@ -355,7 +355,7 @@ async function sync(trust = null, revision = null, progressFunc = null) {
             }));
 
             // the sort runs even without new tabs - the order may have changed, for hidden groups too
-            group.tabs = await Tabs.settleGroupTabs(group.id, savedTabs, creation);
+            group.tabs = await Groups.settleTabs(group, savedTabs, creation);
         }
 
         const {groups} = await Groups.load();

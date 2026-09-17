@@ -117,12 +117,8 @@ async function applyNow(windowId, groupId, activeTabId, applyFromHistory = false
                     groupToShow.tabs = await Tabs.moveToWindow(groupToShow.tabs, groupToShow.id, windowId);
                 }
 
-                await Tabs.show(groupToShow.tabs);
+                await showTabs(groupToShow, groupToShow.tabs);
                 groupToShow.tabs.forEach(tab => tab.hidden = false); // the tab objects were loaded before show
-
-                if (groupToShow.muteTabsWhenGroupCloseAndRestoreWhenOpen) {
-                    await Tabs.setMute(groupToShow.tabs, false);
-                }
 
                 await GroupsNative.apply(windowId, groupToShow);
             }
@@ -131,27 +127,9 @@ async function applyNow(windowId, groupId, activeTabId, applyFromHistory = false
             await Cache.setWindowGroup(windowId, groupToShow.id);
 
             // hide tabs
-            await hideTabs(groupToHide?.tabs);
+            await hideTabs(groupToHide, groupToHide?.tabs);
 
             const activeTabGroupToHide = groupToHide?.tabs.find(tab => tab.active);
-
-            async function hideTabs(tabs = []) {
-                await Tabs.hide(tabs);
-
-                if (groupToHide) {
-                    if (groupToHide.muteTabsWhenGroupCloseAndRestoreWhenOpen) {
-                        await Tabs.setMute(tabs, true);
-                    }
-
-                    if (groupToHide.discardTabsAfterHide) {
-                        if (groupToHide.discardExcludeAudioTabs) {
-                            tabs = tabs.filter(tab => !tab.audible);
-                        }
-
-                        await Tabs.discard(tabs);
-                    }
-                }
-            }
 
             async function hideUnSyncTabs(tabs) {
                 if (!tabs.length) {
@@ -159,7 +137,7 @@ async function applyNow(windowId, groupId, activeTabId, applyFromHistory = false
                 }
 
                 // unsync tabs are managed by the addon: their native groups are consciously destroyed
-                await Tabs.hide(tabs);
+                await hideTabs(null, tabs);
                 await GroupsNative.clearMembership(tabs);
 
                 let showNotif = mainStorage.showTabsInThisWindowWereHidden ?? 0;
@@ -250,7 +228,7 @@ async function applyNow(windowId, groupId, activeTabId, applyFromHistory = false
 
             if (groupToHide) {
                 if (activeTabGroupToHide) {
-                    await hideTabs([activeTabGroupToHide]);
+                    await hideTabs(groupToHide, [activeTabGroupToHide]);
                 }
 
                 groupToHide.tabs.forEach(tab => tab.url.startsWith(Constants.PAGES.MANAGE) && tabsIdsToRemove.add(tab.id));
@@ -763,7 +741,7 @@ async function restoreNow(groupId) {
 
         const creation = await Tabs.createMultiple(setNewTabsParams(group.tabs, group), {hideUnloaded: false});
 
-        group.tabs = await Tabs.settleGroupTabs(group.id, group.tabs, creation);
+        group.tabs = await settleTabs(group, group.tabs, creation);
 
         await Browser.actionLoading(false);
     }
@@ -892,23 +870,54 @@ export async function sort(vector = 'asc') {
     log.stop();
 }
 
-export function isLoaded(groupId) {
-    const log = logger.start('isLoaded', groupId);
+export async function showTabs(group = null, tabs = [], params) {
+    await Tabs.show(tabs.filter(tab => tab.hidden), params);
 
-    if (!groupId) {
-        log.stopWarn('groupId is not defined');
-        return false;
+    await Tabs.setMute(tabs, false, {onlyMutedBySelf: !group?.muteTabsWhenGroupCloseAndRestoreWhenOpen});
+}
+
+export async function hideTabs(group = null, tabs = [], params) {
+    tabs = tabs.filter(Tabs.isCanBeHidden);
+
+    await Tabs.hide(tabs, params);
+
+    if (group?.muteTabsWhenGroupCloseAndRestoreWhenOpen) {
+        await Tabs.setMute(tabs, true);
+    } else {
+        await Tabs.setMute(tabs, false, {onlyMutedBySelf: true});
     }
 
-    const windowId = Cache.getWindowId(groupId);
+    if (group?.discardTabsAfterHide) {
+        if (group.discardExcludeAudioTabs) {
+            await Tabs.discard(tabs.filter(tab => !tab.audible), params);
+        } else {
+            await Tabs.discard(tabs, params);
+        }
+    }
+}
 
-    if (!windowId) {
-        log.stop('group is not loaded');
-        return false;
+// the tail of a restore, after Tabs.createMultiple: the group's live tabs are sorted into the saved
+// order, then the native groups - a loaded group gets GroupsNative.apply over its WHOLE live list
+// (reloaded for it: the caller's group object holds the saved tabs), an unloaded one is stripped
+// (the sort can drop hidden tabs onto live-member slots, docs/TABGROUPS-BEHAVIOR.md §11, §12) and
+// hidden by the group's options (hideTabs) - and the links go last: sort first, link last
+// (docs/OPENER-BEHAVIOR.md Implications 8)
+export async function settleTabs(group, savedTabs, {live, aligned}) {
+    const tabs = await Tabs.ensureSorted(live);
+    const windowId = Cache.getWindowId(group.id);
+
+    if (windowId) {
+        const {group: loadedGroup} = await load(group.id, true);
+
+        await GroupsNative.apply(windowId, loadedGroup)
+            .catch(logger.onCatch(['cant apply native groups', group.id], false));
+    } else {
+        await hideTabs(group, tabs);
     }
 
-    log.stop('group is loaded', windowId);
-    return true;
+    await Tabs.applyOpeners(savedTabs, aligned);
+
+    return tabs.map(Cache.applyTabSession);
 }
 
 async function beforeUnload(group) {
@@ -985,22 +994,10 @@ async function unloadNow(groupId) {
 
     const unsyncTabs = (await Tabs.query({windowId, hidden: true})).filter(tab => !tab.groupId);
 
-    await Tabs.show(unsyncTabs);
+    await showTabs(null, unsyncTabs);
 
     // sessions keep the membership of hidden tabs - nothing to save here
-    await Tabs.hide(group.tabs, {activateOther: true});
-
-    if (group.discardTabsAfterHide) {
-        log.log('run discard tabs');
-
-        let tabs = group.tabs;
-
-        if (group.discardExcludeAudioTabs) {
-            tabs = group.tabs.filter(tab => !tab.audible);
-        }
-
-        await Tabs.discard(tabs);
-    }
+    await hideTabs(group, group.tabs, {activateOther: true});
 
     await Browser.actionLoading(false);
 
@@ -1070,7 +1067,7 @@ async function archiveToggleNow(groupId) {
     if (creation) {
         // outside the queue turn: the settle takes the window gate, and a native-group apply
         // holding that gate ends with Groups.update - a turn of this very queue
-        await Tabs.settleGroupTabs(group.id, savedTabs, creation);
+        await settleTabs(group, savedTabs, creation);
     }
 
     await Tabs.remove(tabsToRemove, {ungroupNative: false, keepWindowsAlive: false});

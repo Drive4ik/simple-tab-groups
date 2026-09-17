@@ -350,7 +350,7 @@ async function runGrandRestoreNow(restoredWindowIds) {
 
             if (isLoadedGroup) {
                 log.log('showing group tabs, group', groupToKeep.id, 'in window', groupToKeep.window.id);
-                await Tabs.show(groupToKeep.tabs);
+                await Groups.showTabs(groupToKeep, groupToKeep.tabs);
 
                 // the array move above can tear live native groups apart - recreate them from sessions
                 await GroupsNative.apply(groupToKeep.window.id, groupToKeep)
@@ -362,7 +362,7 @@ async function runGrandRestoreNow(restoredWindowIds) {
                 }
             } else {
                 log.log('hiding group tabs, group', groupToKeep.id, 'in window', groupToKeep.window.id);
-                await Tabs.hide(groupToKeep.tabs);
+                await Groups.hideTabs(groupToKeep, groupToKeep.tabs);
             }
         }
     } finally {
@@ -791,18 +791,20 @@ async function tryRestoreMissedTabsNow(actionLoading = true) {
 
     // strict find exist tabs
     const {groups} = await Groups.load();
-    const newTabParamsByGroupId = new Map(groups
-        .filter(group => !group.isArchive)
-        .map(group => [group.id, Groups.getNewTabParams(group)]));
+    const groupsById = new Map(groups.filter(group => !group.isArchive).map(group => [group.id, group]));
 
     const existTabs = new Set();
 
     // group by group: the offsets live inside the group's run of the list, the created tabs of a group stay together
     for (const [groupId, savedTabs] of Map.groupBy(tabsToRestore, tab => tab.groupId)) {
+        const group = groupsById.get(groupId);
+
         // if no groupId, or group not found
-        if (!newTabParamsByGroupId.has(groupId)) {
+        if (!group) {
             continue;
         }
+
+        const newTabParams = Groups.getNewTabParams(group);
 
         const tabs = savedTabs.map(tab => {
             const existTab = allTabs.find(t => !existTabs.has(t) && Tabs.isSame(tab, t));
@@ -814,8 +816,8 @@ async function tryRestoreMissedTabsNow(actionLoading = true) {
 
             return {
                 ...tab,
+                ...newTabParams,
                 new: true,
-                ...newTabParamsByGroupId.get(groupId),
             };
         });
 
@@ -823,7 +825,7 @@ async function tryRestoreMissedTabsNow(actionLoading = true) {
 
         const logCreate = log.start('creating and settle tabs for group', groupId, 'tabs count:', needRestoreGroupCount);
         const creation = await Tabs.createMultiple(tabs, {createMissing: true, hideUnloaded: false});
-        await Tabs.settleGroupTabs(groupId, savedTabs, creation);
+        await Groups.settleTabs(group, savedTabs, creation);
         logCreate.stop();
     }
 
@@ -936,8 +938,13 @@ async function initializeGroupsNow(groups, afterRestoring = false) {
     tabsToShow = remapToFreshTabs(tabsToShow);
     tabsToHide = remapToFreshTabs(tabsToHide);
 
+    const groupsById = new Map(groups.map(group => [group.id, group]));
+    const tabsByGroup = tabs => Map.groupBy(tabs, tab => groupsById.get(tab.groupId) ?? null);
+
     if (tabsToShow.size) {
-        await Tabs.show([...tabsToShow]);
+        for (const [group, tabs] of tabsByGroup(tabsToShow)) {
+            await Groups.showTabs(group, tabs);
+        }
 
         for (const tab of tabsToShow) {
             tab.hidden = false;
@@ -947,7 +954,9 @@ async function initializeGroupsNow(groups, afterRestoring = false) {
     }
 
     if (tabsToHide.size) {
-        await Tabs.hide([...tabsToHide], {activateOther: true});
+        for (const [group, tabs] of tabsByGroup(tabsToHide)) {
+            await Groups.hideTabs(group, tabs, {activateOther: true});
+        }
 
         log.log('tabsToHide count', tabsToHide.size);
     }

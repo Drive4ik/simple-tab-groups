@@ -533,6 +533,11 @@ async function onAttached(tabId, {newWindowId}) { // called when tabs.move()
 
     GroupsNative.scheduleMirrorWindow(newWindowId);
 
+    if (groupId && attachedTab?.mutedInfo.muted && !attachedTab.hidden) {
+        const {group} = await Groups.load(groupId);
+        await Groups.showTabs(group, [attachedTab]);
+    }
+
     log.stop();
 }
 
@@ -662,7 +667,7 @@ function createUnsupportedUrlPage(url) {
 tabsToCreate - the tabs to create; with createMissing - a mixed list, where only the tabs marked "new: true" are created, the rest are alive already and are kept as they are, an empty slot stays empty
 startIndex - the index of the first created tab in its window, the rest follow it; without it the tabs are appended at the end of the window
 createMissing - see tabsToCreate
-hideUnloaded - true: the created tabs of an unloaded group are hidden. false: the caller hides them itself, after its own sort (settleGroupTabs)
+hideUnloaded - true: the created tabs of an unloaded group are hidden plain, past the group's options. false: the caller hides them itself, after its own sort (Groups.settleTabs)
 the tabs come out in the list order - explicit ascending indexes per window, created inactive and activated afterwards, the order enforced
 the created tabs are muted for the addon's own create listener: the caller settles them itself
 returns {created, live, aligned}: created - the tabs this call created. live - every tab of the list alive after the call, the created and the kept ones. aligned - live laid over tabsToCreate, undefined where a creation failed
@@ -876,28 +881,6 @@ export async function applyOpeners(savedTabs, aligned) {
     }
 
     await setOpeners(links);
-}
-
-// the tail of a restore, after createMultiple: the group's live tabs are sorted into the saved
-// order, then the native groups - a loaded group gets GroupsNative.apply over its WHOLE live list,
-// an unloaded one is stripped (the sort can drop hidden tabs onto live-member slots,
-// docs/TABGROUPS-BEHAVIOR.md §11, §12) and hidden - and the links go last: sort first, link last
-// (docs/OPENER-BEHAVIOR.md Implications 8)
-export async function settleGroupTabs(groupId, savedTabs, {live, aligned}) {
-    const tabs = await ensureSorted(live);
-
-    if (Groups.isLoaded(groupId)) {
-        const {group} = await Groups.load(groupId, true);
-
-        await GroupsNative.apply(Cache.getWindowId(groupId), group)
-            .catch(logger.onCatch(['cant apply native groups', groupId], false));
-    } else {
-        await hide(tabs);
-    }
-
-    await applyOpeners(savedTabs, aligned);
-
-    return tabs.map(Cache.applyTabSession);
 }
 
 async function queryLiveMembers(windowIds) {
@@ -1207,7 +1190,7 @@ async function addNow(groupId, cookieStoreId, url, title) {
     });
 
     if (!windowId) {
-        await hide(tab);
+        await Groups.hideTabs(group, [tab]);
     }
 
     log.stop(tab);
@@ -1364,11 +1347,11 @@ async function moveNow(tabIds, groupId, params = {}) {
             });
 
             if (groupWindowId) {
-                await show(tabs.filter(tab => tab.hidden));
+                await Groups.showTabs(group, tabs);
             } else {
                 // the anchor can drop any mover, hidden ones included, onto a live-member slot
                 // (docs/TABGROUPS-BEHAVIOR.md §1, §4 R2.14, §11, §20) - the whole set goes through hide
-                await hide(tabs);
+                await Groups.hideTabs(group, tabs);
             }
 
             await Promise.all(tabs.map(tab => Cache.setTabGroup(tab.id, groupId)));
@@ -1834,15 +1817,27 @@ export async function reload(tabs, bypassCache = false) {
     return await tabsAction({action: 'reload'}, tabs, {bypassCache});
 }
 
-export async function setMute(tabs, muted) {
-    logger.log('setMute', {muted});
+export async function setMute(tabs, muted, params = {}) {
+    const onlyMutedBySelf = params.onlyMutedBySelf ?? false;
 
-    tabs = await list(tabs, {withSession: false});
     muted = Boolean(muted);
 
-    tabs = tabs.filter(tab => muted ? tab.audible : tab.mutedInfo.muted);
+    if (onlyMutedBySelf) {
+        tabs = tabs.filter(tab => !tab.mutedInfo || isMutedBySelf(tab));
+    }
 
-    return await tabsAction({action: 'update'}, tabs, {muted});
+    const ids = new Set(tabs.map(extractId));
+
+    if (!ids.size) {
+        return [];
+    }
+
+    logger.log('setMute', {muted, onlyMutedBySelf});
+
+    const found = await query(muted ? {audible: true} : {muted: true}, {withSession: false});
+    const tabsToUpdate = found.filter(tab => ids.has(tab.id) && (!onlyMutedBySelf || isMutedBySelf(tab)));
+
+    return await tabsAction({action: 'update'}, tabsToUpdate, {muted});
 }
 
 // removing all visible tabs closes the window with its hidden tabs (REMOVE-TABS-BEHAVIOR.md §1) -
@@ -2023,12 +2018,16 @@ export function isPinned(tab) {
     return tab.pinned === true;
 }
 
-function isCanBeHidden(tab) {
+export function isCanBeHidden(tab) {
     return !isPinned(tab) && !tab.sharingState?.screen && !tab.sharingState?.camera && !tab.sharingState?.microphone;
 }
 
 export function isCanNotBeHidden(tab) {
     return !isCanBeHidden(tab);
+}
+
+function isMutedBySelf(tab) {
+    return Boolean(tab.mutedInfo?.muted) && tab.mutedInfo.extensionId === browser.runtime.id;
 }
 
 export function isLoaded(tab) {

@@ -779,9 +779,9 @@ live group had at the moment of archiving — a deliberate detach and the post-r
 (§8) freeze identically — so absence in an archive is no explicit "no", and the cloud fills the
 link back in.
 
-**Applying.** The tail of a restore is one function, `Tabs.settleGroupTabs`: the group's live
+**Applying.** The tail of a restore is one function, `Groups.settleTabs`: the group's live
 tabs sorted into the saved order, the native groups applied to a loaded group or stripped and
-hidden for an unloaded one, and the links last — unarchive, undo-remove, the closed windows and
+hidden by the group's options for an unloaded one, and the links last — unarchive, undo-remove, the closed windows and
 the cloud apply all end there; `Tabs.reconcile` of a backup keeps only the sort and the links,
 the addon reload that follows does the rest. `Tabs.applyOpeners` — over the group's final list,
 to every tab with a saved link, never comparing with the tab's current opener: the
