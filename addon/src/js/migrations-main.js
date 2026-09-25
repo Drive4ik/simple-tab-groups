@@ -451,6 +451,7 @@ export default [{
         if (data.tabsToRestore) {
             for (const tab of data.tabsToRestore) {
                 tab.groupId = getNewGroupId(tab.groupId);
+                Tabs.normalizeUrl(tab);
             }
 
             data.tabsToRestore = Windows.rebuildTabsToRestore(data.tabsToRestore, tab => tab.groupId);

@@ -378,7 +378,7 @@ async function runGrandRestoreNow(restoredWindowIds) {
     // the browser brings the window back without the links (docs/OPENER-BEHAVIOR.md §15) - the saved
     // ones are applied to the live tabs of the group whose entries leave the restore list
     for (const {group, savedTabs} of openersToApply) {
-        const liveTabs = normalizeTabs(group.tabs.filter(tab => !tabsToDelete.has(tab.id)));
+        const liveTabs = group.tabs.filter(tab => !tabsToDelete.has(tab.id));
 
         liveTabs.forEach(Tabs.fillEmptyUrl);
 
@@ -527,7 +527,7 @@ async function onRemoved(windowId) {
     createdBatch.delete(windowId);
     grandRestoreBatch.delete(windowId);
 
-    const tabsToRestore = normalizeTabs(Cache.getTabsSessionAndRemove(restoreTabsOnRemoved));
+    const tabsToRestore = Cache.getTabsSessionAndRemove(restoreTabsOnRemoved);
 
     restoreTabsOnRemoved.length = 0;
 
@@ -725,10 +725,6 @@ export async function createPopup(createData, once = true) {
     return win;
 }
 
-function normalizeTabs(tabs) {
-    return tabs.map(Tabs.normalizeUrl).filter(tab => tab.url);
-}
-
 // tabsToRestore is a flat list of many groups; an openerOffset is relative to the group's own
 // subsequence of it, so every rebuild of the list recomputes the offsets per group and keeps the order
 export function rebuildTabsToRestore(tabs, keep = () => true) {
@@ -751,8 +747,7 @@ const tabsToRestoreQueue = new Queue('TabsToRestore');
 
 async function getTabsToRestore() {
     const {tabsToRestore = []} = await Storage.get('tabsToRestore');
-    // not normalizeTabs: dropping a saved entry shifts its neighbors' offsets - the rebuild recomputes them
-    return rebuildTabsToRestore(tabsToRestore.map(Tabs.normalizeUrl), tab => tab.url);
+    return tabsToRestore;
 }
 
 function forgetTabsToRestore(restoredTabs) {

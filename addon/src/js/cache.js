@@ -103,7 +103,7 @@ export function mirrorTab(tab, isRead = false) {
         return;
     }
 
-    record.url = url;
+    record.url = Utils.normalizeUrl(url);
     record.title = title || url;
 
     if (Utils.isAvailableFavIconUrl(favIconUrl)) {
@@ -117,7 +117,7 @@ export function setTab(tab) {
 }
 
 export function mirrorTabUrl(id, url) {
-    tabs.getOrInsertComputed(id, createRecord).url = url;
+    tabs.getOrInsertComputed(id, createRecord).url = Utils.normalizeUrl(url);
 }
 
 export function hasTab(id) {

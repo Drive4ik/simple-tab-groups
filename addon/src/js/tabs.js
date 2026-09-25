@@ -2044,7 +2044,7 @@ export function fillEmptyUrl(tab) {
     const knownUrl = Cache.getTabValue(tab.id, 'url');
 
     if (knownUrl && Utils.isUrlEmpty(tab.url) && (isLoading(tab) || tab.active)) {
-        tab.url = Utils.normalizeUrl(knownUrl);
+        tab.url = knownUrl;
     }
 
     return tab;

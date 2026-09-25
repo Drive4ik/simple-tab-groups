@@ -468,10 +468,6 @@ export default {
 
                     tab.url = Utils.normalizeUrl(tab.url);
 
-                    if (!Utils.isUrlAllowToCreate(tab.url)) {
-                        return;
-                    }
-
                     if (oldTab.pinned) {
                         data.pinnedTabs.push({
                             title: tab.title,
@@ -545,12 +541,10 @@ export default {
                     win.tabs.forEach(function({url, title, pinned, groupId}) {
                         url = Utils.normalizeUrl(url);
 
-                        if (Utils.isUrlAllowToCreate(url)) {
-                            if (pinned) {
-                                data.pinnedTabs.push({url, title, pinned});
-                            } else if (groups[groupId]) {
-                                groups[groupId].tabs.push({url, title});
-                            }
+                        if (pinned) {
+                            data.pinnedTabs.push({url, title, pinned});
+                        } else if (groups[groupId]) {
+                            groups[groupId].tabs.push({url, title});
                         }
                     });
 
@@ -559,15 +553,7 @@ export default {
             } else if (panoramaOptions.file.version === 2) {
                 panoramaOptions.windows.forEach(function(win) {
                     win.tabGroups?.forEach(function({title, tabs}) {
-                        let groupTabs = [];
-
-                        tabs.forEach(function({url, title}) {
-                            url = Utils.normalizeUrl(url);
-
-                            if (Utils.isUrlAllowToCreate(url)) {
-                                groupTabs.push({url, title});
-                            }
-                        });
+                        const groupTabs = tabs.map(({url, title}) => ({url: Utils.normalizeUrl(url), title}));
 
                         if (groupTabs.length) {
                             data.groups.push({
@@ -578,11 +564,7 @@ export default {
                     });
 
                     win.pinnedTabs?.forEach(function({url, title}) {
-                        url = Utils.normalizeUrl(url);
-
-                        if (Utils.isUrlAllowToCreate(url)) {
-                            data.pinnedTabs.push({url, title});
-                        }
+                        data.pinnedTabs.push({url: Utils.normalizeUrl(url), title});
                     });
                 });
             } else {
@@ -625,15 +607,7 @@ export default {
             };
 
             syncTabOptions.groups.forEach(function({title, tabs}) {
-                tabs = tabs
-                    .map(function({url, title, favIconUrl, pinned}) {
-                        url = Utils.normalizeUrl(url);
-
-                        if (Utils.isUrlAllowToCreate(url)) {
-                            return {url, title, favIconUrl, pinned};
-                        }
-                    })
-                    .filter(Boolean);
+                tabs = tabs.map(({url, title, favIconUrl, pinned}) => ({url: Utils.normalizeUrl(url), title, favIconUrl, pinned}));
 
                 data.groups.push({
                     title,
