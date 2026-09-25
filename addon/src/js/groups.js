@@ -597,6 +597,8 @@ async function removeNow(groupIds) {
         let defaultGroupPropsChanged = false;
 
         for (const group of groupsToRemove) {
+            group.index = groups.indexOf(group);
+
             if (removeRefs(group, restGroups, defaultGroupProps)) {
                 defaultGroupPropsChanged = true;
             }
@@ -675,26 +677,30 @@ async function addUndoRemove(groupToRemove) {
         includeThumbnail: false,
     });
 
-    await browser.storage.session.set({
-        [restoreId]: groupToRemove,
-    });
-
-    await Menus.create({
-        id: restoreId,
-        title: Lang('undoRemoveGroupItemTitle', groupToRemove.title),
-        contexts: [Menus.ContextType.BROWSER_ACTION],
-        icons: getIconUrl(groupToRemove, 16),
-        module: ['groups', 'restore', groupToRemove.id],
-    });
-
-    const {showNotificationAfterGroupDelete} = await Storage.get('showNotificationAfterGroupDelete');
-
-    if (showNotificationAfterGroupDelete) {
-        await Notification(['undoRemoveGroupNotification', groupToRemove.title], {
-            id: restoreId,
-            module: ['groups', 'restore', groupToRemove.id],
-            expires: Notification.MAX_EXPIRES,
+    try {
+        await browser.storage.session.set({
+            [restoreId]: groupToRemove,
         });
+
+        await Menus.create({
+            id: restoreId,
+            title: Lang('undoRemoveGroupItemTitle', groupToRemove.title),
+            contexts: [Menus.ContextType.BROWSER_ACTION],
+            icons: getIconUrl(groupToRemove, 16),
+            module: ['groups', 'restore', groupToRemove.id],
+        });
+
+        const {showNotificationAfterGroupDelete} = await Storage.get('showNotificationAfterGroupDelete');
+
+        if (showNotificationAfterGroupDelete) {
+            await Notification(['undoRemoveGroupNotification', groupToRemove.title], {
+                id: restoreId,
+                module: ['groups', 'restore', groupToRemove.id],
+                expires: Notification.MAX_EXPIRES,
+            });
+        }
+    } catch (error) {
+        logger.logError('cant add undo remove', error);
     }
 }
 
@@ -721,8 +727,11 @@ async function restoreNow(groupId) {
 
     await writeQueue.run('restore', async () => {
         const {groups} = await load();
+        const {index} = group;
 
-        groups.push(group);
+        delete group.index;
+
+        groups.splice(index, 0, group);
 
         normalizeContainersInGroups(groups);
 
