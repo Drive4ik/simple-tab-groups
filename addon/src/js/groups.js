@@ -672,7 +672,7 @@ async function addUndoRemove(groupToRemove) {
 
     groupToRemove.tabs = Tabs.prepareForSave(groupToRemove.tabs, {
         includeFavIconUrl: true,
-        includeThumbnail: true,
+        includeThumbnail: false,
     });
 
     await browser.storage.session.set({

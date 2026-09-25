@@ -4,13 +4,20 @@ import * as Cache from './cache.js';
 import * as Utils from './utils.js';
 import Lang, {hasMessage} from './lang.js';
 import Logger from './logger.js';
+import Queue from './queue.js';
 
 let Groups;
 let Windows;
 
 const logger = new Logger('Browser');
 
-export async function action({
+const actionQueue = new Queue('Action');
+
+export function action(...args) {
+    return actionQueue.run('set', () => actionNow(...args));
+}
+
+async function actionNow({
     title = Constants.MANIFEST.browser_action.default_title,
     icon = Constants.MANIFEST.browser_action.default_icon,
     popup = Constants.MANIFEST.browser_action.default_popup,
@@ -78,21 +85,29 @@ export async function action({
     log.stop();
 }
 
-export async function actionAllWindows(details) {
+export function actionAllWindows(...args) {
+    return actionQueue.run('all-windows', () => actionAllWindowsNow(...args));
+}
+
+async function actionAllWindowsNow(details) {
     Windows ??= await import('./windows.js');
     const windows = await Windows.load();
 
-    await action(details); // for new windows
+    await actionNow(details); // for new windows
 
     for (const {id} of windows) { // for every window
-        await action({
+        await actionNow({
             ...details,
             windowId: id,
         });
     }
 }
 
-export async function actionGroup(group, windowId) {
+export function actionGroup(...args) {
+    return actionQueue.run('group', () => actionGroupNow(...args));
+}
+
+async function actionGroupNow(group, windowId) {
     const log = logger.start('actionGroup', {groupId: group?.id, windowId});
 
     Groups ??= await import('./groups.js');
@@ -128,7 +143,7 @@ export async function actionGroup(group, windowId) {
         details.isSticky = group.isSticky;
     }
 
-    await action(details);
+    await actionNow(details);
 
     // prependWindowTitle
     let titlePreface = '';
@@ -149,22 +164,26 @@ export async function actionGroup(group, windowId) {
     log.stop();
 }
 
-export async function actionLoading(start = true) {
+export function actionLoading(start = true) {
+    return actionQueue.run(start ? 'loading' : 'restore', () => actionLoadingNow(start));
+}
+
+async function actionLoadingNow(start) {
     if (start) {
-        await actionAllWindows({
+        await actionAllWindowsNow({
             title: '__MSG_loading__',
         });
     } else {
         Windows ??= await import('./windows.js');
 
-        await action({
+        await actionNow({
             enable: true,
         });
 
         const windows = await Windows.load();
 
         for (const {id} of windows) {
-            await actionGroup(null, id);
+            await actionGroupNow(null, id);
         }
     }
 }

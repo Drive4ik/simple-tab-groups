@@ -1613,7 +1613,11 @@ async function cloudSync({
     actionListeners.add(Cloud.on('sync-end', () => browserActionProgress(100, syncSuccessColor, true)));
     actionListeners.add(Cloud.on('sync-error', ({progress}) => browserActionProgress(progress, syncDangerColor, true)));
     actionListeners.add(Cloud.on('sync-finish', ({ok}) => {
-        cloudSyncResetTimer = setTimeout(() => Browser.actionLoading(false), ok ? 0 : 5_000);
+        if (ok) {
+            Browser.actionLoading(false);
+        } else {
+            cloudSyncResetTimer = setTimeout(() => Browser.actionLoading(false), 5_000);
+        }
     }));
     clearTimeout(cloudSyncResetTimer);
 
