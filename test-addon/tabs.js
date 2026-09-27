@@ -58,6 +58,21 @@ export async function closeHarnessWindows() {
     return closed;
 }
 
+// a container that exists for one test only: created before `run`, removed after it, whatever happened inside
+export async function withContainer(t, run) {
+    t.require('contextualIdentities API present', Boolean(browser.contextualIdentities), 'the cookies and contextualIdentities permissions are missing from the manifest');
+
+    const identity = await browser.contextualIdentities.create({name: 'stg-test', color: 'blue', icon: 'fingerprint'});
+
+    t.note(`container created for the test: ${identity.cookieStoreId} (${identity.name}); removed at the end`);
+
+    try {
+        await run(identity.cookieStoreId);
+    } finally {
+        await browser.contextualIdentities.remove(identity.cookieStoreId).catch(error => t.note(`container removal failed: ${error.message}`));
+    }
+}
+
 export class TabsTest extends Test {
     constructor(options) {
         super(options);

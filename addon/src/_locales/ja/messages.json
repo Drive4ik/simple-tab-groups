@@ -517,16 +517,6 @@
         "message": "ピン留めされたタブはサポートされていません",
         "description": "Pinned tabs are not supported"
     },
-    "thisUrlsAreNotSupported": {
-        "message": "このURL \"$urls$\" はサポートされていません",
-        "description": "This urls \"$urls$\" are not supported",
-        "placeholders": {
-            "urls": {
-                "content": "$1",
-                "example": "about:addons, file://..."
-            }
-        }
-    },
     "moveMultipleTabsToGroupMessage": {
         "message": "$tabscount$ 個のタブを移動しました。\nここをクリックして最初のタブを開いてください",
         "description": "$tabscount$ tabs have been moved.\nClick here to open the first tab",

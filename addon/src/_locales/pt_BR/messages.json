@@ -517,16 +517,6 @@
         "message": "Abas fixadas não são suportadas",
         "description": "Pinned tabs are not supported"
     },
-    "thisUrlsAreNotSupported": {
-        "message": "Estes endereços \"$urls$\" não são suportados",
-        "description": "This urls \"$urls$\" are not supported",
-        "placeholders": {
-            "urls": {
-                "content": "$1",
-                "example": "about:addons, file://..."
-            }
-        }
-    },
     "moveMultipleTabsToGroupMessage": {
         "message": "$tabscount$ abas foram movidas.\nClique aqui para mover a primeira aba",
         "description": "$tabscount$ tabs have been moved.\nClick here to open the first tab",

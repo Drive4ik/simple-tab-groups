@@ -5,13 +5,11 @@ import Listeners from '/js/listeners.js\
 import * as Constants from '/js/constants.js';
 import * as Menus from '/js/menus.js';
 import * as Containers from '/js/containers.js';
-import * as Utils from '/js/utils.js';
 import * as Tabs from '/js/tabs.js';
 import * as Groups from '/js/groups.js';
 import * as GroupsNative from '/js/groups-native.js';
 import * as Windows from '/js/windows.js';
 import * as Storage from '/js/storage.js';
-import Notification from '/js/notification.js';
 import Logger from '/js/logger.js';
 import Lang from '/js/lang.js';
 
@@ -235,12 +233,6 @@ async function onWindowFocusChanged(windowId) {
 // actions
 export async function openInTemporaryContainer(info, tab) {
     const log = logger.start(openInTemporaryContainer, info, tab);
-
-    if (!Utils.isUrlAllowToCreate(tab.url)) {
-        Notification(['thisUrlsAreNotSupported', tab.url]);
-        log.stopWarn('thisUrlsAreNotSupported', tab.url);
-        return;
-    }
 
     await Tabs.create({
         ...GroupsNative.detachTabGroupId(tab),

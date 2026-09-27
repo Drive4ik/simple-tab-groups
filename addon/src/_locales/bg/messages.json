@@ -517,16 +517,6 @@
         "message": "Закачени раздели не се поддържат",
         "description": "Pinned tabs are not supported"
     },
-    "thisUrlsAreNotSupported": {
-        "message": "Адресът „$urls$“ не се поддържа",
-        "description": "This urls \"$urls$\" are not supported",
-        "placeholders": {
-            "urls": {
-                "content": "$1",
-                "example": "about:addons, file://..."
-            }
-        }
-    },
     "moveMultipleTabsToGroupMessage": {
         "message": "$tabscount$ раздела са преместени.\nНатиснете тук, за да посетите първия",
         "description": "$tabscount$ tabs have been moved.\nClick here to open the first tab",

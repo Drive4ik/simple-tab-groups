@@ -543,16 +543,6 @@
         "message": "Закреплённые вкладки не поддерживаются",
         "description": "Pinned tabs are not supported"
     },
-    "thisUrlsAreNotSupported": {
-        "message": "Эти адреса \"$urls$\" не поддерживаются",
-        "description": "This urls \"$urls$\" are not supported",
-        "placeholders": {
-            "urls": {
-                "content": "$1",
-                "example": "about:addons, file://..."
-            }
-        }
-    },
     "moveMultipleTabsToGroupMessage": {
         "message": "Перемещено $tabscount$ вкладок.\nНажмите здесь для открытия первой вкладки",
         "description": "$tabscount$ tabs have been moved.\nClick here to open the first tab",

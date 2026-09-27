@@ -493,16 +493,6 @@
         "message": "고정된 탭은 지원되지 않습니다.",
         "description": "Pinned tabs are not supported"
     },
-    "thisUrlsAreNotSupported": {
-        "message": "이 URL \"$urls$\"은 지원되지 않습니다.",
-        "description": "This urls \"$urls$\" are not supported",
-        "placeholders": {
-            "urls": {
-                "content": "$1",
-                "example": "about:addons, file://..."
-            }
-        }
-    },
     "moveMultipleTabsToGroupMessage": {
         "message": "$tabscount$ 탭이 이동되었습니다.\n첫 번째 탭을 열려면 여기를 클릭하십시오.",
         "description": "$tabscount$ tabs have been moved.\nClick here to open the first tab",

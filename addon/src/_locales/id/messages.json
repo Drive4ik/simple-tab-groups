@@ -501,16 +501,6 @@
         "message": "Tab yang disematkan tidak didukung",
         "description": "Pinned tabs are not supported"
     },
-    "thisUrlsAreNotSupported": {
-        "message": "Url ini \"$urls$\" tidak didukung",
-        "description": "This urls \"$urls$\" are not supported",
-        "placeholders": {
-            "urls": {
-                "content": "$1",
-                "example": "about:addons, file://..."
-            }
-        }
-    },
     "moveMultipleTabsToGroupMessage": {
         "message": "$tabscount$ tab telah dipindahkan.\nKlik di sini untuk membuka tab pertama",
         "description": "$tabscount$ tabs have been moved.\nClick here to open the first tab",

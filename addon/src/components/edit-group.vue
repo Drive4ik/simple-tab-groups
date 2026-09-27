@@ -16,7 +16,7 @@ import Notification from '/js/notification.js';
 import Lang from '/js/lang.js';
 import * as File from '/js/file.js';
 import * as Bookmarks from '/js/bookmarks.js';
-// import * as Tabs from '/js/tabs.js';
+import * as Tabs from '/js/tabs.js';
 import * as Groups from '/js/groups.js';
 import * as Utils from '/js/utils.js';
 import JSON from '/js/json.js';
@@ -188,8 +188,10 @@ export default {
 
             Messages.sendMessageModule('Tabs.getActive')
                 .then(currentTab => {
-                    if (currentTab?.url.startsWith('http')) {
-                        this.currentTabUrl = new URL(currentTab.url);
+                    const url = Tabs.getPageUrl(currentTab?.url);
+
+                    if (url?.startsWith('http')) {
+                        this.currentTabUrl = new URL(url);
                     }
                 });
         }

@@ -517,16 +517,6 @@
         "message": "不支援固定分頁",
         "description": "Pinned tabs are not supported"
     },
-    "thisUrlsAreNotSupported": {
-        "message": "不支援位址”$urls$“",
-        "description": "This urls \"$urls$\" are not supported",
-        "placeholders": {
-            "urls": {
-                "content": "$1",
-                "example": "about:addons, file://..."
-            }
-        }
-    },
     "moveMultipleTabsToGroupMessage": {
         "message": "$tabscount$ 個分頁已被移動。點選此處開啟第一個分頁",
         "description": "$tabscount$ tabs have been moved.\nClick here to open the first tab",

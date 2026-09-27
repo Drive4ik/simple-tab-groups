@@ -2,6 +2,7 @@ export const TAB_GROUP_ID_NONE = -1;
 export const SQUARES = ['🟥', '🟩', '🟦', '🟨', '🟪', '⬛'];
 export const SCENE_URL = browser.runtime.getURL('tab.html');
 export const NETWORK_URL = 'https://example.com/';
+export const READER_URL = 'https://en.wikipedia.org/wiki/Main_Page';
 export const NEW_TAB_POSITIONS = ['atEnd', 'afterCurrent', 'relatedAfterCurrent'];
 
 export const SETTING_WAIT = 100;
@@ -20,7 +21,7 @@ export const TABS_CREATE_URL_LIMIT = 1048572;
 
 export const NOISY_UPDATE_KEYS =['status', 'url', 'title', 'favIconUrl', 'isArticle', 'audible', 'attention'];
 
-export const ROUNDS = ['round-01', 'round-02', 'round-03', 'round-04', 'round-05', 'round-06', 'round-07', 'round-08', 'round-09', 'round-10', 'round-11', 'round-12', 'round-13', 'round-14', 'round-15', 'round-16', 'round-18', 'round-19', 'round-20', 'round-21', 'round-22', 'round-23', 'round-24', 'round-25', 'round-26'];
+export const ROUNDS = ['round-01', 'round-02', 'round-03', 'round-04', 'round-05', 'round-06', 'round-07', 'round-08', 'round-09', 'round-10', 'round-11', 'round-12', 'round-13', 'round-14', 'round-15', 'round-16', 'round-18', 'round-19', 'round-20', 'round-21', 'round-22', 'round-23', 'round-24', 'round-25', 'round-26', 'round-27'];
 
 export const RUN_KEY = 'testRun';
 export const LOGS_KEY = 'testLogs';

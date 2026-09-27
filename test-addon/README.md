@@ -36,7 +36,7 @@ A run is not unattended:
   sees it, and waits. Look at the tab bar, then answer in the same console:
   `T.visualAnswer('only gr2 is visible')`. `T.visualAnswer()` with no argument records "not looked
   at" and moves on. The answer goes into the report under its question.
-- **Restarts.** R3.05, R4.03, R14.08, R14.10 and R19.01 stop and ask for a browser restart
+- **Restarts.** R3.05, R4.03, R14.08, R14.10, R19.01 and R27.09 stop and ask for a browser restart
   (R19.01 — for a complete quit: the shutdown itself is its subject; the exact ask is printed by
   the test). The scene window is left open on purpose — keep it. Restart Firefox, load the add-on
   again in about:debugging, then run `T.continue()`: the harness finds the scene window by the
@@ -81,6 +81,7 @@ writes into the report whatever it had to clean up.
 | `round-24` | `sessions.setTabValue` values across `sessions.restore()`: does the value set on the closed tab's old id come back on the fresh one, and is it readable already inside `tabs.onCreated` — a single closed tab (R24.01); a closed window with a loaded active tab, a background tab that comes back discarded and a hidden member (R24.02); a `setTabValue` from inside `tabs.onCreated` of the restored tab against the value the restore brings, the shape of the STG onCreated handler (R24.03); a `sessions.setWindowValue` value across the restore of its window, probed from every `tabs.onCreated` of the restored window and from `windows.onCreated` (R24.04) |
 | `round-25` | `storage.onChanged` for a key of `storage.local`: the change object of the FIRST write (is `oldValue` absent or present as undefined), of the same value written again, of a change and of a removal, as seen by `storage.onChanged` and by `storage.local.onChanged`; one test per value type — boolean (R25.01), string (R25.02), number (R25.03), array (R25.04), object (R25.05). The facts behind `Storage.isChangedKey` |
 | `round-26` | the calls `Tabs.hide` / `Tabs.remove` / `Tabs.recreate` make, TABGROUPS-BEHAVIOR.md §22–§26: `tabs.ungroup` of a tab in NO group, alone (R26.01) and mixed with a member (R26.02), of a PINNED tab, alone (R26.03) and mixed with a member (R26.04); `tabs.group({tabIds, groupId})` joining an EXISTING group — the tab right before the span (R26.05), right after it (R26.06), far before it (R26.07), a tab that already is a member (R26.08), an array from both sides of the span, reversed (R26.13); `tabs.hide` of an already hidden tab, alone and mixed with a visible one (R26.09); `tabs.create` at the slot of a SINGLE-member span (R26.10). R26.11, R26.12, R26.14 and R26.15 are MANUAL — 👁️ whether the browser keeps a saved group when every member of a live group is closed by one `tabs.remove` (R26.11), when the members are ungrouped first (R26.12), when they are closed one by one (R26.14), and the positive control, a window with a live group closed by `windows.remove` (R26.15); every saved group they leave behind is deleted by hand before the answer |
+| `round-27` | reader mode and extension pages through the tabs API: `tabs.create` with `openInReaderMode` on an article, what the tab reports at the resolve, once loaded, after `tabs.discard` and after activation (R27.01), the same tab created `discarded` (R27.02), the flag on a page that cannot be put into reader mode (R27.03), on `view-source:`, an own extension page, `about:blank` and no url (R27.04), in a non-default container (R27.05); `tabs.update` with an `about:reader` url and `tabs.create` with one that wraps `view-source:` (R27.06); `tabs.toggleReaderMode` on an article and on a page that cannot be put into reader mode, with the urls a `webRequest` main_frame listener and `tabs.onUpdated` deliver (R27.07); a reader tab brought back by `sessions.restore` (R27.08) and by a browser restart (R27.09, stops and asks for it); `management.getSelf().hostPermissions` against the extension's own origin, and `tabs.create` with a `moz-extension://` url of an unknown uuid and of an extension id (R27.10); R27.11 is MANUAL — the reader-mode button (F9) pressed by hand on the shown article, with the same listeners armed; reader tabs hidden and discarded right after their creation, before and after the reader url has committed, the shape of `Groups.settleTabs` on an unloaded group (R27.12). CREATE-TABS-BEHAVIOR.md §30–§35. Needs the network: the article is a real page (`READER_URL`) |
 
 ## Files
 
@@ -88,7 +89,7 @@ writes into the report whatever it had to clean up.
 | - | - |
 | `constants.js` | every constant and timing |
 | `test.js` | `class Test` — the table, notes, questions, events, `expect`, the report. Knows nothing about tabs |
-| `tabs.js` | `class TabsTest extends Test` — windows, tabs, groups, and the `tabs.*` / `tabGroups.*` event formatters |
+| `tabs.js` | `class TabsTest extends Test` — windows, tabs, groups, and the `tabs.*` / `tabGroups.*` event formatters; `withContainer`, a container that lives for one test |
 | `opener.js` | `class OpenerTest extends TabsTest` — the opener suffix in every cell (`c1→p`), opener readers and setters, `tryStep` for a call that may be refused; shared by the opener rounds |
 | `menus.js` | `class MenusTest extends Test` — `browser.menus` wrappers that return `{ok, error}`, existence probing, the `bookmarks` permission helpers |
 | `storage.js` | `class StorageTest extends Test` — formatters for `storage.onChanged` and `storage.local.onChanged` printing every change object property as absent or as type and value; every action goes into the event log as its own line, there is no state table |
@@ -196,6 +197,7 @@ Imported by a round from `../constants.js`:
 | `TAB_GROUP_ID_NONE` | `-1`, the groupId of an ungrouped tab |
 | `SCENE_URL` | `moz-extension://…/tab.html`, the page every scene tab loads — local, so a run needs no network and never touches a real site |
 | `NETWORK_URL` | the site a test loads when it deliberately needs a real page instead |
+| `READER_URL` | a real article the browser can put into reader mode |
 | `SQUARES` | the group markers used in the tables |
 | `NEW_TAB_POSITIONS` | all three `newTabPosition` values |
 | `QUIET_WAIT` 200 | how long nothing may happen before a step counts as settled |

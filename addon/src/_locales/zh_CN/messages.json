@@ -517,16 +517,6 @@
         "message": "不支持固定标签页",
         "description": "Pinned tabs are not supported"
     },
-    "thisUrlsAreNotSupported": {
-        "message": "不支持地址”$urls$“",
-        "description": "This urls \"$urls$\" are not supported",
-        "placeholders": {
-            "urls": {
-                "content": "$1",
-                "example": "about:addons, file://..."
-            }
-        }
-    },
     "moveMultipleTabsToGroupMessage": {
         "message": "$tabscount$个标签页已被移动。点击此处打开第一个标签页",
         "description": "$tabscount$ tabs have been moved.\nClick here to open the first tab",

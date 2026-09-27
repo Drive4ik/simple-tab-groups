@@ -517,16 +517,6 @@
         "message": "Připnuté panely nejsou podporovány.",
         "description": "Pinned tabs are not supported"
     },
-    "thisUrlsAreNotSupported": {
-        "message": "Tento typ adres (\"$urls$\") není podporován.",
-        "description": "This urls \"$urls$\" are not supported",
-        "placeholders": {
-            "urls": {
-                "content": "$1",
-                "example": "about:addons, file://..."
-            }
-        }
-    },
     "moveMultipleTabsToGroupMessage": {
         "message": "$tabscount$ panelů bylo přesunuto.\nKlikněte zde pro otevření prvního.",
         "description": "$tabscount$ tabs have been moved.\nClick here to open the first tab",

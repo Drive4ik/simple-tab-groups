@@ -3,11 +3,9 @@ import Listeners from '/js/listeners.js?storage.local.onChanged';
 import * as Constants from '/js/constants.js';
 import * as Menus from '/js/menus.js';
 import * as Containers from '/js/containers.js';
-import * as Utils from '/js/utils.js';
 import * as Tabs from '/js/tabs.js';
 import * as Groups from '/js/groups.js';
 import * as Storage from '/js/storage.js';
-import Notification from '/js/notification.js';
 import Logger from '/js/logger.js';
 import Lang from '/js/lang.js';
 
@@ -176,12 +174,6 @@ async function onStorageChanged(changes) {
 export async function openInTemporaryContainer(info) {
     const log = logger.start(openInTemporaryContainer, info);
 
-    if (!Utils.isUrlAllowToCreate(info.linkUrl)) {
-        Notification(['thisUrlsAreNotSupported', info.linkUrl]);
-        log.stopWarn('thisUrlsAreNotSupported');
-        return;
-    }
-
     await Tabs.create({
         url: info.linkUrl,
         title: info.linkText,
@@ -195,12 +187,6 @@ export async function openInTemporaryContainer(info) {
 export async function openInGroup(groupId, info) {
     const log = logger.start(openInGroup, groupId, info);
 
-    if (!Utils.isUrlAllowToCreate(info.linkUrl)) {
-        Notification(['thisUrlsAreNotSupported', info.linkUrl]);
-        log.stopWarn('thisUrlsAreNotSupported');
-        return;
-    }
-
     const newTab = await Tabs.add(groupId, undefined, info.linkUrl, info.linkText);
 
     if (info.button.RIGHT) {
@@ -212,12 +198,6 @@ export async function openInGroup(groupId, info) {
 
 export async function createNewGroup(info) {
     const log = logger.start(createNewGroup, info);
-
-    if (!Utils.isUrlAllowToCreate(info.linkUrl)) {
-        Notification(['thisUrlsAreNotSupported', info.linkUrl]);
-        log.stopWarn('thisUrlsAreNotSupported');
-        return;
-    }
 
     let {ok, group, error} = await self.onBackgroundMessage({
         action: 'add-new-group',

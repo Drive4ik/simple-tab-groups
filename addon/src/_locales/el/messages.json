@@ -489,16 +489,6 @@
         "message": "Δεν υποστηρίζονται καρφιτσωμένα (Pinned) tabs",
         "description": "Pinned tabs are not supported"
     },
-    "thisUrlsAreNotSupported": {
-        "message": "Τέτοια urls ($urls$) δεν υποστηρίζονται",
-        "description": "This urls \"$urls$\" are not supported",
-        "placeholders": {
-            "urls": {
-                "content": "$1",
-                "example": "about:addons, file://..."
-            }
-        }
-    },
     "moveMultipleTabsToGroupMessage": {
         "message": "$tabscount$ tabs μετακινήθηκαν.\nΚλικ εδώ για να ανοίξετε το πρώτο tab",
         "description": "$tabscount$ tabs have been moved.\nClick here to open the first tab",

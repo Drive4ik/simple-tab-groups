@@ -517,16 +517,6 @@
         "message": "Les onglets épinglés ne sont pas supportés",
         "description": "Pinned tabs are not supported"
     },
-    "thisUrlsAreNotSupported": {
-        "message": "Url \"$urls$\" non supportée(s)",
-        "description": "This urls \"$urls$\" are not supported",
-        "placeholders": {
-            "urls": {
-                "content": "$1",
-                "example": "about:addons, file://..."
-            }
-        }
-    },
     "moveMultipleTabsToGroupMessage": {
         "message": "$tabscount$ onglets ont été déplacés.\nCliquez ici pour ouvrir le premier onglet.",
         "description": "$tabscount$ tabs have been moved.\nClick here to open the first tab",

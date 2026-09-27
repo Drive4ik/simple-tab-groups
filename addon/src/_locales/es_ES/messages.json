@@ -517,16 +517,6 @@
         "message": "Las pestañas fijas no están soportadas",
         "description": "Pinned tabs are not supported"
     },
-    "thisUrlsAreNotSupported": {
-        "message": "Este tipo de URLs \"$urls$\" no están soportadas",
-        "description": "This urls \"$urls$\" are not supported",
-        "placeholders": {
-            "urls": {
-                "content": "$1",
-                "example": "about:addons, file://..."
-            }
-        }
-    },
     "moveMultipleTabsToGroupMessage": {
         "message": "Se han movido $tabscount$ pestañas.\nHaz clic aquí para abrir la primera pestaña",
         "description": "$tabscount$ tabs have been moved.\nClick here to open the first tab",

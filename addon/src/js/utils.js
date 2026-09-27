@@ -256,14 +256,12 @@ export function formatUrl(url, data = {}) {
     });
 }
 
-// const readerUrl = 'about:reader?url=';
-const readerProtocol = 'about:reader';
 export function normalizeUrl(url) {
     if (!url || typeof url !== 'string') {
         return '';
     }
 
-    if (url.startsWith('moz-extension') || url.startsWith(readerProtocol)) {
+    if (url.startsWith('moz-extension')) {
         const urlObj = new URL(url);
         const urlStr = urlObj.searchParams.get('url') ||
             urlObj.searchParams.get('u') ||

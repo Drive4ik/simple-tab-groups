@@ -517,16 +517,6 @@
         "message": "Angeheftete Tabs werden nicht unterstützt",
         "description": "Pinned tabs are not supported"
     },
-    "thisUrlsAreNotSupported": {
-        "message": "Die URLs \"$urls$\" werden nicht unterstützt",
-        "description": "This urls \"$urls$\" are not supported",
-        "placeholders": {
-            "urls": {
-                "content": "$1",
-                "example": "about:addons, file://..."
-            }
-        }
-    },
     "moveMultipleTabsToGroupMessage": {
         "message": "$tabscount$ Tabs wurden entfernt.\nKlicke hier, um den ersten Tab zu öffnen.",
         "description": "$tabscount$ tabs have been moved.\nClick here to open the first tab",

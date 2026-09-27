@@ -1,6 +1,6 @@
 import {LOAD_WAIT, NETWORK_URL, TABS_CREATE_URL_LIMIT} from '../constants.js';
 import {wait} from '../test.js';
-import {sceneUrl} from '../tabs.js';
+import {sceneUrl, withContainer} from '../tabs.js';
 
 export const note = `Round 20 - what tabs.create accepts, and what a page of the add-on may navigate to.
 Which url classes tabs.create refuses and with which error (R20.01); whether the accepted ones can
@@ -93,20 +93,6 @@ async function describeCreated(t, created) {
         }
 
         t.note(`${name}: url ${short(fresh.url)}; container ${fresh.cookieStoreId}; discarded ${fresh.discarded}`);
-    }
-}
-
-async function withContainer(t, run) {
-    t.require('contextualIdentities API present', Boolean(browser.contextualIdentities), 'the cookies and contextualIdentities permissions are missing from the manifest');
-
-    const identity = await browser.contextualIdentities.create({name: 'stg-test', color: 'blue', icon: 'fingerprint'});
-
-    t.note(`container created for the test: ${identity.cookieStoreId} (${identity.name}); removed at the end`);
-
-    try {
-        await run(identity.cookieStoreId);
-    } finally {
-        await browser.contextualIdentities.remove(identity.cookieStoreId).catch(error => t.note(`container removal failed: ${error.message}`));
     }
 }
 

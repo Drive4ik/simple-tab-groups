@@ -517,16 +517,6 @@
         "message": "Le schede fissate non sono supportate",
         "description": "Pinned tabs are not supported"
     },
-    "thisUrlsAreNotSupported": {
-        "message": "Questi URL \"$urls$\" non sono supportati",
-        "description": "This urls \"$urls$\" are not supported",
-        "placeholders": {
-            "urls": {
-                "content": "$1",
-                "example": "about:addons, file://..."
-            }
-        }
-    },
     "moveMultipleTabsToGroupMessage": {
         "message": "$tabscount$ schede sono state spostate. Clicca qui per aprire la prima scheda.",
         "description": "$tabscount$ tabs have been moved.\nClick here to open the first tab",

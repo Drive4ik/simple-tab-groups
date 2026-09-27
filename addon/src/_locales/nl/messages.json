@@ -517,16 +517,6 @@
         "message": "Vastgemaakte tabs worden niet ondersteund",
         "description": "Pinned tabs are not supported"
     },
-    "thisUrlsAreNotSupported": {
-        "message": "Deze URL's \"$urls$\" worden niet ondersteund",
-        "description": "This urls \"$urls$\" are not supported",
-        "placeholders": {
-            "urls": {
-                "content": "$1",
-                "example": "about:addons, file://..."
-            }
-        }
-    },
     "moveMultipleTabsToGroupMessage": {
         "message": "$tabscount$ tabs werden verplaatst.\nKlik hier om de eerste tab te openen",
         "description": "$tabscount$ tabs have been moved.\nClick here to open the first tab",

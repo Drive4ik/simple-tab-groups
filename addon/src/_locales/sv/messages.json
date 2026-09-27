@@ -439,16 +439,6 @@
         "message": "Fästa flikar stöds ej",
         "description": "Pinned tabs are not supported"
     },
-    "thisUrlsAreNotSupported": {
-        "message": "Dessa URLs stöds ej: $urls$",
-        "description": "This urls \"$urls$\" are not supported",
-        "placeholders": {
-            "urls": {
-                "content": "$1",
-                "example": "about:addons, file://..."
-            }
-        }
-    },
     "moveMultipleTabsToGroupMessage": {
         "message": "$tabscount$ flikar har flyttats.\nKlicka här för att visa den första fliken",
         "description": "$tabscount$ tabs has been moved.\nClick here to open the first tab",

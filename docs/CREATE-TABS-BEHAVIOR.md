@@ -894,6 +894,326 @@ R24.04, a `sessions.setWindowValue` value across the restore of its window:
 - restored window: a fresh id
 - after the restore settled: "value-window"
 
+### 30. `tabs.create({url, openInReaderMode: true})` opens the page as `about:reader?url=<the url, encoded>` with `isInReaderMode: true`, in a container too; the flag cannot be combined with `discarded: true`, does nothing for `about:blank` and no url, and leaves a `view-source:` url or an extension page on `about:blank` for good (R27.01–R27.05)
+
+§30 to §34 come from `round-27`, run in September 2026. A tab in reader mode reports
+`url: about:reader?url=<the page url, encodeURIComponent-encoded>` and `isInReaderMode: true`;
+`about:reader?url=…` passed to `tabs.create` is refused (§16), the flag is the only way in.
+
+- **An article, as a background tab** (R27.01): the call resolves with `about:blank`, status
+  `complete`, `isInReaderMode: false`, like any created tab (§12). Then `tabs.onUpdated` delivers
+  `{status: loading}`, `{status: loading, url: about:reader?url=…}`, `{status: complete}`, and the
+  loaded tab reports the reader url with `isInReaderMode: true`; `isArticle` is `undefined`.
+  `tabs.discard` keeps both the url and the flag. Activating the discarded tab reloads the reader
+  page on the same url. A `webRequest.onBeforeRequest` listener for `main_frame` with `<all_urls>`,
+  armed before the create, saw no request at any point; how the article gets fetched was not measured.
+- **`discarded: true` together with the flag** (R27.02): refused, `Cannot create a discarded new
+  tab or "about" urls.` — the text the browser gives an `about:` url.
+- **A page the browser cannot put into reader mode** (R27.03, `https://example.com/`, the page
+  §32 shows `toggleReaderMode` refusing): the call resolves and the tab lands on
+  `about:reader?url=https%3A%2F%2Fexample.com%2F` with `isInReaderMode: true` all the same, and
+  stays there once activated. What the reader view shows there was not looked at.
+- **`view-source:`, an own extension page, `about:blank` with the flag** (R27.04): every call
+  resolves, and every tab stays on `about:blank` with `isInReaderMode: false`, status `complete`,
+  for good — the url is lost. No url with the flag opens `about:newtab`, as without it (§16).
+- **A container** (R27.05): the reader tab opens in the requested container, with the reader url.
+
+R27.01:
+
+| tab index | 0 | 1 |
+| - | - | - |
+| before | x* | |
+| `tabs.create({url: article, openInReaderMode: true})` — settled 508 ms | | |
+| reader | x* | ➕reader |
+| `tabs.discard(reader)` — settled 269 ms | | |
+| discarded | x* | ➕reader |
+| `tabs.update(reader, {active: true})` — settled 519 ms | | |
+| reader activated | x | ➕reader* |
+
+```text
+    8ms  tabs.onUpdated        reader  {status: loading}
+   39ms  tabs.onUpdated        reader  {status: loading, url: about:reader?url=https%3A%2F%2Fen.wikipedia.org%2Fwiki%2FMain_Page}
+  229ms  tabs.onUpdated        reader  {status: complete}
+    9ms  tabs.onUpdated        reader  {discarded: true}
+   12ms  tabs.onUpdated        reader  {discarded: false}
+   17ms  tabs.onUpdated        reader  {status: complete, url: about:reader?url=https%3A%2F%2Fen.wikipedia.org%2Fwiki%2FMain_Page}
+   18ms  tabs.onUpdated        reader  {status: loading}
+   31ms  tabs.onUpdated        reader  {status: loading, url: about:reader?url=https%3A%2F%2Fen.wikipedia.org%2Fwiki%2FMain_Page}
+   62ms  tabs.onUpdated        reader  {status: complete}
+(7 tabs.onUpdated dropped, only these keys were kept: url/status/isArticle/discarded)
+```
+
+- reader at the resolve: `url:about:blank` isInReaderMode:false isArticle:undefined status:complete discarded:false
+- reader loaded: `url:about:reader?url=https%3A%2F%2Fen.wikipedia.org%2Fwiki%2FMain_Page` isInReaderMode:true isArticle:undefined status:complete discarded:false
+- reader discarded: `url:about:reader?url=https%3A%2F%2Fen.wikipedia.org%2Fwiki%2FMain_Page` isInReaderMode:true isArticle:undefined status:complete discarded:true
+- reader activated and loaded: `url:about:reader?url=https%3A%2F%2Fen.wikipedia.org%2Fwiki%2FMain_Page` isInReaderMode:true isArticle:undefined status:complete discarded:false
+
+R27.02:
+
+| tab index | 0 |
+| - | - |
+| before | x* |
+| `tabs.create({url: article, openInReaderMode: true, discarded: true, title: lazy})` — settled 269 ms | |
+| lazy | x* |
+
+- lazy: rejected - Cannot create a discarded new tab or "about" urls.
+
+R27.03:
+
+| tab index | 0 | 1 |
+| - | - | - |
+| before | x* | |
+| `tabs.create({url: https://example.com/, openInReaderMode: true})` — settled 511 ms | | |
+| plain | x* | ➕plain |
+| `tabs.update(plain, {active: true})` — settled 271 ms | | |
+| plain activated | x | ➕plain* |
+
+```text
+   10ms  tabs.onUpdated        plain  {status: loading}
+   45ms  tabs.onUpdated        plain  {status: loading, url: about:reader?url=https%3A%2F%2Fexample.com%2F}
+  216ms  tabs.onUpdated        plain  {status: complete}
+(1 tabs.onUpdated dropped, only these keys were kept: url/status/isArticle/discarded)
+```
+
+- plain loaded: `url:about:reader?url=https%3A%2F%2Fexample.com%2F` isInReaderMode:true isArticle:undefined status:complete discarded:false
+- plain activated and loaded: `url:about:reader?url=https%3A%2F%2Fexample.com%2F` isInReaderMode:true isArticle:undefined status:complete discarded:false
+
+R27.04:
+
+| tab index | 0 | 1 | 2 | 3 | 4 |
+| - | - | - | - | - | - |
+| before | x* | | | | |
+| `tabs.create({url: view-source:https://example.com/, openInReaderMode: true})` — settled 530 ms | | | | | |
+| view | x* | ➕view | | | |
+| `tabs.create({url: moz-extension://<own uuid>/tab.html?tab=own, openInReaderMode: true})` — settled 264 ms | | | | | |
+| own | x* | ➕view | ➕own | | |
+| `tabs.create({url: about:blank, openInReaderMode: true})` — settled 523 ms | | | | | |
+| blank | x* | ➕view | ➕own | ➕blank | |
+| `tabs.create({openInReaderMode: true}, no url)` — settled 267 ms | | | | | |
+| nourl | x* | ➕view | ➕own | ➕blank | ➕nourl |
+
+- view, 20 s later: `url:about:blank` isInReaderMode:false isArticle:false status:complete discarded:false
+- own, 20 s later: `url:about:blank` isInReaderMode:false isArticle:undefined status:complete discarded:false
+- blank, 20 s later: `url:about:blank` isInReaderMode:false isArticle:false status:complete discarded:false
+- nourl settled: `url:about:newtab` isInReaderMode:false isArticle:undefined status:complete discarded:false
+
+R27.05:
+
+| tab index | 0 | 1 |
+| - | - | - |
+| before | x* | |
+| `tabs.create({url: article, openInReaderMode: true, cookieStoreId: container})` — settled 509 ms | | |
+| reader | x* | ➕reader |
+
+- reader loaded: `url:about:reader?url=https%3A%2F%2Fen.wikipedia.org%2Fwiki%2FMain_Page` isInReaderMode:true isArticle:undefined status:complete discarded:false
+- reader container: firefox-container-15 (the requested one)
+
+### 31. `tabs.update({url: about:reader?url=…})` is refused like `tabs.create`, with `Illegal URL: <the url>`, whatever the reader url wraps (R27.06)
+
+An article, a `view-source:` url and a page that is not an article, each wrapped into
+`about:reader?url=…` and given to `tabs.update` of a live tab: every call is rejected with
+`Illegal URL: <the url as passed>` and the tab stays on its page. `tabs.create` with the
+`view-source:` wrapper is rejected the same way, as §16 already showed for an `https://` one.
+
+| tab index | 0 | 1 | 2 |
+| - | - | - | - |
+| before | x* | y | z |
+| `tabs.update(x, {url: about:reader?url=https%3A%2F%2Fen.wikipedia.org%2Fwiki%2FMain_Page})` — settled 278 ms | | | |
+| x updated | x* | y | z |
+| `tabs.update(y, {url: about:reader?url=view-source%3Ahttps%3A%2F%2Fexample.com%2F})` — settled 258 ms | | | |
+| y updated | x* | y | z |
+| `tabs.update(z, {url: about:reader?url=https%3A%2F%2Fexample.com%2F})` — settled 263 ms | | | |
+| z updated | x* | y | z |
+| `tabs.create({url: about:reader?url=view-source%3Ahttps%3A%2F%2Fexample.com%2F})` — settled 264 ms | | | |
+| created | x* | y | z |
+
+- x: rejected - Illegal URL: about:reader?url=https%3A%2F%2Fen.wikipedia.org%2Fwiki%2FMain_Page
+- y: rejected - Illegal URL: about:reader?url=view-source%3Ahttps%3A%2F%2Fexample.com%2F
+- z: rejected - Illegal URL: about:reader?url=https%3A%2F%2Fexample.com%2F
+- created: rejected - Illegal URL: about:reader?url=view-source%3Ahttps%3A%2F%2Fexample.com%2F
+
+### 32. `tabs.toggleReaderMode` refuses a tab that has never been shown and a page that is not an article; `isArticle` appears only once the tab has been shown; the toggle on and off is announced by `tabs.onUpdated` as a load of the new url and is invisible to `webRequest` (R27.07)
+
+An article loaded in the background reports `isArticle: undefined`, and `toggleReaderMode` on it
+is rejected: `The specified tab cannot be placed into reader mode.` Once the tab is activated,
+`tabs.onUpdated` delivers `{isArticle: true}` 34 ms later, and the same call resolves: the tab
+goes through `{status: loading}`, `{isArticle: false}`, `{status: loading, url: about:reader?url=…}`,
+`{status: complete}` and reports the reader url with `isInReaderMode: true` and `isArticle: false`.
+The second call brings the page back: `{status: loading}`, `{status: loading, url: <the page>}`,
+`{isArticle: true}`, `{status: complete}`, and the tab reports the plain url with
+`isInReaderMode: false`, `isArticle: true`. A shown `https://example.com/` reports
+`isArticle: undefined` and is rejected with the same text. A `webRequest.onBeforeRequest`
+listener for `main_frame` with `<all_urls>`, armed before the first toggle, saw no request for
+either direction.
+
+| tab index | 0 | 1 | 2 |
+| - | - | - | - |
+| before | x* | | |
+| `tabs.create({url: article})` — settled 801 ms | | | |
+| article | x* | ➕article | |
+| `tabs.create({url: https://example.com/})` — settled 521 ms | | | |
+| plain | x* | ➕article | ➕plain |
+| `tabs.toggleReaderMode(article)  // a background tab` — settled 264 ms | | | |
+| reader on | x* | ➕article | ➕plain |
+| `tabs.update(article, {active: true})` — settled 235 ms | | | |
+| article activated | x | ➕article* | ➕plain |
+| `tabs.toggleReaderMode(article)  // the active tab` — settled 526 ms | | | |
+| reader on 2 | x | ➕article* | ➕plain |
+| `tabs.toggleReaderMode(article) again` — settled 228 ms | | | |
+| reader off | x | ➕article* | ➕plain |
+| `tabs.update(plain, {active: true})` — settled 275 ms | | | |
+| plain activated | x | ➕article | ➕plain* |
+| `tabs.toggleReaderMode(plain)  // the active tab` — settled 263 ms | | | |
+| plain toggled | x | ➕article | ➕plain* |
+
+```text
+   34ms  tabs.onUpdated        article  {isArticle: true}
+   58ms  tabs.onUpdated        article  {status: loading}
+   62ms  tabs.onUpdated        article  {isArticle: false}
+   67ms  tabs.onUpdated        article  {status: loading, url: about:reader?url=https%3A%2F%2Fen.wikipedia.org%2Fwiki%2FMain_Page}
+  139ms  tabs.onUpdated        article  {status: complete}
+    4ms  tabs.onUpdated        article  {status: loading}
+   10ms  tabs.onUpdated        article  {status: loading, url: https://en.wikipedia.org/wiki/Main_Page}
+   10ms  tabs.onUpdated        article  {isArticle: true}
+   11ms  tabs.onUpdated        article  {status: complete}
+(4 tabs.onUpdated dropped, only these keys were kept: url/status/isArticle/discarded)
+```
+
+- article loaded in the background: `url:https://en.wikipedia.org/wiki/Main_Page` isInReaderMode:false isArticle:undefined status:complete discarded:false
+- article: rejected - The specified tab cannot be placed into reader mode.
+- article activated and loaded: `url:https://en.wikipedia.org/wiki/Main_Page` isInReaderMode:false isArticle:true status:complete discarded:false
+- article after the toggle on: `url:about:reader?url=https%3A%2F%2Fen.wikipedia.org%2Fwiki%2FMain_Page` isInReaderMode:true isArticle:false status:complete discarded:false
+- article after the toggle off: `url:https://en.wikipedia.org/wiki/Main_Page` isInReaderMode:false isArticle:true status:complete discarded:false
+- plain activated and loaded: `url:https://example.com/` isInReaderMode:false isArticle:undefined status:complete discarded:false
+- plain: rejected - The specified tab cannot be placed into reader mode.
+
+### 33. A tab in reader mode comes back from `sessions.restore()` and from a browser restart discarded, with `about:reader?url=…` and `isInReaderMode: true` already on it, and loads the reader page on that url when activated; the session record holds the reader url (R27.08, R27.09)
+
+The record of the closed window in `sessions.getRecentlyClosed` carries the reader url as the
+tab's `url` (with `favIconUrl`, which the scene tab's record lacks). After `sessions.restore()`
+the fresh tab reports the reader url, `isInReaderMode: true` and `discarded: true` before it is
+ever shown, like the background tabs of §27; activated, it loads the reader page on the same url.
+A browser restart with the tab in the window behaves the same (R27.09).
+
+R27.08:
+
+| tab index | 0 | 1 |
+| - | - | - |
+| before (second window) | w* | |
+| `tabs.create({url: article, openInReaderMode: true} in the second window)` — settled 508 ms | | |
+| reader (second window) | w* | ➕reader |
+| before close (second window) | w* | ➕reader |
+| `windows.remove(second)` — settled 279 ms | | |
+| `sessions.restore(sessionId of the window)` — settled 232 ms | | |
+| restored (second window) | w* | reader |
+| `tabs.update(reader, {active: true})` — settled 253 ms | | |
+| activated (second window) | w | reader* |
+
+- session record: `url:moz-extension://<own uuid>/tab.html?tab=w`; keys: active, hidden, highlighted, incognito, index, lastAccessed, pinned, sessionId, title, url, windowId
+- session record: `url:about:reader?url=https%3A%2F%2Fen.wikipedia.org%2Fwiki%2FMain_Page`; keys: active, favIconUrl, hidden, highlighted, incognito, index, lastAccessed, pinned, sessionId, title, url, windowId
+- reader restored: `url:about:reader?url=https%3A%2F%2Fen.wikipedia.org%2Fwiki%2FMain_Page` isInReaderMode:true isArticle:undefined status:complete discarded:true
+- reader activated and loaded: `url:about:reader?url=https%3A%2F%2Fen.wikipedia.org%2Fwiki%2FMain_Page` isInReaderMode:true isArticle:undefined status:complete discarded:false
+
+R27.09:
+
+| tab index | 0 | 1 |
+| - | - | - |
+| `tabs.create({url: article, openInReaderMode: true})` — settled 518 ms | | |
+| reader | x* | ➕reader |
+| before restart | x* | ➕reader |
+| after restart | x* | reader |
+| `tabs.update(reader, {active: true})` — settled 253 ms | | |
+| reader activated | x | reader* |
+
+- reader after the restart: `url:about:reader?url=https%3A%2F%2Fen.wikipedia.org%2Fwiki%2FMain_Page` isInReaderMode:true isArticle:undefined status:complete discarded:true
+- reader activated and loaded: `url:about:reader?url=https%3A%2F%2Fen.wikipedia.org%2Fwiki%2FMain_Page` isInReaderMode:true isArticle:undefined status:complete discarded:false
+
+### 34. `ExtensionInfo.hostPermissions` names the extension's own origin `moz-extension://<uuid>/*`; `tabs.create` accepts a `moz-extension://` url with an unknown uuid and one with an extension id in place of the uuid, and the tab stays on `about:blank` for good (R27.10)
+
+`management.getSelf()` of the harness, whose manifest asks for `<all_urls>` only, reports
+`hostPermissions: ["<all_urls>", "moz-extension://<own uuid>/*"]`: the extension's own origin is
+listed next to the host permissions it asked for. A `moz-extension://` url with a uuid that
+belongs to no installed extension, and one with the extension id where the uuid goes
+(`moz-extension://stg-behavior-tests@drive4ik/tab.html`, which the URL parser reads as a user name
+and a host), both resolve `tabs.create`, and both tabs stay on `about:blank` with status
+`complete` 20 s later — nothing is ever loaded.
+
+| tab index | 0 | 1 | 2 |
+| - | - | - | - |
+| before | x* | | |
+| `tabs.create({url: moz-extension://<unknown uuid>/tab.html?tab=unknown})` — settled 285 ms | | | |
+| unknown | x* | ➕unknown | |
+| `tabs.create({url: moz-extension://stg-behavior-tests@drive4ik/tab.html?tab=idform})` — settled 272 ms | | | |
+| idform | x* | ➕unknown | ➕idform |
+
+- getSelf: id `stg-behavior-tests@drive4ik`; `hostPermissions: ["<all_urls>","moz-extension://<own uuid>/*"]`
+- unknown, 20 s later: `url:about:blank` isInReaderMode:false isArticle:undefined status:complete discarded:false
+- idform, 20 s later: `url:about:blank` isInReaderMode:false isArticle:undefined status:complete discarded:false
+
+### 35. A reader tab discarded before its url has committed reports `about:blank` without the flag until it is activated, hidden and shown alike, and then loads the reader page; discarded once the url has committed it keeps the reader url (R27.12)
+
+Three tabs created in parallel with the flag and hidden and discarded right away: `tabs.hide`
+hides all three, `tabs.discard` resolves, and every tab reports `url: about:blank`,
+`isInReaderMode: false`, `discarded: true` — after the discard, and still after `tabs.show`. The
+first `tabs.onUpdated` of each was `{status: loading}` 12–15 ms after the create, `{discarded:
+true}` came at 37–38 ms, no url ever arrived. Activated, the tab loads the reader page:
+`{discarded: false}`, `{status: loading}`, `{status: loading, url: about:reader?url=…}`,
+`{status: complete}`, and reports the reader url with the flag. Three more created the same way,
+hidden and discarded once each url read `about:reader?url=…` (187 ms after the resolve; `tabs.get`
+read status `complete` on all three by then, though no `{status: complete}` event had arrived):
+the reader url and the flag stay through the discard and the show, and the activated tab loads the
+reader page on it. So the url a tab is discarded on is the url it reports until activated, and the
+navigation itself is not lost either way.
+
+| tab index | 0 | 1 | 2 | 3 | 4 | 5 | 6 |
+| - | - | - | - | - | - | - | - |
+| before | x* | | | | | | |
+| `tabs.create x3 ({url: article, openInReaderMode: true}) in parallel, then tabs.hide and tabs.discard at once` — settled 275 ms | | | | | | | |
+| early batch hidden and discarded | x* | ➕e1(h) | ➕e2(h) | ➕e3(h) | | | |
+| `tabs.create x3 in parallel, wait until every url reads about:reader, then tabs.hide and tabs.discard` — settled 278 ms | | | | | | | |
+| committed batch hidden and discarded | x* | ➕e1(h) | ➕e2(h) | ➕e3(h) | ➕c1(h) | ➕c2(h) | ➕c3(h) |
+| `tabs.show(all six)` — settled 264 ms | | | | | | | |
+| shown | x* | ➕e1 | ➕e2 | ➕e3 | ➕c1 | ➕c2 | ➕c3 |
+| `tabs.update(e1, {active: true})` — settled 794 ms | | | | | | | |
+| e1 activated | x | ➕e1* | ➕e2 | ➕e3 | ➕c1 | ➕c2 | ➕c3 |
+| `tabs.update(c1, {active: true})` — settled 516 ms | | | | | | | |
+| c1 activated | x | ➕e1 | ➕e2 | ➕e3 | ➕c1* | ➕c2 | ➕c3 |
+
+```text
+   12ms  tabs.onUpdated        e1  {status: loading}
+   13ms  tabs.onUpdated        e2  {status: loading}
+   15ms  tabs.onUpdated        e3  {status: loading}
+   37ms  tabs.onUpdated        e1  {discarded: true}
+   37ms  tabs.onUpdated        e2  {discarded: true}
+   38ms  tabs.onUpdated        e3  {discarded: true}
+  118ms  tabs.onUpdated        c1  {status: loading}
+  121ms  tabs.onUpdated        c2  {status: loading}
+  140ms  tabs.onUpdated        c3  {status: loading}
+  169ms  tabs.onUpdated        c1  {status: loading, url: about:reader?url=https%3A%2F%2Fen.wikipedia.org%2Fwiki%2FMain_Page}
+  170ms  tabs.onUpdated        c2  {status: loading, url: about:reader?url=https%3A%2F%2Fen.wikipedia.org%2Fwiki%2FMain_Page}
+  190ms  tabs.onUpdated        c3  {status: loading, url: about:reader?url=https%3A%2F%2Fen.wikipedia.org%2Fwiki%2FMain_Page}
+  242ms  tabs.onUpdated        c1  {discarded: true}
+  242ms  tabs.onUpdated        c2  {discarded: true}
+  242ms  tabs.onUpdated        c3  {discarded: true}
+   13ms  tabs.onUpdated        e1  {discarded: false}
+   16ms  tabs.onUpdated        e1  {status: loading}
+   30ms  tabs.onUpdated        e1  {status: loading, url: about:reader?url=https%3A%2F%2Fen.wikipedia.org%2Fwiki%2FMain_Page}
+   59ms  tabs.onUpdated        e1  {status: complete}
+    8ms  tabs.onUpdated        c1  {discarded: false}
+   13ms  tabs.onUpdated        c1  {status: complete, url: about:reader?url=https%3A%2F%2Fen.wikipedia.org%2Fwiki%2FMain_Page}
+   15ms  tabs.onUpdated        c1  {status: loading}
+   28ms  tabs.onUpdated        c1  {status: loading, url: about:reader?url=https%3A%2F%2Fen.wikipedia.org%2Fwiki%2FMain_Page}
+   58ms  tabs.onUpdated        c1  {status: complete}
+(26 tabs.onUpdated dropped, only these keys were kept: url/status/isArticle/discarded)
+```
+
+- at the discard: e1 `url:about:blank` isInReaderMode:false isArticle:undefined status:complete discarded:false | e2 the same | e3 the same
+- e1, e2, e3 after hide + discard, and shown: `url:about:blank` isInReaderMode:false isArticle:undefined status:complete discarded:true
+- at the discard, 187 ms after the resolve: c1 `url:about:reader?url=https%3A%2F%2Fen.wikipedia.org%2Fwiki%2FMain_Page` isInReaderMode:true isArticle:undefined status:complete discarded:false | c2 the same | c3 the same
+- c1, c2, c3 after hide + discard, and shown: `url:about:reader?url=https%3A%2F%2Fen.wikipedia.org%2Fwiki%2FMain_Page` isInReaderMode:true isArticle:undefined status:complete discarded:true
+- e1 activated and loaded: `url:about:reader?url=https%3A%2F%2Fen.wikipedia.org%2Fwiki%2FMain_Page` isInReaderMode:true isArticle:undefined status:complete discarded:false
+- c1 activated and loaded: `url:about:reader?url=https%3A%2F%2Fen.wikipedia.org%2Fwiki%2FMain_Page` isInReaderMode:true isArticle:undefined status:complete discarded:false
+
 ---
 
 ## Conclusions for the add-on
@@ -922,7 +1242,8 @@ R24.04, a `sessions.setWindowValue` value across the restore of its window:
   order genuinely non-obvious; on the explicit-index paths it re-checks contiguity and order and
   is expected to move nothing — a move there is visible in its log (`isBlock`).
 - **A url `tabs.create` refuses is the add-on's stub page** (§16): `data:`, `file:`,
-  privileged `about:` and the like never reach `tabs.create` as they are. `Tabs.create` opens
+  privileged `about:` and the like never reach `tabs.create` as they are — `about:reader` alone
+  becomes the flag instead (§30, the bullet below). `Tabs.create` opens
   `help/stg-unsupported-url.html` for them, and `help/dummy.html` with the real url handed over by
   message for what a page can navigate to itself: a `data:` url of a type from §18, of any
   size (§22). No url of another scheme can be longer than the limit (§20, §22), so `data:`
@@ -962,6 +1283,23 @@ R24.04, a `sessions.setWindowValue` value across the restore of its window:
   assumed absent. The window's own `groupId` session value is there just as early: a cache that
   reads a window session once, at the first `Windows.load` after `windows.onCreated`, never
   reads it too soon.
+- **A tab in reader mode is created by the flag, and kept by its own url** (§30, §31, §33):
+  `about:reader?url=…` is refused by `tabs.create` and `tabs.update` alike, so `Tabs.create` turns
+  it into `{url: <the page>, openInReaderMode: true}` — for an http(s) page only, any other url
+  stays blank under the flag — and never discarded, the flag cannot be born discarded. The url the
+  add-on holds for such a tab is the browser's own `about:reader?url=…`: it survives `tabs.discard`,
+  an undo-close and a restart unchanged, so `isSame` matches it as it is. Neither the reader page
+  nor a toggle is a `main_frame` request (§30, §32): `onBeforeTabRequest` never sees reader mode,
+  the mirror learns the reader url from `tabs.onUpdated`. A reader tab is born loading (§30) and
+  starts on `about:blank` like every created tab (§12); discarded there it reports `about:blank`
+  to every read until the user activates it (§35). `Groups.hideTabs` runs right after
+  `createMultiple`, so `Tabs.discard` skips a tab on `about:blank` — there is nothing to free in
+  it anyway — and such a tab stays loaded until the next unload of its group.
+- **The uuid ↔ id map rests on `hostPermissions`** (§34): `Extensions.getByUUID` finds the
+  extension whose `hostPermissions` name the uuid, the extension's own origin being listed there.
+  A `moz-extension://` url the browser cannot serve — an unknown uuid, an extension id in place of
+  it — is accepted by `tabs.create` and opens a blank tab that never loads, so such a url has to be
+  resolved by the add-on before the call.
 
 ## Open questions
 

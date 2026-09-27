@@ -565,6 +565,12 @@ export async function create({url, active, pinned, title, index, windowId, opene
 
     let realUrl;
 
+    // the browser refuses the reader url itself and opens the page in reader mode by the flag (docs/CREATE-TABS-BEHAVIOR.md §16, §30)
+    const pageUrl = getPageUrl(url);
+    const openInReaderMode = pageUrl !== url;
+
+    url = pageUrl;
+
     if (url) {
         if (Utils.isDataUrlAllowToNavigate(url)) {
             realUrl = url;
@@ -599,7 +605,12 @@ export async function create({url, active, pinned, title, index, windowId, opene
         tab.pinned = true;
     }
 
-    if (allowDiscarded && !tab.active && !tab.pinned && tab.url && !tab.url.startsWith('about:') && !realUrl) {
+    // the flag works for an http(s) page only, any other url stays blank under it, and it cannot be born discarded (§30)
+    if (openInReaderMode && tab.url?.startsWith('http')) {
+        tab.openInReaderMode = true;
+    }
+
+    if (allowDiscarded && !tab.active && !tab.pinned && tab.url && !tab.url.startsWith('about:') && !realUrl && !tab.openInReaderMode) {
         tab.discarded = true;
     }
 
@@ -1791,6 +1802,9 @@ export async function hide(tabs, params = {}) {
 }
 
 export async function discard(tabs, params = {}) {
+    // an empty tab holds nothing worth freeing, and a reader tab discarded on about:blank reports about:blank until it is activated (docs/CREATE-TABS-BEHAVIOR.md §35); the skipped tab stays loaded until the next unload of its group
+    tabs = [tabs].flat().filter(tab => !Utils.isUrlEmpty(tab.url));
+
     return await tabsAction({action: 'discard', ...params}, tabs);
 }
 
@@ -1960,7 +1974,15 @@ export function getNewTabContainer(
     return Containers.isDefault(cookieStoreId) ? newTabContainer : cookieStoreId;
 }
 
+// the page a tab shows: for a tab in reader mode, the page it reads
+export function getPageUrl(url) {
+    return url?.startsWith(Constants.READER_MODE_PROTOCOL)
+        ? new URL(url).searchParams.get('url') ?? url
+        : url;
+}
+
 export function getTitle({id, index, title, url, discarded, windowId, lastAccessed}, withUrl = false, sliceLength = 0, withActiveTab = false) {
+    url = getPageUrl(url);
     title = title || url || 'about:blank';
 
     if (withUrl && url && title !== url) {

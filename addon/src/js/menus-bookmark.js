@@ -4,7 +4,6 @@ import * as Constants from '/js/constants.js';
 import * as Menus from '/js/menus.js';
 import * as Bookmarks from '/js/bookmarks.js';
 import * as Containers from '/js/containers.js';
-import * as Utils from '/js/utils.js';
 import * as Tabs from '/js/tabs.js';
 import * as Groups from '/js/groups.js';
 import * as Operations from '/js/operations.js';
@@ -215,12 +214,6 @@ export async function openInTemporaryContainer(info) {
         return;
     }
 
-    if (!Utils.isUrlAllowToCreate(bookmark.url)) {
-        Notification(['thisUrlsAreNotSupported', bookmark.url]);
-        log.stopWarn('thisUrlsAreNotSupported');
-        return;
-    }
-
     await Tabs.create({
         url: bookmark.url,
         title: bookmark.title,
@@ -313,12 +306,6 @@ async function createNewGroupNow(info) {
     log.log('bookmark is', bookmark.type);
 
     if (bookmark.type === Bookmarks.BOOKMARK) {
-        if (!Utils.isUrlAllowToCreate(bookmark.url)) {
-            Notification('bookmarkNotAllowed');
-            log.stop('bookmarkNotAllowed');
-            return;
-        }
-
         let {ok, group, error} = await self.onBackgroundMessage({
             action: 'add-new-group',
             proposalTitle: bookmark.title,
