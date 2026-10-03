@@ -89,8 +89,7 @@ async function init() {
         }
 
         window.addEventListener('focus', isDepsOk);
-        Extensions.onDisabled.add(isDepsOk);
-        Extensions.onUninstalled.add(isDepsOk);
+        Extensions.onChanged(isDepsOk);
         browser.tabs.onAttached.addListener((id, {newPosition, newWindowId}) => {
             if (id === currentTab.id) {
                 currentTab.index = newPosition;

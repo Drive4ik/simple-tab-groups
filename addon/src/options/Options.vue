@@ -322,13 +322,13 @@ export default {
         },
 
         goToBlock(block) {
-            const scrollNodeSelector = {
+            const scrollNodeSelectors = {
                 sync: '#sync-block',
                 debug: '#debug-block',
-            }[block];
+            };
 
-            if (scrollNodeSelector) {
-                Utils.wait(1000).then(() => Utils.scrollTo(scrollNodeSelector));
+            if (Object.hasOwn(scrollNodeSelectors, block)) {
+                Utils.wait(1000).then(() => Utils.scrollTo(scrollNodeSelectors[block]));
             }
         },
 

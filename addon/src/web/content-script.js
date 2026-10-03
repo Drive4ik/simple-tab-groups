@@ -9,11 +9,6 @@ let foundHotKey = false;
 browser.runtime.onMessage.addListener(onMessageListener);
 loadHotkeys();
 
-if (isMainFrame) {
-    // Main frame: listen for messages from iframes and handle popups
-    window.addEventListener('message', handleFrameMessage);
-}
-
 // Set up key event listeners for both main frame and iframes
 setKeyListeners();
 
@@ -47,16 +42,6 @@ function onMessageListener(request) {
         if (isMainFrame) {
             return showPrompt(request);
         }
-    }
-}
-
-function handleFrameMessage(event) {
-    if (event.source === window) {
-        return;
-    }
-
-    if (event.data?.id === browser.runtime.id) {
-        sendMessageToBackground(event.data.hotkey);
     }
 }
 
@@ -111,14 +96,7 @@ function checkKey(event) {
     foundHotKey = true;
     stopEvent(event);
 
-    if (isMainFrame) {
-        sendMessageToBackground(hotkey);
-    } else {
-        window.top.postMessage({
-            id: browser.runtime.id,
-            hotkey,
-        }, '*');
-    }
+    sendMessageToBackground(hotkey);
 }
 
 function stopEvent(e) {

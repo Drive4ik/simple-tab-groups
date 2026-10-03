@@ -396,7 +396,7 @@ function addListenerOnBeforeRequest() {
 
 function removeListenerOnBeforeRequest() {
     logger.log('removeListenerOnBeforeRequest');
-    Listeners.webRequest.onBeforeRequest.clear();
+    Listeners.webRequest.onBeforeRequest.remove(onBeforeTabRequest);
 }
 
 function addEvents() {
