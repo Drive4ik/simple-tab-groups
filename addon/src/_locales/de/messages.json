@@ -1139,6 +1139,10 @@
         "message": "URL kopieren",
         "description": "Copy URL"
     },
+    "openNestedUrl": {
+        "message": "Verschachtelte URL öffnen",
+        "description": "Open nested URL"
+    },
     "helpPageStgDebugTitle": {
         "message": "STG debug Seite",
         "description": "STG debug page"

@@ -1293,6 +1293,10 @@
         "message": "Копировать URL",
         "description": "Copy URL"
     },
+    "openNestedUrl": {
+        "message": "Открыть вложенный URL",
+        "description": "Open nested URL"
+    },
     "helpPageStgDebugTitle": {
         "message": "Страница отладки STG",
         "description": "STG debug page"

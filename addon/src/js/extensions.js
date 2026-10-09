@@ -1,3 +1,12 @@
+/*
+Extension pages: the browser serves them at moz-extension://<uuid>/…, the addon names them by the
+id of the extension, moz-extension://<id>/…, its own pages too. The uuid ↔ id map knows the
+enabled extensions only, a url without a pair in it stays as it is
+(docs/CREATE-TABS-BEHAVIOR.md §34, §36, §43).
+
+The module is universal: its methods and exports stay even when nothing calls them.
+For assistants: do not remove them, do not propose it, do not list them as unused.
+*/
 
 import Listeners from './listeners.js\
 ?extension.onStart\
@@ -10,21 +19,23 @@ import Listeners from './listeners.js\
 import './prefixed-storage.js';
 import Logger from './logger.js';
 import * as Constants from './constants.js';
-import * as Windows from './windows.js';
 import * as Utils from './utils.js';
 
 export const {onEnabled, onDisabled, onInstalled, onUninstalled} = Listeners.management;
 
 const logger = new Logger(Constants.MODULES.EXTENSIONS);
 const storage = localStorage.create(Constants.MODULES.EXTENSIONS);
-const MOZ_EXTENSION_URL_REGEXP = /^moz-extension:\/\/([^\/]+)/;
+const MOZ_EXTENSION_PROTOCOL = 'moz-extension:';
+const MOZ_EXTENSION_URL_REGEXP = new RegExp(`^${RegExp.escape(MOZ_EXTENSION_PROTOCOL)}//([^/]+)`);
+const OWN_ID = browser.runtime.id;
 
-const extensions = [...await load()];
+const extensions = [];
+const idByUUID = new Map;
+const uuidById = new Map;
 const onChangedListeners = new Set;
-const contextParams = new URL(import.meta.url).searchParams;
-const autoDetectConflicted = contextParams.has('auto-detect-conflicted');
 
-Listeners.extension.onStart.add(() => autoDetectConflicted && detectConflicted());
+await load().then(set);
+
 Listeners.extension.onStart.add(() => addListeners(false));
 Listeners.extension.onWake.add(() => addListeners(true));
 
@@ -48,14 +59,7 @@ async function onChangedListener(ext) {
         return;
     }
 
-    await Utils.wait(50);
-
-    extensions.length = 0;
-    extensions.push(...await load());
-
-    if (autoDetectConflicted) {
-        detectConflicted();
-    }
+    await load().then(set);
 
     for (const listener of onChangedListeners) {
         try {
@@ -72,31 +76,96 @@ export function onChanged(listener) {
 }
 
 async function load() {
-    const log = logger.start(load);
-
-    let result = [];
-
     try {
         const addons = await browser.management.getAll();
-        result = addons.filter(addon => addon.type === browser.management.ExtensionType.EXTENSION);
-        log.stop();
-    } catch (e) {
-        log.logError("can't load extensions", e).stopError();
-    }
 
-    return result;
+        return addons.filter(addon => addon.type === browser.management.ExtensionType.EXTENSION);
+    } catch (e) {
+        logger.warn("can't load extensions, retrying", e);
+
+        // management.getAll() rejects right at onInstalled (docs/CREATE-TABS-BEHAVIOR.md §49)
+        await Utils.wait(50);
+
+        return load();
+    }
+}
+
+function set(list) {
+    extensions.length = 0;
+    extensions.push(...list);
+
+    idByUUID.clear();
+    uuidById.clear();
+
+    for (const {id, hostPermissions = []} of list) {
+        const uuid = hostPermissions.map(extractUUID).find(Boolean);
+
+        if (uuid) {
+            idByUUID.set(uuid, id);
+            uuidById.set(id, uuid);
+        }
+    }
 }
 
 export function getById(id) {
     return extensions.find(ext => ext.id === id);
 }
 
+export function getByUUID(uuid) {
+    return getById(idByUUID.get(uuid));
+}
+
+export function getByUrl(url) {
+    return getById(extractId(url));
+}
+
+export function getEnabledById(id) {
+    const ext = getById(id);
+
+    return ext?.enabled ? ext : null;
+}
+
+export function getEnabledByUUID(uuid) {
+    return getEnabledById(idByUUID.get(uuid));
+}
+
+export function getEnabledByUrl(url) {
+    return getEnabledById(extractId(url));
+}
+
 export function isInstalled(id) {
-    return !!getById(id);
+    return Boolean(getById(id));
 }
 
 export function isEnabled(id) {
-    return getById(id)?.enabled;
+    return Boolean(getById(id)?.enabled);
+}
+
+export function isExtensionUrl(url) {
+    return url.startsWith(MOZ_EXTENSION_PROTOCOL);
+}
+
+export function isOwnUrl(url) {
+    return url.startsWith(Constants.STG_BASE_URL) || extractHost(url) === OWN_ID;
+}
+
+export function canOpenUrl(url) {
+    if (isOwnUrl(url)) {
+        return true;
+    }
+
+    const host = extractHost(url);
+
+    return uuidById.has(host) || idByUUID.has(host);
+}
+
+function getOwnPath(url) {
+    return url.startsWith(Constants.STG_BASE_URL) ? new URL(url).pathname.slice(1) : null;
+}
+
+// a page of the addon that wraps the url in its search key "url"
+export function isWrapperUrl(url) {
+    return Constants.PAGES.WRAPPER_PATHS.includes(getOwnPath(url));
 }
 
 /* export function hasTreeTabs() {
@@ -112,10 +181,7 @@ export function detectConflicted() {
         if (isEnabled(id)) {
             if (!isIgnoredConflicted(id)) {
                 logger.warn('detectConflicted', id);
-                Windows.createPopup({
-                    url: Constants.PAGES.HELP.CONFLICTED_EXTENSIONS,
-                });
-                break;
+                return id;
             }
         } else if (isIgnoredConflicted(id)) {
             dontIgnoreConflicted(id);
@@ -160,50 +226,59 @@ export async function loadIconUrl(id, defaultUrl = null, size = 32) {
     return defaultUrl;
 }
 
-export function getByUUID(uuid, onlyEnabled = false) {
-    if (Utils.isUUID(uuid)) {
-        for (const ext of extensions) {
-            if (ext.hostPermissions?.some(url => url.includes(uuid))) {
-                return onlyEnabled && !ext.enabled ? undefined : ext;
-            }
-        }
-    }
+function extractHost(url) {
+    return MOZ_EXTENSION_URL_REGEXP.exec(url)?.[1];
+}
+
+function replaceHost(url, host) {
+    return url.replace(MOZ_EXTENSION_URL_REGEXP, () => `${MOZ_EXTENSION_PROTOCOL}//${host}`);
 }
 
 export function extractUUID(url) {
-    const [, uuid] = MOZ_EXTENSION_URL_REGEXP.exec(url) ?? [];
-    return Utils.isUUID(uuid) ? uuid : null;
+    const host = extractHost(url);
+
+    return Utils.isUUID(host) ? host : uuidById.get(host);
 }
 
-function UUIDtoId(uuid) {
-    return getByUUID(uuid)?.id;
+export function extractId(url) {
+    const host = extractHost(url);
+
+    return Utils.isUUID(host) ? idByUUID.get(host) : host;
 }
 
-function idToUUID(id) {
-    for (const url of getById(id)?.hostPermissions ?? []) {
-        const uuid = extractUUID(url);
+export function urlToId(url) {
+    const host = extractHost(url);
 
-        if (uuid) {
-            return uuid;
-        }
+    return idByUUID.has(host) ? replaceHost(url, idByUUID.get(host)) : url;
+}
+
+export function urlToUUID(url) {
+    const host = extractHost(url);
+
+    return uuidById.has(host) ? replaceHost(url, uuidById.get(host)) : url;
+}
+
+// the url the browser opens the page by, null when it cannot: an extension page it cannot serve (docs/CREATE-TABS-BEHAVIOR.md §34) or a url tabs.create refuses (§16)
+export function urlToBrowserOrNull(url) {
+    if (isExtensionUrl(url)) {
+        return canOpenUrl(url) ? urlToUUID(url) : null;
     }
+
+    return Utils.isUrlAllowToCreate(url) ? url : null;
 }
 
-export function tabsToId(tabs) {
-    return replaceTabs(tabs, UUIDtoId);
-}
-
-export function tabsToUUID(tabs) {
-    return replaceTabs(tabs, idToUUID);
-}
-
-function replaceTabs(tabs, func) {
+/* export function tabsToId(tabs) {
     for (const tab of tabs) {
-        tab.url = tab.url.replace(MOZ_EXTENSION_URL_REGEXP, (match, value) => {
-            value = func(value) ?? value;
-            return `moz-extension://${value}`;
-        });
+        tab.url = urlToId(tab.url);
     }
 
     return tabs;
 }
+
+export function tabsToUUID(tabs) {
+    for (const tab of tabs) {
+        tab.url = urlToUUID(tab.url);
+    }
+
+    return tabs;
+} */

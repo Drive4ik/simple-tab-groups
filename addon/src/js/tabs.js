@@ -197,7 +197,7 @@ async function processCreated(tab) {
         return;
     }
 
-    GroupsNative.detachTabGroupId(tab); // native groupId conflicts with STG groupId key
+    browserTabToAddon(tab);
 
     logger.log(onCreated, tab);
 
@@ -261,9 +261,10 @@ async function onUpdated(tabId, changeInfo, tab) {
     }
 
     processPendingRealUrls(tabId, changeInfo);
+    browserTabToAddon(tab);
 
     if (skip.tracking.has(tab.id) || skipTrackingWindows.has(tab.windowId)) {
-        Cache.setTab(tab);
+        Cache.setTab(tab, changeInfo);
 
         if (Object.hasOwn(changeInfo, 'pinned') || Object.hasOwn(changeInfo, 'hidden')) {
             updatedBatch.add(tab.id, updatedKey(Cache.getTabGroup(tab.id), tab.windowId));
@@ -311,9 +312,12 @@ async function onUpdated(tabId, changeInfo, tab) {
 
     const log = logger.start(onUpdated, tabId, changeInfo);
 
+    // the cache takes what the event announced, not the difference
+    const announced = changeInfo;
+
     changeInfo = Cache.getRealTabStateChanged(tab);
 
-    Cache.setTab(tab);
+    Cache.setTab(tab, announced);
 
     if (!changeInfo) {
         log.stop('🛑 changeInfo keys have not changed');
@@ -562,41 +566,10 @@ export async function create({url, active, pinned, title, index, windowId, opene
     }
 
     const tab = {};
+    const {url: createUrl, realUrl, openInReaderMode} = prepareUrlForCreate(url);
 
-    let realUrl;
-
-    // the browser refuses the reader url itself and opens the page in reader mode by the flag (docs/CREATE-TABS-BEHAVIOR.md §16, §30)
-    const pageUrl = getPageUrl(url);
-    const openInReaderMode = pageUrl !== url;
-
-    url = pageUrl;
-
-    if (url) {
-        if (Utils.isDataUrlAllowToNavigate(url)) {
-            realUrl = url;
-            url = Constants.PAGES.HELP.DUMMY;
-        }
-
-        if (Utils.isUrlAllowToCreate(url)) {
-            if (url.startsWith('moz-extension')) {
-                const uuid = Extensions.extractUUID(url);
-
-                if (Utils.isUUID(uuid)) {
-                    tab.url = url;
-                } else {
-                    tab.url = createUnsupportedUrlPage(url);
-                }
-            } else {
-                tab.url = url;
-            }
-        } else if (url !== 'about:newtab') {
-            tab.url = createUnsupportedUrlPage(url);
-        }
-
-        if (tab.url && !Utils.isUrlLengthValid(tab.url)) {
-            realUrl = url;
-            tab.url = Constants.PAGES.HELP.UNSUPPORTED_URL;
-        }
+    if (createUrl) {
+        tab.url = createUrl;
     }
 
     tab.active = !!active;
@@ -605,12 +578,12 @@ export async function create({url, active, pinned, title, index, windowId, opene
         tab.pinned = true;
     }
 
-    // the flag works for an http(s) page only, any other url stays blank under it, and it cannot be born discarded (§30)
-    if (openInReaderMode && tab.url?.startsWith('http')) {
+    if (openInReaderMode) {
         tab.openInReaderMode = true;
     }
 
-    if (allowDiscarded && !tab.active && !tab.pinned && tab.url && !tab.url.startsWith('about:') && !realUrl && !tab.openInReaderMode) {
+    // a tab in reader mode cannot be born discarded (docs/CREATE-TABS-BEHAVIOR.md §30)
+    if (allowDiscarded && !tab.active && !tab.pinned && tab.url && !tab.url.startsWith('about:') && !realUrl && !openInReaderMode) {
         tab.discarded = true;
     }
 
@@ -648,14 +621,19 @@ export async function create({url, active, pinned, title, index, windowId, opene
         skip.created.add(newTab.id);
     }
 
-    if (schema.processGroupId) {
-        GroupsNative.detachTabGroupId(newTab);
-    }
+    browserTabToAddon(newTab);
 
     if (realUrl) {
         pendingRealUrls.set(newTab.id, realUrl);
         self.setTimeout(() => pendingRealUrls.delete(newTab.id), 30_000);
     }
+
+    // the tab is born on about:blank (docs/CREATE-TABS-BEHAVIOR.md §12)
+    if (createUrl) {
+        Cache.setTabRequestedUrl(newTab.id, urlToAddon(url));
+    }
+
+    fillEmptyUrl(newTab);
 
     await Cache.setTabSession(newTab, {groupId, groupNativeId, favIconUrl, thumbnail});
 
@@ -669,10 +647,49 @@ export async function create({url, active, pinned, title, index, windowId, opene
     return newTab;
 }
 
-function createUnsupportedUrlPage(url) {
-    const unsupportedUrlObj = new URL(Constants.PAGES.HELP.UNSUPPORTED_URL);
-    unsupportedUrlObj.searchParams.set('url', url);
-    return unsupportedUrlObj.href;
+// built as a string: searchParams.set drops the key of an address over the limit (docs/CREATE-TABS-BEHAVIOR.md §54)
+export function wrapUnsupportedUrl(url) {
+    return `${Constants.PAGES.HELP.UNSUPPORTED_URL}?${new URLSearchParams({url})}`;
+}
+
+function unwrapUrl(url) {
+    return Extensions.isWrapperUrl(url)
+        ? Utils.getNestedUrl(url) ?? url
+        : url;
+}
+
+// what browser.tabs.create gets for a url (docs/CREATE-TABS-BEHAVIOR.md §16, §18, §20, §22, §30, §34, §37)
+function prepareUrlForCreate(url) {
+    const readerPageUrl = getPageUrl(url);
+    const openInReaderMode = readerPageUrl !== url && readerPageUrl.startsWith('http');
+    const pageUrl = openInReaderMode ? readerPageUrl : url;
+
+    if (!pageUrl || pageUrl === 'about:newtab' || pageUrl === 'about:home') { // both refused by tabs.create, a call without url opens the New Tab page (§16)
+        return {};
+    }
+
+    const result = {};
+    let createUrl;
+
+    if (Utils.isDataUrlAllowToNavigate(pageUrl)) {
+        result.realUrl = pageUrl;
+        createUrl = Constants.PAGES.HELP.DUMMY;
+    } else {
+        createUrl = Extensions.urlToBrowserOrNull(pageUrl) ?? wrapUnsupportedUrl(pageUrl);
+    }
+
+    if (!Utils.isUrlLengthValid(createUrl)) {
+        result.realUrl = pageUrl;
+        createUrl = Constants.PAGES.HELP.UNSUPPORTED_URL;
+    }
+
+    result.url = createUrl;
+
+    if (openInReaderMode && createUrl.startsWith('http')) {
+        result.openInReaderMode = true;
+    }
+
+    return result;
 }
 
 /*
@@ -719,7 +736,7 @@ export async function createMultiple(tabsToCreate, params = {}) {
         for (const [index, tab] of newTabs.entries()) {
             // the window is resolved first and for EVERY tab - a pinned one skips only the index arithmetic
             const windowId = Cache.getWindowId(tab.groupId) || tab.windowId
-                || (fallbackWindowId ??= await Windows.getLastFocusedNormalWindow());
+                || (fallbackWindowId ??= await Windows.getFirstNormalWindowId());
 
             if (tab.pinned) {
                 placements[index] = {windowId};
@@ -864,9 +881,8 @@ async function setOpeners(links) {
 
         await Promise.all(links.map(async ([tabId, openerTabId]) => {
             try {
-                const tab = await browser.tabs.update(tabId, {openerTabId});
-                GroupsNative.detachTabGroupId(tab);
-                Cache.mirrorTab(tab, true);
+                const tab = browserTabToAddon(await browser.tabs.update(tabId, {openerTabId}));
+                Cache.mirrorTab(tab);
                 updated.set(tabId, tab);
             } catch (e) {
                 logger.warn('cant set opener', openerTabId, 'for tab', tabId, e);
@@ -994,29 +1010,29 @@ export async function recreate(tabs, buildTabFunc) {
 }
 
 export async function createUrlOnce(url) {
-    // the addon's own page: in a window of any type, with its url as the browser holds it
+    // a page in a window of any type
     let [tab] = await query({
         url: url.includes('#') ? url.slice(0, url.indexOf('#')) : url,
         hidden: false,
         windowType: null,
-    }, {raw: true});
+    }, {withSession: false});
 
     if (tab) {
         const updateProperties = {
             active: true,
         };
 
-        if (tab.url !== url) {
+        if (tab.browserUrl !== url) {
             updateProperties.url = url;
         }
 
         [tab] = await tabsAction({action: 'update'}, tab, updateProperties);
     }
 
-    tab ??= await browser.tabs.create({
+    tab ??= browserTabToAddon(await browser.tabs.create({
         url,
         active: true,
-    });
+    }));
 
     return tab;
 }
@@ -1048,7 +1064,7 @@ export async function setActive(tabId = null, tabs = []) {
     return tabToActive;
 }
 
-export async function getActive(windowId = browser.windows.WINDOW_ID_CURRENT) {
+export async function getActive(windowId) {
     const [activeTab] = await query({windowId, active: true});
 
     return activeTab;
@@ -1072,7 +1088,7 @@ export async function getNewTabIndex(tabs) {
     return tabs.at(-1).index + 1;
 }
 
-export async function getHighlightedIds(windowId = browser.windows.WINDOW_ID_CURRENT, clickedTab = null, pinned = false) {
+export async function getHighlightedIds(windowId, clickedTab = null, pinned = false) {
     let tabs = await query({windowId, pinned, hidden: false, highlighted: true});
 
     if (clickedTab && !tabs.some(tab => tab.id === clickedTab.id)) { // if clicked tab not in selected tabs - add it
@@ -1119,8 +1135,7 @@ async function prepare(tabs, params = {}) {
         return tabs;
     }
 
-    tabs.forEach(GroupsNative.detachTabGroupId);
-    tabs.forEach(normalizeUrl);
+    tabs.forEach(browserTabToAddon);
 
     if (!withSession) {
         return tabs;
@@ -1304,7 +1319,7 @@ async function moveNow(tabIds, groupId, params = {}) {
 
     const skippedTabs = skipTrackingTabs(tabIds);
 
-    const windowId = groupWindowId || (group.tabs[0]?.windowId) || await Windows.getLastFocusedNormalWindow();
+    const windowId = groupWindowId || group.tabs[0]?.windowId || tabs[0].windowId;
 
     log.log('vars', {groupWindowId, windowId});
 
@@ -1639,15 +1654,15 @@ export async function moveNative(tabs, moveProperties = {}, params = {}) {
 }
 
 const tabsActionSchema = new Map([
-    ['create', {processGroupId: true, skipTrackingCreated: true}],
-    ['get', {sendOneByOne: true, processGroupId: true}], // TODO refactor to use it
+    ['create', {skipTrackingCreated: true}],
+    ['get', {sendOneByOne: true, returnsTabs: true}], // TODO refactor to use it
     ['discard', {sendArray: true, sendOneByOne: true}],
     ['show', {sendArray: true, sendOneByOne: true, skipTracking: true}],
     ['hide', {sendArray: true, sendOneByOne: true, skipTracking: true}],
     ['remove', {sendArray: true, sendOneByOne: true, skipTracking: true}],
-    ['update', {sendOneByOne: true, processGroupId: true}],
+    ['update', {sendOneByOne: true, returnsTabs: true}],
     ['reload', {sendOneByOne: true}],
-    ['move', {sendArray: true, processGroupId: true, skipTracking: true}],
+    ['move', {sendArray: true, returnsTabs: true, skipTracking: true}],
     ['group', {sendAsIs: true, skipTracking: true, defaultValue: browser.tabGroups.TAB_GROUP_ID_NONE}], // the browser's own argument object → native groupId; defaultValue on fail
     ['ungroup', {sendArray: true, sendOneByOne: true, skipTracking: true}],
 ]);
@@ -1740,8 +1755,8 @@ async function tabsAction({action, ...params}, tabs, ...funcArgs) {
         continueTrackingTabs(skipped);
     }
 
-    if (schema.processGroupId) {
-        result.forEach(GroupsNative.detachTabGroupId);
+    if (schema.returnsTabs) {
+        result.forEach(browserTabToAddon);
     }
 
     log.stop(result.map(extractId), ')');
@@ -1803,7 +1818,7 @@ export async function hide(tabs, params = {}) {
 
 export async function discard(tabs, params = {}) {
     // an empty tab holds nothing worth freeing, and a reader tab discarded on about:blank reports about:blank until it is activated (docs/CREATE-TABS-BEHAVIOR.md §35); the skipped tab stays loaded until the next unload of its group
-    tabs = [tabs].flat().filter(tab => !Utils.isUrlEmpty(tab.url));
+    tabs = [tabs].flat().filter(tabOrId => !Utils.isUrlEmpty(tabOrId.browserUrl));
 
     return await tabsAction({action: 'discard', ...params}, tabs);
 }
@@ -1974,15 +1989,33 @@ export function getNewTabContainer(
     return Containers.isDefault(cookieStoreId) ? newTabContainer : cookieStoreId;
 }
 
-// the page a tab shows: for a tab in reader mode, the page it reads
+// the page a tab shows: for a tab in reader mode, the page it reads (docs/CREATE-TABS-BEHAVIOR.md §30)
 export function getPageUrl(url) {
-    return url?.startsWith(Constants.READER_MODE_PROTOCOL)
-        ? new URL(url).searchParams.get('url') ?? url
+    return url?.startsWith(Constants.READER_MODE_PAGE)
+        ? Utils.getNestedUrl(url) ?? url
         : url;
 }
 
+// the url as the addon keeps it (extensions.js)
+export function urlToAddon(url) {
+    return Extensions.urlToId(unwrapUrl(url));
+}
+
+export function tabUrlToAddon(tab) {
+    tab.url = urlToAddon(tab.url);
+    return tab;
+}
+
+// a tab of the browser as the addon keeps it
+function browserTabToAddon(tab) {
+    GroupsNative.detachTabGroupId(tab); // native groupId conflicts with STG groupId key
+    Object.defineProperty(tab, 'browserUrl', {value: tab.url, writable: true, configurable: true}); // not enumerable: stays out of messages and saved data
+    tabUrlToAddon(tab);
+    return tab;
+}
+
 export function getTitle({id, index, title, url, discarded, windowId, lastAccessed}, withUrl = false, sliceLength = 0, withActiveTab = false) {
-    url = getPageUrl(url);
+    url = Utils.sliceText(getPageUrl(url), 2048);
     title = title || url || 'about:blank';
 
     if (withUrl && url && title !== url) {
@@ -2011,7 +2044,7 @@ export function getTitle({id, index, title, url, discarded, windowId, lastAccess
 // const restrictedDomainsRegExp = /^https?:\/\/(.+\.)?(mozilla\.(net|org|com)|firefox\.com)\//;
 const restrictedDomains = new Set('accounts-static.cdn.mozilla.net,accounts.firefox.com,addons.cdn.mozilla.net,addons.mozilla.org,api.accounts.firefox.com,content.cdn.mozilla.net,discovery.addons.mozilla.org,oauth.accounts.firefox.com,profile.accounts.firefox.com,support.mozilla.org,sync.services.mozilla.com'.split(','));
 
-export function isCanSendMessage({url}) {
+export function isCanSendMessage({browserUrl: url}) {
     if (url === 'about:blank') {
         return true;
     }
@@ -2020,7 +2053,7 @@ export function isCanSendMessage({url}) {
         return false;
     }
 
-    if (url.startsWith('moz-extension') && !url.startsWith(Constants.STG_BASE_URL)) {
+    if (Extensions.isExtensionUrl(url) && !Extensions.isOwnUrl(url)) {
         return false;
     }
 
@@ -2055,18 +2088,10 @@ export function isLoading(tab) {
     return tab.status === browser.tabs.TabStatus.LOADING;
 }
 
-export function normalizeUrl(tab) {
-    tab.url = Utils.normalizeUrl(tab.url);
-    return tab;
-}
-
-// the active tab of a window that has just appeared shows an empty url with status complete for
-// its first tens of ms, the load starts later (docs/CREATE-TABS-BEHAVIOR.md §26)
+// an empty url in a snapshot gets what the cache knows (docs/CREATE-TABS-BEHAVIOR.md §12, §26)
 export function fillEmptyUrl(tab) {
-    const knownUrl = Cache.getTabValue(tab.id, 'url');
-
-    if (knownUrl && Utils.isUrlEmpty(tab.url) && (isLoading(tab) || tab.active)) {
-        tab.url = knownUrl;
+    if (Utils.isUrlEmpty(tab.url)) {
+        tab.url = Cache.getTabUrl(tab.id) ?? tab.url;
     }
 
     return tab;
@@ -2085,22 +2110,21 @@ export function isSame(tab1, tab2, keys = ['url', 'cookieStoreId', 'groupId']) {
 }
 
 export async function restoreOldExtensionUrls(parseUrlFunc = null) {
-    // the addon's own pages: in a window of any type, with their urls as the browser holds them
-    const tabs = await query({
-        url: Constants.STG_HELP_PAGES.map(page => `moz-extension://*/help/${page}.html*`),
+    // the addon's own pages in a window of any type
+    let tabs = await query({
+        url: Constants.PAGES.HELP_PATHS.map(path => `moz-extension://*/${path}*`),
         windowType: null,
-    }, {raw: true});
+    }, {withSession: false});
+
+    // under another uuid it is a page of an old install of the addon, unless the uuid is of a known extension
+    tabs = tabs.filter(tab => Extensions.isOwnUrl(tab.browserUrl) || !Extensions.getByUrl(tab.browserUrl));
 
     await Promise.allSettled(tabs.map(async tab => {
-        const oldUrl = tab.url;
+        const url = parseUrlFunc ? await parseUrlFunc(tab) : tab.browserUrl;
 
-        if (parseUrlFunc) {
-            tab.url = await parseUrlFunc(tab);
-        }
-
-        if (!tab.url.startsWith(Constants.STG_BASE_URL) || oldUrl !== tab.url) {
+        if (!url.startsWith(Constants.STG_BASE_URL) || url !== tab.browserUrl) {
             await browser.tabs.update(tab.id, {
-                url: Constants.STG_BASE_URL + tab.url.slice(Constants.STG_BASE_URL.length),
+                url: Constants.STG_BASE_URL + url.slice(Constants.STG_BASE_URL.length),
                 loadReplace: true,
             });
         }

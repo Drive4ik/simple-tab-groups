@@ -4,7 +4,7 @@
     "browser_specific_settings": {
         "gecko": {
             "id": "simple-tab-groups@drive4ik",
-            "strict_min_version": "140.0"
+            "strict_min_version": "153.0"
         }
     },
 
@@ -67,6 +67,7 @@
             "matches": ["<all_urls>"],
             "js": ["web/content-script.js"],
             "css": ["web/content-script.css"],
+            "css_origin": "user",
             "match_about_blank": true,
             "all_frames": true,
             "run_at": "document_end"

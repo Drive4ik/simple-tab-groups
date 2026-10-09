@@ -124,7 +124,8 @@ export function createListenerOnConnectedBackground(onMessageListener) {
 
         self.logger?.info(name, 'connected');
 
-        port.onMessage.addListener(async (message, ...postArgs) => {
+        // the second argument is "port"; but this is not described in https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/runtime/Port#onmessage
+        port.onMessage.addListener(async message => {
             if (!message?.postId || !CSPorts.has(CSPort)) {
                 return;
             }
@@ -132,7 +133,7 @@ export function createListenerOnConnectedBackground(onMessageListener) {
             const {postId, data} = message;
 
             try {
-                const result = await onMessageListener(data, ...postArgs);
+                const result = await onMessageListener(data, port);
 
                 if (CSPorts.has(CSPort)) {
                     port.postMessage({

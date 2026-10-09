@@ -8,7 +8,6 @@ import * as Groups from '/js/groups.js';
 import * as GroupsNative from '/js/groups-native.js';
 import * as Operations from '/js/operations.js';
 import * as MenusMain from '/js/menus-main.js';
-import * as Extensions from '/js/extensions.js';
 import * as Utils from '/js/utils.js';
 import Lang from '/js/lang.js';
 import JSON from '/js/json.js';
@@ -475,12 +474,6 @@ async function syncGroups(localData, cloudData, sourceOfTruth, changes, newCloud
     const resultLocalGroups = [];
     const resultCloudGroups = [];
 
-    for (const group of localGroups) {
-        if (!group.isArchive) {
-            Extensions.tabsToId(group.tabs);
-        }
-    }
-
     const favIconsByUrl = new Map(
         Utils.flatTabs(...localGroups, ...cloudGroups.filter(group => group.uploadToCloud))
             .filter(tab => isFavIconAllowed(tab.favIconUrl))
@@ -877,12 +870,6 @@ async function syncGroups(localData, cloudData, sourceOfTruth, changes, newCloud
 
         if (!changes.local) {
             changes.local = localGroups.some((group, index) => group.id !== resultLocalGroups[index]?.id);
-        }
-    }
-
-    for (const group of resultLocalGroups) {
-        if (!group.isArchive) {
-            Extensions.tabsToUUID(group.tabs);
         }
     }
 

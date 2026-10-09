@@ -43,8 +43,20 @@ function createRecord(id) {
     return {id};
 }
 
+// the browser's url in the addon's form: Tabs.fillEmptyUrl rewrites tab.url, browserUrl stays the browser's own
+function reportedUrl({url, browserUrl}) {
+    return Utils.isUrlEmpty(browserUrl) ? browserUrl : url;
+}
+
+function isEveryTabComplete(...tabs) {
+    return tabs.every(tab => tab?.status === browser.tabs.TabStatus.COMPLETE);
+}
+
 function setLastTabState(tab) {
-    lastTabsState.set(tab.id, Utils.extractKeys(tab, ['id', ...Constants.ON_UPDATED_TAB_PROPERTIES]));
+    lastTabsState.set(tab.id, {
+        ...Utils.extractKeys(tab, ['id', ...Constants.ON_UPDATED_TAB_PROPERTIES]),
+        url: reportedUrl(tab),
+    });
 }
 
 // don't forget for pinned tabs events
@@ -78,14 +90,22 @@ export function clear() {
 }
 
 // TABS
-// the mirror, and the diff base only for a tab the base does not know yet. The base moves with
-// the events that change the state - processed in full or the addon's own (tabs.js onUpdated,
-// setTab); a read or a side snapshot inside the 50-70 ms event wait must not overwrite it, or
-// the pending event diffs against its own result and is swallowed. A read (isRead) never makes
-// the mirror know less either: an empty url replaces a known one only through an event, and
-// only once the tab has settled on it
-export function mirrorTab(tab, isRead = false) {
-    const {id, url, title, favIconUrl, cookieStoreId, openerTabId, status} = tab;
+
+// changeInfo - what the event announced (tabs.js onUpdated), none for a snapshot
+export function setTab(tab, changeInfo = null) {
+    setLastTabState(tab);
+    mirrorTab(tab, changeInfo);
+}
+
+// the mirror: the last state the browser reported, by events (setTab) and by reads alike;
+// requestedUrl - the address the tab was asked to load (Tabs.create, onBeforeTabRequest) until the
+// load has an outcome (removeTabRequestedUrl). The diff base is set here only for a tab it does
+// not know yet: the base moves with the events (tabs.js onUpdated, setTab); a read or a side
+// snapshot inside the 50-70 ms event wait must not overwrite it, or the pending event diffs
+// against its own result and is swallowed
+export function mirrorTab(tab, changeInfo = null) {
+    const {id, title, favIconUrl, cookieStoreId, openerTabId} = tab;
+    const url = reportedUrl(tab);
 
     lastTabsState.has(id) || setLastTabState(tab);
 
@@ -99,25 +119,40 @@ export function mirrorTab(tab, isRead = false) {
         record.openerTabId = openerTabId;
     }
 
-    if (record.url && Utils.isUrlEmpty(url) && (isRead || status === browser.tabs.TabStatus.LOADING)) {
-        return;
-    }
-
-    record.url = Utils.normalizeUrl(url);
+    record.url = url;
     record.title = title || url;
 
     if (Utils.isAvailableFavIconUrl(favIconUrl)) {
         record.favIconUrl = favIconUrl;
     }
+
+    removeTabRequestedUrl(record, tab, changeInfo);
 }
 
-export function setTab(tab) {
-    setLastTabState(tab);
-    mirrorTab(tab);
+// an empty address is nothing to wait for
+export function setTabRequestedUrl(id, url) {
+    if (!Utils.isUrlEmpty(url)) {
+        tabs.getOrInsertComputed(id, createRecord).requestedUrl = url;
+    }
 }
 
-export function mirrorTabUrl(id, url) {
-    tabs.getOrInsertComputed(id, createRecord).url = Utils.normalizeUrl(url);
+// the load has its outcome: the tab settled on a url (a url read from a loading tab is not final,
+// docs/CREATE-TABS-BEHAVIOR.md §28), or the event announced the end of a load that left the tab empty
+function removeTabRequestedUrl(record, tab, changeInfo) {
+    const settled = Utils.isUrlEmpty(reportedUrl(tab))
+        ? isEveryTabComplete(tab, changeInfo)
+        : isEveryTabComplete(tab);
+
+    if (settled) {
+        delete record.requestedUrl;
+    }
+}
+
+// the requested url, else the last reported one
+export function getTabUrl(id) {
+    const record = tabs.get(id);
+
+    return record?.requestedUrl ?? record?.url;
 }
 
 export function hasTab(id) {
@@ -192,10 +227,6 @@ async function removeValue(store, id, key) {
 
 function getValue(store, id, key) {
     return store.get(id)?.[key] ?? undefined;
-}
-
-export function getTabValue(id, key) {
-    return getValue(tabs, id, key);
 }
 
 // groupId
@@ -278,7 +309,7 @@ export async function loadTabSession(tab, {
     includeThumbnail = false,
 } = {}) {
     try {
-        mirrorTab(tab, true);
+        mirrorTab(tab);
 
         await Promise.all([
             loadValue(tabs, tab.id, GROUP_KEY),
@@ -342,9 +373,20 @@ export function getTabsSessionAndRemove(ids) {
     return ids
         .map(id => {
             const record = tabs.get(id);
-            const session = record?.groupId && record.url
-                ? Object.fromEntries(Object.entries(record).filter(([, value]) => value !== null))
-                : false;
+            const url = getTabUrl(id);
+            let session = false;
+
+            if (record?.groupId && url) {
+                const {requestedUrl, ...known} = record;
+
+                session = Object.fromEntries(Object.entries(known).filter(([, value]) => value !== null));
+                session.url = url;
+
+                // a tab still waiting for its page shows the title of no page
+                if (requestedUrl) {
+                    delete session.title;
+                }
+            }
 
             removeTab(id);
 

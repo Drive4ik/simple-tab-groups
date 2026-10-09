@@ -106,7 +106,7 @@ export default {
             return this.unSyncTabs.filter(tab => Utils.mySearchFunc(searchStr, Tabs.getTitle(tab, true), this.extendedSearch));
         },
         isCurrentWindowIsNormal() {
-            return Windows.isNormal(this.currentWindow);
+            return Boolean(this.currentWindow) && Windows.isNormal(this.currentWindow);
         },
     },
     methods: {

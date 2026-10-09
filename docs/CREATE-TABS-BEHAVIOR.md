@@ -288,10 +288,12 @@ Under `relatedAfterCurrent` (R5.42) the same scene came out cell-for-cell identi
   `url`), `about:home`, `about:config`, `about:addons`, `about:reader?url=…`, `data:` of any type
   (plain text and a png alike), `file:///`, `javascript:`, `chrome://…`, `view-source:file:///`.
 
-The add-on's `Utils.isUrlAllowToCreate` (http, moz-extension, view-source, about:blank) matches
-this list with two harmless edges: `view-source:file:` passes the regexp and is refused by the
-browser, `ftp:` fails the regexp and is accepted by the browser into a blank tab. A refusal costs
-nothing but the call, so neither edge needs a rule.
+The add-on's `Utils.isUrlAllowToCreate` (`https?:`, `view-source:https?:`, `moz-extension:`,
+`about:blank`) matches this list with one harmless edge: `ftp:` fails the regexp and is accepted
+by the browser into a blank tab, so such a url goes to the stub page instead, where it is at least
+kept. The schemes are spelled whole: `view-source:file:` is refused by the browser, and a refusal
+in `Tabs.create` would cost the tab, not just the call. Whether a given extension page can be
+opened is a question of its own, §34 and §36.
 
 | tab index | 0 | 1 | 2 | 3 | 4 | 5 | 6 |
 | - | - | - | - | - | - | - | - |
@@ -896,7 +898,7 @@ R24.04, a `sessions.setWindowValue` value across the restore of its window:
 
 ### 30. `tabs.create({url, openInReaderMode: true})` opens the page as `about:reader?url=<the url, encoded>` with `isInReaderMode: true`, in a container too; the flag cannot be combined with `discarded: true`, does nothing for `about:blank` and no url, and leaves a `view-source:` url or an extension page on `about:blank` for good (R27.01–R27.05)
 
-§30 to §34 come from `round-27`, run in September 2026. A tab in reader mode reports
+§30 to §35 come from `round-27`, run in September 2026. A tab in reader mode reports
 `url: about:reader?url=<the page url, encodeURIComponent-encoded>` and `isInReaderMode: true`;
 `about:reader?url=…` passed to `tabs.create` is refused (§16), the flag is the only way in.
 
@@ -1135,7 +1137,7 @@ R27.09:
 listed next to the host permissions it asked for. A `moz-extension://` url with a uuid that
 belongs to no installed extension, and one with the extension id where the uuid goes
 (`moz-extension://stg-behavior-tests@drive4ik/tab.html`, which the URL parser reads as a user name
-and a host), both resolve `tabs.create`, and both tabs stay on `about:blank` with status
+and a host, §41), both resolve `tabs.create`, and both tabs stay on `about:blank` with status
 `complete` 20 s later — nothing is ever loaded.
 
 | tab index | 0 | 1 | 2 |
@@ -1214,6 +1216,672 @@ navigation itself is not lost either way.
 - e1 activated and loaded: `url:about:reader?url=https%3A%2F%2Fen.wikipedia.org%2Fwiki%2FMain_Page` isInReaderMode:true isArticle:undefined status:complete discarded:false
 - c1 activated and loaded: `url:about:reader?url=https%3A%2F%2Fen.wikipedia.org%2Fwiki%2FMain_Page` isInReaderMode:true isArticle:undefined status:complete discarded:false
 
+### 36. `management.getAll()` reports no `hostPermissions` for a disabled extension, an enabled one lists its own origin there: the uuid of an extension can be read only while it is enabled (R28.01, with other add-ons installed)
+
+§36, §37 and §39 come from `round-28`, run in September 2026 in a profile prepared for it. A disabled
+extension comes back without the `hostPermissions` field at all: its id is there, its uuid is
+not. An enabled extension lists its own origin `moz-extension://<uuid>/*` in the field, as §34
+showed for the harness through `getSelf`.
+
+R28.01, a profile with two more add-ons next to the harness, one disabled and one enabled:
+
+- extension 1: enabled:false hostPermissions: absent
+- extension 2: enabled:true hostPermissions: lists its own origin
+
+### 37. `tabs.create` and `tabs.update` open a page of another enabled extension, `location.replace` from an extension page to it is denied (R28.02, with other add-ons installed)
+
+The `manifest.json` of another enabled extension, by its uuid. `tabs.create` resolves and the
+tab is on the page with status `complete`; `tabs.update` of a live tab does the same. A page of
+the harness that calls `location.replace` with the same url stays where it is, and the browser
+console prints `Uncaught TypeError: Location.replace: Access to
+'moz-extension://<other uuid>/manifest.json' from script denied.` Of the three ways tried, the
+two calls of the tabs API reach the page, the navigation of the page itself does not. The tabs
+were created without an index, their places in the rows are the profile's `newTabPosition`.
+
+| tab index | 0 | 1 | 2 | 3 |
+| - | - | - | - | - |
+| before | x* | y | | |
+| `tabs.create({url: <manifest.json of the other extension>})` — settled 228 ms | | | | |
+| created | x* | ➕created | y | |
+| `tabs.update(y, {url: <the same page>})` — settled 228 ms | | | | |
+| y updated | x* | ➕created | y | |
+| `tabs.create({url: navigate.html?to=<the same page>})  // the page of the harness calls location.replace on load` — settled 250 ms | | | | |
+| nav | x* | ➕nav | ➕created | y |
+
+- created: resolved, on the page, status complete
+- y: resolved, on the page, status complete
+- nav: BLOCKED - still on the page of the harness, status complete
+
+### 39. `tabs.update` called by an extension page on its own tab opens a page of another enabled extension, in the default container and in a non-default one (R28.03, with other add-ons installed)
+
+A page of the harness (`navigate.html`), loaded in a background tab, calls `tabs.getCurrent()`
+and then `tabs.update(<its own tab>, {url: <manifest.json of the other extension>, loadReplace:
+true})`. The call resolves, and the tab is on that page with status `complete`, in the container
+it was created in. §37 measured the call made by the background page, here the page of the tab
+makes it itself. The tabs were created without an index, their places in the rows are the
+profile's `newTabPosition`.
+
+| tab index | 0 | 1 | 2 |
+| - | - | - | - |
+| before | x* | | |
+| `tabs.create({url: navigate.html})` — waited 2000 ms | | | |
+| plain | x* | ➕plain | |
+| `plain calls tabs.update(its own tab, {url: <manifest.json of the other extension>, loadReplace: true})` — waited 2000 ms | | | |
+| plain updated | x* | ➕plain | |
+| `tabs.create({url: navigate.html}, cookieStoreId: container)` — waited 2000 ms | | | |
+| contained | x* | ➕contained | ➕plain |
+| `contained calls tabs.update(its own tab, {url: <manifest.json of the other extension>, loadReplace: true})` — waited 2000 ms | | | |
+| contained updated | x* | ➕contained | ➕plain |
+
+- plain: resolved, on the page, status complete, container firefox-default
+- container created for the test: firefox-container-17 (stg-test); removed at the end
+- contained: resolved, on the page, status complete, container the requested one
+
+### 40. The reader button pressed by the user makes no `main_frame` request, entering the reader view and leaving it (R27.11)
+
+§40 and §41 come from `round-27`, run in September 2026. On a shown article the user presses F9:
+`tabs.onUpdated` delivers `{status: loading}`, `{isArticle: false}`, `{status: loading, url:
+about:reader?url=…}`, `{status: complete}`, and the tab reports the reader url with
+`isInReaderMode: true` and `isArticle: false`. The second press brings the page back: `{status:
+loading}`, `{status: loading, url: <the page>}`, `{isArticle: true}`, `{status: complete}`. A
+`webRequest.onBeforeRequest` listener for `main_frame` with `<all_urls>`, armed before the first
+press, counting the tabs of the test and the requests of no tab, saw no request for either press
+— the button behaves like `tabs.toggleReaderMode` (§32). This is one run on Firefox 158: the
+developer has seen the browser reload the page on leaving the reader view, under conditions this
+run did not meet (see "Open questions").
+
+| tab index | 0 | 1 |
+| - | - | - |
+| `tabs.create({url: article})` — settled 780 ms | | |
+| article | x* | ➕article |
+| `tabs.update(article, {active: true})` — settled 260 ms | | |
+| article activated | x | ➕article* |
+| `the user presses F9 in the article tab to enter the reader view` | | |
+| entered | x | ➕article* |
+| `the user presses F9 in the article tab to leave the reader view` | | |
+| left | x | ➕article* |
+
+```text
+ 3180ms  tabs.onUpdated        article  {status: loading}
+ 3182ms  tabs.onUpdated        article  {isArticle: false}
+ 3187ms  tabs.onUpdated        article  {status: loading, url: about:reader?url=https%3A%2F%2Fen.wikipedia.org%2Fwiki%2FMain_Page}
+ 3321ms  tabs.onUpdated        article  {status: complete}
+ 2928ms  tabs.onUpdated        article  {status: loading}
+ 2933ms  tabs.onUpdated        article  {status: loading, url: https://en.wikipedia.org/wiki/Main_Page}
+ 2934ms  tabs.onUpdated        article  {isArticle: true}
+ 2935ms  tabs.onUpdated        article  {status: complete}
+(4 tabs.onUpdated dropped, only these keys were kept: url/status/isArticle/discarded)
+```
+
+- article activated and loaded: `url:https://en.wikipedia.org/wiki/Main_Page` isInReaderMode:false isArticle:true status:complete discarded:false
+- article entered: `url:about:reader?url=https%3A%2F%2Fen.wikipedia.org%2Fwiki%2FMain_Page` isInReaderMode:true isArticle:false status:complete discarded:false
+- main_frame requests, reader view entered: 0
+- article left: `url:https://en.wikipedia.org/wiki/Main_Page` isInReaderMode:false isArticle:true status:complete discarded:false
+- main_frame requests, reader view left: 0
+
+### 41. The `URL` constructor parses an extension page address that names the extension by its id, in every shape an id takes, and reads its path, query and hash — but it does not give every id back: the host comes out in lower case and a leading `@` is dropped (R27.14)
+
+`new URL('moz-extension://<id>/dir/page.html?url=…&x=1#part')` with made-up ids of every shape an
+extension id takes, and with a uuid for comparison. The constructor throws for none of them, and
+`pathname`, `search`, `hash` and `searchParams.get('url')` are read correctly for all. What the id
+itself turns into differs: the part before an `@` is the user name and keeps its case, the part
+after it is the host and comes out in lower case, an id in braces is a host as a whole, and an
+`@` with nothing before it disappears from `href`. `origin` is `moz-extension://<host>`, never
+the id. After `searchParams.set` the serialized address carries the same changes.
+
+| id shape | id | `href` | `username` | `host` |
+| - | - | - | - | - |
+| uuid | `9a1b7c52-3f0e-4d8a-b6c1-2e5f7a9d0c34` | unchanged | empty | the uuid |
+| `name@domain` | `some-addon@example.com` | unchanged | `some-addon` | `example.com` |
+| `Name@Domain` | `Some-Addon@Example.Com` | CHANGED: `Some-Addon@example.com` | `Some-Addon` | `example.com` |
+| `name_name@domain` | `some_addon@example.com` | unchanged | `some_addon` | `example.com` |
+| `@name` | `@some-addon` | CHANGED: `some-addon`, the `@` is gone | empty | `some-addon` |
+| `{guid}` | `{506e023c-7f2b-40a3-8066-bc5deb40aebe}` | unchanged | empty | the id as it is |
+| `{GUID}` | `{66E978CD-981F-47DF-AC42-E3CF417C1467}` | CHANGED: `{66e978cd-981f-47df-ac42-e3cf417c1467}` | empty | the id in lower case |
+
+### 42. `bookmarks.create` accepts every url that has a scheme and refuses one without it; the bookmark holds the url as the `URL` constructor serializes it (R29.01)
+
+§42 comes from `round-29`, run in September 2026, with the optional `bookmarks` permission
+granted by hand. Every url class a saved tab can hold was accepted, the ones `tabs.create`
+refuses (§16) included. The only refusal was a url without a scheme: `Invalid bookmark:
+{"title":"noscheme","type":1,"url":"example.com","parentGuid":"…"}`. The created node and
+`bookmarks.getChildren` give the same url, and it is the url as it was passed except for the
+three id shapes the `URL` constructor changes (§41).
+
+| url | `bookmarks.create` | the bookmark holds |
+| - | - | - |
+| `https://example.com/` | accepted | the url as passed |
+| `about:reader?url=https%3A%2F%2Fexample.com%2F` | accepted | the url as passed |
+| `about:blank` | accepted | the url as passed |
+| `about:config` | accepted | the url as passed |
+| `file:///C:/stg-behavior-tests.txt` | accepted | the url as passed |
+| `data:text/plain,hello` | accepted | the url as passed |
+| `javascript:void(0)` | accepted | the url as passed |
+| `view-source:https://example.com/` | accepted | the url as passed |
+| `moz-extension://<own uuid>/tab.html?tab=own` | accepted | the url as passed |
+| `moz-extension://9a1b7c52-3f0e-4d8a-b6c1-2e5f7a9d0c34/page.html` | accepted | the url as passed |
+| `moz-extension://some-addon@example.com/page.html?url=https%3A%2F%2Fexample.com%2F` | accepted | the url as passed |
+| `moz-extension://Some-Addon@Example.Com/page.html` | accepted | `moz-extension://Some-Addon@example.com/page.html` |
+| `moz-extension://@some-addon/page.html` | accepted | `moz-extension://some-addon/page.html` |
+| `moz-extension://{506e023c-7f2b-40a3-8066-bc5deb40aebe}/page.html` | accepted | the url as passed |
+| `moz-extension://{66E978CD-981F-47DF-AC42-E3CF417C1467}/page.html` | accepted | `moz-extension://{66e978cd-981f-47df-ac42-e3cf417c1467}/page.html` |
+| `example.com` | refused | |
+
+### 43. `management.getAll()` lists the calling extension itself, and its entry names the origin `runtime.getURL` gives (R28.04, with other add-ons installed)
+
+§43, §46 and §47 come from `round-28`, run in September 2026 in the profile prepared for it, the add-on
+the user acted on was "YT Tweaks". The harness, loaded through about:debugging, is in its own
+list with `installType: development` and its own origin among the host permissions; the two
+other add-ons are `installType: normal`.
+
+- the list holds 2 other extension(s), the harness is in it too
+- the harness: enabled:true installType:development hostPermissions: lists its own origin, the origin is the one runtime.getURL gives
+- extension 1: enabled:false installType:normal hostPermissions: absent
+- extension 2: enabled:true installType:normal hostPermissions: lists its own origin
+
+### 44. `management.onDisabled` and `onEnabled` reach the background and a page of the add-on in a background tab, in a container and in a hidden tab alike, and `management.getAll()` reports the new state right at the event; a timer of a page in a background or a hidden tab is held back to a second (R28.05, with other add-ons installed)
+
+§44 comes from `round-28`, run in October 2026, the add-on the user acted on was "To Google
+Translate". The background and three copies of a page of the harness — one in the default
+container, one in a container made for the test, and one whose tab is hidden once the page has
+loaded — all four with listeners on the management events; the user disables the add-on and
+enables it again. Every context gets the event, the page in the hidden tab like the others.
+`management.getAll()` called from the same context right at the event already reports the new
+state — disabled: no `hostPermissions`, enabled: the own origin is back — and the reads 50 ms and
+2 s later report the same. `management.getAll()` and `storage.session.get` both resolve in a page
+of a container tab. A `setTimeout` of 50 ms took 50 ms in the background page and 1053–1070 ms in
+the pages, the hidden one included: none of their tabs was the active one.
+
+| tab index | 0 | 1 | 2 | 3 | 4 |
+| - | - | - | - | - | - |
+| before | x* | | | | |
+| `tabs.create({url: management.html})` — settled 236 ms | | | | | |
+| plain | x* | ➕plain | | | |
+| `tabs.create({url: management.html}, cookieStoreId: container)` — settled 250 ms | | | | | |
+| contained | x* | ➕plain | ➕contained | | |
+| `tabs.create({url: management.html})` — settled 248 ms | | | | | |
+| hidden | x* | ➕plain | ➕contained | ➕hidden | |
+| `tabs.hide(hidden)` — settled 276 ms | | | | | |
+| page hidden | x* | ➕plain | ➕contained | ➕hidden(h) | |
+| `the user disables "To Google Translate"` | | | | | |
+| disabled | x | ➕plain | ➕contained | ➕hidden(h) | unknown1* |
+| `the user enables "To Google Translate"` | | | | | |
+| enabled again | x | ➕plain | ➕contained | ➕hidden(h) | unknown1* |
+
+`unknown1` is the about:addons tab the user opened in the scene window.
+
+- background: management.getAll resolved, 2 extension(s); storage.session.get resolved
+- plain: management.getAll resolved, 2 extension(s); storage.session.get resolved
+- contained: management.getAll resolved, 2 extension(s); storage.session.get resolved
+- disabled, background: onDisabled of extension 1, type extension - at the event (+0 ms): enabled:false hostPermissions: absent; 50 ms later (+50 ms): enabled:false hostPermissions: absent; 2000 ms after that (+2066 ms): enabled:false hostPermissions: absent; a setTimeout of 50 ms took 50 ms
+- disabled, plain: onDisabled of extension 1, type extension - at the event (+0 ms): enabled:false hostPermissions: absent; 50 ms later (+50 ms): enabled:false hostPermissions: absent; 2000 ms after that (+2065 ms): enabled:false hostPermissions: absent; a setTimeout of 50 ms took 1053 ms
+- disabled, contained: onDisabled of extension 1, type extension - at the event (+0 ms): enabled:false hostPermissions: absent; 50 ms later (+50 ms): enabled:false hostPermissions: absent; 2000 ms after that (+2066 ms): enabled:false hostPermissions: absent; a setTimeout of 50 ms took 1055 ms
+- disabled, hidden: onDisabled of extension 1, type extension - at the event (+0 ms): enabled:false hostPermissions: absent; 50 ms later (+50 ms): enabled:false hostPermissions: absent; 2000 ms after that (+2066 ms): enabled:false hostPermissions: absent; a setTimeout of 50 ms took 1054 ms
+- enabled again, background: onEnabled of extension 1, type extension - at the event (+0 ms): enabled:true hostPermissions: lists its own origin; 50 ms later (+50 ms): enabled:true hostPermissions: lists its own origin; 2000 ms after that (+2082 ms): enabled:true hostPermissions: lists its own origin; a setTimeout of 50 ms took 50 ms
+- enabled again, plain: onEnabled of extension 1, type extension - at the event (+0 ms): enabled:true hostPermissions: lists its own origin; 50 ms later (+50 ms): enabled:true hostPermissions: lists its own origin; 2000 ms after that (+2082 ms): enabled:true hostPermissions: lists its own origin; a setTimeout of 50 ms took 1069 ms
+- enabled again, contained: onEnabled of extension 1, type extension - at the event (+0 ms): enabled:true hostPermissions: lists its own origin; 50 ms later (+50 ms): enabled:true hostPermissions: lists its own origin; 2000 ms after that (+2082 ms): enabled:true hostPermissions: lists its own origin; a setTimeout of 50 ms took 1070 ms
+- enabled again, hidden: onEnabled of extension 1, type extension - at the event (+0 ms): enabled:true hostPermissions: lists its own origin; 50 ms later (+50 ms): enabled:true hostPermissions: lists its own origin; 2000 ms after that (+2081 ms): enabled:true hostPermissions: lists its own origin; a setTimeout of 50 ms took 1069 ms
+
+### 46. A page of another enabled extension can be created discarded: the tab reports the url while it is discarded and loads the page when activated, in a container too (R28.07, with other add-ons installed)
+
+| tab index | 0 | 1 | 2 |
+| - | - | - | - |
+| before | x* | | |
+| `tabs.create({url: <manifest.json of the other extension>, discarded: true, title})` — settled 262 ms | | | |
+| lazy | x* | ➕lazy | |
+| `tabs.update(lazy, {active: true})` — waited 2000 ms | | | |
+| lazy activated | x | ➕lazy* | |
+| `tabs.create({url: <manifest.json of the other extension>, discarded: true, title}, cookieStoreId: container)` — settled 274 ms | | | |
+| lazycontained | x | ➕lazy* | ➕lazycontained |
+| `tabs.update(lazycontained, {active: true})` — waited 2000 ms | | | |
+| lazycontained activated | x | ➕lazy | ➕lazycontained* |
+
+- lazy at the resolve: `url:moz-extension://<other uuid>/manifest.json` status:complete discarded:true hidden:false
+- lazy settled: `url:moz-extension://<other uuid>/manifest.json` status:complete discarded:true hidden:false
+- lazy activated: `url:moz-extension://<other uuid>/manifest.json` status:complete discarded:false hidden:false, container firefox-default
+- container created for the test: firefox-container-18 (stg-test); removed at the end
+- lazycontained at the resolve: `url:moz-extension://<other uuid>/manifest.json` status:complete discarded:true hidden:false
+- lazycontained settled: `url:moz-extension://<other uuid>/manifest.json` status:complete discarded:true hidden:false
+- lazycontained activated: `url:moz-extension://<other uuid>/manifest.json` status:complete discarded:false hidden:false, container the requested one
+
+### 47. `tabs.update` to a page of another extension works when the page calls it as soon as its script runs, and from a hidden tab, which stays hidden (R28.08, with other add-ons installed)
+
+A page whose script calls `tabs.getCurrent()` and `tabs.update` on its own tab right away: the
+page reaches `complete` first, 35 ms after the create, the navigation of the update starts 2 ms
+later, and the tab is on the target. A page in a hidden tab, asked by a message: the call
+resolves, the tab is on the target and still hidden, not discarded.
+
+| tab index | 0 | 1 | 2 |
+| - | - | - | - |
+| before | x* | | |
+| `tabs.create({url: navigate.html?update=<manifest.json of the other extension>})  // the script of the page calls tabs.update on its own tab as soon as it runs` — waited 2000 ms | | | |
+| atload | x* | ➕atload | |
+| `tabs.create({url: navigate.html})` — waited 2000 ms | | | |
+| hidden created | x* | ➕atload | ➕hidden |
+| `tabs.hide(hidden)` — settled 275 ms | | | |
+| hidden | x* | ➕atload | ➕hidden(h) |
+| `hidden calls tabs.update(its own tab, {url: <manifest.json of the other extension>, loadReplace: true})` — waited 2000 ms | | | |
+| hidden updated | x* | ➕atload | ➕hidden(h) |
+
+```text
+    8ms  tabs.onUpdated        atload  {status: loading}
+   17ms  tabs.onUpdated        atload  {status: loading}
+   35ms  tabs.onUpdated        atload  {status: complete}
+   37ms  tabs.onUpdated        atload  {status: loading}
+   46ms  tabs.onUpdated        atload  {status: loading}
+   47ms  tabs.onUpdated        atload  {status: complete}
+    9ms  tabs.onUpdated        hidden  {status: loading}
+   19ms  tabs.onUpdated        hidden  {status: loading}
+   37ms  tabs.onUpdated        hidden  {status: complete}
+    7ms  tabs.onUpdated        hidden  {status: loading}
+   18ms  tabs.onUpdated        hidden  {status: loading}
+   19ms  tabs.onUpdated        hidden  {status: complete}
+(5 tabs.onUpdated dropped, only these keys were kept: status)
+```
+
+- atload: no refusal reported, on the page, status complete
+- hidden: resolved, on the page, status complete, hidden true, discarded false
+
+### 48. When an extension is disabled, the browser closes the loaded tabs on a page that runs its code, visible and hidden alike, and keeps the discarded ones on the same url; enabling it again brings nothing back, and the extension keeps its uuid (R28.10, with other add-ons installed)
+
+§48 to §50 come from `round-28`, run in September 2026 in the profile prepared for it, the add-on
+the user acted on was "YT Tweaks", the page is its options page — `optionsUrl` of
+`management.getAll()`, a page that runs the code of the extension. Four tabs on it: a loaded
+one, a discarded one, a hidden one and a hidden discarded one. The
+user disables the add-on: `tabs.onRemoved` comes for the loaded tab and for the hidden tab, in
+the same millisecond; the two discarded tabs stay, on the same url, discarded. Enabling the add-on
+again changes nothing: the two closed tabs are gone for good, the two discarded ones are still
+there, still discarded. The background gets `onDisabled` and `onEnabled`, and
+`management.getAll()` reports the new state right at the event, as in §44. After the enable the
+add-on lists the same origin as before: a disable and an enable keep the uuid. `unknown1` is the
+about:addons tab the user opened in the scene window.
+
+| tab index | 0 | 1 | 2 | 3 | 4 |
+| - | - | - | - | - | - |
+| before | x* | loaded | lazy | hidden(h) | hiddenlazy(h) |
+| `the user disables "YT Tweaks"` | | | | | |
+| disabled | x | lazy | hiddenlazy(h) | unknown1* | |
+| `the user enables "YT Tweaks"` | | | | | |
+| enabled again | x | lazy | hiddenlazy(h) | unknown1* | |
+
+```text
+10560ms  tabs.onUpdated        unknown1  {status: loading}
+10572ms  tabs.onUpdated        unknown1  {status: loading}
+10619ms  tabs.onUpdated        unknown1  {status: loading}
+10625ms  tabs.onUpdated        unknown1  {status: complete}
+12768ms  tabs.onRemoved        loaded  isWindowClosing:false
+12768ms  tabs.onRemoved        hidden  isWindowClosing:false
+(2 tabs.onUpdated dropped, only these keys were kept: status/discarded/hidden)
+```
+
+- before, loaded: `url:moz-extension://<other uuid>/options/options.html` status:complete discarded:false hidden:false
+- before, lazy: `url:moz-extension://<other uuid>/options/options.html` status:complete discarded:true hidden:false
+- before, hidden: `url:moz-extension://<other uuid>/options/options.html` status:complete discarded:false hidden:true
+- before, hiddenlazy: `url:moz-extension://<other uuid>/options/options.html` status:complete discarded:true hidden:true
+- disabled, loaded: the tab is gone
+- disabled, lazy: `url:moz-extension://<other uuid>/options/options.html` status:complete discarded:true hidden:false
+- disabled, hidden: the tab is gone
+- disabled, hiddenlazy: `url:moz-extension://<other uuid>/options/options.html` status:complete discarded:true hidden:true
+- disabled, background: onDisabled of extension 2, type extension - at the event (+0 ms): enabled:false hostPermissions: absent; 50 ms later (+50 ms): enabled:false hostPermissions: absent; 2000 ms after that (+2052 ms): enabled:false hostPermissions: absent; a setTimeout of 50 ms took 51 ms
+- enabled again, loaded: the tab is gone
+- enabled again, lazy: `url:moz-extension://<other uuid>/options/options.html` status:complete discarded:true hidden:false
+- enabled again, hidden: the tab is gone
+- enabled again, hiddenlazy: `url:moz-extension://<other uuid>/options/options.html` status:complete discarded:true hidden:true
+- enabled again, background: onEnabled of extension 2, type extension - at the event (+0 ms): enabled:true hostPermissions: lists its own origin; 50 ms later (+50 ms): enabled:true hostPermissions: lists its own origin; 2000 ms after that (+2064 ms): enabled:true hostPermissions: lists its own origin; a setTimeout of 50 ms took 171 ms
+- the add-on has the same uuid as before
+
+### 49. When an extension is removed, the browser closes the same tabs and keeps the discarded ones on the url with the old uuid; `management.getAll()` no longer lists it right at `onUninstalled`, and right at `onInstalled` the call is REJECTED with "An unexpected error occurred" — 50 ms later it lists the add-on, enabled and with a NEW uuid (R28.11, with other add-ons installed)
+
+The same four tabs on the options page. The user removes the add-on and closes about:addons:
+`tabs.onRemoved` for the loaded tab and the hidden tab, in the same millisecond, the discarded ones
+stay. The background gets `onUninstalled`, and `management.getAll()` right at the event does not
+list the add-on any more. The user installs the add-on again: the background gets `onInstalled`,
+and `management.getAll()` called right at the event rejects with `An unexpected error occurred`;
+50 ms later, and 2 s after that, it lists the add-on enabled with its origin among the host
+permissions — an origin with ANOTHER uuid. The two discarded tabs are still there, on the url with
+the old uuid, discarded. `unknown1` is the about:addons tab, `unknown2` the tab the add-on was
+installed from.
+
+| tab index | 0 | 1 | 2 | 3 | 4 |
+| - | - | - | - | - | - |
+| before | x* | loaded | lazy | hidden(h) | hiddenlazy(h) |
+| `the user removes "YT Tweaks"` | | | | | |
+| removed | x* | lazy | hiddenlazy(h) | | |
+| `the user installs again "YT Tweaks"` | | | | | |
+| installed again | x | lazy | hiddenlazy(h) | unknown2* | |
+
+```text
+14209ms  tabs.onUpdated        unknown1  {status: loading}
+14221ms  tabs.onUpdated        unknown1  {status: loading}
+14267ms  tabs.onUpdated        unknown1  {status: loading}
+14273ms  tabs.onUpdated        unknown1  {status: complete}
+18324ms  tabs.onRemoved        loaded  isWindowClosing:false
+18324ms  tabs.onRemoved        hidden  isWindowClosing:false
+32848ms  tabs.onRemoved        unknown1  isWindowClosing:false
+ 4791ms  tabs.onUpdated        unknown2  {status: loading}
+ 5184ms  tabs.onUpdated        unknown2  {status: loading}
+ 5551ms  tabs.onUpdated        unknown2  {status: complete}
+(8 tabs.onUpdated dropped, only these keys were kept: status/discarded/hidden)
+```
+
+- before: the four tabs read as in §48
+- removed, loaded: the tab is gone
+- removed, lazy: `url:moz-extension://<other uuid>/options/options.html` status:complete discarded:true hidden:false
+- removed, hidden: the tab is gone
+- removed, hiddenlazy: `url:moz-extension://<other uuid>/options/options.html` status:complete discarded:true hidden:true
+- removed, background: onUninstalled of extension 2, type extension - at the event (+0 ms): not in the list; 50 ms later (+50 ms): not in the list; 2000 ms after that (+2253 ms): not in the list; a setTimeout of 50 ms took 50 ms
+- installed again, loaded: the tab is gone
+- installed again, lazy: `url:moz-extension://<other uuid>/options/options.html` status:complete discarded:true hidden:false
+- installed again, hidden: the tab is gone
+- installed again, hiddenlazy: `url:moz-extension://<other uuid>/options/options.html` status:complete discarded:true hidden:true
+- installed again, background: onInstalled of extension 2, type extension - at the event (+0 ms): getAll rejected - An unexpected error occurred; 50 ms later (+50 ms): enabled:true hostPermissions: lists its own origin; 2000 ms after that (+2070 ms): enabled:true hostPermissions: lists its own origin; a setTimeout of 50 ms took 50 ms
+- the add-on has ANOTHER uuid
+
+### 50. A page that runs the code of another enabled extension opens the way its `manifest.json` does: by `tabs.create`, created discarded and then activated, and by `tabs.update` a page calls on its own tab (R28.12, with other add-ons installed)
+
+The options page of the add-on, as §37, §39 and §46 measured its `manifest.json`: a tab created
+on it starts on `about:blank` and is on the page once loaded; created discarded it reports the
+url at once and is on the page once activated; a page of the harness sends its own tab there
+with `tabs.update`, the call resolves and the tab is on the page.
+
+| tab index | 0 | 1 | 2 | 3 |
+| - | - | - | - | - |
+| before | x* | | | |
+| `tabs.create({url: <options page of the other extension>})` — waited 2000 ms | | | | |
+| created | x* | ➕created | | |
+| `tabs.create({url: <options page of the other extension>, discarded: true, title})` — waited 2000 ms | | | | |
+| lazy | x* | ➕created | ➕lazy | |
+| `tabs.update(lazy, {active: true})` — waited 2000 ms | | | | |
+| lazy activated | x | ➕created | ➕lazy* | |
+| `tabs.create({url: navigate.html})` — waited 2000 ms | | | | |
+| page | x | ➕created | ➕lazy* | ➕page |
+| `page calls tabs.update(its own tab, {url: <options page of the other extension>, loadReplace: true})` — waited 2000 ms | | | | |
+| page updated | x | ➕created | ➕lazy* | ➕page |
+
+- created at the resolve: `url:about:blank` status:complete discarded:false hidden:false
+- created loaded: on a page of the extension, `url:moz-extension://<other uuid>/options/options.html` status:complete discarded:false hidden:false
+- lazy at the resolve: `url:moz-extension://<other uuid>/options/options.html` status:complete discarded:true hidden:false
+- lazy activated: on a page of the extension, `url:moz-extension://<other uuid>/options/options.html` status:complete discarded:false hidden:false
+- page at the resolve: `url:about:blank` status:complete discarded:false hidden:false
+- page: the call resolved
+- page updated: on a page of the extension, `url:moz-extension://<other uuid>/options/options.html` status:complete discarded:false hidden:false
+
+### 51. A tab created on an https address of a host no server answers for keeps the address as its url, with status `complete` and the title "Problem loading page" — for a made-up top-level domain and for a reserved one alike (R30.01)
+
+§51 and §52 come from `round-30`, run in September 2026 with no other add-on installed (the two
+add-ons of round-28 were removed first, only the harness stayed). The addresses are
+`https://stg.addon/tab.html?tab=…` (`.addon` is a top-level domain nobody has registered) and
+`https://stg.invalid/tab.html?tab=…` (`.invalid` is reserved by RFC 6761 and can never be
+registered). No `webRequest` listener is armed. Either tab reaches `complete` about 100 ms after
+the create and reports the address as its url, with the title of the browser's error page.
+
+| tab index | 0 | 1 | 2 |
+| - | - | - | - |
+| before | x* | | |
+| `tabs.create({url: https://stg.addon/tab.html?tab=madeup})` — waited 2000 ms | | | |
+| madeup | x* | ➕madeup | |
+| `tabs.create({url: https://stg.invalid/tab.html?tab=reserved})` — waited 2000 ms | | | |
+| reserved | x* | ➕madeup | ➕reserved |
+
+```text
+   11ms  tabs.onUpdated        madeup  {status: loading}
+  113ms  tabs.onUpdated        madeup  {status: complete}
+  133ms  tabs.onUpdated        madeup  {status: complete, url: https://stg.addon/tab.html?tab=madeup}
+   12ms  tabs.onUpdated        reserved  {status: loading}
+   90ms  tabs.onUpdated        reserved  {status: complete}
+  124ms  tabs.onUpdated        reserved  {status: complete, url: https://stg.invalid/tab.html?tab=reserved}
+(6 tabs.onUpdated dropped, only these keys were kept: status/url)
+```
+
+- madeup after the wait: `url:https://stg.addon/tab.html?tab=madeup` status:complete discarded:false title:"Problem loading page"
+- reserved after the wait: `url:https://stg.invalid/tab.html?tab=reserved` status:complete discarded:false title:"Problem loading page"
+
+### 52. A blocking `onBeforeRequest` listener gets every load of such an address as a `GET` `main_frame` request of frame 0, and `originUrl` names who asked: the origin of the add-on for `tabs.create` and `tabs.update`, the page for `location.replace` from a page of the add-on, the web page for a script of a web page; `documentUrl` is absent; a redirect a listener makes to the address keeps the `requestId` and the `originUrl` of the first request (R30.02)
+
+The listener lets every request go, so every tab ends on the error page of §51 with the address
+as its url. The web page is `https://example.com/`; the script that sets `location.href` is put
+into it as a `<script>` element and runs as the page's own. The last case is a second listener
+that answers a request for `https://example.com/?hop=1` with `redirectUrl` to the address: the
+redirected request comes to the first listener with the same `requestId` (request 5 both times)
+and the same `originUrl`, the origin of the add-on that made the tab.
+
+| tab index | 0 | 1 | 2 | 3 | 4 | 5 |
+| - | - | - | - | - | - | - |
+| before | x* | y | | | | |
+| `tabs.create({url: https://stg.invalid/tab.html?tab=created})` — waited 2000 ms | | | | | | |
+| created | x* | y | ➕created | | | |
+| `tabs.update(y, {url: https://stg.invalid/tab.html?tab=y})` — waited 2000 ms | | | | | | |
+| y updated | x* | y | ➕created | | | |
+| `tabs.create({url: navigate.html?to=https://stg.invalid/tab.html?tab=replaced}  // the page of the add-on calls location.replace on load)` — waited 2000 ms | | | | | | |
+| replaced | x* | y | ➕created | ➕replaced | | |
+| `tabs.create({url: https://example.com/})` — waited 2000 ms | | | | | | |
+| web | x* | y | ➕created | ➕replaced | ➕web | |
+| `a script of the web page sets location.href = https://stg.invalid/tab.html?tab=web  // put into the page as a <script> element, it runs as the page's own` — waited 2000 ms | | | | | | |
+| web navigated | x* | y | ➕created | ➕replaced | ➕web | |
+| `tabs.create({url: https://example.com/?hop=1}  // a listener redirects this web address to the address)` — waited 2000 ms | | | | | | |
+| hop | x* | y | ➕created | ➕replaced | ➕web | ➕hop |
+
+```text
+    5ms  webRequest.onBeforeRequest  created  GET main_frame frame:0  https://stg.invalid/tab.html?tab=created  origin: a page of the add-on (/)  document: none  request 1
+    8ms  webRequest.onBeforeRequest  y  GET main_frame frame:0  https://stg.invalid/tab.html?tab=y  origin: a page of the add-on (/)  document: none  request 2
+   36ms  webRequest.onBeforeRequest  replaced  GET main_frame frame:0  https://stg.invalid/tab.html?tab=replaced  origin: a page of the add-on (/navigate.html)  document: none  request 3
+   27ms  webRequest.onBeforeRequest  web  GET main_frame frame:0  https://stg.invalid/tab.html?tab=web  origin: https://example.com/  document: none  request 4
+    8ms  webRequest.onBeforeRequest  hop  GET main_frame frame:0  https://example.com/?hop=1  origin: a page of the add-on (/)  document: none  request 5  -> redirectUrl: the address
+    9ms  webRequest.onBeforeRequest  hop  GET main_frame frame:0  https://stg.invalid/tab.html?tab=hop  origin: a page of the add-on (/)  document: none  request 5
+```
+
+"a page of the add-on (/)" is `moz-extension://<own uuid>/`, the origin of the add-on itself,
+the background page that called `tabs.create` and `tabs.update`.
+
+- web: a request of the page reached the listener
+- created after the wait: `url:https://stg.invalid/tab.html?tab=created` status:complete discarded:false title:"Problem loading page"
+- y after the wait: `url:https://stg.invalid/tab.html?tab=y` status:complete discarded:false title:"Problem loading page"
+- replaced after the wait: `url:https://stg.invalid/tab.html?tab=replaced` status:complete discarded:false title:"Problem loading page"
+- web after the wait: `url:https://stg.invalid/tab.html?tab=web` status:complete discarded:false title:"Problem loading page"
+- hop after the wait: `url:https://stg.invalid/tab.html?tab=hop` status:complete discarded:false title:"Problem loading page"
+
+### 53. `tabs.update({url, loadReplace: true})` on a discarded tab loads the new page in place: the tab stops being discarded at the resolve, where it reports `about:blank`, and is on the new page once settled; a hidden tab stays hidden, and a tab born discarded on a page of an unknown uuid is updated the same way (R27.15)
+
+§53 comes from `round-27`, run in October 2026. Five discarded tabs: one born discarded on a page
+of the add-on, one discarded after its load, one discarded and hidden, and two born discarded on
+`moz-extension://<unknown uuid>/tab.html` — the shape of a tab another install of an add-on left
+behind — one of them hidden. The browser lets a tab be born discarded on a page of an unknown
+uuid, and the tab reports that url while it is discarded. Each of the five is sent to another
+page of the add-on. Every call resolves, and the tab it resolves with is no longer discarded and
+reports `about:blank` with status `complete`. `tabs.onUpdated` delivers `{discarded: false}`
+first and the load of the new page after it; the tab is on the new page some 40 ms after the
+call, and 330 ms after it for the two tabs of the unknown uuid, whose load starts 300 ms after
+`{discarded: false}`. A tab discarded after its load reports its old page for a moment in
+between, `{status: complete, url: <the old page>}`. A hidden tab is loaded the same way and stays
+hidden. Activated afterwards, every tab is on the new page.
+
+| tab index | 0 | 1 | 2 | 3 | 4 | 5 |
+| - | - | - | - | - | - | - |
+| before | x* | | | | | |
+| `tabs.create({url: own page, discarded: true, title})` — settled 264 ms | | | | | | |
+| born | x* | ➕born | | | | |
+| `tabs.create({url: own page})` — settled 238 ms | | | | | | |
+| unloaded | x* | ➕born | ➕unloaded | | | |
+| `tabs.create({url: own page})` — settled 242 ms | | | | | | |
+| hidden | x* | ➕born | ➕unloaded | ➕hidden | | |
+| `tabs.discard([unloaded, hidden])` — settled 268 ms | | | | | | |
+| discarded | x* | ➕born | ➕unloaded | ➕hidden | | |
+| `tabs.create({url: moz-extension://<unknown uuid>/tab.html, discarded: true, title})` — settled 266 ms | | | | | | |
+| dead | x* | ➕born | ➕unloaded | ➕hidden | ➕dead | |
+| `tabs.create({url: moz-extension://<unknown uuid>/tab.html, discarded: true, title})` — settled 272 ms | | | | | | |
+| deadhidden | x* | ➕born | ➕unloaded | ➕hidden | ➕dead | ➕deadhidden |
+| `tabs.hide([hidden, deadhidden])` — settled 256 ms | | | | | | |
+| hidden 2 | x* | ➕born | ➕unloaded | ➕hidden(h) | ➕dead | ➕deadhidden(h) |
+| `tabs.update(born, {url: <another own page>, loadReplace: true})` — settled 245 ms | | | | | | |
+| born updated | x* | ➕born | ➕unloaded | ➕hidden(h) | ➕dead | ➕deadhidden(h) |
+| `tabs.update(unloaded, {url: <another own page>, loadReplace: true})` — settled 244 ms | | | | | | |
+| unloaded updated | x* | ➕born | ➕unloaded | ➕hidden(h) | ➕dead | ➕deadhidden(h) |
+| `tabs.update(hidden, {url: <another own page>, loadReplace: true})` — settled 241 ms | | | | | | |
+| hidden updated | x* | ➕born | ➕unloaded | ➕hidden(h) | ➕dead | ➕deadhidden(h) |
+| `tabs.update(dead, {url: <another own page>, loadReplace: true})` — settled 530 ms | | | | | | |
+| dead updated | x* | ➕born | ➕unloaded | ➕hidden(h) | ➕dead | ➕deadhidden(h) |
+| `tabs.update(deadhidden, {url: <another own page>, loadReplace: true})` — settled 774 ms | | | | | | |
+| deadhidden updated | x* | ➕born | ➕unloaded | ➕hidden(h) | ➕dead | ➕deadhidden(h) |
+| `tabs.show([hidden, deadhidden])` — settled 265 ms | | | | | | |
+| shown | x* | ➕born | ➕unloaded | ➕hidden | ➕dead | ➕deadhidden |
+| `tabs.update(born, {active: true})` — waited 2000 ms | | | | | | |
+| born activated | x | ➕born* | ➕unloaded | ➕hidden | ➕dead | ➕deadhidden |
+| `tabs.update(unloaded, {active: true})` — waited 2000 ms | | | | | | |
+| unloaded activated | x | ➕born | ➕unloaded* | ➕hidden | ➕dead | ➕deadhidden |
+| `tabs.update(hidden, {active: true})` — waited 2000 ms | | | | | | |
+| hidden activated | x | ➕born | ➕unloaded | ➕hidden* | ➕dead | ➕deadhidden |
+| `tabs.update(dead, {active: true})` — waited 2000 ms | | | | | | |
+| dead activated | x | ➕born | ➕unloaded | ➕hidden | ➕dead* | ➕deadhidden |
+| `tabs.update(deadhidden, {active: true})` — waited 2000 ms | | | | | | |
+| deadhidden activated | x | ➕born | ➕unloaded | ➕hidden | ➕dead | ➕deadhidden* |
+
+The events of the five updates, each clock starting at its own call:
+
+```text
+    2ms  tabs.onUpdated        born  {discarded: false}
+    8ms  tabs.onUpdated        born  {status: loading}
+   17ms  tabs.onUpdated        born  {status: loading, url: <own page>/navigate.html?tab=born}
+   36ms  tabs.onUpdated        born  {status: complete}
+    6ms  tabs.onUpdated        unloaded  {discarded: false}
+    8ms  tabs.onUpdated        unloaded  {status: complete, url: <own page>/tab.html?tab=unloaded}
+   11ms  tabs.onUpdated        unloaded  {status: loading}
+   18ms  tabs.onUpdated        unloaded  {status: loading, url: <own page>/navigate.html?tab=unloaded}
+   36ms  tabs.onUpdated        unloaded  {status: complete}
+    6ms  tabs.onUpdated        hidden  {discarded: false}
+   10ms  tabs.onUpdated        hidden  {status: complete, url: <own page>/tab.html?tab=hidden}
+   11ms  tabs.onUpdated        hidden  {status: loading}
+   21ms  tabs.onUpdated        hidden  {status: loading, url: <own page>/navigate.html?tab=hidden}
+   40ms  tabs.onUpdated        hidden  {status: complete}
+   12ms  tabs.onUpdated        dead  {discarded: false}
+  302ms  tabs.onUpdated        dead  {status: loading}
+  312ms  tabs.onUpdated        dead  {status: loading, url: <own page>/navigate.html?tab=dead}
+  330ms  tabs.onUpdated        dead  {status: complete}
+    8ms  tabs.onUpdated        deadhidden  {discarded: false}
+  314ms  tabs.onUpdated        deadhidden  {status: loading}
+  323ms  tabs.onUpdated        deadhidden  {status: loading, url: <own page>/navigate.html?tab=deadhidden}
+  338ms  tabs.onUpdated        deadhidden  {status: complete}
+```
+
+- born, unloaded, dead before the update: on the old page, status complete, discarded true, hidden false
+- hidden, deadhidden before the update: on the old page, status complete, discarded true, hidden true
+- born, unloaded, dead at the resolve: on about:blank, status complete, discarded false, hidden false
+- hidden, deadhidden at the resolve: on about:blank, status complete, discarded false, hidden true
+- born, unloaded, dead settled: on the new page, status complete, discarded false, hidden false
+- hidden, deadhidden settled: on the new page, status complete, discarded false, hidden true
+- all five activated: on the new page, status complete, discarded false, hidden false
+
+### 54. A `searchParams.set` or a `search` setter that takes the address over the length limit does not throw: one character over, the address is built all the same; far over, the address is left as it was, without the key, while `searchParams` of the same object still gives the value after `set`; the `URL` constructor throws from one character over (R20.08)
+
+§54 comes from `round-20`, run in October 2026. The address is built the way the add-on builds
+the address of its stub page: a page of the add-on with the url in the search key `url`. Three
+ways of building it — `new URL(page)` followed by `searchParams.set('url', value)`, the same
+followed by `url.search = <the serialized key>`, and `new URL(<the whole address>)` — against the
+address a plain string concatenation gives. None of the setters throws for any value. Up to the
+limit of §20 all three build the address. One character over it the two setters still build it,
+`href` is 1 048 573 characters long, and only the constructor throws. A hundred thousand
+characters over, both setters leave `href` as the bare page address, without the key; the list
+the object keeps says otherwise after `searchParams.set`, where `searchParams.get('url')` still
+gives the value, and agrees after the `search` setter, where it gives `null`. A value that is
+under the limit itself and goes over it only when serialized, a slash taking three characters,
+behaves like one that is over as it is. Where between one character and a hundred thousand the
+setters stop building the address was not measured.
+
+| the address asked for | `searchParams.set` | the `search` setter | the constructor |
+| - | - | - | - |
+| 1 066 chars, a value of 1 000 letters | the address asked for | the address asked for | the address asked for |
+| 1 048 572 chars, the limit | the address asked for | the address asked for | the address asked for |
+| 1 048 573 chars, one over | the address asked for | the address asked for | throws |
+| 1 148 572 chars, 100 000 over | the bare page address, no key in it; `searchParams.get('url')` gives the value | the bare page address, no key in it; `searchParams.get('url')` gives `null` | throws |
+| 1 148 574 chars, a value of 382 836 slashes | the bare page address, no key in it; `searchParams.get('url')` gives the value | the bare page address, no key in it; `searchParams.get('url')` gives `null` | throws |
+
+### 55. At the first line of a background that starts with the browser, `management.getAll()` already tells every enabled extension with its own origin, and twenty seconds of reads tell nothing else — in a start where the windows are already there (R28.13, with another add-on installed, the harness installed in the profile)
+
+§55 comes from `round-28`, run in October 2026 with the harness installed in the profile as an
+unsigned zip (`installType: normal`) next to one enabled add-on. A probe armed before the restart
+runs as the first import of the background script: it calls `management.getAll()` in the turn the
+module is evaluated in, then every 250 ms for 20 s, and keeps every read that tells something
+new. After the restart the background started once. Its first line ran when the background page
+was 110 ms old; the browser already had its two windows, `runtime.onStartup` came 8 ms later, and
+no `windows.onCreated` followed. The first read lists the harness and the other add-on enabled,
+each with its own origin among the host permissions, and none of the 75 reads over 19.9 s told
+anything else. This is a background started once the windows are there; a background that finds
+no normal window (private and popup windows do not count) attaches no listener: `init` of the
+add-on waits for `windows.onCreated` and reloads the add-on.
+
+| tab index | 0 |
+| - | - |
+| before restart | x* |
+| after restart | x* |
+
+- add-on starts while the test was suspended: 1; the harness now: installType normal
+- the first line ran when the background page was 110 ms old; windows at the first line: 2; runtime.onStartup: +8 ms; the first windows.onCreated: none
+- 75 read(s) of management.getAll() over 19918 ms, 1 of them told something new
+- the harness: at the first line (+1 ms) - enabled:true hostPermissions: lists its own origin
+- extension 1: at the first line (+1 ms) - enabled:true hostPermissions: lists its own origin
+
+### 56. `runtime.MessageSender` carries the id of the add-on for a page of the add-on and for its content script alike; `url` is the address of the page of the add-on for the first and the address of the web page for the second, and `envType` is `addon_child` against `content_child` — for a message and for a port alike (R31.01)
+
+§56 comes from `round-31`, run in October 2026. The senders are a page of the add-on in a tab and
+the content script the manifest declares for `https://example.org/*`, with `all_frames` and
+`match_about_blank`, in the main frame of the page and in a frame of the same address the script
+adds to it. Each calls `runtime.sendMessage` and opens a port with `runtime.connect`; the
+background reads the sender of the message and `port.sender`, and the two are the same for every
+sender. The keys are `contextId`, `documentId`, `envType`, `frameId`, `id`, `origin`, `tab` and
+`url`. `id` is the id of the add-on for all of them: it does not tell a page of the add-on from
+its content script. `url` does, and `envType` does. `frameId` is 0 for the page and for the main
+frame and another number for the frame. From the `about:blank` frame the script added to the page
+nothing arrived by either way; whether the script ran there at all, the run does not tell.
+
+| the sender | `id` | `url` | `tab` | `frameId` | `envType` |
+| - | - | - | - | - | - |
+| a page of the add-on in a tab | of the add-on | `moz-extension://<own uuid>/sender.html?tab=page` | page | 0 | `addon_child` |
+| the content script, main frame | of the add-on | `https://example.org/?tab=web` | web | 0 | `content_child` |
+| the content script, a frame of the same address | of the add-on | `https://example.org/?tab=web` | web | not 0 | `content_child` |
+| the content script, an `about:blank` frame | nothing arrived | | | | |
+
+| tab index | 0 | 1 | 2 |
+| - | - | - | - |
+| before | x* | | |
+| `tabs.create({url: sender.html})` — settled 245 ms | | | |
+| page | x* | ➕page | |
+| `tabs.create({url: https://example.org/})  // the content script adds a frame of the same site and an about:blank frame` — settled 1065 ms | | | |
+| web | x* | ➕page | ➕web |
+
+- web: status complete, title "Example Domain"
+
+### 57. `management.onUninstalled` and `onInstalled` reach a page of the add-on in a background tab and in a hidden tab the same way they reach the background: at the removal `management.getAll()` of every context no longer lists the add-on, right at the install the call is rejected in every context and 50 ms later lists the add-on enabled with its own origin (R28.14, with other add-ons installed)
+
+§57 comes from `round-28`, run in October 2026 in the profile prepared for it, the add-on the user
+acted on was "To Google Translate". The background and two copies of a page of the harness — one
+in a background tab and one whose tab is hidden once the page has loaded — with listeners on the
+management events; the user removes the add-on and installs it again. Every context gets both
+events, the page in the hidden tab like the others, and the reads of every context are the ones
+§49 recorded for the background: at `onUninstalled` the add-on is no longer in the list, at
+`onInstalled` `management.getAll()` is rejected with "An unexpected error occurred" and answers
+50 ms later, the add-on enabled with its own origin. A `setTimeout` of 50 ms took 50–51 ms in the
+background and 1005–1008 ms in the pages (§44).
+
+| tab index | 0 | 1 | 2 |
+| - | - | - | - |
+| before | x* | | |
+| `tabs.create({url: management.html})` — settled 242 ms | | | |
+| plain | x* | ➕plain | |
+| `tabs.create({url: management.html})` — settled 244 ms | | | |
+| hidden | x* | ➕plain | ➕hidden |
+| `tabs.hide(hidden)` — settled 265 ms | | | |
+| page hidden | x* | ➕plain | ➕hidden(h) |
+| `the user removes "To Google Translate"` | | | |
+| removed | x* | ➕plain | ➕hidden(h) |
+| `the user installs again "To Google Translate"` | | | |
+| installed again | x* | ➕plain | ➕hidden(h) |
+
+- removed, background: onUninstalled of extension 1, type extension - at the event (+0 ms): not in the list; 50 ms later (+50 ms): not in the list; 2000 ms after that (+2056 ms): not in the list; a setTimeout of 50 ms took 51 ms
+- removed, plain: onUninstalled of extension 1, type extension - at the event (+0 ms): not in the list; 50 ms later (+50 ms): not in the list; 2000 ms after that (+2055 ms): not in the list; a setTimeout of 50 ms took 1008 ms
+- removed, hidden: onUninstalled of extension 1, type extension - at the event (+0 ms): not in the list; 50 ms later (+50 ms): not in the list; 2000 ms after that (+2056 ms): not in the list; a setTimeout of 50 ms took 1007 ms
+- installed again, background: onInstalled of extension 1, type extension - at the event (+0 ms): getAll rejected - An unexpected error occurred; 50 ms later (+50 ms): enabled:true hostPermissions: lists its own origin; 2000 ms after that (+2070 ms): enabled:true hostPermissions: lists its own origin; a setTimeout of 50 ms took 50 ms
+- installed again, plain: onInstalled of extension 1, type extension - at the event (+0 ms): getAll rejected - An unexpected error occurred; 50 ms later (+50 ms): enabled:true hostPermissions: lists its own origin; 2000 ms after that (+2069 ms): enabled:true hostPermissions: lists its own origin; a setTimeout of 50 ms took 1005 ms
+- installed again, hidden: onInstalled of extension 1, type extension - at the event (+0 ms): getAll rejected - An unexpected error occurred; 50 ms later (+50 ms): enabled:true hostPermissions: lists its own origin; 2000 ms after that (+2069 ms): enabled:true hostPermissions: lists its own origin; a setTimeout of 50 ms took 1005 ms
+
 ---
 
 ## Conclusions for the add-on
@@ -1246,8 +1914,12 @@ navigation itself is not lost either way.
   becomes the flag instead (§30, the bullet below). `Tabs.create` opens
   `help/stg-unsupported-url.html` for them, and `help/dummy.html` with the real url handed over by
   message for what a page can navigate to itself: a `data:` url of a type from §18, of any
-  size (§22). No url of another scheme can be longer than the limit (§20, §22), so `data:`
-  is the only reason the handover exists. The stub pages need no background page, so they live in
+  size (§22). No url of another scheme can be longer than the limit (§20, §22), but the stub
+  address of such a url, with the url in its search key, can be: it is handed over the same way,
+  to the stub page without the key. `searchParams.set` gives no sign that the address has
+  outgrown the limit — one character over it builds the address all the same, far over it
+  leaves the bare page address behind (§54) — so the address is measured as a string, before a
+  `URL` object is asked to hold it. The stub pages need no background page, so they live in
   any container (§19).
 - **The container never depends on the url** (§17): `Tabs.getNewTabContainer` decides from
   `cookieStoreId` and the group's rules alone. Whether a tab may be destroyed and recreated is a
@@ -1260,12 +1932,15 @@ navigation itself is not lost either way.
   for the request. While it holds, the tab is still `about:blank` and can be read and written
   (§24). A redirect brings the handler back for every hop with the same `requestId` (§25).
 - **The active tab of a window that has just appeared is not loading yet** (§26): for the first
-  50–65 ms after `windows.onCreated` it is `about:blank` with status `complete`, so
-  `Tabs.fillEmptyUrl` replaces an empty url by the mirror's for a tab that is loading OR active,
-  never for a settled background tab. The mirror can only help where it knows more than the
-  live tab does: a snapshot older than the mirror (the group lists `runGrandRestoreNow` keeps
-  from its first read), or a tab whose request the add-on has seen (`onBeforeTabRequest` mirrors
-  the requested url on a catch). A newborn active tab is known to nobody but `tabsToRestore`:
+  50–65 ms after `windows.onCreated` it is `about:blank` with status `complete`, and a created
+  tab is the same for its first 9–10 ms (§23), so the browser's state gives no sign that a page
+  is on its way. The cache keeps that sign itself, as the requested url: the address the tab was
+  asked for (`Tabs.create`, `onBeforeTabRequest`), kept until the tab settles on a non-empty url
+  (status `complete`: a url read from a loading tab is not final, §28) or the browser announces
+  `complete` on an empty tab. `Tabs.fillEmptyUrl` replaces an empty url in a
+  snapshot by what the cache knows: the requested url, else the last reported one, for a
+  snapshot older than the mirror (the group lists `runGrandRestoreNow` keeps from its first
+  read). A newborn active tab is known to nobody but `tabsToRestore` until its request is seen:
   by the time STG reads the window, 1000 ms later, it holds its real url in every run here, and
   on a machine that has not started the load by then the tab is matched by an empty url and the
   saved links do not find it. A background tab of an undo-closed window needs nothing: it comes back
@@ -1285,22 +1960,64 @@ navigation itself is not lost either way.
   reads it too soon.
 - **A tab in reader mode is created by the flag, and kept by its own url** (§30, §31, §33):
   `about:reader?url=…` is refused by `tabs.create` and `tabs.update` alike, so `Tabs.create` turns
-  it into `{url: <the page>, openInReaderMode: true}` — for an http(s) page only, any other url
-  stays blank under the flag — and never discarded, the flag cannot be born discarded. The url the
+  it into `{url: <the page>, openInReaderMode: true}` — for an http(s) page only: any other url
+  stays blank under the flag, so a reader url over another page goes to the stub page whole —
+  and never discarded, the flag cannot be born discarded. The url the
   add-on holds for such a tab is the browser's own `about:reader?url=…`: it survives `tabs.discard`,
-  an undo-close and a restart unchanged, so `isSame` matches it as it is. Neither the reader page
-  nor a toggle is a `main_frame` request (§30, §32): `onBeforeTabRequest` never sees reader mode,
-  the mirror learns the reader url from `tabs.onUpdated`. A reader tab is born loading (§30) and
-  starts on `about:blank` like every created tab (§12); discarded there it reports `about:blank`
-  to every read until the user activates it (§35). `Groups.hideTabs` runs right after
-  `createMultiple`, so `Tabs.discard` skips a tab on `about:blank` — there is nothing to free in
-  it anyway — and such a tab stays loaded until the next unload of its group.
-- **The uuid ↔ id map rests on `hostPermissions`** (§34): `Extensions.getByUUID` finds the
-  extension whose `hostPermissions` name the uuid, the extension's own origin being listed there.
-  A `moz-extension://` url the browser cannot serve — an unknown uuid, an extension id in place of
-  it — is accepted by `tabs.create` and opens a blank tab that never loads, so such a url has to be
-  resolved by the add-on before the call.
+  an undo-close and a restart unchanged, so `isSame` matches it as it is. Neither a tab created
+  with the flag, nor `tabs.toggleReaderMode`, nor the reader button pressed by the user makes a
+  `main_frame` request (§30, §32, §40): `onBeforeTabRequest` sees none of them, the reader url
+  is requested by `Tabs.create` and confirmed by `tabs.onUpdated`. A reload of the page on leaving the reader view, which the
+  developer has seen under conditions not found yet (open question), reaches `onBeforeTabRequest`
+  as an ordinary load of the page url, and needs nothing of its own. A reader tab is born loading
+  (§30) and starts on `about:blank` like every created tab (§12); discarded there it reports
+  `about:blank` to every read until the user activates it (§35). `Groups.hideTabs` runs right
+  after `createMultiple`, so `Tabs.discard` skips an empty tab (`about:blank`, the New Tab page,
+  Firefox Home) — there is nothing worth freeing in it anyway — and such a tab stays loaded until
+  the next unload of its group.
+- **The uuid ↔ id map rests on `hostPermissions`, so it holds enabled extensions only** (§34,
+  §36): `extensions.js` maps every extension whose `hostPermissions` name its own origin, and
+  `Extensions.urlToId` / `urlToUUID` turn a page url from one form into the other. The map is
+  built at the first line of the module, and at a start of the browser every enabled extension
+  is already in the list there, once the windows are there (§55). A
+  `moz-extension://` url the browser cannot serve — an unknown uuid, an extension id in place of
+  it — is accepted by `tabs.create` and opens a blank tab that never loads, so `Tabs.create`
+  resolves such a url first: a page of an enabled extension by its uuid, a page of a disabled or
+  missing one by the stub page. The stub page looks at the extension again when it loads and
+  whenever the list of extensions changes — the management events reach a page in a tab, in a
+  container and in a hidden tab too, a removal and an install included (§44, §57) — and once the extension is enabled it sends its own
+  tab to the page with `tabs.update` (§39, §47): `location.replace` is denied there (§37).
+  `management.getAll()` called right at `onInstalled` rejects and answers 50 ms later (§49):
+  `load` in `extensions.js` waits that long after a rejection and reads the list again. A tab left
+  on a page of the add-on under another uuid is sent to the page of this install the same way
+  (`Tabs.restoreOldExtensionUrls`): `tabs.update` loads a discarded tab, and a hidden one stays
+  hidden (§53). What the browser does with the
+  tabs of an extension that goes away: the loaded tabs on a page that runs its code are closed,
+  visible and hidden alike, the discarded ones stay on the same url, and nothing comes back when
+  the extension returns (§48, §49). The uuid survives a disable and an enable (§48) and changes
+  with a removal and an install (§49): a discarded tab left behind then names a uuid no extension
+  has, and its id is known only to whoever remembered the pair while the extension was enabled.
+- **`originUrl` names who asked for a load** (§52): a blocking `onBeforeRequest` listener gets the
+  origin of the add-on for a load its `tabs.create` or `tabs.update` started, the page for a
+  navigation a page of the add-on makes itself, the web page for a script of a web page, and a
+  redirect keeps the `originUrl` of the first request. `onBeforeTabRequest` reads it to tell its
+  own loads from the loads another add-on started (`Extensions.getEnabledByUrl(originUrl)`): a
+  container add-on it does not fight with. A load of an address no server answers for reaches the
+  listener like any other, and the tab ends on the browser's error page with the address as its
+  url (§51).
+- **The id of a sender does not tell a page of the add-on from its content script, the url does**
+  (§56): both carry the id of the add-on, a page of the add-on carries its own
+  `moz-extension://` address in `url`, the content script the address of the web page it runs
+  in. `isStgSender` in `background.js` trusts a sender by its `id`, the content script included:
+  it sends only an `action` and a `groupId` from its own list, nothing a web page can shape.
 
 ## Open questions
 
-None. Add new facts and test results to the end of "Verified facts" under the next free number.
+- **Does the browser sometimes reload the page on leaving the reader view?** The developer has
+  seen it; the conditions are not known — a large page, a cache that ran out while the page was
+  read? R27.11 on Firefox 158 saw no `main_frame` request for either press (§40). Not
+  reproduced yet.
+- **What does a discarded tab left behind by a removed extension (§49) do when activated after the
+  extension is installed again with its new uuid?** Not measured.
+
+Add new facts and test results to the end of "Verified facts" under the next free number.

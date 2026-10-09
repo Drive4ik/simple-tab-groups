@@ -1139,6 +1139,10 @@
         "message": "复制链接",
         "description": "Copy URL"
     },
+    "openNestedUrl": {
+        "message": "打开嵌套链接",
+        "description": "Open nested URL"
+    },
     "helpPageStgDebugTitle": {
         "message": "STG 调试页",
         "description": "STG debug page"

@@ -343,10 +343,6 @@
         "message": "Ikonstil",
         "description": "Icon style"
     },
-    "tabsWithoutGroups": {
-        "message": "Flikar utan grupp",
-        "description": "Tabs without groups"
-    },
     "actionHiddenUnSyncTabsMoveAllTabsToCurrentGroup": {
         "message": "Flytta alla dessa flikar till nuvarande flikgrupp",
         "description": "Move all of these tabs into current group"
@@ -496,5 +492,13 @@
     "createNewGroupWhenOpenNewWindow": {
         "message": "Skapa en ny grupp då ett nytt fönster öppnas",
         "description": "Create a new group when opening a new window"
+    },
+    "tabsWithoutGroups": {
+        "message": "Flikar utan grupp",
+        "description": "Tabs without groups"
+    },
+    "openNestedUrl": {
+        "message": "Öppna inbäddad URL",
+        "description": "Open nested URL"
     }
 }

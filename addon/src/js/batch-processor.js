@@ -1,5 +1,3 @@
-import './polyfills.js';
-
 export default class BatchProcessor {
     #batches = new Map;
     #queue = new Set;

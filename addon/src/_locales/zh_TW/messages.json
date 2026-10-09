@@ -1139,6 +1139,10 @@
         "message": "複製網址",
         "description": "Copy URL"
     },
+    "openNestedUrl": {
+        "message": "開啟巢狀網址",
+        "description": "Open nested URL"
+    },
     "helpPageStgDebugTitle": {
         "message": "STG 除錯頁面",
         "description": "STG debug page"

@@ -49,7 +49,7 @@ import * as GroupsExternal from '/js/groups-external.js';
 import * as Operations from '/js/operations.js';
 import * as Tabs from '/js/tabs.js';
 import * as Windows from '/js/windows.js';
-import * as Extensions from '/js/extensions.js?auto-detect-conflicted';
+import * as Extensions from '/js/extensions.js';
 import * as Bookmarks from '/js/bookmarks.js';
 import * as Permissions from '/js/permissions.js';
 import * as BrowserSettings from '/js/browser-settings.js';
@@ -160,7 +160,7 @@ const onBeforeTabRequest = catchFunc(async function onBeforeTabRequest({
         return {};
     }
 
-    Cache.mirrorTabUrl(tabId, requestedUrl);
+    Cache.setTabRequestedUrl(tabId, requestedUrl);
 
     if (Containers.isTemporary(cookieStoreId)) {
         log.stop('exclude temporary container');
@@ -172,7 +172,7 @@ const onBeforeTabRequest = catchFunc(async function onBeforeTabRequest({
         return {cancel: true};
     }
 
-    if (originUrl.startsWith(Constants.STG_BASE_URL)) {
+    if (Extensions.isOwnUrl(originUrl)) {
         originUrl = 'stg://';
     }
 
@@ -214,8 +214,7 @@ const onBeforeTabRequest = catchFunc(async function onBeforeTabRequest({
             return {};
         }
 
-        // past the cache: the origin check wants the url the tab really shows, not the cache's
-        // one for a blank tab (fillEmptyUrl), and the object only goes to Cache.setTab
+        // past the cache: the origin check wants the url the tab really shows
         tab = await Tabs.get(tabId, {withSession: false});
 
         if (!tab) {
@@ -224,13 +223,8 @@ const onBeforeTabRequest = catchFunc(async function onBeforeTabRequest({
         }
 
         if (new URL(tab.url).origin !== new URL(requestedUrl).origin) {
-            tab.favIconUrl = null;
             Cache.removeTabThumbnail(tab.id);
         }
-
-        tab.url = requestedUrl;
-        tab.status = browser.tabs.TabStatus.COMPLETE;
-        Cache.setTab(tab);
 
         moveTabsBatch.add(tab.id, destGroup.id);
         log.stop('move tab from groupId:', tabGroup.id, 'to groupId:', destGroup.id);
@@ -249,7 +243,7 @@ const onBeforeTabRequest = catchFunc(async function onBeforeTabRequest({
         return {};
     }
 
-    const originExt = Extensions.getByUUID(Extensions.extractUUID(originUrl), true);
+    const originExt = Extensions.getEnabledByUrl(originUrl);
 
     function rememberFor(map, key, ms) {
         clearTimeout(map.get(key));
@@ -504,14 +498,14 @@ const INTERNAL_MODULES = {
 };
 
 function isStgSender(sender) {
-    return sender === self ||
-        sender.id === browser.runtime.id ||
-        sender.sender?.id === browser.runtime.id;
+    return sender === self || sender.id === browser.runtime.id;
 }
 
 self.onBackgroundMessage = onBackgroundMessage;
 
 async function onBackgroundMessage(message, sender) {
+    sender = sender.sender ?? sender; // a port carries its MessageSender inside
+
     const isSTGMessage = isStgSender(sender);
     const senderToLogs = isSTGMessage ? browser.runtime.id : sender;
 
@@ -591,74 +585,82 @@ async function onBackgroundMessage(message, sender) {
     );
 
     try {
-        const currentWindow = await Windows.getLastFocusedNormalWindow(false);
+        // null for a private or a popup window in focus: the actions bound to a window are refused, the rest work
+        const focusedWindow = await Windows.getFocusedNormalWindow({withSession: true});
 
-        if (!currentWindow) {
-            throw new Error('no windows found');
-        }
+        const getFocusedWindow = () => {
+            if (!focusedWindow) {
+                throw new Error('no normal window in focus');
+            }
+
+            return focusedWindow;
+        };
+
+        const getActiveTab = () => Tabs.getActive(getFocusedWindow().id);
 
         const {
             group: currentGroup,
             groups,
             groupsById,
             notArchivedGroups,
-        } = await Groups.load(currentWindow.groupId);
+        } = await Groups.load(focusedWindow?.groupId);
 
         if (data.windowId === browser.windows.WINDOW_ID_CURRENT) {
-            data.windowId = currentWindow.id;
+            data.windowId = getFocusedWindow().id;
         }
 
         log.log('check action, data:', data);
 
         switch (data.action) {
+            // groups
             case 'get-groups-list':
                 result.groupsList = groups.map(Groups.mapForExternalExtension);
                 result.ok = true;
                 break;
             case 'load-next-group':
-                result.ok = await Groups.applyByPosition('next', currentWindow.id, notArchivedGroups, currentGroup?.id);
+                result.ok = await Groups.applyByPosition('next', getFocusedWindow().id, notArchivedGroups, currentGroup?.id);
                 break;
             case 'load-prev-group':
-                result.ok = await Groups.applyByPosition('prev', currentWindow.id, notArchivedGroups, currentGroup?.id);
+                result.ok = await Groups.applyByPosition('prev', getFocusedWindow().id, notArchivedGroups, currentGroup?.id);
                 break;
             case 'load-next-unloaded-group':
                 {
                     const unloadedGroups = notArchivedGroups.filter(group => !Cache.getWindowId(group.id) || group.id === currentGroup?.id);
-                    result.ok = await Groups.applyByPosition('next', currentWindow.id, unloadedGroups, currentGroup?.id);
+                    result.ok = await Groups.applyByPosition('next', getFocusedWindow().id, unloadedGroups, currentGroup?.id);
                 }
                 break;
             case 'load-prev-unloaded-group':
                 {
                     const unloadedGroups = notArchivedGroups.filter(group => !Cache.getWindowId(group.id) || group.id === currentGroup?.id);
-                    result.ok = await Groups.applyByPosition('prev', currentWindow.id, unloadedGroups, currentGroup?.id);
+                    result.ok = await Groups.applyByPosition('prev', getFocusedWindow().id, unloadedGroups, currentGroup?.id);
                 }
                 break;
             case 'load-next-non-empty-group':
                 {
                     const {notArchivedGroups} = await Groups.load(null, true);
-                    result.ok = await Groups.applyByPosition('next', currentWindow.id, notArchivedGroups.filter(group => group.tabs.length), currentGroup?.id);
+                    result.ok = await Groups.applyByPosition('next', getFocusedWindow().id, notArchivedGroups.filter(group => group.tabs.length), currentGroup?.id);
                 }
                 break;
             case 'load-prev-non-empty-group':
                 {
                     const {notArchivedGroups} = await Groups.load(null, true);
-                    result.ok = await Groups.applyByPosition('prev', currentWindow.id, notArchivedGroups.filter(group => group.tabs.length), currentGroup?.id);
+                    result.ok = await Groups.applyByPosition('prev', getFocusedWindow().id, notArchivedGroups.filter(group => group.tabs.length), currentGroup?.id);
                 }
                 break;
             case 'load-history-next-group':
-                result.ok = await Groups.applyByHistory('next', currentWindow.id, notArchivedGroups);
+                result.ok = await Groups.applyByHistory('next', getFocusedWindow().id, notArchivedGroups);
                 break;
             case 'load-history-prev-group':
-                result.ok = await Groups.applyByHistory('prev', currentWindow.id, notArchivedGroups);
+                result.ok = await Groups.applyByHistory('prev', getFocusedWindow().id, notArchivedGroups);
                 break;
             case 'load-first-group':
                 if (notArchivedGroups.length) {
-                    result.ok = await Groups.apply(currentWindow.id, notArchivedGroups.shift().id);
+                    result.ok = await Groups.apply(getFocusedWindow().id, notArchivedGroups.shift().id);
                 }
                 break;
             case 'load-last-group':
                 if (notArchivedGroups.length) {
-                    result.ok = await Groups.apply(currentWindow.id, notArchivedGroups.pop().id);
+                    result.ok = await Groups.apply(getFocusedWindow().id, notArchivedGroups.pop().id);
                 }
                 break;
             case 'load-custom-group':
@@ -669,7 +671,7 @@ async function onBackgroundMessage(message, sender) {
                     }, sender);
 
                     if (ok) {
-                        result.ok = await Groups.apply(currentWindow.id, group.id);
+                        result.ok = await Groups.apply(getFocusedWindow().id, group.id);
                     }
                 } else if (data.groupId) {
                     let groupToLoad = groupsById.get(data.groupId);
@@ -689,7 +691,7 @@ async function onBackgroundMessage(message, sender) {
                                     result.error = 'Invalid window id';
                                 }
                             } else {
-                                result.ok = await Groups.apply(currentWindow.id, data.groupId, data.tabId);
+                                result.ok = await Groups.apply(getFocusedWindow().id, data.groupId, data.tabId);
                             }
                         }
                     } else {
@@ -697,7 +699,7 @@ async function onBackgroundMessage(message, sender) {
                         result = await onBackgroundMessage(data, sender);
                     }
                 } else {
-                    let activeTab = await Tabs.getActive();
+                    let activeTab = await getActiveTab();
 
                     if (Tabs.isCanSendMessage(activeTab)) {
                         Tabs.sendMessage(activeTab.id, {
@@ -732,7 +734,7 @@ async function onBackgroundMessage(message, sender) {
                     result.ok = true;
                     result.group = Groups.mapForExternalExtension(newGroup);
                 } else {
-                    const activeTab = await Tabs.getActive();
+                    const activeTab = await getActiveTab();
                     const {defaultGroupProps} = await Groups.getDefaults();
                     data.proposalTitle = Groups.createTitle(data.proposalTitle, null, defaultGroupProps);
 
@@ -778,7 +780,7 @@ async function onBackgroundMessage(message, sender) {
                     result.error = Lang('noGroupsAvailable');
                     Notification(result.error);
                 } else if (!data.groupId) {
-                    let activeTab = await Tabs.getActive();
+                    let activeTab = await getActiveTab();
 
                     if (Tabs.isCanSendMessage(activeTab)) {
                         Tabs.sendMessage(activeTab.id, {
@@ -804,7 +806,7 @@ async function onBackgroundMessage(message, sender) {
                     let groupToRename = groupsById.get(data.groupId);
 
                     if (groupToRename) {
-                        let activeTab = await Tabs.getActive();
+                        let activeTab = await getActiveTab();
 
                         if (Tabs.isCanSendMessage(activeTab)) {
                             let title = await Tabs.sendMessage(activeTab.id, {
@@ -853,14 +855,11 @@ async function onBackgroundMessage(message, sender) {
                 }
 
                 if (data.groupId) {
-                    const {
-                        group: groupToExport,
-                        groupIndex,
-                    } = await Groups.load(data.groupId, true);
+                    const {group: groupToExport} = await Groups.load(data.groupId, true);
 
                     if (groupToExport) {
                         await Browser.actionLoading();
-                        result.ok = await Bookmarks.exportGroup(groupToExport, groupIndex);
+                        result.ok = await Bookmarks.exportGroup(groupToExport);
                         await Browser.actionLoading(false);
 
                         if (data.showMessages) {
@@ -873,7 +872,7 @@ async function onBackgroundMessage(message, sender) {
                 }
 
                 if (!data.groupId) {
-                    let activeTab = await Tabs.getActive();
+                    let activeTab = await getActiveTab();
 
                     if (Tabs.isCanSendMessage(activeTab)) {
                         Tabs.sendMessage(activeTab.id, {
@@ -921,7 +920,7 @@ async function onBackgroundMessage(message, sender) {
                 if (currentGroup) {
                     await Groups.remove(currentGroup.id);
 
-                    if (!isSTGMessage && sender?.id) {
+                    if (!isSTGMessage) {
                         Notification([
                             'groupRemovedByExtension',
                             currentGroup.title,
@@ -961,7 +960,7 @@ async function onBackgroundMessage(message, sender) {
                 result.ok = true;
                 break;
             case 'move-selected-tabs-to-custom-group':
-                let activeTab = await Tabs.getActive(),
+                let activeTab = await getActiveTab(),
                     tabIds = await Tabs.getHighlightedIds(activeTab.windowId, undefined, null);
 
                 if (data.groupId === 'new') {
@@ -1023,7 +1022,7 @@ async function onBackgroundMessage(message, sender) {
                             result.ok = true;
                         }
                     } else {
-                        let activeTab = await Tabs.getActive();
+                        let activeTab = await getActiveTab();
 
                         if (Tabs.isCanSendMessage(activeTab)) {
                             Tabs.sendMessage(activeTab.id, {
@@ -1072,15 +1071,6 @@ async function onBackgroundMessage(message, sender) {
                 }
 
                 break;
-            case 'create-temp-tab':
-                await Tabs.create({
-                    active: data.active,
-                    cookieStoreId: Constants.TEMPORARY_CONTAINER,
-                }, {skipTrackingCreated: false});
-
-                result.ok = true;
-
-                break;
             case 'get-current-group':
                 if (Number.isSafeInteger(data.windowId) && data.windowId > 0) {
                     let group = groupsById.get(Cache.getWindowGroup(data.windowId));
@@ -1116,6 +1106,28 @@ async function onBackgroundMessage(message, sender) {
                 result.ok = true;
 
                 break;
+
+            // tabs
+            case 'get-active-tab':
+                {
+                    // a page in a tab asks about its own window; the popup and the sidebar live in a normal window in focus
+                    const windowId = sender.tab?.windowId ?? getFocusedWindow().id;
+
+                    result.tab = await Tabs.getActive(windowId) ?? null;
+                    result.ok = true;
+                }
+                break;
+            case 'create-temp-tab':
+                await Tabs.create({
+                    active: data.active,
+                    cookieStoreId: Constants.TEMPORARY_CONTAINER,
+                }, {skipTrackingCreated: false});
+
+                result.ok = true;
+
+                break;
+
+            // other actions
             case 'create-backup':
                 result.ok = await createBackup({
                     includeFavIconUrl: data.includeFavIconUrl === true,
@@ -1301,13 +1313,11 @@ async function createBackup(params = {}, isAutoBackup = false) {
     const pinnedTabs = await Tabs.query({pinned: true}, {withSession: false});
 
     if (pinnedTabs.length) {
-        Extensions.tabsToId(pinnedTabs);
         data.pinnedTabs = Tabs.prepareForSave(pinnedTabs, {includeOpener: false});
     }
 
     data.groups = groups.map(group => {
         if (!group.isArchive) {
-            Extensions.tabsToId(group.tabs);
             group.groupsNative = GroupsNative.referencedGroupsNative(group);
         }
 
@@ -1446,9 +1456,8 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
             }
         }
 
-        if (!newGroup.isArchive) {
-            Extensions.tabsToUUID(newGroup.tabs);
-        }
+        // another add-on's backup names extension pages the browser's way
+        newGroup.tabs.forEach(Tabs.tabUrlToAddon);
 
         for (const tab of newGroup.tabs) {
             if (Containers.isDefault(tab.cookieStoreId) || Containers.isTemporary(tab.cookieStoreId)) {
@@ -1508,15 +1517,12 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
     if (Array.isArray(data.pinnedTabs)) {
         const currentPinnedTabs = await Tabs.query({pinned: true}, {withSession: false});
 
-        Extensions.tabsToId(currentPinnedTabs);
-
-        data.pinnedTabs = data.pinnedTabs.filter(tab => {
+        data.pinnedTabs = data.pinnedTabs.map(Tabs.tabUrlToAddon).filter(tab => {
             tab.pinned = true;
             return !currentPinnedTabs.some(t => t.url === tab.url);
         });
 
         if (data.pinnedTabs.length) {
-            Extensions.tabsToUUID(data.pinnedTabs);
             await Tabs.createMultiple(data.pinnedTabs);
         }
     }
@@ -1831,6 +1837,17 @@ async function setActionToReloadAddon() {
 
     Listeners.browserAction.onClicked.add(() => browser.runtime.reload());
 }
+
+function showConflictedExtensions() {
+    if (Extensions.detectConflicted()) {
+        Windows.createPopup({
+            url: Constants.PAGES.HELP.CONFLICTED_EXTENSIONS,
+        });
+    }
+}
+
+Listeners.extension.onStart.add(showConflictedExtensions);
+Extensions.onChanged(showConflictedExtensions);
 
 Listeners.extension.onStart.add(async () => {
     await Browser.action({

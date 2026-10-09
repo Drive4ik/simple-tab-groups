@@ -466,8 +466,6 @@ export default {
                     let tabData = {},
                         tab = oldTab.entries.pop();
 
-                    tab.url = Utils.normalizeUrl(tab.url);
-
                     if (oldTab.pinned) {
                         data.pinnedTabs.push({
                             title: tab.title,
@@ -539,8 +537,6 @@ export default {
                     });
 
                     win.tabs.forEach(function({url, title, pinned, groupId}) {
-                        url = Utils.normalizeUrl(url);
-
                         if (pinned) {
                             data.pinnedTabs.push({url, title, pinned});
                         } else if (groups[groupId]) {
@@ -553,7 +549,7 @@ export default {
             } else if (panoramaOptions.file.version === 2) {
                 panoramaOptions.windows.forEach(function(win) {
                     win.tabGroups?.forEach(function({title, tabs}) {
-                        const groupTabs = tabs.map(({url, title}) => ({url: Utils.normalizeUrl(url), title}));
+                        const groupTabs = tabs.map(({url, title}) => ({url, title}));
 
                         if (groupTabs.length) {
                             data.groups.push({
@@ -564,7 +560,7 @@ export default {
                     });
 
                     win.pinnedTabs?.forEach(function({url, title}) {
-                        data.pinnedTabs.push({url: Utils.normalizeUrl(url), title});
+                        data.pinnedTabs.push({url, title});
                     });
                 });
             } else {
@@ -607,7 +603,7 @@ export default {
             };
 
             syncTabOptions.groups.forEach(function({title, tabs}) {
-                tabs = tabs.map(({url, title, favIconUrl, pinned}) => ({url: Utils.normalizeUrl(url), title, favIconUrl, pinned}));
+                tabs = tabs.map(({url, title, favIconUrl, pinned}) => ({url, title, favIconUrl, pinned}));
 
                 data.groups.push({
                     title,

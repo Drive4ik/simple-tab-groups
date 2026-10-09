@@ -720,8 +720,8 @@ that could not be created leaves its original where it is, with its links, and o
 transfer. The copy is born in place, in the original's window, at its slot (the copy of a live
 sub-group's first member one slot further, TABGROUPS-BEHAVIOR.md §7), with whatever the caller
 builds for it: the transfer builds it with no binding at all — no group, no native sub-group,
-nothing of the original's session but its icon, its thumbnail and the url the mirror knows for a
-tab still loading its first page (`Tabs.fillEmptyUrl`); a container reopen (`onBeforeTabRequest`,
+nothing of the original's session but its icon, its thumbnail and the url the tab was asked for
+while it still reports none (`Tabs.fillEmptyUrl`); a container reopen (`onBeforeTabRequest`,
 the temporary-container menu item) keeps the original's group and sub-group, and the copy of a
 hidden tab, or of an unloaded group's tab, is hidden. So the links `recreate` writes never cross a window, and a
 transfer to another window is the move's business, once the copy exists; the group and the

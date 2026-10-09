@@ -393,10 +393,6 @@
         "message": "Απόρριψη των tabs μετά την απόκρυψη (εξοικονόμηση μνήμης)",
         "description": "Unload tabs from memory after closing a group"
     },
-    "tabsWithoutGroups": {
-        "message": "Καρτέλες χωρίς ομάδες",
-        "description": "Tabs without groups"
-    },
     "actionHiddenUnSyncTabsMoveAllTabsToCurrentGroup": {
         "message": "Μετακινείστε όλα αυτά τα tabs στο τρέχον group",
         "description": "Move all of these tabs into current group"
@@ -551,6 +547,10 @@
         "message": "Δημιουργία νέου group όταν ανοίγει νέο παράθυρο",
         "description": "Create a new group when opening a new window"
     },
+    "tabsWithoutGroups": {
+        "message": "Καρτέλες χωρίς ομάδες",
+        "description": "Tabs without groups"
+    },
     "colorScheme": {
         "message": "Θέμα",
         "description": "Select theme"
@@ -570,5 +570,9 @@
     "group": {
         "message": "Group",
         "description": "Group"
+    },
+    "openNestedUrl": {
+        "message": "Άνοιγμα ενσωματωμένου URL",
+        "description": "Open nested URL"
     }
 }

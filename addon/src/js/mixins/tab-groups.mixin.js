@@ -4,6 +4,7 @@ import Vue from '/js/vue.runtime.esm.js';
 import '/js/prefixed-storage.js';
 import * as Constants from '/js/constants.js';
 import * as Containers from '/js/containers.js';
+import * as Extensions from '/js/extensions.js';
 import * as Tabs from '/js/tabs.js';
 import * as Groups from '/js/groups.js';
 import * as Utils from '/js/utils.js';
@@ -299,7 +300,7 @@ export default {
                 tab.thumbnail ??= null;
             }
 
-            if (!isArchive && tab.url === window.location.href) {
+            if (!isArchive && tab.url === Extensions.urlToId(window.location.href)) {
                 tab.status = browser.tabs.TabStatus.COMPLETE;
             }
 

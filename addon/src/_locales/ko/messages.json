@@ -1014,5 +1014,9 @@
     "group": {
         "message": "그룹",
         "description": "Group"
+    },
+    "openNestedUrl": {
+        "message": "중첩된 URL 열기",
+        "description": "Open nested URL"
     }
 }

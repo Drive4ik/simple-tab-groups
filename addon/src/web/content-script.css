@@ -4,17 +4,15 @@
     * {
         margin: unset;
         padding: unset;
-        border-radius: unset;
         background-color: unset;
-        box-shadow: unset;
     }
 
     &::backdrop {
         background-color: rgba(0, 0, 0, 0.5);
     }
 
-    --indent: .75rem;
-    --indent-small: .4rem;
+    --indent: 12px;
+    --indent-small: 6px;
     --border-radius: 5px;
     --font-family: system-ui, sans-serif;
     --font-size: 15px;
@@ -23,14 +21,11 @@
     font-size: var(--font-size);
     font-weight: var(--font-weight);
     user-select: none;
-    z-index: 2147483647;
     background-color: transparent;
     padding: 0;
     margin: auto;
     border: 0;
-    transform: none !important;
-    opacity: 1 !important;
-    visibility: visible !important;
+    visibility: visible;
     outline: none;
 
     color-scheme: light;
@@ -45,17 +40,17 @@
     --background-focus-color: light-dark(hsl(0, 0%, 85%), hsl(0, 0%, 40%));
 
     .stg-has-text {
-        color: var(--text-color) !important;
-        font-family: var(--font-family) !important;
-        font-size: var(--font-size) !important;
-        font-weight: var(--font-weight) !important;
-        line-height: calc(var(--font-size) * 1.5) !important;
+        color: var(--text-color);
+        font-family: var(--font-family);
+        font-size: var(--font-size);
+        font-weight: var(--font-weight);
+        line-height: calc(var(--font-size) * 1.5);
         overflow: hidden;
         text-overflow: ellipsis;
     }
 
     .stg-main {
-        background-color: var(--background-color) !important;
+        background-color: var(--background-color);
         border-radius: var(--border-radius);
         padding: var(--indent);
         min-width: 600px;
@@ -78,6 +73,7 @@
 
             .stg-group {
                 display: flex;
+                appearance: none; /* a user-origin sheet does not switch the native look of a button off by itself */
                 align-items: center;
                 gap: var(--indent);
                 min-height: calc(var(--font-size) * 2);
@@ -87,12 +83,11 @@
                 outline: none;
                 overflow: hidden;
                 border: 0;
-                transition: none;
 
                 &:not([disabled]):hover,
                 &:not([disabled]):focus {
-                    color: var(--text-focus-color) !important;
-                    background-color: var(--background-focus-color) !important;
+                    color: var(--text-focus-color);
+                    background-color: var(--background-focus-color);
                 }
 
                 &[disabled] {
@@ -114,7 +109,14 @@
                         height: var(--image-size);
                         min-width: var(--image-size);
                         min-height: var(--image-size);
-                        position: relative !important;
+                    }
+
+                    &.stg-icon-archive {
+                        background: url(/icons/archive.svg) center / contain no-repeat;
+                    }
+
+                    &.stg-icon-group-new {
+                        background: url(/icons/group-new.svg) center / contain no-repeat;
                     }
                 }
 
@@ -123,8 +125,8 @@
                     position: absolute;
                     top: -5px;
                     right: -5px;
-                    font-size: 10px !important;
-                    line-height: 1 !important;
+                    font-size: 10px;
+                    line-height: 1;
                 }
             }
         }

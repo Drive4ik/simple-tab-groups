@@ -3,6 +3,20 @@ import {Test} from './test.js';
 export const GRANT_URL = browser.runtime.getURL('grant.html');
 export const BOOKMARKS = {permissions: ['bookmarks']};
 
+// the optional bookmarks permission for a test of any class: asked for on the grant page when it
+// is missing, the page is closed after the answer
+export async function requireBookmarks(t) {
+    if (!await browser.permissions.contains(BOOKMARKS)) {
+        const tab = await browser.tabs.create({url: GRANT_URL, active: true});
+
+        await t.ask('A grant page opened. Click "Grant bookmarks permission" and ALLOW the prompt. Then T.visualAnswer("granted")');
+        await browser.tabs.remove(tab.id).catch(() => {});
+    }
+
+    t.require('bookmarks permission granted', await browser.permissions.contains(BOOKMARKS));
+    t.require('browser.bookmarks is present', Boolean(browser.bookmarks), 'the API did not appear after the grant: reload the add-on in about:debugging and run the test again');
+}
+
 export class MenusTest extends Test {
     constructor(options) {
         super(options);

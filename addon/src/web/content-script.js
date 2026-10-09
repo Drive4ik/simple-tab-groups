@@ -3,8 +3,10 @@ import {isValidHotkeyEvent, eventToHotkeyValue, NOT_SUPPORTED_CODE_KEYS} from '.
 
 const POPUP_ID = 'stg-select-group-dialog';
 const isMainFrame = window.top === window;
+const isOwnPage = location.protocol === 'moz-extension:';
 const hotkeys = [];
 let foundHotKey = false;
+let popupHost = null; // the <div> whose closed shadow root holds the dialog while it is open
 
 browser.runtime.onMessage.addListener(onMessageListener);
 loadHotkeys();
@@ -70,7 +72,7 @@ function resetFoundHotKey() {
 }
 
 function checkKey(event) {
-    if (foundHotKey || !hotkeys.length || event.repeat) {
+    if (!event.isTrusted || event.repeat || foundHotKey || !hotkeys.length) {
         return;
     }
 
@@ -78,7 +80,7 @@ function checkKey(event) {
         return;
     }
 
-    if (document.getElementById(POPUP_ID)) {
+    if (popupHost?.isConnected) {
         return;
     }
 
@@ -96,7 +98,10 @@ function checkKey(event) {
     foundHotKey = true;
     stopEvent(event);
 
-    sendMessageToBackground(hotkey);
+    sendMessageToBackground({
+        action: hotkey.action,
+        groupId: hotkey.groupId,
+    });
 }
 
 function stopEvent(e) {
@@ -137,16 +142,20 @@ function setNextFocus(node, vector = 'down', filterFunc = n => !n.disabled) {
 }
 
 function showGroupsPopup(data) {
-    if (document.getElementById(POPUP_ID)) {
+    if (popupHost?.isConnected) {
         return;
     }
 
     const activeElement = document.activeElement;
 
+    const host = document.createElement('div');
+    const shadow = isOwnPage ? null : host.attachShadow({mode: 'closed'}); // a web page sees an empty <div>, not the groups; an own page styles the dialog by its <link>
+    const root = shadow ?? document;
     const dialog = document.createElement('dialog');
 
     function closeGroupsPopup() {
-        dialog.remove();
+        host.remove();
+        popupHost = null;
         activeElement?.focus();
     }
 
@@ -164,7 +173,7 @@ function showGroupsPopup(data) {
     dialog.addEventListener('keydown', e => {
         e.stopPropagation();
 
-        const activeGroup = [...groups.children].find(node => node === document.activeElement);
+        const activeGroup = [...groups.children].find(node => node === root.activeElement);
 
         if (['PageUp', 'Home'].includes(e.code)) {
             stopEvent(e);
@@ -200,7 +209,7 @@ function showGroupsPopup(data) {
     groups.classList = 'stg-groups';
     groups.setAttribute('role', 'list');
     groups.addEventListener('mouseover', () => {
-        if (document.activeElement !== dialog && groups.contains(document.activeElement)) {
+        if (root.activeElement !== dialog && groups.contains(root.activeElement)) {
             dialog.focus();
         }
     }, {passive: true});
@@ -214,7 +223,11 @@ function showGroupsPopup(data) {
         groupNode.autofocus = group.id === data.focusedGroupId;
 
         if (!isDisabled) {
-            groupNode.addEventListener('click', () => {
+            groupNode.addEventListener('click', event => {
+                if (!event.isTrusted) {
+                    return;
+                }
+
                 sendMessageToBackground({
                     action: data.popupAction,
                     groupId: group.id,
@@ -232,13 +245,18 @@ function showGroupsPopup(data) {
         }
         groupNode.setAttribute('aria-label', ariaLabelParts.join(', '));
 
-        const imgNode = document.createElement('img');
-        imgNode.src = group.iconUrl.startsWith('/icons') ? browser.runtime.getURL(group.iconUrl) : group.iconUrl;
-        imgNode.alt = group.title;
-
         const figureNode = document.createElement('figure');
         figureNode.classList.toggle('stg-group-sticky', group.isSticky);
-        figureNode.append(imgNode);
+
+        if (group.iconUrl) {
+            const imgNode = document.createElement('img');
+            imgNode.src = group.iconUrl;
+            imgNode.alt = group.title;
+            figureNode.append(imgNode);
+        } else {
+            figureNode.classList.add(`stg-icon-${group.icon}`); // an icon of the addon comes by the stylesheet, not by an <img> with the uuid
+        }
+
         groupNode.append(figureNode);
 
         if (group.contextualIdentity?.iconUrl) {
@@ -250,13 +268,10 @@ function showGroupsPopup(data) {
         }
 
         if (group.isArchive) {
-            const archiveImgNode = document.createElement('img');
-            archiveImgNode.alt = browser.i18n.getMessage('archiveGroup');
-            archiveImgNode.src = browser.runtime.getURL('/icons/archive.svg');
-
             const archiveFigureNode = document.createElement('figure');
+            archiveFigureNode.classList = 'stg-icon-archive';
             archiveFigureNode.title = browser.i18n.getMessage('archiveGroup');
-            archiveFigureNode.append(archiveImgNode);
+            archiveFigureNode.setAttribute('role', 'img');
             groupNode.append(archiveFigureNode);
         }
 
@@ -277,17 +292,19 @@ function showGroupsPopup(data) {
         const newGroupNode = createGroupNode({
             id: 'new',
             title: browser.i18n.getMessage('createNewGroup'),
-            iconUrl: browser.runtime.getURL('/icons/group-new.svg'),
+            icon: 'group-new',
         });
 
         groups.append(newGroupNode);
     }
 
-    getBody().append(dialog);
+    (shadow ?? host).append(dialog);
+    getBody().append(host);
+    popupHost = host;
     dialog.showModal();
 
     if (!data.focusedGroupId) {
-        const hoveredElements = document.querySelectorAll(':hover');
+        const hoveredElements = root.querySelectorAll(':hover');
 
         if (groups.contains(hoveredElements[hoveredElements.length - 1])) {
             dialog.focus();

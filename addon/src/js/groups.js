@@ -64,7 +64,7 @@ export function apply(...args) {
 async function applyNow(windowId, groupId, activeTabId, applyFromHistory = false) {
     const log = logger.start(apply, 'groupId:', groupId, 'windowId:', windowId, 'activeTabId:', activeTabId);
 
-    windowId ||= await Windows.getLastFocusedNormalWindow();
+    windowId ??= (await Windows.getFocusedNormalWindow())?.id;
 
     if (!windowId) {
         log.stopError('no window was found for apply');
@@ -229,7 +229,7 @@ async function applyNow(windowId, groupId, activeTabId, applyFromHistory = false
                     await hideTabs(groupToHide, [activeTabGroupToHide]);
                 }
 
-                groupToHide.tabs.forEach(tab => tab.url.startsWith(Constants.PAGES.MANAGE) && tabsIdsToRemove.add(tab.id));
+                groupToHide.tabs.forEach(tab => tab.url.startsWith(Extensions.urlToId(Constants.PAGES.MANAGE)) && tabsIdsToRemove.add(tab.id));
             }
 
             await Tabs.remove(Array.from(tabsIdsToRemove));
@@ -820,8 +820,8 @@ async function updateNow(groupId, updateData) {
 
     if (updateDataKeys.has('exportToBookmarks')) {
         if (updateData.exportToBookmarks) {
-            const {group: groupToExport, groupIndex} = await load(group.id, true);
-            await Bookmarks.exportGroup(groupToExport, groupIndex).catch(log.onCatch('cant update bookmark', false));
+            const {group: groupToExport} = await load(group.id, true);
+            await Bookmarks.exportGroup(groupToExport).catch(log.onCatch('cant update bookmark', false));
         } else {
             await Bookmarks.removeGroup(group).catch(log.onCatch('cant remove bookmark', false));
         }
@@ -1044,15 +1044,11 @@ async function archiveToggleNow(groupId) {
         if (group.isArchive) {
             group.isArchive = false;
 
-            Extensions.tabsToUUID(group.tabs);
-
             savedTabs = group.tabs;
             creation = await Tabs.createMultiple(setNewTabsParams(savedTabs, group), {hideUnloaded: false});
 
             group.tabs = [];
         } else {
-            Extensions.tabsToId(group.tabs);
-
             tabsToRemove = group.tabs;
 
             group.isArchive = true;

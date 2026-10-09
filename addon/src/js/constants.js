@@ -1,6 +1,7 @@
 
 export const MANIFEST = Object.freeze(browser.runtime.getManifest());
 export const STG_BASE_URL = browser.runtime.getURL('');
+export const NESTED_URL_KEYS = Object.freeze(['url', 'u', 'go']); // search keys in which pages of other add-ons keep a url
 export const BROWSER = await browser.runtime.getBrowserInfo();
 export const PLATFORM = await browser.runtime.getPlatformInfo();
 
@@ -16,7 +17,7 @@ export const DEBUG = Object.freeze({
 });
 
 export const MAX_URL_LENGTH = 1048572; // bytes of the serialized url, all ASCII, so also its characters: the last length accepted for the stub page shape, docs/CREATE-TABS-BEHAVIOR.md §20
-export const READER_MODE_PROTOCOL = 'about:reader'; // a tab in reader mode holds about:reader?url=<the page, encoded>; tabs.create refuses that url and takes openInReaderMode instead, docs/CREATE-TABS-BEHAVIOR.md §16, §30
+export const READER_MODE_PAGE = 'about:reader'; // a tab in reader mode holds about:reader?url=<the page, encoded>; tabs.create refuses that url and takes openInReaderMode instead, docs/CREATE-TABS-BEHAVIOR.md §16, §30
 
 export const ACTIVE_SYMBOL = '〇';
 export const DISCARDED_SYMBOL = '✱';
@@ -51,30 +52,26 @@ export const INTERVAL_KEY = Object.freeze({
     days: 'days',
 });
 
-export const STG_HELP_PAGES = Object.freeze([
-    'welcome',
-    'extensions-that-conflict-with-stg',
-    'open-in-container',
-    'how-to-github-gist',
-    'stg-unsupported-url',
-    'stg-debug',
-    'db-error-reinstall',
-]);
+// every html page of the addon; isHelp - Tabs.restoreOldExtensionUrls, isWrapper - Extensions.isWrapperUrl
+const PAGES_CONFIG = Object.freeze({
+    'popup/popup.html': {key: 'POPUP'},
+    'manage/manage.html': {key: 'MANAGE'},
+    'options/options.html': {key: 'SETTINGS'},
+    'help/welcome.html': {key: 'HELP.WELCOME', isHelp: true},
+    'help/extensions-that-conflict-with-stg.html': {key: 'HELP.CONFLICTED_EXTENSIONS', isHelp: true},
+    'help/open-in-container.html': {key: 'HELP.OPEN_IN_CONTAINER', isHelp: true, isWrapper: true},
+    'help/how-to-github-gist.html': {key: 'HELP.HOWTO_GITHUB_GIST', isHelp: true},
+    'help/stg-unsupported-url.html': {key: 'HELP.UNSUPPORTED_URL', isHelp: true, isWrapper: true},
+    'help/dummy.html': {key: 'HELP.DUMMY'},
+    'help/stg-debug.html': {key: 'HELP.DEBUG', isHelp: true},
+    'help/db-error-reinstall.html': {key: 'HELP.REINSTALL', isHelp: true},
+});
 
-export const PAGES = Object.freeze({
-    POPUP: browser.runtime.getURL('popup/popup.html'),
-    MANAGE: browser.runtime.getURL('manage/manage.html'),
-    SETTINGS: browser.runtime.getURL('options/options.html'),
-    HELP: {
-        WELCOME: browser.runtime.getURL('help/welcome.html'),
-        CONFLICTED_EXTENSIONS: browser.runtime.getURL('help/extensions-that-conflict-with-stg.html'),
-        OPEN_IN_CONTAINER: browser.runtime.getURL('help/open-in-container.html'),
-        HOWTO_GITHUB_GIST: browser.runtime.getURL('help/how-to-github-gist.html'),
-        UNSUPPORTED_URL: browser.runtime.getURL('help/stg-unsupported-url.html'),
-        DUMMY: browser.runtime.getURL('help/dummy.html'),
-        DEBUG: browser.runtime.getURL('help/stg-debug.html'),
-        REINSTALL: browser.runtime.getURL('help/db-error-reinstall.html'),
-    },
+const PAGE_PATHS = Object.keys(PAGES_CONFIG);
+
+export const PAGES = {
+    HELP_PATHS: Object.freeze(PAGE_PATHS.filter(path => PAGES_CONFIG[path].isHelp)),
+    WRAPPER_PATHS: Object.freeze(PAGE_PATHS.filter(path => PAGES_CONFIG[path].isWrapper)),
     DOC: {
         UNSUPPORTED_URL: 'https://developer.mozilla.org/docs/Mozilla/Add-ons/WebExtensions/Content_scripts',
     },
@@ -84,7 +81,21 @@ export const PAGES = Object.freeze({
         return location.href.startsWith(PAGES.MANAGE);
     },
     isOptions: location.href.startsWith(MANIFEST.options_ui.page),
-});
+};
+
+for (const path of PAGE_PATHS) {
+    const names = PAGES_CONFIG[path].key.split('.');
+    const name = names.pop();
+    const branch = names.reduce((parent, branchName) => parent[branchName] ??= {}, PAGES);
+
+    if (Object.hasOwn(branch, name)) {
+        throw new Error(`PAGES_CONFIG: the key "${PAGES_CONFIG[path].key}" is taken`);
+    }
+
+    branch[name] = browser.runtime.getURL(path);
+}
+
+Object.freeze(PAGES);
 
 // permission "<all_urls>" need for tab thumbnails and webRequestBlocking
 export const PERMISSIONS = Object.freeze({

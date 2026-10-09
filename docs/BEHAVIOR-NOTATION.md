@@ -147,10 +147,14 @@ test that breaks one of them produces a table that looks like a fact and is not 
 **Environment.** A clean profile, no other add-ons, `test-addon/` loaded through about:debugging
 with the permissions its manifest lists (`tabs`, `tabGroups`, `tabHide`, `sessions`, `storage`,
 `browserSettings`, `menus`, `cookies`, `contextualIdentities`, `webRequest`, `webRequestBlocking`,
+`management`, which reads the add-ons of a profile prepared for a test about them,
 the `<all_urls>` host permission, which covers the `example.com` page an injected script asks for
 the microphone on and lets a `webRequest` listener see every main-frame load, and the optional
-`bookmarks` permission, granted by hand where a test asks for it). Progress goes to `console.debug`; the report itself opens in a tab at the end
-of the run.
+`bookmarks` permission, granted by hand where a test asks for it). The manifest also declares a
+content script for `https://example.org/*`, the page the round about message senders opens. A
+test about the start of the browser is the exception to the temporary load: it needs the add-on
+installed in the profile, a temporary one is gone at the restart. Progress goes to
+`console.debug`; the report itself opens in a tab at the end of the run.
 
 **Isolation.** One test = one window it opens itself = one table. Tests never share a window and
 never depend on the order they ran in. Cleanliness is the harness's job, not the test's: when a
@@ -202,9 +206,11 @@ Facts about the extension's own lifecycle — `runtime.onInstalled`, updates, en
 uninstall, what each storage survives — cannot be produced by `test-addon/`: the addon under test
 is killed by the very actions being measured. They come from a throwaway stand of two addons (the
 addon under test plus a log collector) that lives outside the repo and is rebuilt from its
-description when a fact is disputed. The exception is browser shutdown: the quit kills the addon
-too, but the evidence lands in its storage and is read back after the restart, so those facts
-come from the regular harness with the usual `R` markers (LIFECYCLE-BEHAVIOR.md §8).
+description when a fact is disputed. The exception is browser shutdown and browser start: the
+quit kills the addon too, but the evidence lands in its storage and is read back after the
+restart, and a harness installed in the profile starts with the browser and records its own first
+moments the same way, so those facts come from the regular harness with the usual `R` markers
+(LIFECYCLE-BEHAVIOR.md §8, CREATE-TABS-BEHAVIOR.md §55).
 
 Their document keeps the same rules as the rest (§5), with these deviations:
 

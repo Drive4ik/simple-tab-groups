@@ -186,9 +186,9 @@ export default {
                 }
             }
 
-            Messages.sendMessageModule('Tabs.getActive')
-                .then(currentTab => {
-                    const url = Tabs.getPageUrl(currentTab?.url);
+            Messages.sendMessage('get-active-tab')
+                .then(result => {
+                    const url = Tabs.getPageUrl(result.tab?.url);
 
                     if (url?.startsWith('http')) {
                         this.currentTabUrl = new URL(url);

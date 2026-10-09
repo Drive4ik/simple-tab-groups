@@ -184,19 +184,19 @@ export async function openInTemporaryContainer(info) {
     log.stop();
 }
 
-export async function openInGroup(groupId, info) {
+export async function openInGroup(groupId, info, tab) {
     const log = logger.start(openInGroup, groupId, info);
 
     const newTab = await Tabs.add(groupId, undefined, info.linkUrl, info.linkText);
 
     if (info.button.RIGHT) {
-        await Groups.apply(newTab.windowId, groupId, newTab.id);
+        await Groups.apply(tab?.windowId, groupId, newTab.id); // the window of the click; a link in the sidebar has no tab, then the window in focus
     }
 
     log.stop();
 }
 
-export async function createNewGroup(info) {
+export async function createNewGroup(info, tab) {
     const log = logger.start(createNewGroup, info);
 
     let {ok, group, error} = await self.onBackgroundMessage({
@@ -214,7 +214,7 @@ export async function createNewGroup(info) {
         const newTab = await Tabs.add(group.id, undefined, info.linkUrl, info.linkText);
 
         if (info.button.RIGHT) {
-            await Groups.apply(undefined, group.id, newTab.id);
+            await Groups.apply(tab?.windowId, group.id, newTab.id);
         }
     }
 

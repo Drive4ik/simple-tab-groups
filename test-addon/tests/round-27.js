@@ -1,4 +1,4 @@
-import {NETWORK_URL, READER_URL, POLL_WAIT, TIGHT_POLL_WAIT, LOAD_WAIT} from '../constants.js';
+import {NETWORK_URL, READER_URL, NAVIGATE_URL, POLL_WAIT, TIGHT_POLL_WAIT, LOAD_WAIT} from '../constants.js';
 import {wait} from '../test.js';
 import {sceneUrl, nameFromUrl, openedWindows, withContainer} from '../tabs.js';
 import * as Sessions from '../sessions.js';
@@ -16,13 +16,30 @@ reader mode, with the urls a webRequest main_frame listener and tabs.onUpdated d
 a reader tab brought back by sessions.restore (R27.08) and by a browser restart (R27.09, stops
 and asks for it); management.getSelf().hostPermissions against the extension's own origin, and
 tabs.create with a moz-extension url of an unknown uuid and of an extension id (R27.10); R27.11
-is MANUAL - the reader-mode button (F9) pressed by hand, with the same listeners armed; reader
-tabs hidden and discarded right after their creation, before and after the reader url has
-committed, the shape of Groups.settleTabs on an unloaded group (R27.12).
-The expectations are the facts of CREATE-TABS-BEHAVIOR.md 30-35. Needs the network: the article
-is a real page.`;
+is MANUAL - the reader-mode button (F9) pressed by hand, to enter the reader view and to leave
+it, with the same listeners armed; reader tabs hidden and discarded right after their creation,
+before and after the reader url has committed, the shape of Groups.settleTabs on an unloaded group
+(R27.12); what the URL constructor makes of an extension page address that names the extension by
+its id, for every shape an id takes (R27.14); tabs.update with a url on a DISCARDED tab - born
+discarded, discarded after its load, hidden, and born on a page of an unknown uuid, shown and
+hidden (R27.15).
+The expectations are the facts of CREATE-TABS-BEHAVIOR.md 30-35, 40, 41 and 53. Needs the network:
+the article is a real page.`;
 
 const UPDATED_KEYS = ['url', 'status', 'isArticle', 'discarded'];
+const OWN_ORIGIN = browser.runtime.getURL('');
+
+// the shapes an extension id takes, and a uuid next to them for comparison: the id, and the user
+// name and the host the URL constructor reads it as (CREATE-TABS-BEHAVIOR.md 41)
+const ID_SHAPES = [
+    ['uuid', '9a1b7c52-3f0e-4d8a-b6c1-2e5f7a9d0c34', '', '9a1b7c52-3f0e-4d8a-b6c1-2e5f7a9d0c34'],
+    ['name@domain', 'some-addon@example.com', 'some-addon', 'example.com'],
+    ['Name@Domain', 'Some-Addon@Example.Com', 'Some-Addon', 'example.com'],
+    ['name_name@domain', 'some_addon@example.com', 'some_addon', 'example.com'],
+    ['@name', '@some-addon', '', 'some-addon'],
+    ['{guid}', '{506e023c-7f2b-40a3-8066-bc5deb40aebe}', '', '{506e023c-7f2b-40a3-8066-bc5deb40aebe}'],
+    ['{GUID}', '{66E978CD-981F-47DF-AC42-E3CF417C1467}', '', '{66e978cd-981f-47df-ac42-e3cf417c1467}'],
+];
 
 const readerUrl = url => `about:reader?url=${encodeURIComponent(url)}`;
 const short = url => url.length > 90 ? `${url.slice(0, 87)}...` : url;
@@ -93,8 +110,16 @@ function watchRequests(t) {
 
     const seen = [];
     const handler = details => {
+        // the listener hears every window of the browser: only the tabs of the test and the requests of no tab count
+        if (details.tabId !== browser.tabs.TAB_ID_NONE && !t.nameById.has(details.tabId)) {
+            return;
+        }
+
+        const tab = details.tabId === browser.tabs.TAB_ID_NONE ? 'no tab' : t.known(details.tabId);
+        const origin = details.originUrl ? short(details.originUrl.replace(OWN_ORIGIN, '<own page>/')) : 'none';
+
         seen.push(details.url);
-        t.record('webRequest.onBeforeRequest', `${t.known(details.tabId)}  ${short(details.url)}`);
+        t.record('webRequest.onBeforeRequest', `${tab}  ${details.method} ${details.type} frame:${details.frameId}  ${short(details.url)}  origin: ${origin}`);
     };
 
     browser.webRequest.onBeforeRequest.addListener(handler, {urls: ['<all_urls>'], types: ['main_frame']});
@@ -482,7 +507,7 @@ export const tests = [
 
 {
     id: 'R27.11',
-    title: 'MANUAL: the reader-mode button (F9) pressed by hand on a shown article - the urls webRequest and tabs.onUpdated deliver, and what the tab reports after',
+    title: 'MANUAL: the reader-mode button (F9) pressed by hand on a shown article, to enter the reader view and to leave it - the requests webRequest gets, the urls tabs.onUpdated delivers, and what the tab reports after either press',
     async run(t) {
         await t.scene(['x']);
 
@@ -495,16 +520,27 @@ export const tests = [
 
         t.watch(['tabs.onUpdated'], {updatedKeys: UPDATED_KEYS});
         const seen = watchRequests(t);
+        const pressed = {};
 
-        t.act('the user presses F9 in the article tab');
-        await t.ask('press F9 (or the reader-view icon in the address bar) in the article tab, the active tab of the scene window; wait for the reader view, then answer: done');
-        await t.settled();
-        await t.snap('after F9');
+        for (const [moment, aim, wanted] of [['entered', 'to enter the reader view', 'the reader view'], ['left', 'to leave the reader view', 'the plain page']]) {
+            const before = seen.length;
 
-        const after = await report(t, 'article', 'after F9');
+            t.act(`the user presses F9 in the article tab ${aim}`);
+            await t.ask(`press F9 (or the reader-view icon in the address bar) in the article tab, the active tab of the scene window; wait for ${wanted}, then answer: done`);
+            await t.settled();
+            await t.snap(moment);
 
-        t.note(`main_frame requests seen while entering reader mode by hand: ${seen.length}${seen.length ? ` - ${seen.map(short).join(' | ')}` : ''}`);
-        t.note(`the tab after F9: ${describe(after)}`);
+            const tab = await report(t, 'article', moment);
+
+            pressed[moment] = {...readerState(tab), isArticle: tab.isArticle, requests: seen.length - before};
+
+            t.note(`main_frame requests, reader view ${moment}: ${seen.length - before}${seen.length > before ? ` - ${seen.slice(before).map(short).join(' | ')}` : ''}`);
+        }
+
+        t.expect('the reader button takes the tab into the reader view and back, with no main_frame request either way (CREATE-TABS-BEHAVIOR.md §40)', pressed, {
+            entered: {url: readerUrl(READER_URL), isInReaderMode: true, discarded: false, isArticle: false, requests: 0},
+            left: {url: READER_URL, isInReaderMode: false, discarded: false, isArticle: true, requests: 0},
+        });
     },
 },
 
@@ -595,6 +631,146 @@ export const tests = [
         t.expect('activated: both load the reader page (§35)', {e1: readerState(await activate(t, 'e1')), c1: readerState(await activate(t, 'c1'))}, {e1: loadedReader, c1: loadedReader});
         t.expectRow('e1 activated', ['x', '➕e1*', '➕e2', '➕e3', '➕c1', '➕c2', '➕c3']);
         t.expectRow('c1 activated', ['x', '➕e1', '➕e2', '➕e3', '➕c1*', '➕c2', '➕c3']);
+    },
+},
+
+{
+    id: 'R27.14',
+    title: 'new URL() on the address of an extension page that names the extension by its id - for every shape an id takes: does the constructor accept it, what it reads as the user name, the host, the path, the query and the hash, and does the address come back unchanged',
+    async run(t) {
+        const path = '/dir/page.html';
+        const search = `?url=${encodeURIComponent(NETWORK_URL)}&x=1`;
+        const hash = '#part';
+        const got = {};
+        const want = {};
+
+        for (const [shape, id, username, host] of ID_SHAPES) {
+            const start = `moz-extension://${id}`;
+            const url = `${start}${path}${search}${hash}`;
+
+            want[shape] = {username, host, start: `moz-extension://${username && `${username}@`}${host}`, read: true};
+
+            try {
+                const parsed = new URL(url);
+                const parts = ['username', 'host', 'pathname', 'search', 'hash', 'origin'].map(key => `${key}:"${parsed[key]}"`);
+
+                got[shape] = {
+                    username: parsed.username,
+                    host: parsed.host,
+                    start: parsed.href.slice(0, parsed.href.indexOf(path)),
+                    read: parsed.pathname === path && parsed.search === search && parsed.hash === hash && parsed.searchParams.get('url') === NETWORK_URL,
+                };
+
+                t.note(`${shape} (${id}): parsed, href ${parsed.href === url ? 'unchanged' : `CHANGED to ${parsed.href}`}; ${parts.join(' ')}; searchParams url:"${parsed.searchParams.get('url')}"`);
+
+                parsed.searchParams.set('x', '2');
+
+                t.note(`${shape}: after searchParams.set the address ${parsed.href.startsWith(`${start}/`) ? 'still starts' : 'NO LONGER starts'} with the id - ${parsed.href}`);
+            } catch (error) {
+                got[shape] = 'throws';
+                t.note(`${shape} (${id}): the constructor throws - ${shortError(error.message)}`);
+            }
+        }
+
+        t.expect('every shape is parsed and its path, query and hash are read; the host comes back in lower case and a leading @ is gone (CREATE-TABS-BEHAVIOR.md §41)', got, want);
+    },
+},
+
+{
+    id: 'R27.15',
+    title: 'tabs.update({url, loadReplace: true}) on a DISCARDED tab - a tab born discarded, a tab discarded after its load, a hidden discarded one, and two born discarded on a page of an unknown uuid, one of them hidden: does the call resolve, what the tab reports at the resolve and once settled, does it stay discarded, and what it shows once activated',
+    async run(t) {
+        const unknownOrigin = `moz-extension://${crypto.randomUUID()}/`;
+        const mask = text => text.replaceAll(OWN_ORIGIN, '<own page>/').replaceAll(unknownOrigin, '<unknown uuid>/');
+
+        // the page a tab is on before the update, and the one the update asks for: another page of the add-on under the same name
+        const from = {
+            born: sceneUrl('born'),
+            unloaded: sceneUrl('unloaded'),
+            hidden: sceneUrl('hidden'),
+            dead: `${unknownOrigin}tab.html?tab=dead`,
+            deadhidden: `${unknownOrigin}tab.html?tab=deadhidden`,
+        };
+        const to = name => sceneUrl(name, NAVIGATE_URL);
+        const place = (tab, name) => tab.url === to(name) ? 'on the new page' : tab.url === from[name] ? 'on the old page' : `on ${short(mask(tab.url))}`;
+        const tell = (tab, name) => tab ? `${place(tab, name)}, status ${tab.status}, discarded ${tab.discarded}, hidden ${tab.hidden}` : 'the tab is gone';
+        const read = name => browser.tabs.get(t.id(name)).catch(() => null);
+        const refused = (name, error) => t.note(`${name}: rejected - ${mask(shortError(error.message))}`);
+
+        const create = (name, label, properties = {}) => t.step(`tabs.create(${label})`, async () => {
+            const tab = await browser.tabs.create({windowId: t.win, active: false, url: from[name], ...properties});
+
+            t.bind(tab.id, name);
+            t.createdByAction.add(tab.id);
+        }, {snap: name});
+
+        t.mask = mask;
+
+        await t.scene(['x']);
+        t.watch(['tabs.onUpdated'], {updatedKeys: ['url', 'status', 'discarded']});
+        await t.snap('before');
+
+        await create('born', '{url: own page, discarded: true, title}', {discarded: true, title: 'born'});
+
+        for (const name of ['unloaded', 'hidden']) {
+            await create(name, '{url: own page}');
+            await loaded(t, name);
+        }
+
+        await t.step('tabs.discard([unloaded, hidden])', () => browser.tabs.discard(t.ids(['unloaded', 'hidden'])), {snap: 'discarded'});
+
+        // the shape of a tab another install of an add-on left behind
+        for (const name of ['dead', 'deadhidden']) {
+            await create(name, '{url: moz-extension://<unknown uuid>/tab.html, discarded: true, title}', {discarded: true, title: name});
+        }
+
+        const names = Object.keys(from);
+        const hidden = ['hidden', 'deadhidden'];
+
+        await t.step(`tabs.hide([${hidden.join(', ')}])`, () => browser.tabs.hide(t.ids(hidden)), {snap: 'hidden'});
+
+        const scene = await Promise.all(names.map(read));
+
+        for (const [index, name] of names.entries()) {
+            t.note(`${name} before the update: ${tell(scene[index], name)}`);
+        }
+
+        t.require('every tab is discarded and on its page, hidden and deadhidden are hidden', scene.every((tab, index) => tab?.discarded === true && tab.url === from[names[index]] && tab.hidden === hidden.includes(names[index])));
+
+        const got = {};
+
+        for (const name of names) {
+            const result = await t.step(`tabs.update(${name}, {url: <another own page>, loadReplace: true})`, () => {
+                return browser.tabs.update(t.id(name), {url: to(name), loadReplace: true}).catch(error => {
+                    refused(name, error);
+                    return null;
+                });
+            }, {snap: `${name} updated`});
+
+            got[name] = {atResolve: result ? tell(result, name) : 'rejected', settled: tell(await read(name), name)};
+
+            t.note(`${name} at the resolve: ${got[name].atResolve}`);
+            t.note(`${name} settled: ${got[name].settled}`);
+        }
+
+        await t.step(`tabs.show([${hidden.join(', ')}])`, () => browser.tabs.show(t.ids(hidden)).catch(error => refused('tabs.show', error)), {snap: 'shown'});
+
+        for (const name of names) {
+            await t.step(`tabs.update(${name}, {active: true})`, () => browser.tabs.update(t.id(name), {active: true}).catch(error => refused(name, error)), {wait: LOAD_WAIT, snap: `${name} activated`});
+
+            got[name].activated = tell(await read(name), name);
+
+            t.note(`${name} activated: ${got[name].activated}`);
+        }
+
+        const updated = isHidden => ({
+            atResolve: `on about:blank, status complete, discarded false, hidden ${isHidden}`,
+            settled: `on the new page, status complete, discarded false, hidden ${isHidden}`,
+            activated: 'on the new page, status complete, discarded false, hidden false',
+        });
+
+        t.expectRow('deadhidden updated', ['x*', '➕born', '➕unloaded', '➕hidden(h)', '➕dead', '➕deadhidden(h)']);
+        t.expect('the update loads a discarded tab on the new page, a hidden one stays hidden, a tab of an unknown uuid alike (CREATE-TABS-BEHAVIOR.md §53)', got, Object.fromEntries(names.map(name => [name, updated(hidden.includes(name))])));
     },
 },
 

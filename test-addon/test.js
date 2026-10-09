@@ -37,6 +37,7 @@ export class Test {
         this.listeners = [];
         this.queued = [];
         this.labels = new Map();
+        this.mask = text => text;
         this.t0 = Date.now();
         this.lastEventAt = Date.now();
         this.wake = null;
@@ -300,7 +301,7 @@ export class Test {
         const width = Math.max(22, ...this.queued.map(({spec}) => spec.length + 2));
 
         for (const {at, spec, text} of this.queued) {
-            const rendered = typeof text === 'function' ? text() : text;
+            const rendered = this.mask(typeof text === 'function' ? text() : text);
             this.data.events.push(`${String(at).padStart(5)}ms  ${spec.padEnd(width)}${rendered}`);
         }
 

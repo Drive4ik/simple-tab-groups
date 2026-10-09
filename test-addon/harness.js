@@ -1,3 +1,4 @@
+import './startup.js'; // the first import on purpose: its probe is the first thing a start of the background does
 import {ROUNDS, RUN_KEY, LOGS_KEY, BATCH_GAP} from './constants.js';
 import {wait, RestartRequested} from './test.js';
 import {TabsTest, closeHarnessWindows, nameFromUrl} from './tabs.js';
@@ -210,7 +211,9 @@ async function drive(state) {
             }
 
             if (state.index === 0) {
-                state.reports.push(`## ${round}${module.note ? `\n\n${module.note}` : ''}`);
+                const heading = only.length ? `${round}: ${tests.map(test => test.id).join(', ')}` : round;
+
+                state.reports.push(`## ${heading}${module.note ? `\n\n${module.note}` : ''}`);
                 console.debug(`=== ${round}: ${tests.length} test(s) ===`);
             }
 

@@ -1139,6 +1139,10 @@
         "message": "URLをコピー",
         "description": "Copy URL"
     },
+    "openNestedUrl": {
+        "message": "ネストされたURLを開く",
+        "description": "Open nested URL"
+    },
     "helpPageStgDebugTitle": {
         "message": "STGデバッグページ",
         "description": "STG debug page"

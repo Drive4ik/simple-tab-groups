@@ -10,6 +10,7 @@ Listeners.tabs.onCreated.clear(); // remove all listeners, ! but doesn't unsubsc
 const Listeners = {};
 
 const ON_EXTENSION_START_TIME_STORAGE_KEY = '__ext_start_time';
+const IS_BACKGROUND_PAGE = self.location.pathname.includes('background');
 
 const DEFAULT_EVENT_PREFS = {
     waitListener: true,
@@ -31,7 +32,7 @@ CUSTOM_EVENT_SCHEMES.set('extension.onStart', {
             const EXTENSION_START_TIME = await getExtensionStartTimePromise;
 
             if (!EXTENSION_START_TIME) {
-                if (isFirstExtensionStartTimePromise) {
+                if (isFirstExtensionStartTimePromise && IS_BACKGROUND_PAGE) {
                     await setExtensionStartTime(Date.now());
                 }
 

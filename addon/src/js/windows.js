@@ -125,8 +125,6 @@ async function runGrandRestoreNow(restoredWindowIds) {
 
             const glog = log.start('preparing group', gr.id, 'in window', win.id);
 
-            group.tabs.forEach(Tabs.fillEmptyUrl);
-
             group.isLoaded = group.id === win.groupId;
 
             glog.log('isLoaded', group.isLoaded);
@@ -642,7 +640,7 @@ export async function setFocus(windowId) {
 }
 
 export function isNormal(win) {
-    return win?.type === browser.windows.WindowType.NORMAL;
+    return win.type === browser.windows.WindowType.NORMAL;
 }
 
 export async function isNormalId(windowId) {
@@ -661,33 +659,23 @@ export async function isNormalId(windowId) {
     return normal;
 }
 
-export async function getLastFocusedNormalWindow(returnId = true) {
-    const log = logger.start(getLastFocusedNormalWindow, {returnId});
+// the window in focus with its session, null when it is not a normal window: nothing is done for a popup window;
+// getLastFocused rejects for a private window in focus, the addon does not see it (incognito: not_allowed)
+export async function getFocusedNormalWindow({withSession = false} = {}) {
+    const win = await browser.windows.getLastFocused().catch(() => null);
 
-    let lastFocusedWindow = await browser.windows.getLastFocused().catch(log.onCatch('windows.getLastFocused', false));
-
-    if (isNormal(lastFocusedWindow)) {
-        if (returnId) {
-            log.stop('windowId', lastFocusedWindow.id);
-            return lastFocusedWindow.id;
-        } else {
-            lastFocusedWindow = await Cache.loadWindowSession(lastFocusedWindow);
-
-            if (lastFocusedWindow) {
-                log.stop('window', lastFocusedWindow);
-                return lastFocusedWindow;
-            }
-        }
+    if (!win || !isNormal(win)) {
+        return null;
     }
 
-    log.warn('hard way (((');
+    return withSession ? Cache.loadWindowSession(win) : win;
+}
 
-    const windows = await load();
-    const win = windows.find(win => win.focused) || windows.pop();
+// a home for tabs that have none: the normal window in focus, else the first normal window by id; null without one
+export async function getFirstNormalWindowId() {
+    const focused = await getFocusedNormalWindow();
 
-    log.assert(win, 'normal window not found!');
-    log.stop('windowId', win?.id);
-    return returnId ? win?.id : win;
+    return focused?.id ?? (await load()).at(0)?.id ?? null;
 }
 
 export async function createPopup(createData, once = true) {

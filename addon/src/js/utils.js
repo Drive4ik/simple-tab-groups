@@ -1,5 +1,4 @@
 
-import './polyfills.js';
 import * as Constants from './constants.js';
 import JSON from './json.js';
 
@@ -213,20 +212,31 @@ export function isUrlEmpty(url) {
     return emptyUrls.has(url);
 }
 
-const allowCreateUrlRegexp = /^((http|moz-extension|view-source)|about:blank)/;
+const allowCreateUrlRegexp = /^(https?:|view-source:https?:|moz-extension:|about:blank)/; // the schemes whole: view-source:file: is refused by the browser (docs/CREATE-TABS-BEHAVIOR.md §16)
 export function isUrlAllowToCreate(url) {
     return allowCreateUrlRegexp.test(url);
 }
 
-export function isUrlLengthValid(url, out = {}) {
-    out.length = url.length;
-    out.maxLength = Constants.MAX_URL_LENGTH;
-    return out.length <= out.maxLength;
+export function isUrlLengthValid(url) {
+    return url.length <= Constants.MAX_URL_LENGTH;
 }
 
 const allowNavigateDataUrlRegexp = /^data:(image\/(?!svg\+xml[;,])[^;,]*|application\/pdf|application\/json|text\/json)[;,]/i;
 export function isDataUrlAllowToNavigate(url) {
     return allowNavigateDataUrlRegexp.test(url);
+}
+
+// the url a page keeps in one of its search keys (Constants.NESTED_URL_KEYS), null without one
+export function getNestedUrl(url) {
+    let searchParams;
+
+    try {
+        ({searchParams} = new URL(url));
+    } catch {
+        return null;
+    }
+
+    return Constants.NESTED_URL_KEYS.map(key => searchParams.get(key)).find(Boolean) ?? null;
 }
 
 export function setUrlSearchParams(url, params = {}, baseUrl = Constants.STG_BASE_URL) {
@@ -254,23 +264,6 @@ export function formatUrl(url, data = {}) {
 
         return window.encodeURIComponent(data[key]);
     });
-}
-
-export function normalizeUrl(url) {
-    if (!url || typeof url !== 'string') {
-        return '';
-    }
-
-    if (url.startsWith('moz-extension')) {
-        const urlObj = new URL(url);
-        const urlStr = urlObj.searchParams.get('url') ||
-            urlObj.searchParams.get('u') ||
-            urlObj.searchParams.get('go');
-
-        return urlStr ? normalizeUrl(urlStr) : url;
-    }
-
-    return url;
 }
 
 const UUID_REGEXP = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;

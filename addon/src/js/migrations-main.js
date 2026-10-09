@@ -141,6 +141,30 @@ export default [{
             }
         }
 
+        // saved tabs, by url shape
+
+        const stubPath = new URL(Constants.PAGES.HELP.UNSUPPORTED_URL).pathname;
+
+        // before 6 the stub page kept the url in the hash
+        function getStubbedUrl(url) {
+            if (Extensions.isExtensionUrl(url)) {
+                const {pathname, hash} = new URL(url);
+
+                if (pathname === stubPath && hash) {
+                    return hash.slice(1);
+                }
+            }
+
+            return null;
+        }
+
+        function migrateTabUrls(tabs) {
+            for (const tab of tabs) {
+                tab.url = getStubbedUrl(tab.url) ?? tab.url;
+                Tabs.tabUrlToAddon(tab);
+            }
+        }
+
         // groups, by data shape
 
         const autoMovePropsRenames = [
@@ -267,9 +291,7 @@ export default [{
                 delete group.exportToBookmarksWhenAutoBackup;
             }
 
-            if (group.isArchive) {
-                Extensions.tabsToId(group.tabs);
-            }
+            migrateTabUrls(group.tabs);
 
             for (const key in exampleGroup) {
                 if (!Object.hasOwn(group, key)) {
@@ -282,6 +304,8 @@ export default [{
             delete tab.id;
             delete tab.openerTabId;
         }
+
+        migrateTabUrls(data.pinnedTabs ?? []);
 
         // defaultGroupProps, by data shape
         data.defaultGroupProps ??= {};
@@ -360,7 +384,7 @@ export default [{
             if (stgNewTabs.length) {
                 for (const tab of stgNewTabs) {
                     delete tab.groupId; // native groupId conflicts with STG groupId key
-                    Tabs.normalizeUrl(tab);
+                    tab.url = new URL(tab.url).searchParams.get('url');
                 }
 
                 const savedTabs = Tabs.withOffsets(stgNewTabs);
@@ -370,6 +394,16 @@ export default [{
 
                 await Tabs.remove(stgNewTabs);
             }
+
+            await Tabs.restoreOldExtensionUrls(tab => {
+                const stubbedUrl = getStubbedUrl(tab.browserUrl);
+
+                if (stubbedUrl) {
+                    Tabs.wrapUnsupportedUrl(stubbedUrl);
+                }
+
+                return tab.browserUrl;
+            });
         }
 
         // ! MIGRATE group ids from small int to UUID
@@ -451,8 +485,9 @@ export default [{
         if (data.tabsToRestore) {
             for (const tab of data.tabsToRestore) {
                 tab.groupId = getNewGroupId(tab.groupId);
-                Tabs.normalizeUrl(tab);
             }
+
+            migrateTabUrls(data.tabsToRestore);
 
             data.tabsToRestore = Windows.rebuildTabsToRestore(data.tabsToRestore, tab => tab.groupId);
 

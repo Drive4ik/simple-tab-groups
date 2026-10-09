@@ -405,10 +405,6 @@
         "message": "Sesli sekmeleri hariç tut",
         "description": "Exclude tabs with sound"
     },
-    "tabsWithoutGroups": {
-        "message": "Grupsuz sekmeler",
-        "description": "Tabs without groups"
-    },
     "actionHiddenUnSyncTabsMoveAllTabsToCurrentGroup": {
         "message": "Tüm bu sekmeleri mevcut gruba taşı",
         "description": "Move all of these tabs into current group"
@@ -486,6 +482,10 @@
     "browseFileTitle": {
         "message": "Göz at...",
         "description": "Browse..."
+    },
+    "tabsWithoutGroups": {
+        "message": "Grupsuz sekmeler",
+        "description": "Tabs without groups"
     },
     "folderNameTitle": {
         "message": "Klasör ismi",
@@ -592,5 +592,9 @@
     "group": {
         "message": "Grup",
         "description": "Group"
+    },
+    "openNestedUrl": {
+        "message": "İç içe URL'yi aç",
+        "description": "Open nested URL"
     }
 }

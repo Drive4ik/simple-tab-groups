@@ -1062,5 +1062,9 @@
     "searchOnlyGroups": {
         "message": "Pouze skupiny",
         "description": "Only groups"
+    },
+    "openNestedUrl": {
+        "message": "Otevřít vnořenou URL",
+        "description": "Open nested URL"
     }
 }

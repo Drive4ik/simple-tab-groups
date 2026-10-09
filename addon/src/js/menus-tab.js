@@ -87,7 +87,7 @@ async function createMenus(settings = null) {
         module: [MODULE_NAME, 'openInTemporaryContainer'],
     });
 
-    const currentWindow = await Windows.getLastFocusedNormalWindow(false);
+    const currentWindow = await Windows.getFocusedNormalWindow({withSession: true});
 
     await Menus.create({
         id: SET_ICON_TO_GROUP_ID,
@@ -131,9 +131,7 @@ async function updateIconToGroup(windowId, settings, enabled) {
         return;
     }
 
-    const currentWindow = await Windows.get();
-
-    if (currentWindow.id === windowId) {
+    if ((await Windows.getFocusedNormalWindow())?.id === windowId) {
         await Menus.update(SET_ICON_TO_GROUP_ID, {
             enabled,
         });

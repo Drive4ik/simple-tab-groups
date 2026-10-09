@@ -5,6 +5,7 @@ import Lang from '/js/lang.js';
 import * as Constants from './constants.js';
 import * as Storage from './storage.js';
 import * as Permissions from './permissions.js';
+import * as Extensions from './extensions.js';
 
 // ! BE CAREFUL: "browser.bookmarks" doesn't exist if "bookmarks" is disabled as permission
 
@@ -136,8 +137,8 @@ export async function updateGroupTitle(group) {
     return false;
 }
 
-export async function exportGroup(group, groupIndex) {
-    const log = logger.start('exportGroup', {groupId: group.id, groupIndex});
+export async function exportGroup(group, folderIndex = null) {
+    const log = logger.start('exportGroup', {groupId: group.id, folderIndex});
 
     if (!await hasPermission()) {
         log.stop('no permission');
@@ -148,33 +149,43 @@ export async function exportGroup(group, groupIndex) {
 
     storage[group.id] = groupBookmark.id;
 
-    if (groupBookmark.parentId === storage.rootId && groupBookmark.index !== groupIndex) {
+    if (folderIndex !== null && groupBookmark.parentId === storage.rootId && groupBookmark.index !== folderIndex) {
         await browser.bookmarks.move(groupBookmark.id, {
-            index: groupIndex,
+            index: folderIndex,
         });
     }
 
     const bookmarks = groupBookmark.children;
     const bookmarksToSave = new Set();
 
-    for (const [index, tab] of group.tabs.entries()) {
-        tab.title ??= tab.url;
+    for (const tab of group.tabs) {
+        const url = Extensions.isExtensionUrl(tab.url)
+            ? Extensions.urlToBrowserOrNull(tab.url)
+            : tab.url;
 
-        let bookmark = bookmarks.find(({id, url}) => !bookmarksToSave.has(id) && url === tab.url);
+        if (!url) {
+            log.warn('skip tab, no bookmark for a page of an extension the browser cannot serve', {url: tab.url});
+            continue;
+        }
+
+        tab.title ??= url;
+
+        const index = bookmarksToSave.size;
+        let bookmark = bookmarks.find(candidate => !bookmarksToSave.has(candidate.id) && candidate.url === url);
 
         if (bookmark) {
             if (bookmark.index !== index) {
                 await browser.bookmarks.move(bookmark.id, {index});
             }
         } else {
-            if (tab.url.length > MAX_LENGTH || tab.title.length > MAX_LENGTH) {
-                log.warn('skip tab', tab.url.slice(0, 30), tab.title.slice(0, 50));
+            if (url.length > MAX_LENGTH || tab.title.length > MAX_LENGTH) {
+                log.warn('skip tab', url.slice(0, 30), tab.title.slice(0, 50));
                 continue;
             }
 
             bookmark = await browser.bookmarks.create({
                 title: tab.title,
-                url: tab.url,
+                url,
                 type: BOOKMARK,
                 index,
                 parentId: groupBookmark.id,
@@ -203,9 +214,11 @@ export async function exportGroups(groups) {
         return false;
     }
 
-    for (const [groupIndex, group] of groups.entries()) {
+    let folderIndex = 0;
+
+    for (const group of groups) {
         if (group.exportToBookmarks) {
-            await exportGroup(group, groupIndex);
+            await exportGroup(group, folderIndex++);
         }
     }
 

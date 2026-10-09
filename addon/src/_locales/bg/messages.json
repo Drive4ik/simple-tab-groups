@@ -1123,6 +1123,10 @@
         "message": "Копиране на адреса",
         "description": "Copy URL"
     },
+    "openNestedUrl": {
+        "message": "Отваряне на вложения адрес",
+        "description": "Open nested URL"
+    },
     "helpPageStgDebugTitle": {
         "message": "Страница на STG за отстраняване на дефекти",
         "description": "STG debug page"

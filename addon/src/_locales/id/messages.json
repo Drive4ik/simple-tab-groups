@@ -1094,5 +1094,9 @@
     "group": {
         "message": "Grup",
         "description": "Group"
+    },
+    "openNestedUrl": {
+        "message": "Buka URL bersarang",
+        "description": "Open nested URL"
     }
 }

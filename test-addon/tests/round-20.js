@@ -1,4 +1,4 @@
-import {LOAD_WAIT, NETWORK_URL, TABS_CREATE_URL_LIMIT} from '../constants.js';
+import {LOAD_WAIT, NETWORK_URL, NAVIGATE_URL, SCENE_URL, TABS_CREATE_URL_LIMIT} from '../constants.js';
 import {wait} from '../test.js';
 import {sceneUrl, withContainer} from '../tabs.js';
 
@@ -10,10 +10,11 @@ runtime.getBackgroundPage() returns to an extension page opened in a container (
 byte limit of a url passed to tabs.create, and whether it counts bytes or characters (R20.05);
 which schemes a webRequest main_frame listener sees at all (R20.06). Every refusal is printed with
 the browser's own error text, and whether a url over the limit can still be reached by navigation
-and held as a tab url (R20.07). The expectations are the facts of CREATE-TABS-BEHAVIOR.md 16-22.
+and held as a tab url (R20.07); what the URL api does with an address over the limit, built the way
+the add-on builds the address of its stub page (R20.08). The expectations are the facts of
+CREATE-TABS-BEHAVIOR.md 16-22 and 54.
 Needs the cookies, contextualIdentities, webRequest and <all_urls> permissions of the manifest.`;
 
-const NAVIGATE_URL = browser.runtime.getURL('navigate.html');
 const PROBE_URL = browser.runtime.getURL('probe.html');
 
 const PNG_1PX = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
@@ -449,6 +450,82 @@ export const tests = [
             bigpng: 'navigated',
             bighttp: 'refused',
         });
+    },
+},
+
+{
+    id: 'R20.08',
+    title: 'the URL api at the length limit, the address built the way the add-on builds its stub page address - an own page with the url in a search key: searchParams.set, the search setter and the constructor asked for an address over the limit - which of them throw, which leave the address as it was, and what href and searchParams read after',
+    async run(t) {
+        const room = TABS_CREATE_URL_LIMIT - `${SCENE_URL}?url=`.length;
+        const over = 100_000;
+
+        // letters are serialized as they are, a slash takes three characters in a search key
+        const cases = [
+            ['a short value', 'a'.repeat(1000)],
+            [`letters up to an address of ${TABS_CREATE_URL_LIMIT} chars`, 'a'.repeat(room)],
+            ['one letter more', 'a'.repeat(room + 1)],
+            [`letters, ${over} more`, 'a'.repeat(room + over)],
+            ['slashes, the value under the limit and its serialized form over it', '/'.repeat(Math.ceil((room + over) / 3))],
+        ];
+
+        const ways = {
+            'searchParams.set': value => {
+                const url = new URL(SCENE_URL);
+
+                url.searchParams.set('url', value);
+
+                return url;
+            },
+            'the search setter': value => {
+                const url = new URL(SCENE_URL);
+
+                url.search = new URLSearchParams({url: value}).toString();
+
+                return url;
+            },
+            'the constructor': value => new URL(`${SCENE_URL}?${new URLSearchParams({url: value})}`),
+        };
+
+        // the key as the address itself holds it, and as the list of the same URL object gives it: after a refused change the two may differ
+        const got = [];
+
+        for (const [label, value] of cases) {
+            const asked = `${SCENE_URL}?${new URLSearchParams({url: value})}`;
+            const excess = asked.length - TABS_CREATE_URL_LIMIT;
+            const holds = held => held === value ? 'the value' : held === null ? 'absent' : `${held.length} chars, NOT the value`;
+            const outcomes = {};
+
+            t.note(`${label}: the value is ${value.length} chars, the address asked for is ${asked.length} chars, ${excess > 0 ? `${excess} over the limit` : 'within the limit'}`);
+
+            for (const [way, build] of Object.entries(ways)) {
+                try {
+                    const url = build(value);
+                    const address = url.href === asked ? 'the address asked for' : url.href === SCENE_URL ? 'the bare page address' : `${url.href.length} chars, its search ${url.search.length} chars`;
+
+                    outcomes[way] = `no throw; href is ${address}; the key in the address: ${holds(new URLSearchParams(url.search).get('url'))}; in searchParams: ${holds(url.searchParams.get('url'))}`;
+                } catch {
+                    outcomes[way] = 'throws';
+                }
+
+                t.note(`${label}, ${way}: ${outcomes[way]}`);
+            }
+
+            got.push(outcomes);
+        }
+
+        const built = 'no throw; href is the address asked for; the key in the address: the value; in searchParams: the value';
+        const bare = list => `no throw; href is the bare page address; the key in the address: absent; in searchParams: ${list}`;
+        const within = {'searchParams.set': built, 'the search setter': built, 'the constructor': built};
+        const far = {'searchParams.set': bare('the value'), 'the search setter': bare('absent'), 'the constructor': 'throws'};
+
+        t.expect('up to the limit all three build the address; one character over, the setters still build it and the constructor throws; far over, the setters leave the bare page address and no key in it (CREATE-TABS-BEHAVIOR.md §54)', got, [
+            within,
+            within,
+            {...within, 'the constructor': 'throws'},
+            far,
+            far,
+        ]);
     },
 },
 
