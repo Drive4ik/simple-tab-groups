@@ -11,7 +11,7 @@ action as its own line, and the lines under it are the events that action caused
 an action means no event.
 
 **A new fact is appended as the next number at the end of "Verified facts". Numbers are never
-renumbered or reused** — code comments reference them by number (`docs/STORAGE-BEHAVIOR.md §1`).
+renumbered or reused** — code comments reference them by number (`docs/BEHAVIOR-STORAGE.md §1`).
 
 ---
 

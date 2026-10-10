@@ -212,7 +212,7 @@ export function isUrlEmpty(url) {
     return emptyUrls.has(url);
 }
 
-const allowCreateUrlRegexp = /^(https?:|view-source:https?:|moz-extension:|about:blank)/; // the schemes whole: view-source:file: is refused by the browser (docs/CREATE-TABS-BEHAVIOR.md §16)
+const allowCreateUrlRegexp = /^(https?:|view-source:https?:|moz-extension:|about:blank)/; // the schemes whole: view-source:file: is refused by the browser (docs/BEHAVIOR-CREATE-TABS.md §16)
 export function isUrlAllowToCreate(url) {
     return allowCreateUrlRegexp.test(url);
 }

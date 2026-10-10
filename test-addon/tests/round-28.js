@@ -27,7 +27,7 @@ page in a background tab and in a hidden tab get them, with what management.getA
 each at the event and after it, the add-on is removed and installed again by hand; R28.11 is
 MANUAL and stands last on purpose - the same tabs of an extension the user REMOVES, the add-on
 has to be installed again afterwards. The
-expectations are the facts of CREATE-TABS-BEHAVIOR.md 36, 37, 39, 43, 44, 46-50, 55 and 57. The other
+expectations are the facts of BEHAVIOR-CREATE-TABS.md 36, 37, 39, 43, 44, 46-50, 55 and 57. The other
 extensions are numbered, their ids and uuids are never printed; a MANUAL test names the add-on
 the user has to act on, and checks through management.getAll() that the user has done it.`;
 
@@ -45,7 +45,7 @@ const ROLES = {
 };
 
 // the steps the user makes by hand, each with what management.getAll() has to show once it is made,
-// and with the management event and the three reads a context gets at it (CREATE-TABS-BEHAVIOR.md 44, 48, 49)
+// and with the management event and the three reads a context gets at it (BEHAVIOR-CREATE-TABS.md 44, 48, 49)
 const DISABLED_STATE = 'enabled:false hostPermissions: absent';
 const ENABLED_STATE = 'enabled:true hostPermissions: lists its own origin';
 const DISABLE = {
@@ -236,7 +236,7 @@ async function tabsOfLeavingExtension(t, steps, {uuidKept = true} = {}) {
         const heard = reports.slice(seen).filter(report => report.id === subject.id);
 
         tellManagement(t, step.moment, reports.slice(seen), ['background'], numberOf);
-        t.expect(`${step.moment}: the loaded tabs are closed, the discarded ones stay as they were (CREATE-TABS-BEHAVIOR.md §48, §49)`, told(await readAll()), closedLoaded);
+        t.expect(`${step.moment}: the loaded tabs are closed, the discarded ones stay as they were (BEHAVIOR-CREATE-TABS.md §48, §49)`, told(await readAll()), closedLoaded);
         t.expect(
             `${step.moment}: the background gets the event, and its three reads of management.getAll() are what §48 and §49 record`,
             heard.map(({event, reads}) => ({event, reads: reads.map(read => read.state)})),
@@ -268,7 +268,7 @@ export const tests = [
             t.note(`extension ${index + 1}: enabled:${extension.enabled} hostPermissions: ${hosts(extension)}`);
         }
 
-        t.expect('a disabled extension reports no hostPermissions (CREATE-TABS-BEHAVIOR.md §36)', disabled.map(hosts), disabled.map(() => 'absent'));
+        t.expect('a disabled extension reports no hostPermissions (BEHAVIOR-CREATE-TABS.md §36)', disabled.map(hosts), disabled.map(() => 'absent'));
         t.expect('an enabled extension lists its own origin there (§34, §36)', enabled.map(hosts), enabled.map(() => 'lists its own origin'));
     },
 },
@@ -331,7 +331,7 @@ export const tests = [
         const navigated = nav.url === target ? 'navigated to the page' : nav.url.startsWith(NAVIGATE_URL) ? 'BLOCKED - still on the page of the harness' : `elsewhere, on ${mask(nav.url)}`;
 
         t.note(`nav: ${navigated}, status ${nav.status}`);
-        t.expect('tabs.create and tabs.update open the page, location.replace is denied (CREATE-TABS-BEHAVIOR.md §37)', {...outcomes, replace: navigated}, {
+        t.expect('tabs.create and tabs.update open the page, location.replace is denied (BEHAVIOR-CREATE-TABS.md §37)', {...outcomes, replace: navigated}, {
             create: 'on the page, status complete',
             update: 'on the page, status complete',
             replace: 'BLOCKED - still on the page of the harness',
@@ -372,7 +372,7 @@ export const tests = [
 
         const onThePage = {update: 'resolved', landed: 'on the page', status: 'complete', sameContainer: true};
 
-        t.expect('a page may send its own tab to a page of another extension, in either container (CREATE-TABS-BEHAVIOR.md §39)', outcomes, {plain: onThePage, contained: onThePage});
+        t.expect('a page may send its own tab to a page of another extension, in either container (BEHAVIOR-CREATE-TABS.md §39)', outcomes, {plain: onThePage, contained: onThePage});
     },
 },
 
@@ -394,7 +394,7 @@ export const tests = [
             t.note(`extension ${index + 1}: enabled:${extension.enabled} installType:${extension.installType} hostPermissions: ${hosts(extension)}`);
         }
 
-        t.expect('the calling extension is in its own list, with the origin runtime.getURL gives (CREATE-TABS-BEHAVIOR.md §43)', {listed: Boolean(self), named}, {listed: true, named: true});
+        t.expect('the calling extension is in its own list, with the origin runtime.getURL gives (BEHAVIOR-CREATE-TABS.md §43)', {listed: Boolean(self), named}, {listed: true, named: true});
     },
 },
 
@@ -433,7 +433,7 @@ export const tests = [
             tellManagement(t, step.moment, heard, CONTEXTS, numberOf);
 
             t.expect(
-                `${step.moment}: every context gets the event and reads the new state from the first read on (CREATE-TABS-BEHAVIOR.md §44)`,
+                `${step.moment}: every context gets the event and reads the new state from the first read on (BEHAVIOR-CREATE-TABS.md §44)`,
                 Object.fromEntries(CONTEXTS.map(context => [context, own(context).map(({event, reads}) => ({event, reads: reads.map(read => read.state)}))])),
                 Object.fromEntries(CONTEXTS.map(context => [context, [{event: step.event, reads: step.reads}]])),
             );
@@ -529,7 +529,7 @@ export const tests = [
 
         const bornLazy = {born: 'on the page, discarded true', activated: 'on the page, status complete, discarded false', sameContainer: true};
 
-        t.expect('a page of another extension is born discarded on its url and loads when activated, in either container (CREATE-TABS-BEHAVIOR.md §46)', outcomes, {lazy: bornLazy, lazycontained: bornLazy});
+        t.expect('a page of another extension is born discarded on its url and loads when activated, in either container (BEHAVIOR-CREATE-TABS.md §46)', outcomes, {lazy: bornLazy, lazycontained: bornLazy});
     },
 },
 
@@ -574,7 +574,7 @@ export const tests = [
         const toldHidden = `${update}, ${place(fresh)}, status ${fresh.status}, hidden ${fresh.hidden}, discarded ${fresh.discarded}`;
 
         t.note(`hidden: ${toldHidden}`);
-        t.expect('the update made as soon as the script runs and the one made from a hidden tab both reach the page, the hidden tab stays hidden (CREATE-TABS-BEHAVIOR.md §47)', {atload: told, hidden: toldHidden}, {
+        t.expect('the update made as soon as the script runs and the one made from a hidden tab both reach the page, the hidden tab stays hidden (BEHAVIOR-CREATE-TABS.md §47)', {atload: told, hidden: toldHidden}, {
             atload: 'no refusal reported, on the page, status complete',
             hidden: 'resolved, on the page, status complete, hidden true, discarded false',
         });
@@ -651,7 +651,7 @@ export const tests = [
 
         const onThePage = 'on a page of the extension, discarded false';
 
-        t.expect('a page that runs the code of another extension opens by tabs.create, created discarded and activated, and by tabs.update a page calls on its own tab (CREATE-TABS-BEHAVIOR.md §50)', outcomes, {
+        t.expect('a page that runs the code of another extension opens by tabs.create, created discarded and activated, and by tabs.update a page calls on its own tab (BEHAVIOR-CREATE-TABS.md §50)', outcomes, {
             created: onThePage,
             lazy: {born: 'on a page of the extension, discarded true', activated: onThePage},
             page: `resolved, ${onThePage}`,
@@ -667,7 +667,7 @@ export const tests = [
 
         t.require('the profile holds another enabled extension', others.some(extension => extension.enabled), 'install any add-on next to the harness and leave it enabled');
 
-        // an add-on loaded through about:debugging tells installType development (CREATE-TABS-BEHAVIOR.md 43)
+        // an add-on loaded through about:debugging tells installType development (BEHAVIOR-CREATE-TABS.md 43)
         t.require('the harness is installed in the profile', (await browser.management.getSelf()).installType !== 'development', 'a temporary add-on is gone at the restart: zip the CONTENTS of test-addon, manifest.json at the root, install the zip from about:addons - Install Add-on From File, and start the test from the installed one');
 
         await t.scene(['x']);
@@ -732,7 +732,7 @@ export const tests = [
 
         const enabled = [browser.runtime.id, ...others.filter(extension => extension.enabled).map(extension => extension.id)];
 
-        t.expect('every enabled extension lists its own origin at the first line, and no later read tells anything else (CREATE-TABS-BEHAVIOR.md §55)', enabled.map(id => tellings.get(id)), enabled.map(() => [ENABLED_STATE]));
+        t.expect('every enabled extension lists its own origin at the first line, and no later read tells anything else (BEHAVIOR-CREATE-TABS.md §55)', enabled.map(id => tellings.get(id)), enabled.map(() => [ENABLED_STATE]));
         t.require('the background started exactly once since the probe was armed', t.rebirths === 1, `add-on starts while the test was suspended: ${t.rebirths}; the record is of the first of them`);
     },
 },
@@ -789,7 +789,7 @@ export const tests = [
             const own = context => heard.filter(report => report.context === context && report.id === subject.id);
 
             t.expect(
-                `${step.moment}: every context gets the event, and its reads are the ones §49 records for the background (CREATE-TABS-BEHAVIOR.md §57)`,
+                `${step.moment}: every context gets the event, and its reads are the ones §49 records for the background (BEHAVIOR-CREATE-TABS.md §57)`,
                 Object.fromEntries(contexts.map(context => [context, own(context).map(({event, reads}) => ({event, reads: reads.map(read => read.state)}))])),
                 Object.fromEntries(contexts.map(context => [context, [{event: step.event, reads: step.reads}]])),
             );

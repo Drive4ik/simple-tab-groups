@@ -15,7 +15,7 @@ State tables, markers, confirmation rules and how the tests are written — BEHA
 
 **A new fact is appended as the next number at the end of the numbered sections, right before
 "Implications for STG code". Numbers are never renumbered or reused** — code comments reference
-them by number (`docs/MENUS-BEHAVIOR.md §5`).
+them by number (`docs/BEHAVIOR-MENUS.md §5`).
 
 There is no `menus.getAll` — existence is probed with `menus.update(id, {enabled: true})`:
 resolves if the item is registered, rejects with the §3 error if it is not. The probe is itself

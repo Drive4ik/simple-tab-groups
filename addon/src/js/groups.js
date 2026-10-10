@@ -911,7 +911,7 @@ export async function pinSharingTabs(tabs) {
 
     const log = logger.start(pinSharingTabs, tabsToPin.map(Tabs.extractId));
 
-    // pinning strips the native membership itself (docs/TABGROUPS-BEHAVIOR.md §19)
+    // pinning strips the native membership itself (docs/BEHAVIOR-TABGROUPS.md §19)
     await Tabs.pin(tabsToPin);
 
     await Promise.allSettled(tabsToPin.flatMap(tab => [
@@ -934,9 +934,9 @@ export async function pinSharingTabs(tabs) {
 // the tail of a restore, after Tabs.createMultiple: the group's live tabs are sorted into the saved
 // order, then the native groups - a loaded group gets GroupsNative.apply over its WHOLE live list
 // (reloaded for it: the caller's group object holds the saved tabs), an unloaded one is stripped
-// (the sort can drop hidden tabs onto live-member slots, docs/TABGROUPS-BEHAVIOR.md §11, §12) and
+// (the sort can drop hidden tabs onto live-member slots, docs/BEHAVIOR-TABGROUPS.md §11, §12) and
 // hidden by the group's options (hideTabs) - and the links go last: sort first, link last
-// (docs/OPENER-BEHAVIOR.md Implications 8)
+// (docs/BEHAVIOR-OPENER.md Implications 8)
 export async function settleTabs(group, savedTabs, {live, aligned}) {
     let tabs = await Tabs.ensureSorted(live);
     const windowId = Cache.getWindowId(group.id);

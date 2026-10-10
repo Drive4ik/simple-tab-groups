@@ -9,15 +9,15 @@ and no stronger.
 Only facts confirmed by an actual test run belong here — never assumptions about how the browser
 "probably" works. This file holds the opener link itself: how it is set, what carries it, what
 erases it. The closing section, "How STG carries the link", is the one exception: not browser
-facts but the model STG implements on top of them. Where a fact is also about creation or movement, a copy lives in CREATE-TABS-BEHAVIOR.md
-or MOVE-TABS-BEHAVIOR.md with a cross-reference, and both copies are kept in sync.
+facts but the model STG implements on top of them. Where a fact is also about creation or movement, a copy lives in BEHAVIOR-CREATE-TABS.md
+or BEHAVIOR-MOVE-TABS.md with a cross-reference, and both copies are kept in sync.
 
 State tables, markers, confirmation rules and how the tests are written — BEHAVIOR-NOTATION.md.
 In this document every cell also prints the opener: `c1→p` means `c1.openerTabId` points at `p`,
 no arrow — no opener (notation §2).
 
 **A new fact is appended as the next number at the end of "Verified facts". Numbers are never
-renumbered or reused** — code comments reference them by number (`docs/OPENER-BEHAVIOR.md §7`).
+renumbered or reused** — code comments reference them by number (`docs/BEHAVIOR-OPENER.md §7`).
 
 ---
 
@@ -36,11 +36,11 @@ right away. No `tabs.onUpdated` follows — the link is part of the creation.
 
 ### 2. Under relatedAfterCurrent a tab created WITH an opener and WITHOUT an index lands right after its opener; an explicit index still wins (R14.02)
 
-CREATE-TABS-BEHAVIOR.md §1 covers tabs without an opener — for them relatedAfterCurrent equals
+BEHAVIOR-CREATE-TABS.md §1 covers tabs without an opener — for them relatedAfterCurrent equals
 atEnd. With an opener the "related" half of the setting kicks in: the new tab goes directly after
 its opener, whether the opener is the active tab or not. An explicit `index` overrides that
-placement exactly as CREATE-TABS-BEHAVIOR.md §2 states for tabs without an opener — the opener is
-kept, the position is the requested one. (Copy: CREATE-TABS-BEHAVIOR.md §14.)
+placement exactly as BEHAVIOR-CREATE-TABS.md §2 states for tabs without an opener — the opener is
+kept, the position is the requested one. (Copy: BEHAVIOR-CREATE-TABS.md §14.)
 
 | tab index | 0 | 1 | 2 | 3 | 4 | 5 | 6 |
 | - | - | - | - | - | - | - | - |
@@ -148,7 +148,7 @@ as after a `-1` clear, §3) — the child is not handed to the grandparent. The 
 - A move **to another window** erases the moved tab's opener — when the child goes alone, and
   just the same when the opener and the child travel **together in one `tabs.move` call**. Moving
   the child back next to its opener does not bring the link back. No `tabs.onUpdated` announces
-  the erasure — only `onDetached`/`onAttached` are delivered. (Copy: MOVE-TABS-BEHAVIOR.md §4.)
+  the erasure — only `onDetached`/`onAttached` are delivered. (Copy: BEHAVIOR-MOVE-TABS.md §4.)
 - After the move `tabs.update({openerTabId})` restores the link, provided both tabs are in the
   same window now.
 - Pointing a tab at an opener that lives in another window is rejected:
@@ -424,7 +424,7 @@ not keep the link at all.
 `p→g` with a child `c1→p` and a grandchild `c2→c1` is pinned. The pin moves the tab into the
 pinned zone and changes nothing about the links: `p→g` and `c1→p` are what every read reports
 afterwards, and the only events are `tabs.onMoved` and `{pinned: true}` — no `openerTabId` line
-(the same two events as the pin of a group member, TABGROUPS-BEHAVIOR.md §19, without the
+(the same two events as the pin of a group member, BEHAVIOR-TABGROUPS.md §19, without the
 membership one). Pinned, the tab takes a fresh link (`p→x`), becomes the opener of a tab
 re-pointed at it (`y→p`) and of a tab created with it at an explicit index (`n→p`), and takes the
 `-1` (§3) — each write with its one `tabs.onUpdated` (§10), exactly as on a plain tab. The `-1` on
@@ -718,7 +718,7 @@ then every link of the original lands on the new id, and every live child of the
 pinned or not, is re-pointed at it; an original is removed only once its copy exists — a copy
 that could not be created leaves its original where it is, with its links, and out of the
 transfer. The copy is born in place, in the original's window, at its slot (the copy of a live
-sub-group's first member one slot further, TABGROUPS-BEHAVIOR.md §7), with whatever the caller
+sub-group's first member one slot further, BEHAVIOR-TABGROUPS.md §7), with whatever the caller
 builds for it: the transfer builds it with no binding at all — no group, no native sub-group,
 nothing of the original's session but its icon, its thumbnail and the url the tab was asked for
 while it still reports none (`Tabs.fillEmptyUrl`); a container reopen (`onBeforeTabRequest`,

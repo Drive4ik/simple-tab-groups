@@ -7,7 +7,7 @@ which it refuses and with what error, and whether the bookmark gives the url bac
 - from the created node and from bookmarks.getChildren (R29.01). MANUAL: the optional bookmarks
 permission is granted on the page the test opens. The bookmarks live in a folder the test makes in
 Other Bookmarks and removes at the end. The expectations are the facts of
-CREATE-TABS-BEHAVIOR.md 42. The extension ids in the urls are made up, the own uuid is never
+BEHAVIOR-CREATE-TABS.md 42. The extension ids in the urls are made up, the own uuid is never
 printed.`;
 
 export const testClass = MenusTest;
@@ -16,7 +16,7 @@ const OWN_ORIGIN = browser.runtime.getURL('');
 const KEPT = 'the url as passed';
 const REFUSED = 'refused';
 
-// the url, and what the bookmark holds for it (CREATE-TABS-BEHAVIOR.md 42)
+// the url, and what the bookmark holds for it (BEHAVIOR-CREATE-TABS.md 42)
 const URL_CASES = [
     ['http', NETWORK_URL, KEPT],
     ['reader', `about:reader?url=${encodeURIComponent(NETWORK_URL)}`, KEPT],
@@ -83,7 +83,7 @@ export const tests = [
         }
 
         t.expect(
-            'every url with a scheme is accepted, one without it is refused, and the bookmark holds the url as the URL constructor serializes it (CREATE-TABS-BEHAVIOR.md §42)',
+            'every url with a scheme is accepted, one without it is refused, and the bookmark holds the url as the URL constructor serializes it (BEHAVIOR-CREATE-TABS.md §42)',
             Object.fromEntries(URL_CASES.map(([name]) => [name, got[name]])),
             Object.fromEntries(URL_CASES.map(([name, , outcome]) => [name, outcome])),
         );

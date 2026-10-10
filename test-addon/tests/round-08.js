@@ -7,7 +7,7 @@ do the gesture with the mouse in the scene window, wait for the tab bar to settl
 then answer T.visualAnswer('done') — or describe what you saw if anything looked odd.
 Events from ALL windows are recorded here (a gesture may span windows), tagged [other window].
 The point of the round: which events the browser emits for USER gestures — every event fact
-in TABGROUPS-BEHAVIOR.md so far comes from API calls only.`;
+in BEHAVIOR-TABGROUPS.md so far comes from API calls only.`;
 
 const WATCH_ALL = [
     'tabs.onCreated', 'tabs.onMoved', 'tabs.onUpdated', 'tabs.onRemoved',

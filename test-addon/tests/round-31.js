@@ -10,7 +10,7 @@ sends a message with runtime.sendMessage and opens a port with runtime.connect, 
 background prints the keys of the sender, whether the id is the add-on's, the url, the tab, the
 frame and the envType, and whether the url starts with the origin of the add-on - the rule the
 add-on tells its own pages by (R31.01). A popup of the toolbar button and a sidebar are not among
-the senders: the harness has neither. The expectations are the fact of CREATE-TABS-BEHAVIOR.md 56.
+the senders: the harness has neither. The expectations are the fact of BEHAVIOR-CREATE-TABS.md 56.
 Needs the network: the web page is a real one. The own uuid is never printed.`;
 
 const OWN_ORIGIN = browser.runtime.getURL('');
@@ -22,7 +22,7 @@ const SILENT = 'nothing arrived';
 const mask = text => text.replaceAll(OWN_ORIGIN, '<own page>/');
 const line = ({keys, id, url, tab, frameId, envType}) => `keys: ${keys}; id: ${id}; url: ${url}; tab: ${tab}; frameId: ${frameId}; envType: ${envType}; the url starts with the origin of the add-on: ${url.startsWith('<own page>/')}`;
 
-// every sender with what the background has to get from it, by a message and by a port alike (CREATE-TABS-BEHAVIOR.md 56)
+// every sender with what the background has to get from it, by a message and by a port alike (BEHAVIOR-CREATE-TABS.md 56)
 const page = {keys: KEYS, id: 'of the add-on', url: mask(sceneUrl('page', SENDER_URL)), tab: 'page', frameId: 0, envType: 'addon_child'};
 const script = {keys: KEYS, id: 'of the add-on', url: sceneUrl('web', CONTENT_SCRIPT_URL), tab: 'web', frameId: 0, envType: 'content_child'};
 const SENDERS = {
@@ -108,7 +108,7 @@ export const tests = [
             t.note(`a sender outside the list: ${label}, ${way}`);
         }
 
-        t.expect('a page of the add-on and its content script carry the same id, the url and the envType tell them apart, a message and a port give the same sender (CREATE-TABS-BEHAVIOR.md §56)', got, Object.fromEntries(Object.entries(SENDERS).map(([label, told]) => [label, WAYS.map(() => told)])));
+        t.expect('a page of the add-on and its content script carry the same id, the url and the envType tell them apart, a message and a port give the same sender (BEHAVIOR-CREATE-TABS.md §56)', got, Object.fromEntries(Object.entries(SENDERS).map(([label, told]) => [label, WAYS.map(() => told)])));
     },
 },
 

@@ -7,15 +7,15 @@ it, and no stronger.
 
 Only facts confirmed by an actual test run belong here — never assumptions about how the browser
 "probably" works. Tab-creation facts (`tabs.create`, `index`, newTabPosition) live in
-CREATE-TABS-BEHAVIOR.md; plain `tabs.move` facts with no groups involved — in
-MOVE-TABS-BEHAVIOR.md. Anything involving a native group lives here; a copy goes into those
+BEHAVIOR-CREATE-TABS.md; plain `tabs.move` facts with no groups involved — in
+BEHAVIOR-MOVE-TABS.md. Anything involving a native group lives here; a copy goes into those
 documents only when groups make creation or movement deviate from what they themselves state.
 
 State tables, markers, confirmation rules and how the tests are written — BEHAVIOR-NOTATION.md.
 
 **A new fact is appended as the next number at the end of the numbered sections, right before
 "Implications for STG code". Numbers are never renumbered or reused** — code comments reference
-them by number (`docs/TABGROUPS-BEHAVIOR.md §2`, `§4`, `§5`).
+them by number (`docs/BEHAVIOR-TABGROUPS.md §2`, `§4`, `§5`).
 
 `browser.tabGroups.TAB_GROUP_ID_NONE` is `-1`, and an ungrouped tab really does report that as its
 `groupId`. `tabGroups.query` on a window without groups returns `[]`. (R1.01)
@@ -390,7 +390,7 @@ How a window created by moving existing tabs announces itself. Three paths, two 
 
 - **A hidden member travels with the group and arrives VISIBLE — silently.** No
   `tabs.onUpdated {hidden}` fires anywhere; the reveal is observable only by re-reading the tab.
-  The reveal itself matches a cross-window `tabs.move` (MOVE-TABS-BEHAVIOR.md §1, R7.02); the
+  The reveal itself matches a cross-window `tabs.move` (BEHAVIOR-MOVE-TABS.md §1, R7.02); the
   no-event part is this run's addition. (R9.02)
 
   | tab index | 0 | 1 | 2 | 3 | 4 |
@@ -549,7 +549,7 @@ still has members. (R10.01)
   not tab-by-tab. Movers taken from beyond the target index would come out reversed under a
   one-by-one model; the real result keeps the array order. (R1.19; the §11 landing agrees.)
   "Starting at the requested index" holds while every other mover stands beyond it: a mover
-  standing before the target slides the block one slot left — MOVE-TABS-BEHAVIOR.md §5
+  standing before the target slides the block one slot left — BEHAVIOR-MOVE-TABS.md §5
   (R15.03, R15.04).
 
 - **A block that lands between the members of a live span is swallowed whole.** The first mover —

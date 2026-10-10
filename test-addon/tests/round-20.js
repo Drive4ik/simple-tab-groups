@@ -12,7 +12,7 @@ which schemes a webRequest main_frame listener sees at all (R20.06). Every refus
 the browser's own error text, and whether a url over the limit can still be reached by navigation
 and held as a tab url (R20.07); what the URL api does with an address over the limit, built the way
 the add-on builds the address of its stub page (R20.08). The expectations are the facts of
-CREATE-TABS-BEHAVIOR.md 16-22 and 54.
+BEHAVIOR-CREATE-TABS.md 16-22 and 54.
 Needs the cookies, contextualIdentities, webRequest and <all_urls> permissions of the manifest.`;
 
 const PROBE_URL = browser.runtime.getURL('probe.html');
@@ -153,7 +153,7 @@ export const tests = [
         await t.step('let the created pages load', () => wait(LOAD_WAIT), {wait: 0, snap: 'loaded'});
         await describeCreated(t, created);
 
-        t.expect('tabs.create verdicts by url class (CREATE-TABS-BEHAVIOR.md §16)', verdicts, {
+        t.expect('tabs.create verdicts by url class (BEHAVIOR-CREATE-TABS.md §16)', verdicts, {
             blank: 'resolved', newtab: 'rejected', home: 'rejected', config: 'rejected', addons: 'rejected', reader: 'rejected',
             datatext: 'rejected', dataimg: 'rejected', file: 'rejected', js: 'rejected', chrome: 'rejected',
             ftp: 'resolved', view: 'resolved', viewfile: 'rejected', own: 'resolved', http: 'resolved', nourl: 'resolved',
@@ -201,7 +201,7 @@ export const tests = [
                 containers[name] = (await browser.tabs.get(tab.id)).cookieStoreId === cookieStoreId ? 'container' : 'elsewhere';
             }
 
-            t.expect('the same verdicts in a container (CREATE-TABS-BEHAVIOR.md §17)', verdicts, {
+            t.expect('the same verdicts in a container (BEHAVIOR-CREATE-TABS.md §17)', verdicts, {
                 blank: 'resolved', newtab: 'rejected', home: 'rejected', view: 'resolved', own: 'resolved', http: 'resolved', nourl: 'resolved',
             });
             t.expect('every accepted tab lives in the requested container (§17)', containers, {
@@ -228,7 +228,7 @@ export const tests = [
             t.note(`${type}: ${outcome}`);
         }
 
-        t.expect('which data: types a top-level navigation from an extension page reaches (CREATE-TABS-BEHAVIOR.md §18)', outcomes, {
+        t.expect('which data: types a top-level navigation from an extension page reaches (BEHAVIOR-CREATE-TABS.md §18)', outcomes, {
             'image/png': 'navigated', 'image/gif': 'navigated', 'image/svg+xml': 'blocked',
             'application/pdf': 'navigated', 'application/json': 'navigated', 'text/json': 'navigated',
             'text/plain': 'blocked', 'text/html': 'blocked', 'video/mp4': 'blocked', '(no type)': 'blocked',
@@ -275,7 +275,7 @@ export const tests = [
                 return [probe, report ? {runtime: report.runtimeGetBackgroundPage, extension: report.extensionGetBackgroundPage, reported: true} : {reported: false}];
             }));
 
-            t.expect('the background page seen from an extension page, by container (CREATE-TABS-BEHAVIOR.md §19)', answers, {
+            t.expect('the background page seen from an extension page, by container (BEHAVIOR-CREATE-TABS.md §19)', answers, {
                 default: {runtime: 'window', extension: 'window', reported: true},
                 container: {runtime: 'null', extension: 'null', reported: true},
             });
@@ -347,7 +347,7 @@ export const tests = [
 
         const settled = ['len1', 'len2', 'len3', 'len4', 'len5', 'len6', 'len7'];
 
-        t.expect('the limit is 1048572 characters of the serialized url, not utf-8 bytes (CREATE-TABS-BEHAVIOR.md §20)', pick(verdicts, settled), {
+        t.expect('the limit is 1048572 characters of the serialized url, not utf-8 bytes (BEHAVIOR-CREATE-TABS.md §20)', pick(verdicts, settled), {
             len1: 'resolved', len2: 'rejected', len3: 'rejected', len4: 'rejected', len5: 'rejected', len6: 'resolved', len7: 'rejected',
         });
         t.expect('the URL constructor enforces the same boundary (§20)', pick(parses, settled), {
@@ -394,7 +394,7 @@ export const tests = [
             t.note(`webRequest ${String(at).padStart(5)}ms  ${type}  ${t.known(tabId)}  ${short(url)}`);
         }
 
-        t.expect('main_frame loads seen by webRequest: http and view-source with its inner url, nothing else (CREATE-TABS-BEHAVIOR.md §21)', seen.map(({tabId, url}) => `${t.known(tabId)} ${url}`), [
+        t.expect('main_frame loads seen by webRequest: http and view-source with its inner url, nothing else (BEHAVIOR-CREATE-TABS.md §21)', seen.map(({tabId, url}) => `${t.known(tabId)} ${url}`), [
             `http ${NETWORK_URL}`,
             `view ${NETWORK_URL}`,
         ]);
@@ -446,7 +446,7 @@ export const tests = [
             t.note(`${name}: ${outcomes[name]}${outcomes[name] === 'elsewhere' ? ` ${short(fresh.url)}` : ''}, tab url ${fresh.url.length} chars, the limit is ${TABS_CREATE_URL_LIMIT}, status ${fresh.status}`);
         }
 
-        t.expect('a data: image over the limit is navigated to and held as the tab url, an https url over the limit is refused by location.replace itself (CREATE-TABS-BEHAVIOR.md §22)', outcomes, {
+        t.expect('a data: image over the limit is navigated to and held as the tab url, an https url over the limit is refused by location.replace itself (BEHAVIOR-CREATE-TABS.md §22)', outcomes, {
             bigpng: 'navigated',
             bighttp: 'refused',
         });
@@ -519,7 +519,7 @@ export const tests = [
         const within = {'searchParams.set': built, 'the search setter': built, 'the constructor': built};
         const far = {'searchParams.set': bare('the value'), 'the search setter': bare('absent'), 'the constructor': 'throws'};
 
-        t.expect('up to the limit all three build the address; one character over, the setters still build it and the constructor throws; far over, the setters leave the bare page address and no key in it (CREATE-TABS-BEHAVIOR.md §54)', got, [
+        t.expect('up to the limit all three build the address; one character over, the setters still build it and the constructor throws; far over, the setters leave the bare page address and no key in it (BEHAVIOR-CREATE-TABS.md §54)', got, [
             within,
             within,
             {...within, 'the constructor': 'throws'},

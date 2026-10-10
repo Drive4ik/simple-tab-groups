@@ -3,9 +3,9 @@ import {TabsTest} from '../tabs.js';
 
 export const note = `Round 13 — a window whose LAST VISIBLE tabs are removed while hidden (tabHide)
 tabs remain: does the window survive, which hidden tab gets revealed, and — critically — which
-events announce the reveal (a cross-window move reveals SILENTLY, TABGROUPS-BEHAVIOR.md §17 — does
+events announce the reveal (a cross-window move reveals SILENTLY, BEHAVIOR-TABGROUPS.md §17 — does
 this reveal too?). Watched: tabs.onRemoved / onActivated / onUpdated and windows.onRemoved.
-Asserts the recorded facts: REMOVE-TABS-BEHAVIOR.md §1 (the window closes, hidden tabs die, no
+Asserts the recorded facts: BEHAVIOR-REMOVE-TABS.md §1 (the window closes, hidden tabs die, no
 reveal) and §2 (a pinned tab keeps the window alive).`;
 
 class WindowLifeTest extends TabsTest {

@@ -1,6 +1,6 @@
 import {TAB_GROUP_ID_NONE} from '../constants.js';
 
-export const note = `Round 26 — the calls Tabs.hide / Tabs.remove / Tabs.recreate make, recorded as TABGROUPS-BEHAVIOR.md §22–§26.
+export const note = `Round 26 — the calls Tabs.hide / Tabs.remove / Tabs.recreate make, recorded as BEHAVIOR-TABGROUPS.md §22–§26.
 (A) tabs.ungroup on a tab that is in NO group — alone (R26.01) and mixed with a member (R26.02);
 on a PINNED tab — alone (R26.03) and mixed with a member (R26.04), the odd tab second in both arrays:
 does the call resolve or reject, what happens to the member next to it, which events fire (§22);

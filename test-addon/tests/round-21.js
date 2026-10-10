@@ -159,7 +159,7 @@ class FirstLoadTest extends TabsTest {
     async readBack(name) {
         const value = await browser.sessions.getTabValue(this.id(name), PROBE_KEY).catch(error => `rejected, ${error.message}`);
 
-        this.expect(`${name}: sessions.getTabValue after the load returns the value set from inside onBeforeRequest (CREATE-TABS-BEHAVIOR.md §24)`, value === PROBE_VALUE ? 'the value' : JSON.stringify(value), 'the value');
+        this.expect(`${name}: sessions.getTabValue after the load returns the value set from inside onBeforeRequest (BEHAVIOR-CREATE-TABS.md §24)`, value === PROBE_VALUE ? 'the value' : JSON.stringify(value), 'the value');
     }
 
     async idsNow() {
@@ -209,7 +209,7 @@ class FirstLoadTest extends TabsTest {
 
         const first = this.firstRequest.get(this.id(name));
 
-        this.expect(`${name}: tabs.onCreated is delivered before the first onBeforeRequest of the tab (CREATE-TABS-BEHAVIOR.md §23)`, first?.created, true);
+        this.expect(`${name}: tabs.onCreated is delivered before the first onBeforeRequest of the tab (BEHAVIOR-CREATE-TABS.md §23)`, first?.created, true);
         this.expect(`${name}: inside that listener tabs.get resolves and sessions.setTabValue succeeds (§24)`, first?.probed, {get: true, set: true});
 
         if (first?.hops > 1) {

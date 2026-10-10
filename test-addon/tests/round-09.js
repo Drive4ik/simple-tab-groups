@@ -8,7 +8,7 @@ and records events from ALL windows, tagged [winA]/[winB]. It settles: the order
 windows.onCreated vs the first tabs.onAttached, whether the initial tab of a freshly created
 window ever fires tabs.onCreated, whether a session-restored window is populated only through
 tabs.onCreated with fresh ids, and what happens to hidden tabs on both trips.
-Recorded in TABGROUPS-BEHAVIOR.md §17, §18. Gesture instructions come as questions during the
+Recorded in BEHAVIOR-TABGROUPS.md §17, §18. Gesture instructions come as questions during the
 run: do the gesture, wait for the tab bar to settle, then T.visualAnswer('done') — or describe
 what you saw if anything looked odd.`;
 

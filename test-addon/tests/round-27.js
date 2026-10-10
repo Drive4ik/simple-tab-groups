@@ -4,7 +4,7 @@ import {sceneUrl, nameFromUrl, openedWindows, withContainer} from '../tabs.js';
 import * as Sessions from '../sessions.js';
 
 export const note = `Round 27 - reader mode and extension pages through the tabs API.
-tabs.create refuses an about:reader url (CREATE-TABS-BEHAVIOR.md 16), so reader mode is driven
+tabs.create refuses an about:reader url (BEHAVIOR-CREATE-TABS.md 16), so reader mode is driven
 through the openInReaderMode flag, and every step prints what the tab reports: url,
 isInReaderMode, isArticle, status, discarded. A background tab created with the flag, at the
 resolve, once loaded, after tabs.discard and after activation (R27.01); the same tab created
@@ -23,14 +23,14 @@ before and after the reader url has committed, the shape of Groups.settleTabs on
 its id, for every shape an id takes (R27.14); tabs.update with a url on a DISCARDED tab - born
 discarded, discarded after its load, hidden, and born on a page of an unknown uuid, shown and
 hidden (R27.15).
-The expectations are the facts of CREATE-TABS-BEHAVIOR.md 30-35, 40, 41 and 53. Needs the network:
+The expectations are the facts of BEHAVIOR-CREATE-TABS.md 30-35, 40, 41 and 53. Needs the network:
 the article is a real page.`;
 
 const UPDATED_KEYS = ['url', 'status', 'isArticle', 'discarded'];
 const OWN_ORIGIN = browser.runtime.getURL('');
 
 // the shapes an extension id takes, and a uuid next to them for comparison: the id, and the user
-// name and the host the URL constructor reads it as (CREATE-TABS-BEHAVIOR.md 41)
+// name and the host the URL constructor reads it as (BEHAVIOR-CREATE-TABS.md 41)
 const ID_SHAPES = [
     ['uuid', '9a1b7c52-3f0e-4d8a-b6c1-2e5f7a9d0c34', '', '9a1b7c52-3f0e-4d8a-b6c1-2e5f7a9d0c34'],
     ['name@domain', 'some-addon@example.com', 'some-addon', 'example.com'],
@@ -72,7 +72,7 @@ async function attempt(t, name, label, properties, windowId = t.win) {
     return tab;
 }
 
-// a created tab starts on about:blank with status complete (CREATE-TABS-BEHAVIOR.md 12): the page
+// a created tab starts on about:blank with status complete (BEHAVIOR-CREATE-TABS.md 12): the page
 // is on it once the status is complete past that, or it never comes - a real load takes LOAD_WAIT
 async function loaded(t, name) {
     const started = Date.now();
@@ -162,7 +162,7 @@ export const tests = [
         const tab = await attempt(t, 'reader', '{url: article, openInReaderMode: true}', {url: READER_URL, openInReaderMode: true});
 
         t.require('the create resolved', tab !== null);
-        t.expect('at the resolve the tab is about:blank without the flag (CREATE-TABS-BEHAVIOR.md §30)', {url: tab.url, isInReaderMode: tab.isInReaderMode}, {url: 'about:blank', isInReaderMode: false});
+        t.expect('at the resolve the tab is about:blank without the flag (BEHAVIOR-CREATE-TABS.md §30)', {url: tab.url, isInReaderMode: tab.isInReaderMode}, {url: 'about:blank', isInReaderMode: false});
 
         const loadedTab = await report(t, 'reader', 'loaded');
         t.expect('loaded: the reader url with isInReaderMode (§30)', readerState(loadedTab), {url: readerUrl(READER_URL), isInReaderMode: true, discarded: false});
@@ -188,7 +188,7 @@ export const tests = [
 
         const tab = await attempt(t, 'lazy', '{url: article, openInReaderMode: true, discarded: true, title: lazy}', {url: READER_URL, openInReaderMode: true, discarded: true, title: 'lazy'});
 
-        t.expect('a discarded create with the flag is refused (CREATE-TABS-BEHAVIOR.md §30)', tab === null, true);
+        t.expect('a discarded create with the flag is refused (BEHAVIOR-CREATE-TABS.md §30)', tab === null, true);
 
         if (!tab) {
             return;
@@ -213,7 +213,7 @@ export const tests = [
         t.require('the create resolved', tab !== null);
 
         const loadedTab = await report(t, 'plain', 'loaded');
-        t.expect('the tab lands on the reader url all the same (CREATE-TABS-BEHAVIOR.md §30)', readerState(loadedTab), {url: readerUrl(NETWORK_URL), isInReaderMode: true, discarded: false});
+        t.expect('the tab lands on the reader url all the same (BEHAVIOR-CREATE-TABS.md §30)', readerState(loadedTab), {url: readerUrl(NETWORK_URL), isInReaderMode: true, discarded: false});
 
         const activated = await activate(t, 'plain');
         t.expect('and stays there once activated (§30)', readerState(activated), {url: readerUrl(NETWORK_URL), isInReaderMode: true, discarded: false});
@@ -256,7 +256,7 @@ export const tests = [
             landed.nourl = {url: fresh.url, isInReaderMode: fresh.isInReaderMode};
         }
 
-        t.expect('every call resolves (CREATE-TABS-BEHAVIOR.md §30)', verdicts, {view: 'resolved', own: 'resolved', blank: 'resolved', nourl: 'resolved'});
+        t.expect('every call resolves (BEHAVIOR-CREATE-TABS.md §30)', verdicts, {view: 'resolved', own: 'resolved', blank: 'resolved', nourl: 'resolved'});
         t.expect('view-source, an own page and about:blank stay on about:blank without the flag, no url opens about:newtab (§30)', landed, {
             view: {url: 'about:blank', isInReaderMode: false},
             own: {url: 'about:blank', isInReaderMode: false},
@@ -281,7 +281,7 @@ export const tests = [
             const fresh = await report(t, 'reader', 'loaded');
 
             t.note(`reader container: ${fresh?.cookieStoreId} (${fresh?.cookieStoreId === cookieStoreId ? 'the requested one' : 'NOT the requested one'})`);
-            t.expect('the reader page opens in the requested container (CREATE-TABS-BEHAVIOR.md §30)', {...readerState(fresh), container: fresh.cookieStoreId === cookieStoreId}, {url: readerUrl(READER_URL), isInReaderMode: true, discarded: false, container: true});
+            t.expect('the reader page opens in the requested container (BEHAVIOR-CREATE-TABS.md §30)', {...readerState(fresh), container: fresh.cookieStoreId === cookieStoreId}, {url: readerUrl(READER_URL), isInReaderMode: true, discarded: false, container: true});
         });
     },
 },
@@ -316,7 +316,7 @@ export const tests = [
 
         const created = await attempt(t, 'created', `{url: ${short(readerUrl(`view-source:${NETWORK_URL}`))}}`, {url: readerUrl(`view-source:${NETWORK_URL}`)});
 
-        t.expect('tabs.update refuses an about:reader url whatever it wraps (CREATE-TABS-BEHAVIOR.md §31)', verdicts, {x: 'rejected', y: 'rejected', z: 'rejected'});
+        t.expect('tabs.update refuses an about:reader url whatever it wraps (BEHAVIOR-CREATE-TABS.md §31)', verdicts, {x: 'rejected', y: 'rejected', z: 'rejected'});
         t.expect('the tabs stay on their pages (§31)', stayed, {x: true, y: true, z: true});
         t.expect('tabs.create refuses an about:reader url whatever it wraps (§16, §31)', created === null, true);
     },
@@ -342,7 +342,7 @@ export const tests = [
 
         let toggled = await attemptCall(t, 'article', 'tabs.toggleReaderMode(article)  // a background tab', () => browser.tabs.toggleReaderMode(t.id('article')).then(() => true), 'reader on');
 
-        t.expect('a background tab has no isArticle and cannot be toggled (CREATE-TABS-BEHAVIOR.md §32)', {isArticle: inBackground.isArticle, toggle: toggled ? 'resolved' : 'rejected'}, {isArticle: undefined, toggle: 'rejected'});
+        t.expect('a background tab has no isArticle and cannot be toggled (BEHAVIOR-CREATE-TABS.md §32)', {isArticle: inBackground.isArticle, toggle: toggled ? 'resolved' : 'rejected'}, {isArticle: undefined, toggle: 'rejected'});
 
         // a background tab may never be judged an article: the toggle is tried again once the tab has been shown
         if (toggled === null) {
@@ -404,7 +404,7 @@ export const tests = [
             t.note(`session record: url:${short(record.url)}; keys: ${Object.keys(record).sort().join(', ')}`);
         }
 
-        t.expect('the session record holds the reader url (CREATE-TABS-BEHAVIOR.md §33)', session.window.tabs.map(record => record.url), [sceneUrl('w'), readerUrl(READER_URL)]);
+        t.expect('the session record holds the reader url (BEHAVIOR-CREATE-TABS.md §33)', session.window.tabs.map(record => record.url), [sceneUrl('w'), readerUrl(READER_URL)]);
 
         const restored = await t.step('sessions.restore(sessionId of the window)', () => browser.sessions.restore(session.window.sessionId), {wait: 0, snap: false});
         const restoredWinId = restored.window.id;
@@ -460,7 +460,7 @@ export const tests = [
         await t.snap('after restart');
         t.note(`reader after the restart: ${describe(back)}`);
         t.expectRow('after restart', ['x*', 'reader']);
-        t.expect('after the restart: discarded, on the reader url, with the flag (CREATE-TABS-BEHAVIOR.md §33)', readerState(back), {url: readerUrl(READER_URL), isInReaderMode: true, discarded: true});
+        t.expect('after the restart: discarded, on the reader url, with the flag (BEHAVIOR-CREATE-TABS.md §33)', readerState(back), {url: readerUrl(READER_URL), isInReaderMode: true, discarded: true});
 
         const activated = await activate(t, 'reader');
         t.expect('activated: the reader page loads on the same url (§33)', readerState(activated), {url: readerUrl(READER_URL), isInReaderMode: true, discarded: false});
@@ -480,7 +480,7 @@ export const tests = [
 
         t.note(`getSelf: id ${self.id}; hostPermissions: ${JSON.stringify(self.hostPermissions)}`);
         t.note(`the own origin is ${listed ? 'listed' : 'NOT listed'} in hostPermissions`);
-        t.expect('hostPermissions names the extension\'s own origin (CREATE-TABS-BEHAVIOR.md §34)', listed, true);
+        t.expect('hostPermissions names the extension\'s own origin (BEHAVIOR-CREATE-TABS.md §34)', listed, true);
 
         const cases = [
             ['unknown', `moz-extension://${crypto.randomUUID()}/tab.html?tab=unknown`],
@@ -537,7 +537,7 @@ export const tests = [
             t.note(`main_frame requests, reader view ${moment}: ${seen.length - before}${seen.length > before ? ` - ${seen.slice(before).map(short).join(' | ')}` : ''}`);
         }
 
-        t.expect('the reader button takes the tab into the reader view and back, with no main_frame request either way (CREATE-TABS-BEHAVIOR.md §40)', pressed, {
+        t.expect('the reader button takes the tab into the reader view and back, with no main_frame request either way (BEHAVIOR-CREATE-TABS.md §40)', pressed, {
             entered: {url: readerUrl(READER_URL), isInReaderMode: true, discarded: false, isArticle: false, requests: 0},
             left: {url: READER_URL, isInReaderMode: false, discarded: false, isArticle: true, requests: 0},
         });
@@ -599,7 +599,7 @@ export const tests = [
         }, {snap: 'early batch hidden and discarded'});
 
         t.expectRow('early batch hidden and discarded', ['x*', '➕e1(h)', '➕e2(h)', '➕e3(h)']);
-        t.expect('discarded before the url committed: about:blank, no flag (CREATE-TABS-BEHAVIOR.md §35)', await states(early, 'after hide + discard'), {e1: blank, e2: blank, e3: blank});
+        t.expect('discarded before the url committed: about:blank, no flag (BEHAVIOR-CREATE-TABS.md §35)', await states(early, 'after hide + discard'), {e1: blank, e2: blank, e3: blank});
 
         await t.step('tabs.create x3 in parallel, wait until every url reads about:reader, then tabs.hide and tabs.discard', async () => {
             const tabs = await createBatch(committed);
@@ -672,7 +672,7 @@ export const tests = [
             }
         }
 
-        t.expect('every shape is parsed and its path, query and hash are read; the host comes back in lower case and a leading @ is gone (CREATE-TABS-BEHAVIOR.md §41)', got, want);
+        t.expect('every shape is parsed and its path, query and hash are read; the host comes back in lower case and a leading @ is gone (BEHAVIOR-CREATE-TABS.md §41)', got, want);
     },
 },
 
@@ -770,7 +770,7 @@ export const tests = [
         });
 
         t.expectRow('deadhidden updated', ['x*', '➕born', '➕unloaded', '➕hidden(h)', '➕dead', '➕deadhidden(h)']);
-        t.expect('the update loads a discarded tab on the new page, a hidden one stays hidden, a tab of an unknown uuid alike (CREATE-TABS-BEHAVIOR.md §53)', got, Object.fromEntries(names.map(name => [name, updated(hidden.includes(name))])));
+        t.expect('the update loads a discarded tab on the new page, a hidden one stays hidden, a tab of an unknown uuid alike (BEHAVIOR-CREATE-TABS.md §53)', got, Object.fromEntries(names.map(name => [name, updated(hidden.includes(name))])));
     },
 },
 

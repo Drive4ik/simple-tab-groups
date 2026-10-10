@@ -6,7 +6,7 @@ export const quiet = OTHER_ADDON_WAIT;
 
 export const note = `Round 16 — what tabs.create({openerTabId}) accepts: the opener states a
 recreate path meets. A hidden, discarded or hidden-and-discarded opener takes the link at
-creation, and a tab created discarded carries it (OPENER-BEHAVIOR.md §11); an opener in another
+creation, and a tab created discarded carries it (BEHAVIOR-OPENER.md §11); an opener in another
 window or an already closed one rejects the call and creates NO tab (§12, §13). Every cell prints
 the opener as a suffix: c1→p means c1.openerTabId points at p. The expectations are the
 clean-profile facts; the silence window is OTHER_ADDON_WAIT so a re-run in a Tree Style Tab

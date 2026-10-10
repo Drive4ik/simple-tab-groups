@@ -194,7 +194,7 @@ export const tests = [
 
         t.expectRow('closed', ['keep*']);
         t.expectRow('restored', ['keep', 'c*']);
-        t.expect('the value is readable inside tabs.onCreated of the restored tab (CREATE-TABS-BEHAVIOR.md §29)', t.probesByName(['c']).c, shown('value-c'));
+        t.expect('the value is readable inside tabs.onCreated of the restored tab (BEHAVIOR-CREATE-TABS.md §29)', t.probesByName(['c']).c, shown('value-c'));
         t.expect('the value is on the fresh tab after the restore settled (§29)', await readValue(fresh.id), shown('value-c'));
     },
 },
@@ -261,7 +261,7 @@ export const tests = [
 
         const expected = Object.fromEntries(names.map(name => [name, shown(`value-${name}`)]));
 
-        t.expect('the values are readable inside tabs.onCreated, the discarded and the hidden tab included (CREATE-TABS-BEHAVIOR.md §29)', t.probesByName(names), expected);
+        t.expect('the values are readable inside tabs.onCreated, the discarded and the hidden tab included (BEHAVIOR-CREATE-TABS.md §29)', t.probesByName(names), expected);
         t.expect('the values are on the fresh tabs after the restore settled (§29)', await t.valuesByName(names), expected);
     },
 },
@@ -283,7 +283,7 @@ export const tests = [
 
         t.expectRow('closed', ['keep*']);
         t.expectRow('restored', ['keep', 'c*']);
-        t.expect('the restored value is there before the write (CREATE-TABS-BEHAVIOR.md §29)', t.probesByName(['c']).c, shown('value-c'));
+        t.expect('the restored value is there before the write (BEHAVIOR-CREATE-TABS.md §29)', t.probesByName(['c']).c, shown('value-c'));
         t.expect('the write from inside tabs.onCreated is what the tab holds after the restore settled (§29)', await readValue(fresh.id), shown(WRITTEN_VALUE));
     },
 },
@@ -342,7 +342,7 @@ export const tests = [
         t.expectRow('after (scene window)', ['keep*']);
 
         t.note(`restored window: ${restoredWinId === winId ? 'the SAME id' : 'a fresh id'}`);
-        t.expect('the window value is readable inside every tabs.onCreated of the restored window and inside windows.onCreated (CREATE-TABS-BEHAVIOR.md §29)', {reads: t.windowProbes.length, values: [...new Set(t.windowProbes)]}, {reads: names.length + 1, values: [shown('value-window')]});
+        t.expect('the window value is readable inside every tabs.onCreated of the restored window and inside windows.onCreated (BEHAVIOR-CREATE-TABS.md §29)', {reads: t.windowProbes.length, values: [...new Set(t.windowProbes)]}, {reads: names.length + 1, values: [shown('value-window')]});
         t.expect('the window value is on the fresh window after the restore settled (§29)', await readWindowValue(restoredWinId), shown('value-window'));
     },
 },

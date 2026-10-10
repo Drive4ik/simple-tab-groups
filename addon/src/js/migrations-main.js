@@ -575,7 +575,7 @@ export default [{
 
             // adopt the live native groups of each window: per-tab membership → sessions,
             // metadata → the STG group that OWNS the member tabs. Hidden tabs keep their native
-            // membership (docs/TABGROUPS-BEHAVIOR.md §4) and pre-5.5 STG hid tabs without
+            // membership (docs/BEHAVIOR-TABGROUPS.md §4) and pre-5.5 STG hid tabs without
             // ungrouping, so one live group can span several STG groups: visible members belong
             // to the window's active group, hidden ones to their unloaded groups. Every
             // (live group, owner) pair gets its OWN stable id - one id never lives in two STG

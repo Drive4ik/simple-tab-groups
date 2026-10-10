@@ -8,7 +8,7 @@ what survives hide/show, discard, a move (same window, across windows), a pin, t
 and a browser restart. Every cell prints the opener as a suffix right after the name: c1→p means
 c1.openerTabId points at p; (p) is a pinned tab. Run it twice — in the clean profile, and in a profile with Tree Style
 Tab and no STG: the expectations are the clean-profile facts, so in the TST profile every MISMATCH
-line is a TST fact (OPENER-BEHAVIOR.md, the Tree Style Tab section). A tree extension acts with a delay, so
+line is a TST fact (BEHAVIOR-OPENER.md, the Tree Style Tab section). A tree extension acts with a delay, so
 a step here counts as settled only after OTHER_ADDON_WAIT of silence — in both profiles alike.
 
 PRECONDITION for R14.08: about:preferences → Startup → "Open previous windows and tabs" must be ON.`;
@@ -126,7 +126,7 @@ export const tests = [
         t.expectRow('no index, opener inactive', ['p*', '➕c1→p', 'a', '➕c2→a', 'b']);
         t.expectRow('index 0', ['➕c3→p', 'p*', '➕c1→p', 'a', '➕c2→a', 'b']);
         t.expectRow('index at the end', ['➕c3→p', 'p*', '➕c1→p', 'a', '➕c2→a', 'b', '➕c4→p']);
-        t.note('CREATE-TABS-BEHAVIOR.md §2 holds for tabs WITHOUT an opener; the index rows above are the same check WITH one');
+        t.note('BEHAVIOR-CREATE-TABS.md §2 holds for tabs WITHOUT an opener; the index rows above are the same check WITH one');
     },
 },
 

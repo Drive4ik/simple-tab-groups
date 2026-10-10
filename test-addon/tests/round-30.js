@@ -5,7 +5,7 @@ to an https address of a host no server answers for, so nothing but the request 
 the outcome. What a tab on such an address reports when nobody listens, for a made-up top-level
 domain and for a reserved one (R30.01); which requests reach the listener and what they say about
 who asked - tabs.create, tabs.update, a page of the add-on, a script of a web page, a web address
-a listener redirects (R30.02). The expectations are the facts of CREATE-TABS-BEHAVIOR.md 51-52.
+a listener redirects (R30.02). The expectations are the facts of BEHAVIOR-CREATE-TABS.md 51-52.
 Needs the network for the web page of R30.02. The own uuid is never printed.`;
 
 const OWN_UUID = new URL(browser.runtime.getURL('')).host;
@@ -92,7 +92,7 @@ export const tests = [
         }
 
         t.expect(
-            'a tab on an address no server answers for keeps the address as its url, complete, with the title of the error page, for either top-level domain (CREATE-TABS-BEHAVIOR.md §51)',
+            'a tab on an address no server answers for keeps the address as its url, complete, with the title of the error page, for either top-level domain (BEHAVIOR-CREATE-TABS.md §51)',
             got,
             Object.fromEntries(HOSTS.map(([name, host]) => [name, {url: address(host, name), status: 'complete', title: 'Problem loading page'}])),
         );
@@ -174,7 +174,7 @@ export const tests = [
 
         got.hopKeepsTheRequest = Boolean(hopFirst) && seen.some(details => details.requestId === hopFirst.requestId && details.originUrl === hopFirst.originUrl);
 
-        t.expect('every way of asking reaches the listener as a GET main_frame request of frame 0 with originUrl naming who asked, a redirect keeps the request, and every tab ends on the error page (CREATE-TABS-BEHAVIOR.md §52)', got, {
+        t.expect('every way of asking reaches the listener as a GET main_frame request of frame 0 with originUrl naming who asked, a redirect keeps the request, and every tab ends on the error page (BEHAVIOR-CREATE-TABS.md §52)', got, {
             created: {asked: byAddon, ended: onErrorPage},
             y: {asked: byAddon, ended: onErrorPage},
             replaced: {asked: 'GET main_frame frame:0  origin: a page of the add-on (/navigate.html)  document: none', ended: onErrorPage},

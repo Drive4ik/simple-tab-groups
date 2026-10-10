@@ -16,8 +16,8 @@ export const DEBUG = Object.freeze({
     AUTO: 'auto',
 });
 
-export const MAX_URL_LENGTH = 1048572; // bytes of the serialized url, all ASCII, so also its characters: the last length accepted for the stub page shape, docs/CREATE-TABS-BEHAVIOR.md §20
-export const READER_MODE_PAGE = 'about:reader'; // a tab in reader mode holds about:reader?url=<the page, encoded>; tabs.create refuses that url and takes openInReaderMode instead, docs/CREATE-TABS-BEHAVIOR.md §16, §30
+export const MAX_URL_LENGTH = 1048572; // bytes of the serialized url, all ASCII, so also its characters: the last length accepted for the stub page shape, docs/BEHAVIOR-CREATE-TABS.md §20
+export const READER_MODE_PAGE = 'about:reader'; // a tab in reader mode holds about:reader?url=<the page, encoded>; tabs.create refuses that url and takes openInReaderMode instead, docs/BEHAVIOR-CREATE-TABS.md §16, §30
 
 export const ACTIVE_SYMBOL = '〇';
 export const DISCARDED_SYMBOL = '✱';

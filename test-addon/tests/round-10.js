@@ -3,7 +3,7 @@ import {wait} from '../test.js';
 import {sceneUrl} from '../tabs.js';
 
 export const note = `Round 10 — API pinning, the facts behind pin-and-detach of tabs that cannot be hidden.
-(A) tabs.update({pinned: true}) on a native-group member: membership, events, session values, where unpin returns the tab — recorded as TABGROUPS-BEHAVIOR.md §19;
+(A) tabs.update({pinned: true}) on a native-group member: membership, events, session values, where unpin returns the tab — recorded as BEHAVIOR-TABGROUPS.md §19;
 (B) the same on the ACTIVE and ONLY member — the group dies, the tab stays active (§19);
 (C) MANUAL: tabs.hide silently skips a tab with a LIVE microphone, tabs.update({pinned: true}) pins it
 normally with the microphone staying live (§19) — the microphone is requested by an injected script
@@ -11,7 +11,7 @@ on NETWORK_URL (extension pages get the microphone without it ever reaching tab.
 the run needs only the permission grant;
 (D) MANUAL: tabs.move of a tab with a LIVE microphone into another window and back — the capture
 survives the trip (sharingState, the track of the page's own stream, the indicator by eye) —
-recorded as MOVE-TABS-BEHAVIOR.md §6.`;
+recorded as BEHAVIOR-MOVE-TABS.md §6.`;
 
 const WATCH = [
     'tabs.onMoved', 'tabs.onUpdated', 'tabs.onActivated',

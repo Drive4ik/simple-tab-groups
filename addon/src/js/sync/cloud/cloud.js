@@ -886,7 +886,7 @@ function createStub(groupId) {
     };
 }
 
-// the rows (C1-C8 trust cloud, L1-L5 trust local) are docs/UPLOAD-TO-CLOUD.md §2
+// the rows (C1-C8 trust cloud, L1-L5 trust local) are docs/DESIGN-CLOUD-UPLOAD.md §2
 function syncGroupUpload(localGroup, cloudGroup, {sourceOfTruth, lastSync, prepareCloudGroup}, changes) {
     const settled = (resultLocalGroup, resultCloudGroup) => ({
         settled: true,

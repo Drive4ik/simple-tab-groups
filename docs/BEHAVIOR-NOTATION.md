@@ -1,6 +1,6 @@
 # Notation for the browser-behavior docs
 
-How a verified fact is written down in `docs/*-BEHAVIOR.md`. One format for all of them, so a
+How a verified fact is written down in `docs/BEHAVIOR-*.md`. One format for all of them, so a
 state map can be read at a glance and never has to be decoded.
 
 Facts are produced by `test-addon/` — a small add-on loaded into a clean Firefox profile with no
@@ -74,7 +74,7 @@ A cell is a tab. Always a **meaningful name**, never a real `tab.id`:
   are instantly told apart; two emoji next to each other are not.
 - **`→name`** right after the tab's own name is its opener: `c1→p` means `c1.openerTabId` points
   at `p`; no arrow — no opener. Printed only by rounds whose subject is the opener
-  (OPENER-BEHAVIOR.md); everywhere else the column would be noise.
+  (BEHAVIOR-OPENER.md); everywhere else the column would be noise.
 
 Emoji are for the two things you scan for — which group a tab is in, and what is new. Everything
 else stays text. Adding a third emoji axis makes the table noise again, which is exactly what this
@@ -111,7 +111,7 @@ Every fact carries the run that produced it:
 - **`E<n>`** — legacy marker from the runs made before this harness existed. Those runs are not
   reproducible and their tables carry raw tab ids. Every `E<n>` fact is being re-verified; the
   marker is replaced with an `R` one as that happens. Do not mint new `E` numbers.
-- **`L<n>`** — a lifecycle fact from `LIFECYCLE-BEHAVIOR.md`, produced by the throwaway stand
+- **`L<n>`** — a lifecycle fact from `BEHAVIOR-LIFECYCLE.md`, produced by the throwaway stand
   described inside that document (§7 here). The evidence is the recorded session log kept in the
   document; re-verifying means rebuilding the stand from its description and replaying the action.
 
@@ -123,15 +123,15 @@ means the same run.
 ## 5. Rules
 
 - **Real `tab.id` / group ids never reach a doc.** Native group ids are not stable anyway
-  (TABGROUPS-BEHAVIOR.md §5) — a square plus a name says everything an id could.
+  (BEHAVIOR-TABGROUPS.md §5) — a square plus a name says everything an id could.
 - **The scene is asserted, not assumed.** The harness builds the scene, then compares the result
   against what was requested and aborts the test on any mismatch. No fact is ever derived from a
   scene that silently came out wrong.
 - **New facts are appended** at the end of their document under the next free number. Numbers are
   never renumbered or reused — code comments point at them.
-- **One topic per document.** Tab creation and `index` → CREATE-TABS-BEHAVIOR.md; native groups →
-  TABGROUPS-BEHAVIOR.md. Anything involving a native group — including the membership of created
-  or moved tabs — lives in TABGROUPS-BEHAVIOR.md; other documents cross-reference it instead of
+- **One topic per document.** Tab creation and `index` → BEHAVIOR-CREATE-TABS.md; native groups →
+  BEHAVIOR-TABGROUPS.md. Anything involving a native group — including the membership of created
+  or moved tabs — lives in BEHAVIOR-TABGROUPS.md; other documents cross-reference it instead of
   copying. The exception that DOES get a copy: when creation or movement in the presence of native
   groups behaves differently from what CREATE-TABS/MOVE-TABS themselves document — such a deviation
   is recorded in both documents, with cross-references, and both copies are kept in sync. Overlaps
@@ -192,7 +192,7 @@ printed — a fact must never look more complete than it is.
 
 **Distinguishing hypotheses.** When two explanations both fit, the test matrix must contain the
 cells where they disagree, and the output must print whatever the hypotheses differ about. §1 of
-TABGROUPS-BEHAVIOR.md was settled by exactly two rows out of eight.
+BEHAVIOR-TABGROUPS.md was settled by exactly two rows out of eight.
 
 **Visual checks.** `await t.ask('…')` stops the run at that exact frame, prints the window as the
 API sees it and the question, and waits for `T.visualAnswer('…')`. The answer lands in the report
@@ -210,7 +210,7 @@ description when a fact is disputed. The exception is browser shutdown and brows
 quit kills the addon too, but the evidence lands in its storage and is read back after the
 restart, and a harness installed in the profile starts with the browser and records its own first
 moments the same way, so those facts come from the regular harness with the usual `R` markers
-(LIFECYCLE-BEHAVIOR.md §8, CREATE-TABS-BEHAVIOR.md §55).
+(BEHAVIOR-LIFECYCLE.md §8, BEHAVIOR-CREATE-TABS.md §55).
 
 Their document keeps the same rules as the rest (§5), with these deviations:
 

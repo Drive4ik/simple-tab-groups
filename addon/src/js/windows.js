@@ -373,7 +373,7 @@ async function runGrandRestoreNow(restoredWindowIds) {
         Tabs.sendUpdatedGroup(groupId);
     }
 
-    // the browser brings the window back without the links (docs/OPENER-BEHAVIOR.md §15) - the saved
+    // the browser brings the window back without the links (docs/BEHAVIOR-OPENER.md §15) - the saved
     // ones are applied to the live tabs of the group whose entries leave the restore list
     for (const {group, savedTabs} of openersToApply) {
         const liveTabs = group.tabs.filter(tab => !tabsToDelete.has(tab.id));

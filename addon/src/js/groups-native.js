@@ -27,7 +27,7 @@ function onStorageChanged(changes) {
     }
 }
 
-// Membership model (browser behavior details: docs/TABGROUPS-BEHAVIOR.md):
+// Membership model (browser behavior details: docs/BEHAVIOR-TABGROUPS.md):
 // - session value 'groupNativeId' on a tab = stable string id of its sub-group. The single source
 //   of truth for membership: survives addon/browser restarts and travels with the tab everywhere -
 //   Tabs.prepareForSave carries it into backup/cloud/archive/undo, Tabs.create writes it back.
@@ -35,7 +35,7 @@ function onStorageChanged(changes) {
 //   stable ids, array order is meaningless (visual order comes from tab order). The same format
 //   is stored in storage, backup, cloud and archive - there is no other representation.
 // - live browser group ids are ephemeral (a re-created group gets a new id, see
-//   docs/TABGROUPS-BEHAVIOR.md §5) and never leave the runtime: the maps below translate them
+//   docs/BEHAVIOR-TABGROUPS.md §5) and never leave the runtime: the maps below translate them
 //   to stable ids and back.
 // - the mirror records live membership immediately, but ERASES a session only through a deferred
 //   settled re-check (clearWindowSessionsNow): the id must have been live in that window before

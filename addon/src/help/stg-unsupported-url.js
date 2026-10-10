@@ -70,7 +70,7 @@ async function openNestedUrl() {
     }
 }
 
-// location.replace to another extension's page is denied, tabs.update is not (docs/CREATE-TABS-BEHAVIOR.md §37, §39, §47)
+// location.replace to another extension's page is denied, tabs.update is not (docs/BEHAVIOR-CREATE-TABS.md §37, §39, §47)
 async function openUrl(url) {
     const tab = await browser.tabs.getCurrent();
 

@@ -6,14 +6,14 @@ a claim is as strong as the runs cited next to it, and no stronger.
 
 Only facts confirmed by an actual test run belong here — never assumptions about how the browser
 "probably" works. This file holds `tabs.move` behavior with **no native groups involved**; how a
-move changes native-group membership lives in TABGROUPS-BEHAVIOR.md, tab creation and `index` —
-in CREATE-TABS-BEHAVIOR.md. What overlaps is duplicated in both files with cross-references.
+move changes native-group membership lives in BEHAVIOR-TABGROUPS.md, tab creation and `index` —
+in BEHAVIOR-CREATE-TABS.md. What overlaps is duplicated in both files with cross-references.
 
 State tables, markers, confirmation rules and how the tests are written — BEHAVIOR-NOTATION.md.
 
 **A new fact is appended as the next number at the end of the numbered sections, right before
 "Implications for STG code". Numbers are never renumbered or reused** — code comments reference
-them by number (`docs/MOVE-TABS-BEHAVIOR.md §1`).
+them by number (`docs/BEHAVIOR-MOVE-TABS.md §1`).
 
 ---
 
@@ -33,7 +33,7 @@ them by number (`docs/MOVE-TABS-BEHAVIOR.md §1`).
 - **A hidden tab moved to another window arrives VISIBLE.** The move itself reveals it: both the
   resolved Tab objects and a fresh `tabs.get` report `hidden: false`. (R7.02) The browser's own
   gestures reveal the same way — and silently, with no `tabs.onUpdated {hidden}` at all:
-  TABGROUPS-BEHAVIOR.md §17 (R9.02).
+  BEHAVIOR-TABGROUPS.md §17 (R9.02).
 
   | tab index | 0 | 1 | 2 |
   | - | - | - | - |
@@ -97,7 +97,7 @@ them by number (`docs/MOVE-TABS-BEHAVIOR.md §1`).
   not bring the link back, and no `tabs.onUpdated` announces the loss — only
   `onDetached`/`onAttached` are delivered. `tabs.update({openerTabId})` restores it once both
   tabs share a window; an opener left in another window is refused. Cells print the opener as
-  `c1→p` (notation §2); the full opener picture is OPENER-BEHAVIOR.md §7. (R14.07)
+  `c1→p` (notation §2); the full opener picture is BEHAVIOR-OPENER.md §7. (R14.07)
 
   | tab index | 0 | 1 | 2 | 3 |
   | - | - | - | - | - |
@@ -135,7 +135,7 @@ them by number (`docs/MOVE-TABS-BEHAVIOR.md §1`).
   their links too, silently; a child that follows into the opener's window arrives without a
   link, `tabs.update` restores it. A `tabs.get` inside `onDetached` and inside `onAttached`
   already shows the moved tab in the new window with no opener. The full picture is
-  OPENER-BEHAVIOR.md §9. (R14.16)
+  BEHAVIOR-OPENER.md §9. (R14.16)
 
   | tab index | 0 | 1 | 2 | 3 |
   | - | - | - | - | - |
@@ -165,11 +165,11 @@ them by number (`docs/MOVE-TABS-BEHAVIOR.md §1`).
 
 ## 5. An array moved to an explicit index in its own window lands as one block in array order — around its first mover, not at the requested index
 
-TABGROUPS-BEHAVIOR.md §21 shows the block landing at the requested index when every other mover
+BEHAVIOR-TABGROUPS.md §21 shows the block landing at the requested index when every other mover
 stands beyond it. The rows below are the other cases — the calls `Tabs.ensureSorted` makes to
 collect a group into a block: the target is the first tab's own index or the smallest index of
 the set. In every run the set came out contiguous and in array order; the first mover behaves
-like the anchor of `tabs.group` (TABGROUPS-BEHAVIOR.md §3) — it goes to the requested index (no
+like the anchor of `tabs.group` (BEHAVIOR-TABGROUPS.md §3) — it goes to the requested index (no
 move and no event when it already stands there) and each next mover lands right after the
 previous one, wherever that one is by then.
 
@@ -267,8 +267,8 @@ previous one, wherever that one is by then.
 3. **Every cross-window move needs a re-link of `openerTabId`** (§4): the link is gone even when
    the opener moved along in the same call, and nothing announces it. Re-apply it after the move
    for the tabs whose opener is in the target window — and only for them, an opener left behind
-   is refused (OPENER-BEHAVIOR.md §7). The children an opener leaves behind lose their links as
-   well, with no event (§4, OPENER-BEHAVIOR.md §9).
+   is refused (BEHAVIOR-OPENER.md §7). The children an opener leaves behind lose their links as
+   well, with no event (§4, BEHAVIOR-OPENER.md §9).
 4. **A same-window array gather forms the block around its first mover, not at the requested
    index** (§5): with the first tab's own index — or the set's smallest — as the target, the set
    always ends up contiguous and in array order, but it starts earlier by the number of tabs that
@@ -277,4 +277,4 @@ previous one, wherever that one is by then.
    needs an exact landing index must read it from the resolved objects, not from the request.
 5. **A tab with a live microphone can be moved between windows** (§6): `Tabs.move` into a LOADED
    group carries it like any other tab, the capture is not lost on the way. Into an unloaded
-   group it is pinned away instead, because it cannot be hidden (TABGROUPS-BEHAVIOR.md §19).
+   group it is pinned away instead, because it cannot be hidden (BEHAVIOR-TABGROUPS.md §19).

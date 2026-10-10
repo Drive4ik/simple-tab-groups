@@ -147,7 +147,7 @@ export function isSkippedTracking(tab) {
 }
 
 // the first load of a new tab reaches onBeforeTabRequest a few ms after this event
-// (docs/CREATE-TABS-BEHAVIOR.md §23): the request handler waits for the group decision here
+// (docs/BEHAVIOR-CREATE-TABS.md §23): the request handler waits for the group decision here
 const pendingOnCreatedById = new Map();
 
 async function onCreated(tab) {
@@ -274,10 +274,10 @@ async function onUpdated(tabId, changeInfo, tab) {
         return;
     }
 
-    // the subscription is unfiltered (docs/OPENER-BEHAVIOR.md Implications 9), so the event fires
+    // the subscription is unfiltered (docs/BEHAVIOR-OPENER.md Implications 9), so the event fires
     // on every tab property; no tracked key changed - drop it before the wait and the extra
     // tabs.get. The tab argument already carries the new values, openerTabId included
-    // (docs/OPENER-BEHAVIOR.md §10), and it feeds the mirror, not the diff base: the snapshot may
+    // (docs/BEHAVIOR-OPENER.md §10), and it feeds the mirror, not the diff base: the snapshot may
     // hold tracked keys of an event that is still waiting to be processed
     if (!Object.hasOwn(changeInfo, 'groupId') && !Constants.ON_UPDATED_TAB_PROPERTIES.some(key => Object.hasOwn(changeInfo, key))) {
         Cache.mirrorTab(tab);
@@ -475,12 +475,12 @@ async function onMoved(tabId, {windowId, fromIndex, toIndex}) {
 }
 
 // onDetached/onAttached are never muted per-window: the addon's own moves are muted per-tab, a
-// restored window never emits attaches (docs/TABGROUPS-BEHAVIOR.md §18), and a moved tab's attach
+// restored window never emits attaches (docs/BEHAVIOR-TABGROUPS.md §18), and a moved tab's attach
 // can be delivered BEFORE windows.onCreated (§17) - a window-level flag set there is always too
 // late. An unmuted attach is a user move and must be mirrored immediately: GrandRestore reads the
 // window a second later and relies on the arrived tabs being already unbound from their groups
 async function onDetached(tabId, {oldWindowId}) { // notice: called before onAttached
-    // ahead of the mutes: the addon's own moves erase the links just the same (docs/OPENER-BEHAVIOR.md §7, §9)
+    // ahead of the mutes: the addon's own moves erase the links just the same (docs/BEHAVIOR-OPENER.md §7, §9)
     Cache.clearTabOpeners(tabId);
 
     if (skip.removed.has(tabId)) {
@@ -521,7 +521,7 @@ async function onAttached(tabId, {newWindowId}) { // called when tabs.move()
         .catch(log.onCatch("can't set group"));
 
     // a single moved tab arrives ungrouped, a group moved whole arrives with its membership and
-    // the same live id, both without any groupId event (docs/TABGROUPS-BEHAVIOR.md §16, §17) -
+    // the same live id, both without any groupId event (docs/BEHAVIOR-TABGROUPS.md §16, §17) -
     // the arrived tab's own groupId is the only signal
     const attachedTab = await get(tabId, {raw: true});
 
@@ -582,7 +582,7 @@ export async function create({url, active, pinned, title, index, windowId, opene
         tab.openInReaderMode = true;
     }
 
-    // a tab in reader mode cannot be born discarded (docs/CREATE-TABS-BEHAVIOR.md §30)
+    // a tab in reader mode cannot be born discarded (docs/BEHAVIOR-CREATE-TABS.md §30)
     if (allowDiscarded && !tab.active && !tab.pinned && tab.url && !tab.url.startsWith('about:') && !realUrl && !openInReaderMode) {
         tab.discarded = true;
     }
@@ -628,7 +628,7 @@ export async function create({url, active, pinned, title, index, windowId, opene
         self.setTimeout(() => pendingRealUrls.delete(newTab.id), 30_000);
     }
 
-    // the tab is born on about:blank (docs/CREATE-TABS-BEHAVIOR.md §12)
+    // the tab is born on about:blank (docs/BEHAVIOR-CREATE-TABS.md §12)
     if (createUrl) {
         Cache.setTabRequestedUrl(newTab.id, urlToAddon(url));
     }
@@ -647,7 +647,7 @@ export async function create({url, active, pinned, title, index, windowId, opene
     return newTab;
 }
 
-// built as a string: searchParams.set drops the key of an address over the limit (docs/CREATE-TABS-BEHAVIOR.md §54)
+// built as a string: searchParams.set drops the key of an address over the limit (docs/BEHAVIOR-CREATE-TABS.md §54)
 export function wrapUnsupportedUrl(url) {
     return `${Constants.PAGES.HELP.UNSUPPORTED_URL}?${new URLSearchParams({url})}`;
 }
@@ -658,7 +658,7 @@ function unwrapUrl(url) {
         : url;
 }
 
-// what browser.tabs.create gets for a url (docs/CREATE-TABS-BEHAVIOR.md §16, §18, §20, §22, §30, §34, §37)
+// what browser.tabs.create gets for a url (docs/BEHAVIOR-CREATE-TABS.md §16, §18, §20, §22, §30, §34, §37)
 function prepareUrlForCreate(url) {
     const readerPageUrl = getPageUrl(url);
     const openInReaderMode = readerPageUrl !== url && readerPageUrl.startsWith('http');
@@ -726,7 +726,7 @@ export async function createMultiple(tabsToCreate, params = {}) {
         return {created: [], live: aligned.filter(Boolean), aligned};
     }
 
-    // explicit ascending indexes per window: a no-index batch comes out reversed (docs/CREATE-TABS-BEHAVIOR.md §4-5)
+    // explicit ascending indexes per window: a no-index batch comes out reversed (docs/BEHAVIOR-CREATE-TABS.md §4-5)
     const placements = [];
 
     {
@@ -745,7 +745,7 @@ export async function createMultiple(tabsToCreate, params = {}) {
 
             // BUG https://bugzilla.mozilla.org/show_bug.cgi?id=1396758
             // the browser's own count, closing tabs included: a tab the user has just closed holds its slot
-            // for ~110 ms after onRemoved, and query() would leave it out (docs/REMOVE-TABS-BEHAVIOR.md §4)
+            // for ~110 ms after onRemoved, and query() would leave it out (docs/BEHAVIOR-REMOVE-TABS.md §4)
             const tabIndex = nextIndexByWindow.get(windowId)
                 ?? startIndex
                 ?? (await browser.tabs.query({windowId})).length;
@@ -760,7 +760,7 @@ export async function createMultiple(tabsToCreate, params = {}) {
         }
     }
 
-    // the openers are applied afterwards by applyOpeners (docs/OPENER-BEHAVIOR.md §3): a saved opener may not exist yet
+    // the openers are applied afterwards by applyOpeners (docs/BEHAVIOR-OPENER.md §3): a saved opener may not exist yet
     let created = await Promise.all(newTabs.map(async (tab, index) => {
         try {
             return await create({
@@ -778,7 +778,7 @@ export async function createMultiple(tabsToCreate, params = {}) {
     {
         const createdTabsByWindow = Map.groupBy(created.filter(Boolean), tab => tab.windowId);
 
-        // safety net: explicit indexes must keep the order (docs/CREATE-TABS-BEHAVIOR.md §2)
+        // safety net: explicit indexes must keep the order (docs/BEHAVIOR-CREATE-TABS.md §2)
         for (const windowTabs of createdTabsByWindow.values()) {
             const sorted = await ensureSorted(windowTabs, {...params, byMinIndex: true});
             const sortedById = new Map(sorted.map(tab => [tab.id, tab]));
@@ -793,7 +793,7 @@ export async function createMultiple(tabsToCreate, params = {}) {
     }
 
     if (hideUnloaded) {
-        // appended past the end of the strip the tabs join nothing (docs/TABGROUPS-BEHAVIOR.md §10), an anchor inside the group can land in a span (§7)
+        // appended past the end of the strip the tabs join nothing (docs/BEHAVIOR-TABGROUPS.md §10), an anchor inside the group can land in a span (§7)
         await hide(created.filter(tab => tab?.groupId && !Cache.getWindowId(tab.groupId)), {ungroupNative: startIndex !== null});
     }
 
@@ -870,7 +870,7 @@ export function withOffsets(tabs, openers = getOpeners(tabs), {removeIds = false
 }
 
 // the single writer of the links; the browser is the judge - a refused link costs nothing,
-// the tab stays (docs/OPENER-BEHAVIOR.md §3, §7, Implications 10). Every accepted write feeds
+// the tab stays (docs/BEHAVIOR-OPENER.md §3, §7, Implications 10). Every accepted write feeds
 // the mirror right here: Cache.getTabChildren and the tabsToRestore of a closing window read
 // the links from it
 async function setOpeners(links) {
@@ -897,7 +897,7 @@ async function setOpeners(links) {
 savedTabs - the tabs as they were saved, with "openerOffset" relative to this very list
 aligned - the "aligned" list createMultiple returned for savedTabs: the browser tabs at the same indexes
 every live tab gets its saved opener, without comparing with the current one: the tab objects may be stale by now,
-and re-applying the link a tab already has is a no-op for a tree extension (docs/OPENER-BEHAVIOR.md T5); a link is never removed
+and re-applying the link a tab already has is a no-op for a tree extension (docs/BEHAVIOR-OPENER.md T5); a link is never removed
 */
 export async function applyOpeners(savedTabs, aligned) {
     const links = [];
@@ -922,7 +922,7 @@ async function queryLiveMembers(windowIds) {
     return members;
 }
 
-// docs/OPENER-BEHAVIOR.md "How STG carries the link" - A transfer (§3, §6, §7, Implications 10)
+// docs/BEHAVIOR-OPENER.md "How STG carries the link" - A transfer (§3, §6, §7, Implications 10)
 // a copy that could not be created is an empty slot in the result: its original stays where it is, with its links
 export async function recreate(tabs, buildTabFunc) {
     const log = logger.start(recreate, 'tabs:', tabs.map(extractId));
@@ -931,7 +931,7 @@ export async function recreate(tabs, buildTabFunc) {
     const windowIds = new Set(originals.map(tab => tab.windowId));
 
     // the copy takes the original's slot and its live sub-group by the occupant rule; the first
-    // member's slot is the boundary of the span (docs/TABGROUPS-BEHAVIOR.md §7) - its copy goes
+    // member's slot is the boundary of the span (docs/BEHAVIOR-TABGROUPS.md §7) - its copy goes
     // one slot further, a span of one member is a boundary too (§25); the copies the rule still
     // leaves out stand right next to the span and join in place below (§23)
     const membersBefore = await queryLiveMembers(windowIds);
@@ -1128,7 +1128,7 @@ async function prepare(tabs, params = {}) {
     const withSession = params.withSession ?? true;
 
     // BUG https://bugzilla.mozilla.org/show_bug.cgi?id=1396758
-    // a tab the user closes lingers in tabs.query after onRemoved (docs/REMOVE-TABS-BEHAVIOR.md §4)
+    // a tab the user closes lingers in tabs.query after onRemoved (docs/BEHAVIOR-REMOVE-TABS.md §4)
     tabs = tabs.filter(tab => !skip.removed.has(tab.id));
 
     if (raw) {
@@ -1186,7 +1186,7 @@ export async function createTempActiveTab(windowId, createPinnedTab = true, newT
             url: createPinnedTab ? (newTabUrl || 'about:blank') : (newTabUrl || 'about:newtab'),
             pinned: createPinnedTab,
             active: true,
-            index: 0, // never joins a span there (docs/TABGROUPS-BEHAVIOR.md §7, R7.12/R7.13)
+            index: 0, // never joins a span there (docs/BEHAVIOR-TABGROUPS.md §7, R7.12/R7.13)
             windowId: windowId,
             groupId: createPinnedTab ? undefined : Cache.getWindowGroup(windowId),
         });
@@ -1380,7 +1380,7 @@ async function moveNow(tabIds, groupId, params = {}) {
                 await Groups.showTabs(group, tabs);
             } else {
                 // the anchor can drop any mover, hidden ones included, onto a live-member slot
-                // (docs/TABGROUPS-BEHAVIOR.md §1, §4 R2.14, §11, §20) - the whole set goes through hide
+                // (docs/BEHAVIOR-TABGROUPS.md §1, §4 R2.14, §11, §20) - the whole set goes through hide
                 await Groups.hideTabs(group, tabs);
             }
 
@@ -1418,7 +1418,7 @@ async function moveNow(tabIds, groupId, params = {}) {
 
 // the group's tabs gather as one block in the window at their own first tab there, or at the
 // group's anchor: strays arrive without joining anyone, the in-window part can be swallowed by
-// a live span (docs/TABGROUPS-BEHAVIOR.md §20, §21) - the caller rebuilds the sub-groups after
+// a live span (docs/BEHAVIOR-TABGROUPS.md §20, §21) - the caller rebuilds the sub-groups after
 export async function moveToWindow(tabs, groupId, windowId) {
     const anchorTab = tabs.find(tab => tab.windowId === windowId);
 
@@ -1432,7 +1432,7 @@ export async function moveToWindow(tabs, groupId, windowId) {
 // per newTabPosition), keeping the group's tabs contiguous. Membership follows the occupant
 // rule: cross-window arrivals at the tail join nothing, same-window movers can be swallowed
 // by a live span - a loaded group keeps the browser's placement, an unloaded one strips the
-// movers before hiding (docs/TABGROUPS-BEHAVIOR.md §1, §11, §20). An empty group: arrivals
+// movers before hiding (docs/BEHAVIOR-TABGROUPS.md §1, §11, §20). An empty group: arrivals
 // from other windows append at the end of the strip; movers already in the window gather at
 // the first mover's own slot, their live membership stripped first - a member as the first
 // mover swallows the whole block (§21), and the snapshot taken before carries the sub-groups
@@ -1458,7 +1458,7 @@ async function resolveMoveIndex(groupId, windowId, movingTabs) {
 
     // BUG https://bugzilla.mozilla.org/show_bug.cgi?id=1396758
     // the browser's own count, closing tabs included: a tab the user has just closed holds its slot
-    // for ~110 ms after onRemoved, and query() would leave it out (docs/REMOVE-TABS-BEHAVIOR.md §4)
+    // for ~110 ms after onRemoved, and query() would leave it out (docs/BEHAVIOR-REMOVE-TABS.md §4)
     return (await browser.tabs.query({windowId})).length;
 }
 
@@ -1583,7 +1583,7 @@ export async function moveNative(tabs, moveProperties = {}, params = {}) {
 
     /* a cross-window move erases the opener even when it moved along - restore it manually;
     the browser is the judge: an opener that is in the tab's new window is accepted, one
-    left in another window is refused (docs/OPENER-BEHAVIOR.md §7, §9) */
+    left in another window is refused (docs/BEHAVIOR-OPENER.md §7, §9) */
     const links = [];
 
     for (const tab of tabs) {
@@ -1793,7 +1793,7 @@ async function activateOutside(tabs) {
 }
 
 // the tabs leave their live native groups first (ungroupNative): the header of a group whose tabs
-// are all hidden stays in the tab bar (docs/TABGROUPS-BEHAVIOR.md §4). tabs.hide skips the window's
+// are all hidden stays in the tab bar (docs/BEHAVIOR-TABGROUPS.md §4). tabs.hide skips the window's
 // active tab (§9) - activateOther hands the activity to another visible tab before
 export async function hide(tabs, params = {}) {
     const activateOther = params.activateOther ?? false;
@@ -1817,7 +1817,7 @@ export async function hide(tabs, params = {}) {
 }
 
 export async function discard(tabs, params = {}) {
-    // an empty tab holds nothing worth freeing, and a reader tab discarded on about:blank reports about:blank until it is activated (docs/CREATE-TABS-BEHAVIOR.md §35); the skipped tab stays loaded until the next unload of its group
+    // an empty tab holds nothing worth freeing, and a reader tab discarded on about:blank reports about:blank until it is activated (docs/BEHAVIOR-CREATE-TABS.md §35); the skipped tab stays loaded until the next unload of its group
     tabs = [tabs].flat().filter(tabOrId => !Utils.isUrlEmpty(tabOrId.browserUrl));
 
     return await tabsAction({action: 'discard', ...params}, tabs);
@@ -1868,7 +1868,7 @@ export async function setMute(tabs, muted, params = {}) {
     return await tabsAction({action: 'update'}, tabsToUpdate, {muted});
 }
 
-// removing all visible tabs closes the window with its hidden tabs (REMOVE-TABS-BEHAVIOR.md §1) -
+// removing all visible tabs closes the window with its hidden tabs (BEHAVIOR-REMOVE-TABS.md §1) -
 // give it a temp tab first; the state is read live, the caller's snapshot may be stale
 async function ensureWindowsAlive(tabsToRemove) {
     const removedIds = new Set(tabsToRemove.map(extractId));
@@ -1896,7 +1896,7 @@ export async function remove(tabs, params = {}) {
     }
 
     // closing a whole live native group in one call leaves a SAVED group in the browser that no API
-    // can remove (docs/TABGROUPS-BEHAVIOR.md §26) - the tabs leave their groups first
+    // can remove (docs/BEHAVIOR-TABGROUPS.md §26) - the tabs leave their groups first
     if (ungroupNative) {
         await ungroup(tabs);
     }
@@ -1989,7 +1989,7 @@ export function getNewTabContainer(
     return Containers.isDefault(cookieStoreId) ? newTabContainer : cookieStoreId;
 }
 
-// the page a tab shows: for a tab in reader mode, the page it reads (docs/CREATE-TABS-BEHAVIOR.md §30)
+// the page a tab shows: for a tab in reader mode, the page it reads (docs/BEHAVIOR-CREATE-TABS.md §30)
 export function getPageUrl(url) {
     return url?.startsWith(Constants.READER_MODE_PAGE)
         ? Utils.getNestedUrl(url) ?? url
@@ -2088,7 +2088,7 @@ export function isLoading(tab) {
     return tab.status === browser.tabs.TabStatus.LOADING;
 }
 
-// an empty url in a snapshot gets what the cache knows (docs/CREATE-TABS-BEHAVIOR.md §12, §26)
+// an empty url in a snapshot gets what the cache knows (docs/BEHAVIOR-CREATE-TABS.md §12, §26)
 export function fillEmptyUrl(tab) {
     if (Utils.isUrlEmpty(tab.url)) {
         tab.url = Cache.getTabUrl(tab.id) ?? tab.url;
@@ -2216,7 +2216,7 @@ export async function ensureSorted(tabs, params = {}) {
 
     const log = logger.start(ensureSorted, 'tabs:', liveTabs.map(extractId), {isBlock, startIndex: String(startIndex)});
 
-    // the array lands as one block in list order around its first tab (docs/MOVE-TABS-BEHAVIOR.md §5)
+    // the array lands as one block in list order around its first tab (docs/BEHAVIOR-MOVE-TABS.md §5)
     if (!isBlock && Number.isInteger(startIndex)) {
         liveTabs = await moveNative(liveTabs, {index: startIndex}, params);
     }

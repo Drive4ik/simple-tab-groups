@@ -46,7 +46,7 @@ const TYPE_CHECKS = new Map([
 ]);
 
 // the first write of a key comes with oldValue present as undefined, a removal without newValue,
-// and an unchanged write fires just the same (docs/STORAGE-BEHAVIOR.md §1, §2): a change is a
+// and an unchanged write fires just the same (docs/BEHAVIOR-STORAGE.md §1, §2): a change is a
 // new value of the type that differs from the old one, or that has no old one at all
 export function isChangedKey(key, changes, type) {
     const {newValue, oldValue} = changes[key] ?? {};

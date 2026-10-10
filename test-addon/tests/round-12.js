@@ -8,7 +8,7 @@ clock reads are for magnitude only, they are clamped to ~1 ms and cannot order t
 Events pair with moves first-in-first-out per (event, tab, window); a slot whose event count or
 order cannot be trusted is EXCLUDED from the late/early lines and reported as such — a broken
 pairing must not fabricate a latency. Cross-window moves use {windowId, index: -1}. Asserts the
-recorded facts: MOVE-TABS-BEHAVIOR.md §2 (full delivery, zero events after the resolve) and §3
+recorded facts: BEHAVIOR-MOVE-TABS.md §2 (full delivery, zero events after the resolve) and §3
 (the R12.03/R12.04 after-rows).`;
 
 const PACED_SINGLE = 30;

@@ -7,14 +7,14 @@ as the runs cited next to it, and no stronger.
 
 Only facts confirmed by an actual test run belong in "Verified facts" — never assumptions about how
 the browser "probably" works. Native tab group facts — including the membership of created tabs —
-live in TABGROUPS-BEHAVIOR.md (§7, §10 there). A copy lands here only when creation next to native
+live in BEHAVIOR-TABGROUPS.md (§7, §10 there). A copy lands here only when creation next to native
 groups behaves differently from what this document itself states.
 
 State tables, markers, confirmation rules and how the tests are written — BEHAVIOR-NOTATION.md.
 
 **A new fact is appended as the next number at the end of "Verified facts". Numbers are never
 renumbered or reused** — code comments reference them by number
-(`docs/CREATE-TABS-BEHAVIOR.md §4-5`, `§11`).
+(`docs/BEHAVIOR-CREATE-TABS.md §4-5`, `§11`).
 
 Mapping between the setting and prefs (the same thing `browser.browserSettings.newTabPosition`
 reads/writes):
@@ -39,7 +39,7 @@ which is `relatedAfterCurrent`. Tests switch it themselves; nothing is toggled b
 Under `relatedAfterCurrent` every pattern below produced the same result as under `atEnd` — end of
 window, call order preserved, explicit index respected. The tabs `Tabs.createMultiple` creates
 never carry an opener at creation — the link is applied afterwards by `Tabs.applyOpeners`
-(OPENER-BEHAVIOR.md) ⇒ for them **relatedAfterCurrent is equivalent to atEnd**. Hence also: the
+(BEHAVIOR-OPENER.md) ⇒ for them **relatedAfterCurrent is equivalent to atEnd**. Hence also: the
 fallback "no permission for `browserSettings` → assume atEnd" exactly matches the browser's
 default behavior. With an opener in the call the picture changes — §14: the one path that passes
 an opener at creation is a deliberate single-tab call whose opener is alive in the same window
@@ -230,7 +230,7 @@ The run lives in the pinning round (`round-10`) — the one exception to "no pin
 "related" part of the setting applies: the new tab goes directly after its opener — whether the
 opener is the active tab (`c1` after `p`) or not (`c2` after `a`). With an explicit `index` the
 tab lands at that index and keeps its opener: §2 holds with an opener exactly as without one.
-Cells print the opener as `c1→p` (notation §2); the full opener picture is OPENER-BEHAVIOR.md §2.
+Cells print the opener as `c1→p` (notation §2); the full opener picture is BEHAVIOR-OPENER.md §2.
 
 | tab index | 0 | 1 | 2 | 3 | 4 | 5 | 6 |
 | - | - | - | - | - | - | - | - |
@@ -773,7 +773,7 @@ navigation to an empty page is fooled by a single sample.
 ### 29. A `sessions.setTabValue` value rides through `sessions.restore()` onto the fresh tab, is readable inside its `tabs.onCreated`, and a write from inside that handler wins over it; a `sessions.setWindowValue` value does the same for a restored window (R24.01–R24.04)
 
 A tab restored by `sessions.restore()` — a closed tab or a whole closed window — comes back with a
-fresh id (OPENER-BEHAVIOR.md §15, §16) and with the value that was set on the OLD id: for a loaded
+fresh id (BEHAVIOR-OPENER.md §15, §16) and with the value that was set on the OLD id: for a loaded
 active tab, for a background tab that comes back discarded (§27) and for a hidden member alike.
 The value is already there when `tabs.onCreated` fires: a `sessions.getTabValue` started inside
 the handler returns it, 6–7 ms for a single restored tab, 40–52 ms for the three tabs of a
@@ -784,7 +784,7 @@ holds once the restore has settled: the restore does not write its value again a
 A window value behaves the same (R24.04): the restored window gets a fresh id, the dead id rejects
 the read (`Invalid window ID`), and `sessions.getWindowValue` returns the value from inside the
 first `tabs.onCreated` of the restored window — the one delivered before `windows.onCreated`
-(TABGROUPS-BEHAVIOR.md §18) — as well as from inside `windows.onCreated` and after the restore
+(BEHAVIOR-TABGROUPS.md §18) — as well as from inside `windows.onCreated` and after the restore
 has settled, 51–73 ms per read with the three reads in flight together.
 
 R24.01, a single closed tab:
@@ -1895,7 +1895,7 @@ background and 1005–1008 ms in the pages (§44).
   max `lastAccessed`, otherwise/without permission — end of the group (exactly matches the
   browser, §1). Without group context — end of the window.
 - The anchor may land inside a native subgroup's span → the tab will join that subgroup
-  (TABGROUPS-BEHAVIOR.md §7); this is expected, the mirror syncs membership.
+  (BEHAVIOR-TABGROUPS.md §7); this is expected, the mirror syncs membership.
 - **A single new tab**: into a loaded group — do NOT pass index, the browser itself will place
   it by newTabPosition, including non-focused windows (§9); into an unloaded one — an
   explicit index by the `getNewTabIndex` anchor (hidden tabs are addressable by index, §3).

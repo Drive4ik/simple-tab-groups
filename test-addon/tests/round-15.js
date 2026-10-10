@@ -1,11 +1,11 @@
 export const note = `Round 15 — a plain array tabs.move to an EXPLICIT index inside one window, no native groups.
-TABGROUPS-BEHAVIOR.md §21 (R1.19) shows the array landing as a block only when every other mover
+BEHAVIOR-TABGROUPS.md §21 (R1.19) shows the array landing as a block only when every other mover
 stands BEYOND the target index. Not covered: movers standing BEFORE the target, the set gathered
 at its smallest index in reverse, and hidden outsiders sitting inside the set. These are exactly
 the calls STG makes to collect a group into a block (Tabs.ensureSorted): the target is the first
 tab's own index (cloud sync, backup restore) or the smallest index of the set (createMultiple).
 Every test prints the resolved objects and a fresh tabs.query — the fact is the final order
-(MOVE-TABS-BEHAVIOR.md §5).`;
+(BEHAVIOR-MOVE-TABS.md §5).`;
 
 const HIDDEN_KEYS = ['hidden'];
 

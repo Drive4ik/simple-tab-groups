@@ -169,7 +169,7 @@ class WindowBirthTest extends TabsTest {
     }
 
     expectBirth({others = null, atRead}) {
-        this.expect('the active tab at windows.onCreated: an empty url with status complete, not loading yet (CREATE-TABS-BEHAVIOR.md §26)', this.atBirth, {empty: true, status: 'complete', discarded: false});
+        this.expect('the active tab at windows.onCreated: an empty url with status complete, not loading yet (BEHAVIOR-CREATE-TABS.md §26)', this.atBirth, {empty: true, status: 'complete', discarded: false});
 
         if (others) {
             this.expect('the other tabs at windows.onCreated (§27)', this.othersAtBirth, others);

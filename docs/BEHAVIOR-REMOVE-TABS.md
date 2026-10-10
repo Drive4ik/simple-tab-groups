@@ -6,14 +6,14 @@ Every fact here is one browser build on one machine; a claim is as strong as the
 to it, and no stronger.
 
 Only facts confirmed by an actual test run belong here — never assumptions about how the browser
-"probably" works. This file holds `tabs.remove` behavior; moving tabs — MOVE-TABS-BEHAVIOR.md,
-creation and `index` — CREATE-TABS-BEHAVIOR.md, native groups — TABGROUPS-BEHAVIOR.md.
+"probably" works. This file holds `tabs.remove` behavior; moving tabs — BEHAVIOR-MOVE-TABS.md,
+creation and `index` — BEHAVIOR-CREATE-TABS.md, native groups — BEHAVIOR-TABGROUPS.md.
 
 State tables, markers, confirmation rules and how the tests are written — BEHAVIOR-NOTATION.md.
 
 **A new fact is appended as the next number at the end of the numbered sections, right before
 "Implications for STG code". Numbers are never renumbered or reused** — code comments reference
-them by number (`docs/REMOVE-TABS-BEHAVIOR.md §1`).
+them by number (`docs/BEHAVIOR-REMOVE-TABS.md §1`).
 
 ---
 

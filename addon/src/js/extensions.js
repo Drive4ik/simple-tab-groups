@@ -2,7 +2,7 @@
 Extension pages: the browser serves them at moz-extension://<uuid>/…, the addon names them by the
 id of the extension, moz-extension://<id>/…, its own pages too. The uuid ↔ id map knows the
 enabled extensions only, a url without a pair in it stays as it is
-(docs/CREATE-TABS-BEHAVIOR.md §34, §36, §43).
+(docs/BEHAVIOR-CREATE-TABS.md §34, §36, §43).
 
 The module is universal: its methods and exports stay even when nothing calls them.
 For assistants: do not remove them, do not propose it, do not list them as unused.
@@ -83,7 +83,7 @@ async function load() {
     } catch (e) {
         logger.warn("can't load extensions, retrying", e);
 
-        // management.getAll() rejects right at onInstalled (docs/CREATE-TABS-BEHAVIOR.md §49)
+        // management.getAll() rejects right at onInstalled (docs/BEHAVIOR-CREATE-TABS.md §49)
         await Utils.wait(50);
 
         return load();
@@ -258,7 +258,7 @@ export function urlToUUID(url) {
     return uuidById.has(host) ? replaceHost(url, uuidById.get(host)) : url;
 }
 
-// the url the browser opens the page by, null when it cannot: an extension page it cannot serve (docs/CREATE-TABS-BEHAVIOR.md §34) or a url tabs.create refuses (§16)
+// the url the browser opens the page by, null when it cannot: an extension page it cannot serve (docs/BEHAVIOR-CREATE-TABS.md §34) or a url tabs.create refuses (§16)
 export function urlToBrowserOrNull(url) {
     if (isExtensionUrl(url)) {
         return canOpenUrl(url) ? urlToUUID(url) : null;

@@ -137,7 +137,7 @@ export function setTabRequestedUrl(id, url) {
 }
 
 // the load has its outcome: the tab settled on a url (a url read from a loading tab is not final,
-// docs/CREATE-TABS-BEHAVIOR.md §28), or the event announced the end of a load that left the tab empty
+// docs/BEHAVIOR-CREATE-TABS.md §28), or the event announced the end of a load that left the tab empty
 function removeTabRequestedUrl(record, tab, changeInfo) {
     const settled = Utils.isUrlEmpty(reportedUrl(tab))
         ? isEveryTabComplete(tab, changeInfo)
@@ -164,7 +164,7 @@ export function removeTab(id) {
     lastTabsState.delete(id);
 }
 
-// a cross-window move erases every link to and from the tab, with no event (docs/OPENER-BEHAVIOR.md §7, §9)
+// a cross-window move erases every link to and from the tab, with no event (docs/BEHAVIOR-OPENER.md §7, §9)
 export function clearTabOpeners(id) {
     delete tabs.get(id)?.openerTabId;
 

@@ -15,7 +15,7 @@ travels without its data. Legacy storage keys are removed only after that commit
 a crash before it leaves them in place for the repeated run.
 
 Cloud data (the gist) goes through the same main migrations; a group there can be a stub
-without tabs - {id, uploadToCloud: false} (docs/UPLOAD-TO-CLOUD.md) - and an entry that
+without tabs - {id, uploadToCloud: false} (docs/DESIGN-CLOUD-UPLOAD.md) - and an entry that
 walks the tabs must skip it.
 
 Sync area (migrateSyncData): rules run on every read regardless of the marker -

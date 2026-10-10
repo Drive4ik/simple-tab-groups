@@ -15,7 +15,7 @@ const SPECS = ['storage.onChanged', 'storage.local.onChanged'];
 
 const shown = value => `${typeof value} ${JSON.stringify(value)}`;
 
-// the same change object from both listeners (STORAGE-BEHAVIOR.md §3)
+// the same change object from both listeners (BEHAVIOR-STORAGE.md §3)
 function both(keys, oldValue, newValue) {
     return SPECS.map(spec => `${spec}: keys:[${keys.join(', ')}] oldValue: ${oldValue} newValue: ${newValue}`);
 }
@@ -26,7 +26,7 @@ async function sequence(t, first, second) {
     t.watch(SPECS);
 
     await t.step(`storage.local.remove(${KEY}) while the key is absent`, () => browser.storage.local.remove(KEY));
-    t.expect('a removal of an absent key fires nothing (STORAGE-BEHAVIOR.md §1)', t.delivered(), []);
+    t.expect('a removal of an absent key fires nothing (BEHAVIOR-STORAGE.md §1)', t.delivered(), []);
 
     await t.step(`storage.local.set({${KEY}: ${JSON.stringify(first)}}) - the first write`, () => browser.storage.local.set({[KEY]: first}));
     t.expect('the first write carries oldValue present as undefined (§1)', t.delivered(), both(['oldValue', 'newValue'], 'undefined undefined', shown(first)));

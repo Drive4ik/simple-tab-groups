@@ -236,7 +236,7 @@ export async function openInTemporaryContainer(info, tab) {
         ...GroupsNative.detachTabGroupId(tab),
         index: null,
         active: info.button.RIGHT,
-        // the original opens its copy: relatedAfterCurrent puts it right after (docs/CREATE-TABS-BEHAVIOR.md §14), a tree makes it a child
+        // the original opens its copy: relatedAfterCurrent puts it right after (docs/BEHAVIOR-CREATE-TABS.md §14), a tree makes it a child
         openerTabId: tab.id,
         cookieStoreId: Constants.TEMPORARY_CONTAINER,
     }, {skipTrackingCreated: false});

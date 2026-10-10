@@ -15,7 +15,7 @@ closing tab holds a slot" gives [a, c, ➕n1, d] for the WITHOUT count, "it does
 R23.04 is R23.03 with the ACTIVE tab removed - the browser blurs it first. R23.05 is the shape of the
 addon's own race: the create at the WITHOUT count goes right after tabs.remove has resolved, not from the
 handler. For tabs.remove the removed tab is already out of tabs.query inside the handler
-(REMOVE-TABS-BEHAVIOR.md §3), so R23.01-R23.05 assert that and the appending create. R23.06 and R23.07
+(BEHAVIOR-REMOVE-TABS.md §3), so R23.01-R23.05 assert that and the appending create. R23.06 and R23.07
 are MANUAL: the user closes the tab - the close button of an inactive tab, Ctrl+W on the active one -
 the gestures the bug report ties to the closing animation; the handler samples tabs.query, creates at
 the WITHOUT count and keeps sampling until the tab is gone. There the tab lingers for about 110 ms and
@@ -110,7 +110,7 @@ class ClosingTabTest extends TabsTest {
         const done = this.onRemovedOf(closingId, async () => {
             const first = await this.seen(closingId);
 
-            this.expect(`${closingName} is still in tabs.query inside onRemoved after the user's close (REMOVE-TABS-BEHAVIOR.md §4)`, first.closing !== undefined, true);
+            this.expect(`${closingName} is still in tabs.query inside onRemoved after the user's close (BEHAVIOR-REMOVE-TABS.md §4)`, first.closing !== undefined, true);
 
             await this.createAgainst(name, closingId, {withClosing: false});
             await this.untilGone(closingId);
@@ -145,7 +145,7 @@ export const tests = [
                 const first = await t.seen(bId);
 
                 t.record('onRemoved+query', first.text);
-                t.expect('b is out of tabs.query inside onRemoved (REMOVE-TABS-BEHAVIOR.md §3)', first.closing === undefined, true);
+                t.expect('b is out of tabs.query inside onRemoved (BEHAVIOR-REMOVE-TABS.md §3)', first.closing === undefined, true);
 
                 await t.untilGone(bId);
             });

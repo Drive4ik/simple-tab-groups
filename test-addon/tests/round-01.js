@@ -1,6 +1,6 @@
 import {TAB_GROUP_ID_NONE, NEW_TAB_POSITIONS} from '../constants.js';
 
-export const note = 'Round 01 — TABGROUPS-BEHAVIOR.md §1, §2, §20 and §21, plus a harness/API self-check.';
+export const note = 'Round 01 — BEHAVIOR-TABGROUPS.md §1, §2, §20 and §21, plus a harness/API self-check.';
 
 const EVENT_APIS = [
     'tabs.onCreated', 'tabs.onMoved', 'tabs.onUpdated', 'tabs.onRemoved', 'tabs.onActivated',

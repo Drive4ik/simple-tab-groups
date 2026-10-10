@@ -4,8 +4,8 @@
 node_modules/
 package-lock.json
 
-CLAUDE.md
 /*.md
 !/README.md
+!/CLAUDE.md
 /.claude/*.local.json
 /sandbox/
