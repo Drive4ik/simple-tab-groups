@@ -1606,80 +1606,6 @@ with `tabs.update`, the call resolves and the tab is on the page.
 - page: the call resolved
 - page updated: on a page of the extension, `url:moz-extension://<other uuid>/options/options.html` status:complete discarded:false hidden:false
 
-### 51. A tab created on an https address of a host no server answers for keeps the address as its url, with status `complete` and the title "Problem loading page" — for a made-up top-level domain and for a reserved one alike (R30.01)
-
-§51 and §52 come from `round-30`, run in September 2026 with no other add-on installed (the two
-add-ons of round-28 were removed first, only the harness stayed). The addresses are
-`https://stg.addon/tab.html?tab=…` (`.addon` is a top-level domain nobody has registered) and
-`https://stg.invalid/tab.html?tab=…` (`.invalid` is reserved by RFC 6761 and can never be
-registered). No `webRequest` listener is armed. Either tab reaches `complete` about 100 ms after
-the create and reports the address as its url, with the title of the browser's error page.
-
-| tab index | 0 | 1 | 2 |
-| - | - | - | - |
-| before | x* | | |
-| `tabs.create({url: https://stg.addon/tab.html?tab=madeup})` — waited 2000 ms | | | |
-| madeup | x* | ➕madeup | |
-| `tabs.create({url: https://stg.invalid/tab.html?tab=reserved})` — waited 2000 ms | | | |
-| reserved | x* | ➕madeup | ➕reserved |
-
-```text
-   11ms  tabs.onUpdated        madeup  {status: loading}
-  113ms  tabs.onUpdated        madeup  {status: complete}
-  133ms  tabs.onUpdated        madeup  {status: complete, url: https://stg.addon/tab.html?tab=madeup}
-   12ms  tabs.onUpdated        reserved  {status: loading}
-   90ms  tabs.onUpdated        reserved  {status: complete}
-  124ms  tabs.onUpdated        reserved  {status: complete, url: https://stg.invalid/tab.html?tab=reserved}
-(6 tabs.onUpdated dropped, only these keys were kept: status/url)
-```
-
-- madeup after the wait: `url:https://stg.addon/tab.html?tab=madeup` status:complete discarded:false title:"Problem loading page"
-- reserved after the wait: `url:https://stg.invalid/tab.html?tab=reserved` status:complete discarded:false title:"Problem loading page"
-
-### 52. A blocking `onBeforeRequest` listener gets every load of such an address as a `GET` `main_frame` request of frame 0, and `originUrl` names who asked: the origin of the add-on for `tabs.create` and `tabs.update`, the page for `location.replace` from a page of the add-on, the web page for a script of a web page; `documentUrl` is absent; a redirect a listener makes to the address keeps the `requestId` and the `originUrl` of the first request (R30.02)
-
-The listener lets every request go, so every tab ends on the error page of §51 with the address
-as its url. The web page is `https://example.com/`; the script that sets `location.href` is put
-into it as a `<script>` element and runs as the page's own. The last case is a second listener
-that answers a request for `https://example.com/?hop=1` with `redirectUrl` to the address: the
-redirected request comes to the first listener with the same `requestId` (request 5 both times)
-and the same `originUrl`, the origin of the add-on that made the tab.
-
-| tab index | 0 | 1 | 2 | 3 | 4 | 5 |
-| - | - | - | - | - | - | - |
-| before | x* | y | | | | |
-| `tabs.create({url: https://stg.invalid/tab.html?tab=created})` — waited 2000 ms | | | | | | |
-| created | x* | y | ➕created | | | |
-| `tabs.update(y, {url: https://stg.invalid/tab.html?tab=y})` — waited 2000 ms | | | | | | |
-| y updated | x* | y | ➕created | | | |
-| `tabs.create({url: navigate.html?to=https://stg.invalid/tab.html?tab=replaced}  // the page of the add-on calls location.replace on load)` — waited 2000 ms | | | | | | |
-| replaced | x* | y | ➕created | ➕replaced | | |
-| `tabs.create({url: https://example.com/})` — waited 2000 ms | | | | | | |
-| web | x* | y | ➕created | ➕replaced | ➕web | |
-| `a script of the web page sets location.href = https://stg.invalid/tab.html?tab=web  // put into the page as a <script> element, it runs as the page's own` — waited 2000 ms | | | | | | |
-| web navigated | x* | y | ➕created | ➕replaced | ➕web | |
-| `tabs.create({url: https://example.com/?hop=1}  // a listener redirects this web address to the address)` — waited 2000 ms | | | | | | |
-| hop | x* | y | ➕created | ➕replaced | ➕web | ➕hop |
-
-```text
-    5ms  webRequest.onBeforeRequest  created  GET main_frame frame:0  https://stg.invalid/tab.html?tab=created  origin: a page of the add-on (/)  document: none  request 1
-    8ms  webRequest.onBeforeRequest  y  GET main_frame frame:0  https://stg.invalid/tab.html?tab=y  origin: a page of the add-on (/)  document: none  request 2
-   36ms  webRequest.onBeforeRequest  replaced  GET main_frame frame:0  https://stg.invalid/tab.html?tab=replaced  origin: a page of the add-on (/navigate.html)  document: none  request 3
-   27ms  webRequest.onBeforeRequest  web  GET main_frame frame:0  https://stg.invalid/tab.html?tab=web  origin: https://example.com/  document: none  request 4
-    8ms  webRequest.onBeforeRequest  hop  GET main_frame frame:0  https://example.com/?hop=1  origin: a page of the add-on (/)  document: none  request 5  -> redirectUrl: the address
-    9ms  webRequest.onBeforeRequest  hop  GET main_frame frame:0  https://stg.invalid/tab.html?tab=hop  origin: a page of the add-on (/)  document: none  request 5
-```
-
-"a page of the add-on (/)" is `moz-extension://<own uuid>/`, the origin of the add-on itself,
-the background page that called `tabs.create` and `tabs.update`.
-
-- web: a request of the page reached the listener
-- created after the wait: `url:https://stg.invalid/tab.html?tab=created` status:complete discarded:false title:"Problem loading page"
-- y after the wait: `url:https://stg.invalid/tab.html?tab=y` status:complete discarded:false title:"Problem loading page"
-- replaced after the wait: `url:https://stg.invalid/tab.html?tab=replaced` status:complete discarded:false title:"Problem loading page"
-- web after the wait: `url:https://stg.invalid/tab.html?tab=web` status:complete discarded:false title:"Problem loading page"
-- hop after the wait: `url:https://stg.invalid/tab.html?tab=hop` status:complete discarded:false title:"Problem loading page"
-
 ### 53. `tabs.update({url, loadReplace: true})` on a discarded tab loads the new page in place: the tab stops being discarded at the resolve, where it reports `about:blank`, and is on the new page once settled; a hidden tab stays hidden, and a tab born discarded on a page of an unknown uuid is updated the same way (R27.15)
 
 §53 comes from `round-27`, run in October 2026. Five discarded tabs: one born discarded on a page
@@ -1997,14 +1923,13 @@ background and 1005–1008 ms in the pages (§44).
   the extension returns (§48, §49). The uuid survives a disable and an enable (§48) and changes
   with a removal and an install (§49): a discarded tab left behind then names a uuid no extension
   has, and its id is known only to whoever remembered the pair while the extension was enabled.
-- **`originUrl` names who asked for a load** (§52): a blocking `onBeforeRequest` listener gets the
+- **`originUrl` names who asked for a load**: a blocking `onBeforeRequest` listener gets the
   origin of the add-on for a load its `tabs.create` or `tabs.update` started, the page for a
   navigation a page of the add-on makes itself, the web page for a script of a web page, and a
   redirect keeps the `originUrl` of the first request. `onBeforeTabRequest` reads it to tell its
   own loads from the loads another add-on started (`Extensions.getEnabledByUrl(originUrl)`): a
-  container add-on it does not fight with. A load of an address no server answers for reaches the
-  listener like any other, and the tab ends on the browser's error page with the address as its
-  url (§51).
+  container add-on it does not fight with. The evidence is the published add-on, which has read
+  `originUrl` this way since 2019.
 - **The id of a sender does not tell a page of the add-on from its content script, the url does**
   (§56): both carry the id of the add-on, a page of the add-on carries its own
   `moz-extension://` address in `url`, the content script the address of the web page it runs

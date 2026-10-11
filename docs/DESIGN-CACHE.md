@@ -1,7 +1,7 @@
 # The cache — the mirror of the tabs and the requested url
 
 What `addon/src/js/cache.js` knows about every tab and window, who feeds it and who may write
-into it. The browser facts are in `BEHAVIOR-CREATE-TABS.md` (§12, §23, §26–§28, §35, §46, §51).
+into it. The browser facts are in `BEHAVIOR-CREATE-TABS.md` (§12, §23, §26–§28, §35, §46).
 
 ## 1. Three things the cache keeps per tab
 
@@ -18,8 +18,8 @@ The mirror and the base hold only what the browser said. The requested url holds
 knows ahead of the browser: a created tab is born on `about:blank` (§12), a tab that starts a
 load reports `about:blank` until the url commits, and the browser gives no honest "in transit"
 sign — a newborn is `complete` + `about:blank` for its first 9–10 ms (§23), the active tab of a
-new window for 50–65 ms (§26), a `complete` event can come before the url event (§51), and the
-url of a restored window's active tab dips back to `about:blank` while loading (§28).
+new window for 50–65 ms (§26), and the url of a restored window's active tab dips back to
+`about:blank` while loading (§28).
 
 ## 2. The outcome of a load
 
