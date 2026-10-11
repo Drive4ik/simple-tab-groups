@@ -141,6 +141,10 @@ export function insertVariable(node, value, variable) {
         value.slice(node.selectionEnd, value.length);
 }
 
+// what downloads.download() refuses in a path (BEHAVIOR-DOWNLOADS.md §3) and a localized date may carry:
+// the user cannot change a date, so its value is made safe silently; the typed part of the path is checked by a test save
+const FILE_PATH_FORBIDDEN_CHARS = /[\\/:*?"<>|]/g;
+
 export function getFilePathVariables() {
     const variables =  {
         ...DATE_LOCALE_VARIABLES,
@@ -149,8 +153,10 @@ export function getFilePathVariables() {
 
     for (const key in variables) {
         variables[key] = variables[key]
-            .replaceAll(':', '-')
-            .replaceAll('/', '-');
+            .replaceAll(FILE_PATH_FORBIDDEN_CHARS, '-')
+            .replaceAll(/\p{Zs}/gu, ' ') // a narrow no-break space before AM
+            .replace(/[\s.]+$/, '') // a dot or a space at the end of a folder or a file name
+            .trimStart();
     }
 
     return variables;

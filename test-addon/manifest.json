@@ -27,6 +27,7 @@
         "webRequest",
         "webRequestBlocking",
         "management",
+        "downloads",
         "<all_urls>"
     ],
 

@@ -53,7 +53,7 @@ export default {
             }
         },
     ],
-    externalsType: 'module',
+    externalsType: 'module-import', // a static import stays an import, a dynamic import() stays an import()
     resolve: {
         extensions: ['.js', '.vue'],
     },

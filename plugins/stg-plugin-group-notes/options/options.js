@@ -273,6 +273,10 @@ async function setEvents() {
         try {
             const file = await File.loadJson();
 
+            if (!file) {
+                return;
+            }
+
             if (!file.data) {
                 throw new Error('Invalid backup');
             }

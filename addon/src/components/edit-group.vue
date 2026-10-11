@@ -14,7 +14,6 @@ import * as Storage from '/js/storage.js';
 import * as Messages from '/js/messages.js';
 import Notification from '/js/notification.js';
 import Lang from '/js/lang.js';
-import * as File from '/js/file.js';
 import * as Bookmarks from '/js/bookmarks.js';
 import * as Tabs from '/js/tabs.js';
 import * as Groups from '/js/groups.js';
@@ -255,10 +254,19 @@ export default {
                 return;
             }
 
-            await File.load('image/x-icon, image/png, image/jpeg, image/svg+xml', 'url')
-                .then(file => Utils.normalizeGroupIcon(file.data))
-                .then(iconUrl => this.setIconUrl(iconUrl))
-                .catch(Notification);
+            const File = await import('/js/file.js');
+
+            try {
+                const file = await File.load('image/x-icon, image/png, image/jpeg, image/svg+xml', 'url');
+
+                if (!file) {
+                    return;
+                }
+
+                this.setIconUrl(await Utils.normalizeGroupIcon(file.data));
+            } catch (e) {
+                Notification(e);
+            }
         },
 
         async setPermissionsBookmarks(event, groupOptionKey) {

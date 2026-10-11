@@ -390,10 +390,11 @@ export default {
             try {
                 file = await File.loadJson();
             } catch (e) {
-                if (e.type !== 'cancel') {
-                    Notification(e);
-                }
+                Notification(e);
+                return;
+            }
 
+            if (!file) {
                 return;
             }
 
@@ -424,14 +425,16 @@ export default {
 
             try {
                 file = await File.loadJson();
-                oldOptions = file.data;
             } catch (e) {
-                if (e.type !== 'cancel') {
-                    Notification(e);
-                }
-
+                Notification(e);
                 return;
             }
+
+            if (!file) {
+                return;
+            }
+
+            oldOptions = file.data;
 
             if (!Array.isArray(oldOptions?.windows) || !oldOptions.session) {
                 Notification('This is not "Tab Groups" backup!');
@@ -506,14 +509,16 @@ export default {
 
             try {
                 file = await File.loadJson();
-                panoramaOptions = file.data;
             } catch (e) {
-                if (e.type !== 'cancel') {
-                    Notification(e);
-                }
-
+                Notification(e);
                 return;
             }
+
+            if (!file) {
+                return;
+            }
+
+            panoramaOptions = file.data;
 
             if (!panoramaOptions || !panoramaOptions.file || 'panoramaView' !== panoramaOptions.file.type || !Array.isArray(panoramaOptions.windows)) {
                 Notification('This is not "Panorama View" backup!');
@@ -578,14 +583,16 @@ export default {
 
             try {
                 file = await File.loadJson();
-                syncTabOptions = file.data;
             } catch (e) {
-                if (e.type !== 'cancel') {
-                    Notification(e);
-                }
-
+                Notification(e);
                 return;
             }
+
+            if (!file) {
+                return;
+            }
+
+            syncTabOptions = file.data;
 
             if (!syncTabOptions || !syncTabOptions.version || 'syncTabGroups' !== syncTabOptions.version[0] || !Array.isArray(syncTabOptions.groups)) {
                 Notification('This is not "Sync Tab Groups" backup!');

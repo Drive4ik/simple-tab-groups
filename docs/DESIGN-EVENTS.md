@@ -1,10 +1,11 @@
 # Events — the add-on's own actions are muted, the user's are mirrored
 
 How the handlers of the browser events in `addon/src/js/tabs.js` and `windows.js` tell the
-add-on's own actions from the user's, and what the add-on does about other add-ons. Events are
-subscribed through `addon/src/js/listeners.js` (the MV3-ready module); the browser facts are in
-`BEHAVIOR-CREATE-TABS.md`, `BEHAVIOR-MOVE-TABS.md`, `BEHAVIOR-REMOVE-TABS.md` and
-`BEHAVIOR-TABGROUPS.md`.
+add-on's own actions from the user's, what the add-on does about other add-ons, and how an own
+action is awaited by its event (`downloads.js`). Events are subscribed through
+`addon/src/js/listeners.js` (the MV3-ready module); the browser facts are in
+`BEHAVIOR-CREATE-TABS.md`, `BEHAVIOR-MOVE-TABS.md`, `BEHAVIOR-REMOVE-TABS.md`,
+`BEHAVIOR-TABGROUPS.md` and `BEHAVIOR-DOWNLOADS.md`.
 
 ## 1. The add-on's own actions are muted in the events
 
@@ -26,3 +27,13 @@ restore it and does not fight back. STG is not obliged to handle the crookedness
 There are backups.
 
 These policies are deliberate decisions. They are not changed in passing while fixing a bug.
+
+## 4. The end of an own action is awaited by its event
+
+Where the browser announces the end of an action of the add-on with an event, the add-on waits
+for the event, it does not poll the API. `Downloads.download` (`addon/src/js/downloads.js`, the
+same module in the plugins) starts a download and resolves with its final item: one subscription
+to `downloads.onChanged` for the whole module, the wait registered right at the resolve of
+`downloads.download()` with nothing awaited in between, and no timeout — a download that is still
+running is not an error. The end of a download is its `state`; an interruption is done once its
+reason has come too, in the same delta or in the next one. The facts — `BEHAVIOR-DOWNLOADS.md`.

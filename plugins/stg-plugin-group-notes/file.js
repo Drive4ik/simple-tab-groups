@@ -2,8 +2,11 @@
 // import * as Constants from './constants.js';
 import * as MainConstants from './main-constants.js';
 import * as Utils from './utils.js';
+import * as Downloads from './downloads.js';
 
-export async function load(accept = '*/*', readAs = 'text') { // readAs: text, url
+const SAVE_TRY_COUNT = 5; // STG issue #374: backups that failed for no known reason, BEHAVIOR-DOWNLOADS.md conclusion 3
+
+export async function load(accept = '*/*', readAs = 'text') { // readAs: text, url. null when the user closes the dialog without a file
     if (!['text', 'url'].includes(readAs)) {
         throw new Error('wrong readAs parameter');
     }
@@ -15,6 +18,7 @@ export async function load(accept = '*/*', readAs = 'text') { // readAs: text, u
     input.accept = accept;
     input.initialValue = input.value;
 
+    input.addEventListener('cancel', () => resolve(null));
     input.addEventListener('change', () => {
         if (input.initialValue === input.value) {
             return reject('no changes');
@@ -52,73 +56,60 @@ export async function load(accept = '*/*', readAs = 'text') { // readAs: text, u
 export async function loadJson() {
     const file = await load('application/json', 'text');
 
-    file.data = JSON.parse(file.data);
+    if (file) {
+        file.data = JSON.parse(file.data);
+    }
 
     return file;
 }
 
 // data : Object/Array/Text
 export async function save(data, filePath = 'file-name', options = {}) {
-    options.saveAs ??= true;
-    options.clearOnComplete ??= false;
-    options.throwError ??= false;
-    options.tryCount ??= 0;
+    const {saveAs = true, clearOnComplete = false, throwError = false} = options;
 
     filePath = Utils.format(filePath, Utils.getFilePathVariables());
 
-    let body = null,
-        type = null;
-
-    if ('string' === typeof data) {
-        type = 'text/plain';
-        body = data;
-    } else {
-        type = 'application/json';
-        body = JSON.stringify(data, null, 4);
-    }
-
-    const blob = new Blob([body], {type});
-    const url = URL.createObjectURL(blob);
+    const blob = typeof data === 'string'
+        ? new Blob([data], {type: 'text/plain'})
+        : new Blob([JSON.stringify(data, null, 4)], {type: 'application/json'});
 
     try {
-        const id = await browser.downloads.download({
-            filename: filePath,
-            url: url,
-            saveAs: options.saveAs,
-            conflictAction: browser.downloads.FilenameConflictAction.OVERWRITE,
-        });
+        for (let tryIndex = 1; ; tryIndex++) {
+            const {id, state, error} = await Downloads.download(blob, {
+                filename: filePath,
+                saveAs,
+                conflictAction: Downloads.FilenameConflictAction.OVERWRITE,
+            });
 
-        let {
-            state: state = browser.downloads.State.INTERRUPTED,
-            error: error = `Download ID not found, id: ${id}`,
-        } = await waitDownload(id);
+            if (state === Downloads.State.COMPLETE) {
+                if (clearOnComplete) {
+                    await Downloads.eraseId(id);
+                }
 
-        error = `Error save file:\n${filePath}\nerror: ${String(error)}`;
-
-        if (browser.downloads.State.COMPLETE === state) {
-            if (options.clearOnComplete) {
-                await browser.downloads.erase({id});
+                return id;
             }
-        } else if (browser.downloads.State.INTERRUPTED === state && !options.saveAs && options.tryCount < 5) {
-            await browser.downloads.erase({id});
-            console.warn('cant download id:', id, 'tryCount:', options.tryCount, error);
-            options.tryCount++;
-            return save(data, filePath, options);
-        } else {
-            throw error;
-        }
 
-        return id;
+            if (error === Downloads.InterruptReason.USER_CANCELED) { // the user canceled the download in the downloads panel
+                return;
+            }
+
+            if (saveAs || tryIndex >= SAVE_TRY_COUNT) {
+                throw new Error(`Error save file:\n${filePath}\nerror: ${error}`);
+            }
+
+            await Downloads.eraseId(id);
+            console.warn('download interrupted, try again', {id, tryIndex, error});
+        }
     } catch (e) {
-        if (!String(e.message || e).toLowerCase().includes('canceled')) {
-            console.error(e);
-
-            if (options.throwError) {
-                throw e;
-            }
+        if (Downloads.isCanceledByUser(e)) {
+            return;
         }
-    } finally {
-        URL.revokeObjectURL(url);
+
+        console.error(e);
+
+        if (throwError) {
+            throw e;
+        }
     }
 }
 
@@ -144,13 +135,13 @@ export async function testBackupFilePath(filePath, exploreFolder = false) {
         });
 
         if (id && exploreFolder) {
-            await browser.downloads.show(id);
+            await Downloads.show(id);
             await new Promise(resolve => setTimeout(resolve, 750));
         }
     } finally {
         if (id) {
-            await browser.downloads.removeFile(id).catch(() => {});
-            await browser.downloads.erase({id}).catch(() => {});
+            await Downloads.removeFile(id).catch(() => {});
+            await Downloads.eraseId(id).catch(() => {});
         }
     }
 }
@@ -171,20 +162,4 @@ export async function openBackupFolder() {
     }
 
     await testBackupFilePath(autoBackupFilePath, true);
-}
-
-async function waitDownload(id, maxWaitSec = 10) {
-    let downloadObj = null;
-
-    for (let i = 0; i < maxWaitSec * 5; i++) {
-        [downloadObj] = await browser.downloads.search({id});
-
-        if (downloadObj && browser.downloads.State.IN_PROGRESS !== downloadObj.state) {
-            break;
-        }
-
-        await new Promise(resolve => setTimeout(resolve, 200));
-    }
-
-    return downloadObj || {};
 }
