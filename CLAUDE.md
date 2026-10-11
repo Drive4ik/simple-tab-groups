@@ -108,6 +108,11 @@ the `&&=`/`||=`/`??=` operators, `Promise.allSettled()` and so on.
   mechanisms of the add-on live in `docs/DESIGN-*.md`, the facts of the browser in
   `docs/BEHAVIOR-*.md`. A model described in the header of a module — only at the developer's
   request.
+- Code that works around a bug or exists because of one carries the link to the bug itself, in
+  every place the bug touches — not only the `§` of the doc. For a bug of the browser that is the
+  Bugzilla address: `// BUG https://bugzilla.mozilla.org/show_bug.cgi?id=…`. A comment that marks
+  a defect or work to do starts with one of the tags the editor highlights (ToDo Tree): `BUG`,
+  `HACK`, `FIXME`, `TODO`, `[ ]`, `[x]`.
 - The names of variables, functions and modules are simple, say what they hold, and follow the
   style of the add-on.
 - The name of a method names the action and is clear without context: inside the module and

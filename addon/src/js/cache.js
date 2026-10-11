@@ -10,7 +10,7 @@ export const THUMBNAIL_KEY = 'thumbnail';
 export const KEYS = [GROUP_KEY, GROUP_NATIVE_KEY, FAVICON_KEY, THUMBNAIL_KEY];
 
 export const tabs = new Map;
-export const lastTabsState = new Map; // BUG https://bugzilla.mozilla.org/show_bug.cgi?id=1818392
+export const lastTabsState = new Map; // BUG https://bugzilla.mozilla.org/show_bug.cgi?id=1405603
 export const windows = new Map;
 
 const SESSIONS_API = new Map([

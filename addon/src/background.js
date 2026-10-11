@@ -115,7 +115,7 @@ const reopenTabsBatch = new BatchProcessor(async (paramsByTabId, groupId) => {
     log.stop();
 }, {useMap: true});
 
-// https://bugzilla.mozilla.org/show_bug.cgi?id=1683646
+// BUG https://bugzilla.mozilla.org/show_bug.cgi?id=1683646
 // only onBeforeNavigate can detect view-source, but it's need new permission "webNavigation" in manifest
 const canceledRequests = new Map;
 const reopenedForExtension = new Map;
