@@ -418,11 +418,6 @@ export function createId() {
     return self.crypto.randomUUID();
 }
 
-// extract "uid" from "group.id" that matches UUID
-export function extractUId(groupId) {
-    return groupId?.slice(-4);
-}
-
 export function create(id, title, defaultGroupProps = {}) {
     const group = {
         id,
@@ -726,10 +721,18 @@ async function restoreNow(groupId) {
     await browser.storage.session.remove(restoreId);
 
     await writeQueue.run('restore', async () => {
-        const {groups} = await load();
+        const {groups, groupsById} = await load();
         const {index} = group;
 
         delete group.index;
+
+        // while the undo waits, a backup restore or the cloud can bring the same group id or
+        // sub-group ids back - fresh ones then, like in restoreBackup
+        if (groupsById.has(group.id)) {
+            group.id = createId();
+        }
+
+        GroupsNative.reissueSubGroupIds(group, groups);
 
         groups.splice(index, 0, group);
 
@@ -1308,7 +1311,7 @@ export function getIconUrl(group, keyInObj = null) {
 }
 
 export function createTitle(title = null, groupId = null, defaultGroupProps = {}, format = true) {
-    const uid = extractUId(groupId) || '{uid}';
+    const uid = groupId?.slice(-4) || '{uid}'; // the tail of the group's UUID
 
     if (title) {
         title = String(title);

@@ -1441,17 +1441,7 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
             }
         }
 
-        if (newGroupId !== group.id) {
-            // restoring a copy next to the original - the copy's sub-groups get their own identity
-            const newSubIdByOldId = new Map(newGroup.groupsNative.map(entry => [entry.id, GroupsNative.createSubGroupId()]));
-
-            newGroup.groupsNative = newGroup.groupsNative.map(entry => ({...entry, id: newSubIdByOldId.get(entry.id)}));
-
-            for (const tab of newGroup.tabs) {
-                const newSubId = newSubIdByOldId.get(tab.groupNativeId);
-                newSubId ? tab.groupNativeId = newSubId : delete tab.groupNativeId;
-            }
-        }
+        GroupsNative.reissueSubGroupIds(newGroup, currentData.groups);
 
         // another add-on's backup names extension pages the browser's way
         newGroup.tabs.forEach(Tabs.tabUrlToAddon);

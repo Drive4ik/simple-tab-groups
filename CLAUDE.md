@@ -196,6 +196,14 @@ a call in the wrong order), the code must break loudly: throw, not log and go on
 must show up at the first start of the add-on after the change and never reach the users. For
 example, registering a second queue under the same name throws when the module loads.
 
+The same goes for the arguments of a method that must stand in a relation to each other: an item
+and the list it must not be part of, two ids that must differ, a value and the set it must belong
+to. The caller is where the slip happens (a wrong list, a stale id, the call before the step that
+makes the relation true), and the method cannot tell such a call from a right one by the shape of
+its arguments alone. So the method checks the relation at its top and throws. The price is one
+check; without it the method quietly does the wrong thing with correct-looking data, and the
+damage shows up far away, in the user's storage, with no trace back to the call.
+
 ### Scale of a change
 
 The best code is the code not written. Pick the smallest intervention. The order of preference,

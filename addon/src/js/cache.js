@@ -249,7 +249,7 @@ export async function removeTabGroup(id) {
 }
 
 // groupNativeId - membership in a native tab group: the stable string id of the sub-group
-// (GroupsNative.createSubGroupId), never the ephemeral browser group id. The single source of
+// (createSubGroupId, groups-native.js), never the ephemeral browser group id. The single source of
 // truth: survives addon and browser restarts and travels with the tab.
 export async function loadTabNativeGroupId(id) {
     return await loadValue(tabs, id, GROUP_NATIVE_KEY);

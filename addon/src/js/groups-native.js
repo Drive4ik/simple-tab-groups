@@ -46,10 +46,31 @@ function onStorageChanged(changes) {
 //   browser's header drag, which STG's UI does not have. A partial move loses the sub-group,
 //   except a partial move to ANOTHER group with cloneSubGroupsWhenMovingTabs on - then it is
 //   CLONED there under a fresh stable id. Landing inside another sub-group's span always wins.
-//   One id never lives in two STG groups (snapshotMembership/restoreMembership).
+//   One id never lives in two STG groups (snapshotMembership/restoreMembership, reissueSubGroupIds).
 
-export function createSubGroupId() {
+function createSubGroupId() {
     return self.crypto.randomUUID().slice(0, 8);
+}
+
+// one sub-group id never lives in two STG groups: a group that comes in from outside (restoreBackup,
+// the undo of a removal) gets a fresh id for every sub-group whose id one of otherGroups holds -
+// the same fresh id in the metadata and on every tab that carries it
+export function reissueSubGroupIds(group, otherGroups) {
+    if (otherGroups.some(({id}) => id === group.id)) {
+        throw new Error(`reissueSubGroupIds: group ${group.id} is among otherGroups, its own ids would count as taken`);
+    }
+
+    const takenIds = new Set(otherGroups.flatMap(({groupsNative}) => groupsNative.map(({id}) => id)));
+    const newIdByOldId = new Map;
+    const reissue = id => takenIds.has(id) ? newIdByOldId.getOrInsertComputed(id, createSubGroupId) : id;
+
+    group.groupsNative.forEach(entry => entry.id = reissue(entry.id));
+
+    for (const tab of group.tabs) {
+        if (tab.groupNativeId) {
+            tab.groupNativeId = reissue(tab.groupNativeId);
+        }
+    }
 }
 
 const liveIdByStableId = new Map;
