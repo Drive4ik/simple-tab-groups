@@ -684,6 +684,9 @@ export const DATE_LOCALE_VARIABLES = Object.freeze({
     get 'month-numeric'() {
         return (new Date).toLocaleString(UI_LANG, {month: 'numeric'});
     },
+	 get 'month-2-digit'() {
+        return (new Date).toLocaleString(UI_LANG, {month: '2-digit'});
+    },
     get 'month-long'() {
         return (new Date).toLocaleString(UI_LANG, {month: 'long'});
     },
