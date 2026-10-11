@@ -55,7 +55,10 @@ async function disableDebug() {
     await saveConsoleLogs();
 }
 
-const normalizeAndClear = function(obj, objKey) {
+const urls = new Map; // url → URL_n / FILE_n
+let urlIndex = 1;
+
+function normalizeAndClear(obj, objKey) {
     if (mainStorage.IS_TEMPORARY) {
         return obj;
     }
@@ -63,7 +66,7 @@ const normalizeAndClear = function(obj, objKey) {
     if (Array.isArray(obj)) {
         return obj.map(normalizeAndClear);
     } else if (typeof obj === 'object') {
-        for (let key in obj) {
+        for (const key in obj) {
             if (['title', 'icon', 'icons', 'iconUrl', 'favIconUrl', 'thumbnail', 'filename', 'catchTabRules'].includes(key)) {
                 obj[key] = obj[key] ? ('some ' + key) : obj[key];
             } else {
@@ -75,20 +78,17 @@ const normalizeAndClear = function(obj, objKey) {
     } else if (String(obj).startsWith('data:image')) {
         return 'some data:image';
     } else if (String(obj).startsWith('http')) {
-        return this.urls[obj] || (this.urls[obj] = 'URL_' + this.urlIndex++);
+        return urls.getOrInsertComputed(obj, () => 'URL_' + urlIndex++);
     } else if (String(obj).startsWith('file:')) {
-        return this.urls[obj] || (this.urls[obj] = 'FILE_' + this.urlIndex++);
+        return urls.getOrInsertComputed(obj, () => 'FILE_' + urlIndex++);
     } else if (typeof obj === 'string' && obj.includes(Constants.STG_BASE_URL) && objKey !== 'UUID') {
         return obj.replaceAll(Constants.STG_BASE_URL, '');
     }
 
     return obj;
-}.bind({
-    urls: {},
-    urlIndex: 1,
-});
+}
 
-let CRITICAL_ERRORS = [];
+const CRITICAL_ERRORS = [];
 function onCatch(message, resultObjType, ...args) {
     return nativeError => {
         const ERROR = {
@@ -159,7 +159,7 @@ async function saveConsoleLogs() {
     let loadedTabs = await Promise.all(tabs.map(tab => Cache.loadTabSession(tab)));
     loadedTabs = loadedTabs.filter(Boolean);
 
-    const filteredExtensions = (function() {
+    const filteredExtensions = (() => {
         try {
             return extensions
                 .filter(({id, enabled, type}) => !id.endsWith('@search.mozilla.org') && enabled && type === browser.management.ExtensionType.EXTENSION)
@@ -195,7 +195,7 @@ async function saveConsoleLogs() {
         errorLogs,
     });
 
-    let savedId = await File.save(LOGS_OBJ, 'STG-debug-logs.json');
+    const savedId = await File.save(LOGS_OBJ, 'STG-debug-logs.json');
 
     if (savedId) {
         clearLogs();
@@ -216,7 +216,7 @@ function onClosePage() {
 
 async function closePage() {
     onClosePage();
-    let tab = await browser.tabs.getCurrent();
+    const tab = await browser.tabs.getCurrent();
     await browser.tabs.remove(tab.id);
 }
 

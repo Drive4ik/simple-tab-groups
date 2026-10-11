@@ -51,18 +51,15 @@ function replaceTags(message, data, extra) {
         const namedTagData = globalTagData[keyName] ?? globalTagData;
 
         if ('hreftocontent' in namedTagData || 'hreftocontent' in globalTagData) {
-            try {
-                const tagURL = new URL(namedTagData.href);
-                const hreftocontent = namedTagData.hreftocontent ?? globalTagData.hreftocontent;
-                content = (hreftocontent || 'hostname pathname')
-                    .trim()
-                    .split(/\s+/)
-                    .map(k => tagURL[k])
-                    .filter(Boolean)
-                    .shift() || namedTagData.href;
-            } catch {
-                content = namedTagData.href;
-            }
+            const tagURL = URL.parse(namedTagData.href);
+            const hreftocontent = namedTagData.hreftocontent ?? globalTagData.hreftocontent;
+
+            content = tagURL && (hreftocontent || 'hostname pathname')
+                .trim()
+                .split(/\s+/)
+                .map(k => tagURL[k])
+                .filter(Boolean)
+                .shift() || namedTagData.href;
         }
 
         if ('spacesaround' in namedTagData || 'spacesaround' in globalTagData) {

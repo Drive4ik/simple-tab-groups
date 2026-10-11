@@ -295,7 +295,7 @@ export default [{
 
             for (const key in exampleGroup) {
                 if (!Object.hasOwn(group, key)) {
-                    group[key] = JSON.clone(exampleGroup[key]);
+                    group[key] = structuredClone(exampleGroup[key]);
                 }
             }
         }
@@ -420,7 +420,7 @@ export default [{
 
             let newGroupId = await Utils.dataToUUIDv8(similarityData);
 
-            if (new Set(groupIdsMap.values()).has(newGroupId)) {
+            if (groupIdsMap.values().some(id => id === newGroupId)) {
                 newGroupId = await Utils.dataToUUIDv8([group.id, ...similarityData]);
             }
 

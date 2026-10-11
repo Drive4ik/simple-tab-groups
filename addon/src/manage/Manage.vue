@@ -86,13 +86,16 @@ export default {
         log.stop();
     },
     watch: {
-        'options.showTabsWithThumbnailsInManageGroups'(value) {
-            value && this.loadAvailableTabThumbnails();
+        async 'options.showTabsWithThumbnailsInManageGroups'(value) {
+            if (value) {
+                await this.tabGroupsPromise; // the options load ahead of the groups
+                this.loadAvailableTabThumbnails();
+            }
         },
     },
     computed: {
         filteredGroups() {
-            let searchStr = this.search.toLowerCase(),
+            const searchStr = this.search.toLowerCase(),
                 groups = this.options.showArchivedGroups ? this.groups : this.groups.filter(group => !group.isArchive);
 
             return groups.map(group => {
@@ -101,7 +104,7 @@ export default {
             });
         },
         filteredUnSyncTabs() {
-            let searchStr = this.search.toLowerCase();
+            const searchStr = this.search.toLowerCase();
 
             return this.unSyncTabs.filter(tab => Utils.mySearchFunc(searchStr, Tabs.getTitle(tab, true), this.extendedSearch));
         },
@@ -219,18 +222,14 @@ export default {
                 }
             } else if (event.shiftKey) {
                 if (this.multipleTabIds.length) {
-                    let tabIds = group ? group.filteredTabs.map(Tabs.extractId) : this.filteredUnSyncTabs.map(Tabs.extractId),
+                    const tabIds = group ? group.filteredTabs.map(Tabs.extractId) : this.filteredUnSyncTabs.map(Tabs.extractId),
                         tabIndex = tabIds.indexOf(tab.id),
-                        lastTabIndex = -1;
-
-                    this.multipleTabIds.slice().reverse().some(function(tabId) {
-                        return -1 !== (lastTabIndex = tabIds.indexOf(tabId));
-                    });
+                        lastTabIndex = tabIds.indexOf(this.multipleTabIds.findLast(tabId => tabIds.includes(tabId)));
 
                     if (-1 === lastTabIndex) {
                         this.multipleTabIds.push(tab.id);
                     } else if (tabIndex !== lastTabIndex) {
-                        let multipleTabIndex = this.multipleTabIds.indexOf(tabIds[lastTabIndex]);
+                        const multipleTabIndex = this.multipleTabIds.indexOf(tabIds[lastTabIndex]);
 
                         for (let i = Math.min(tabIndex, lastTabIndex), maxIndex = Math.max(tabIndex, lastTabIndex); i <= maxIndex; i++) {
                             if (!this.multipleTabIds.includes(tabIds[i])) {
@@ -277,7 +276,7 @@ export default {
         },
 
         isGroup(obj) {
-            return obj.hasOwnProperty('tabs');
+            return Object.hasOwn(obj, 'tabs');
         },
 
         // allowTypes: Array ['groups', 'tabs']
@@ -302,7 +301,7 @@ export default {
                         }
 
                         if (1 < this.multipleTabIds.length) {
-                            let multiTabsNode = document.getElementById('multipleTabsText');
+                            const multiTabsNode = document.getElementById('multipleTabsText');
                             multiTabsNode.innerText = this.lang('movingMultipleTabsText', this.multipleTabIds.length);
 
                             event.dataTransfer.setDragImage(multiTabsNode, 20, multiTabsNode.offsetHeight - 80);
@@ -864,7 +863,7 @@ export default {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
         /* grid-template-rows: minmax(auto, 600px) minmax(auto, 600px); */
-        grid-gap: var(--gap-indent);
+        gap: var(--gap-indent);
     }
 
     .group {
@@ -903,7 +902,7 @@ export default {
 
             &:not(.in-list-view) {
                 display: grid;
-                grid-gap: var(--gap-indent-mini);
+                gap: var(--gap-indent-mini);
                 grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
                 grid-auto-rows: 10em;
             }
@@ -1157,7 +1156,7 @@ export default {
     position: absolute;
     top: 0;
     left: 50%;
-    transform: translateX(-50%);
+    translate: -50%;
 }
 
 </style>

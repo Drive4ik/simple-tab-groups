@@ -28,7 +28,11 @@
     visibility: visible;
     outline: none;
 
-    color-scheme: light;
+    color-scheme: light dark; /* data-theme="auto": the scheme the user prefers */
+
+    &[data-theme="light"] {
+        color-scheme: light;
+    }
 
     &[data-theme="dark"] {
         color-scheme: dark;

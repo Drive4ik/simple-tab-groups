@@ -136,7 +136,7 @@ function setNextFocus(node, vector = 'down', filterFunc = n => !n.disabled) {
         if (nodes[nodeIndex]) {
             nodes[nodeIndex].focus();
         } else {
-            nodes[nodes.length - 1].focus();
+            nodes.at(-1).focus();
         }
     }
 }
@@ -159,16 +159,10 @@ function showGroupsPopup(data) {
         activeElement?.focus();
     }
 
-    if (data.colorScheme === 'auto') {
-        dialog.dataset.theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-    } else {
-        dialog.dataset.theme = data.colorScheme;
-    }
-
+    dialog.dataset.theme = data.colorScheme;
     dialog.id = POPUP_ID;
     dialog.tabIndex = -1;
-    dialog.setAttribute('aria-modal', 'true');
-    dialog.addEventListener('click', e => e.target === dialog ? closeGroupsPopup() : null);
+    dialog.closedBy = 'any'; // a click outside the dialog closes it, the close listener does the rest
     dialog.addEventListener('close', closeGroupsPopup);
     dialog.addEventListener('keydown', e => {
         e.stopPropagation();

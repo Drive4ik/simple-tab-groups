@@ -160,13 +160,20 @@ function createMockedListener(eventPrefs, ...eventParameters) {
 
     event.addListener(realListener, ...eventParameters);
 
-    function settlePending() {
-        self.clearTimeout(pending?.timer);
-        pending?.resolve(eventPrefs.noListenerPromiseHandler(...(pendingArgs ?? [])));
+    function answerPending(answer) {
+        self.clearTimeout(pending.timer);
+        pending.resolve(answer);
+        pending = null;
+    }
+
+    function dropPending() {
+        if (pending) {
+            answerPending(eventPrefs.noListenerPromiseHandler(...pendingArgs));
+        }
+
         if (!eventPrefs.calledOnce) {
             pendingArgs = null;
         }
-        pending = null;
     }
 
     function processListeners(args) {
@@ -209,14 +216,14 @@ function createMockedListener(eventPrefs, ...eventParameters) {
             listeners.add(listener);
 
             if (waitListener && pendingArgs) {
-                const promisedResult = processListeners(pendingArgs);
+                const result = processListeners(pendingArgs);
 
-                if (eventPrefs.returnPromise) {
-                    pending.resolve(promisedResult);
+                if (pending) {
+                    answerPending(result);
                 }
             }
 
-            settlePending();
+            dropPending();
         }
 
         return () => remove(listener);
@@ -225,7 +232,7 @@ function createMockedListener(eventPrefs, ...eventParameters) {
     function remove(listener) {
         const deleted = listeners.delete(listener);
         calledOnceListeners.delete(listener);
-        settlePending();
+        dropPending();
         return deleted;
     }
 
@@ -251,10 +258,10 @@ function createMockedListener(eventPrefs, ...eventParameters) {
 
         if (eventPrefs.waitListener) {
             if (eventPrefs.returnPromise) {
-                settlePending();
+                dropPending();
                 pending = Promise.withResolvers();
                 pendingArgs = args;
-                pending.timer = self.setTimeout(settlePending, eventPrefs.pendingPromiseTimeout);
+                pending.timer = self.setTimeout(dropPending, eventPrefs.pendingPromiseTimeout);
                 return pending.promise;
             }
 

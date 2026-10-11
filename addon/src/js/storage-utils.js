@@ -7,7 +7,7 @@ export function getKeysData(keys, defaultData) {
     if (!keys) {
         keysData = defaultData;
     } else if (Array.isArray(keys)) {
-        keysData = keys.reduce((acc, key) => (acc[key] = defaultData[key], acc), {});
+        keysData = Object.fromEntries(keys.map(key => [key, defaultData[key]]));
     } else if (typeof keys === 'string') {
         keysData = {[keys]: defaultData[keys]};
     } else { // if keys is object

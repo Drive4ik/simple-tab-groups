@@ -28,7 +28,7 @@ export default {
         await this.$nextTick();
 
         if (this.buttons.length) {
-            let focusedButtonIndex = this.buttons.findIndex(button => button.hasOwnProperty('focused'));
+            let focusedButtonIndex = this.buttons.findIndex(button => Object.hasOwn(button, 'focused'));
 
             if (focusedButtonIndex === -1) {
                 focusedButtonIndex = 1;

@@ -213,7 +213,7 @@ export default {
                         <figure></figure>
                     </figure>
 
-                    <span class="word-wrap-anywhere" v-text="getGroupTitle(group)"></span>
+                    <span class="overflow-wrap-anywhere" v-text="getGroupTitle(group)"></span>
 
                     <small class="brackets-round is-italic" v-text="lang('groupTabsCount', group.tabs.length)"></small>
                 </span>

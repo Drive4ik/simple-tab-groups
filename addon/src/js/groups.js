@@ -162,11 +162,11 @@ async function applyNow(windowId, groupId, activeTabId, applyFromHistory = false
                 }
             } else if (groupToHide) {
                 if (activeTabGroupToHide) {
-                    let tabToActive = await Tabs.setActive(null, groupToShow.tabs);
+                    const tabToActive = await Tabs.setActive(null, groupToShow.tabs);
 
                     if (!tabToActive) {
                         // group to show has no any tabs, try select pinned tab or create new one
-                        let pinnedTabs = await Tabs.query({windowId, pinned: true, hidden: false}, {withSession: false}),
+                        const pinnedTabs = await Tabs.query({windowId, pinned: true, hidden: false}, {withSession: false}),
                             activePinnedTab = await Tabs.setActive(null, pinnedTabs);
 
                         if (!activePinnedTab) {
@@ -186,7 +186,7 @@ async function applyNow(windowId, groupId, activeTabId, applyFromHistory = false
                 // remove tabs without group
                 tabs = tabs.filter(tab => !tab.groupId);
 
-                let activePinnedTab = await Tabs.setActive(null, tabs.filter(tab => tab.pinned));
+                const activePinnedTab = await Tabs.setActive(null, tabs.filter(tab => tab.pinned));
 
                 // find other not pinned tabs
                 tabs = tabs.filter(tab => !tab.pinned);
@@ -1125,7 +1125,7 @@ export function getNewTabParams(group) {
 }
 
 export function setNewTabsParams(tabs, group) {
-    let newTabParams = getNewTabParams(group);
+    const newTabParams = getNewTabParams(group);
 
     return tabs.map(tab => Object.assign(tab, newTabParams));
 }
@@ -1206,7 +1206,7 @@ export function getCatchedForTab(notArchivedGroups, currentGroup, {cookieStoreId
 }
 
 export function isNeedBlockBeforeRequest(groups) {
-    return groups.some(function({isArchive, catchTabContainers, catchTabRules, ifDifferentContainerReOpen, newTabContainer}) {
+    return groups.some(({isArchive, catchTabContainers, catchTabRules, ifDifferentContainerReOpen, newTabContainer}) => {
         if (isArchive) {
             return false;
         }
@@ -1234,8 +1234,7 @@ export async function setIconUrl(groupId, iconUrl) {
     }
 }
 
-const emojiRegExp = /\p{RI}\p{RI}|\p{Emoji}(\p{EMod}+|\u{FE0F}\u{20E3}?|[\u{E0020}-\u{E007E}]+\u{E007F})?(\u{200D}\p{Emoji}(\p{EMod}+|\u{FE0F}\u{20E3}?|[\u{E0020}-\u{E007E}]+\u{E007F})?)+|\p{EPres}(\p{EMod}+|\u{FE0F}\u{20E3}?|[\u{E0020}-\u{E007E}]+\u{E007F})?|\p{Emoji}(\p{EMod}+|\u{FE0F}\u{20E3}?|[\u{E0020}-\u{E007E}]+\u{E007F})/u;
-const firstCharEmojiRegExp = new RegExp(`^(${emojiRegExp.source})`, emojiRegExp.flags);
+const firstCharEmojiRegExp = /^\p{RGI_Emoji}/v;
 
 export function getEmojiIcon(group) {
     if (group.iconViewType === 'title') {
@@ -1389,7 +1388,7 @@ export function tabsCountMessage(tabs, groupIsArchived, lang = true) {
         return lang ? Lang('groupTabsCount', tabs.length) : tabs.length;
     }
 
-    let activeTabsCount = tabs.filter(tab => !tab.discarded).length;
+    const activeTabsCount = tabs.filter(tab => !tab.discarded).length;
 
     if (lang) {
         return Lang('groupTabsCountActive', [activeTabsCount, tabs.length]);

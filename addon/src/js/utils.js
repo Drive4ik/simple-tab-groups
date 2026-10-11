@@ -3,14 +3,13 @@ import * as Constants from './constants.js';
 import JSON from './json.js';
 
 export const INNER_HTML = 'innerHTML';
-const encoder = new TextEncoder();
 
 export function unixNow() {
     return Math.floor(Date.now() / 1000);
 }
 
 export function encodeToBytes(str) {
-    return encoder.encode(str);
+    return new TextEncoder().encode(str);
 }
 
 export function type(obj) {
@@ -32,7 +31,7 @@ export function format(str, ...args) {
     str = String(str);
     if (!str) return str;
 
-    const lastArg = args[args.length - 1];
+    const lastArg = args.at(-1);
 
     let removeEmptyKeys = false;
     let processValueFunc = value => value;
@@ -52,9 +51,8 @@ export function format(str, ...args) {
         KEY_PARTS_DELIMITER = '.',
     ] = Array.isArray(this) ? this : [];
 
-    const regexpEscape = RegExp.escape ? RegExp.escape : s => s.split('').map(s => `\\${s}`).join('');
-    const BRACKET_START_ESCAPED = regexpEscape(BRACKET_START);
-    const BRACKET_END_ESCAPED = regexpEscape(BRACKET_END);
+    const BRACKET_START_ESCAPED = RegExp.escape(BRACKET_START);
+    const BRACKET_END_ESCAPED = RegExp.escape(BRACKET_END);
 
     const replaceRegExp = new RegExp(`${BRACKET_START_ESCAPED}((?!${BRACKET_END_ESCAPED}).+?)${BRACKET_END_ESCAPED}`, 'g');
 
@@ -84,7 +82,7 @@ export function format(str, ...args) {
         }
 
         if (keys.length > 1) {
-            return keys[keys.length - 1];
+            return keys.at(-1);
         }
 
         if (removeEmptyKeys) {
@@ -149,13 +147,11 @@ export function unSafeHtml(html) {
 }
 
 export function base64Encode(str) {
-    const bytes = encodeToBytes(str);
-    return btoa(String.fromCodePoint(...bytes));
+    return encodeToBytes(str).toBase64();
 }
 
 export function base64Decode(str) {
-    const bytes = Uint8Array.from(Array.from(atob(str), char => char.codePointAt(0)));
-    return new TextDecoder().decode(bytes);
+    return new TextDecoder().decode(Uint8Array.fromBase64(str));
 }
 
 export function sliceText(text, length = 50) {
@@ -168,12 +164,8 @@ async function sha256Bytes(str) {
     return new Uint8Array(hashBuffer);
 }
 
-function bytesToHex(bytes) {
-    return Array.from(bytes, byte => byte.toString(16).padStart(2, '0')).join('');
-}
-
 export async function sha256Hex(str) {
-    return bytesToHex(await sha256Bytes(str));
+    return (await sha256Bytes(str)).toHex();
 }
 
 export function isAllowExternalRequestAndSender(request, sender, extensionRules = {}) {
@@ -181,7 +173,7 @@ export function isAllowExternalRequestAndSender(request, sender, extensionRules 
     //     return true;
     // }
 
-    let extension = Constants.EXTENSIONS_WHITE_LIST[sender.id];
+    const extension = Constants.EXTENSIONS_WHITE_LIST[sender.id];
 
     if (!extension) {
         return false;
@@ -228,11 +220,9 @@ export function isDataUrlAllowToNavigate(url) {
 
 // the url a page keeps in one of its search keys (Constants.NESTED_URL_KEYS), null without one
 export function getNestedUrl(url) {
-    let searchParams;
+    const searchParams = URL.parse(url)?.searchParams;
 
-    try {
-        ({searchParams} = new URL(url));
-    } catch {
+    if (!searchParams) {
         return null;
     }
 
@@ -290,7 +280,7 @@ function bytesToUUIDv8(bytes) {
     uuidBytes[6] = (uuidBytes[6] & 0x0f) | 0x80;
     uuidBytes[8] = (uuidBytes[8] & 0x3f) | 0x80;
 
-    const hex = bytesToHex(uuidBytes);
+    const hex = uuidBytes.toHex();
 
     return [
         hex.slice(0, 8),
@@ -307,10 +297,7 @@ export async function dataToUUIDv8(data) {
             data = JSON.stringify(data.map(String));
             break;
         case 'object':
-            data = JSON.stringify(Object.keys(data).sort().reduce((acc, key) => {
-                acc[key] = String(data[key]);
-                return acc;
-            }, {}));
+            data = JSON.stringify(Object.fromEntries(Object.keys(data).sort().map(key => [key, String(data[key])])));
             break;
         case 'string':
         default:
@@ -349,9 +336,7 @@ export function getNextIndex(index, length, direction = 'next', wrapAround = fal
 }
 
 export function toCamelCase(str) {
-    return str.replace(/^([A-Z])|[\s_-](\w)/g, function(match, p1, p2) {
-        return p2 ? p2.toUpperCase() : p1.toLowerCase();
-    });
+    return str.replace(/^([A-Z])|[\s_-](\w)/g, (match, p1, p2) => p2 ? p2.toUpperCase() : p1.toLowerCase());
 }
 
 export function capitalize(str) {
@@ -387,7 +372,7 @@ export function compareStrings(a, b, numeric = true) {
 }
 
 export function isElementVisible(element) {
-    let rect = element.getBoundingClientRect();
+    const rect = element.getBoundingClientRect();
 
     // Only completely visible elements return true:
     return rect.top >= 0 && rect.bottom <= window.innerHeight;
@@ -420,7 +405,7 @@ export function clamp(value, min = 0, max = 999) {
         throw new Error('invalid clamp args');
     }
 
-    value = parseFloat(value, 10);
+    value = parseFloat(value);
 
     if (isNaN(value)) {
         value = min;
@@ -434,7 +419,7 @@ export function randomColor() {
 }
 
 export function safeColor(color) {
-    let div = document.createElement('div');
+    const div = document.createElement('div');
     div.style.backgroundColor = color;
     return div.style.backgroundColor;
 }
@@ -473,35 +458,26 @@ export function normalizeSvg(svgUrl) {
     return convertSvgToUrl(div[INNER_HTML]);
 }
 
-export function normalizeGroupIcon(iconUrl) {
-    return new Promise(function(resolve, reject) {
-        if (isSvg(iconUrl)) {
-            resolve(normalizeSvg(iconUrl));
-        } else {
-            let img = new Image();
+export async function normalizeGroupIcon(iconUrl) {
+    if (isSvg(iconUrl)) {
+        return normalizeSvg(iconUrl);
+    }
 
-            img.addEventListener('load', () => {
-                if (img.height > 64 || img.width > 64) {
-                    resolve(resizeImage(img, 64, 64));
-                } else {
-                    resolve(iconUrl);
-                }
-            });
+    const img = new Image();
 
-            img.addEventListener('error', () => reject('Error load icon'));
+    img.src = iconUrl;
+    await img.decode();
 
-            img.src = iconUrl;
-        }
-    });
+    if (img.height > 64 || img.width > 64) {
+        return resizeImage(img, 64, 64);
+    }
+
+    return iconUrl;
 }
 
 export function resizeImage(img, height, width, useTransparency = true, ...canvasParams) { // img: new Image()
     const canvas = document.createElement('canvas'),
-        context = canvas.getContext('2d');
-
-    if (!useTransparency) {
-        canvas.mozOpaque = true;
-    }
+        context = canvas.getContext('2d', {alpha: useTransparency});
 
     canvas.width = width;
     canvas.height = height;
@@ -511,13 +487,11 @@ export function resizeImage(img, height, width, useTransparency = true, ...canva
     return isCanvasBlank(canvas, useTransparency, ...canvasParams) ? null : canvas.toDataURL(...canvasParams);
 }
 
+// the same mode for both canvases, otherwise the encoded bytes differ
 function isCanvasBlank(canvas, useTransparency, ...canvasParams) {
     const blank = document.createElement('canvas'),
+        blankContext = blank.getContext('2d', {alpha: useTransparency}),
         canvasDataUrl = canvas.toDataURL(...canvasParams);
-
-    if (!useTransparency) {
-        blank.mozOpaque = true;
-    }
 
     blank.width = canvas.width;
     blank.height = canvas.height;
@@ -525,8 +499,6 @@ function isCanvasBlank(canvas, useTransparency, ...canvasParams) {
     let isEmpty = canvasDataUrl === blank.toDataURL(...canvasParams);
 
     if (!isEmpty) {
-        const blankContext = blank.getContext('2d');
-
         blankContext.fillStyle = 'rgb(255, 255, 255)';
         blankContext.fillRect(0, 0, blank.width, blank.height);
 
@@ -534,6 +506,26 @@ function isCanvasBlank(canvas, useTransparency, ...canvasParams) {
     }
 
     return isEmpty;
+}
+
+// every pixel is the first one: a picture of one color
+export async function isImageUniform(dataUrl) {
+    const img = new Image();
+
+    img.src = dataUrl;
+    await img.decode();
+
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d', {alpha: false, willReadFrequently: true});
+
+    canvas.width = img.width;
+    canvas.height = img.height;
+
+    context.drawImage(img, 0, 0);
+
+    const pixels = new Uint32Array(context.getImageData(0, 0, canvas.width, canvas.height).data.buffer);
+
+    return pixels.every(pixel => pixel === pixels[0]);
 }
 
 // needle need to be "LowerCased"
@@ -548,7 +540,7 @@ export function mySearchFunc(needle, haystack, extendedSearch = false) {
 
     return needle
         .split('')
-        .every(function(char) {
+        .every(char => {
             if (' ' === char) {
                 return true;
             }
@@ -556,14 +548,6 @@ export function mySearchFunc(needle, haystack, extendedSearch = false) {
             lastFindIndex = haystack.indexOf(char, lastFindIndex + 1);
             return -1 !== lastFindIndex;
         });
-}
-
-export function onlyUniqueFilter(value, index, self) {
-    return self.indexOf(value) === index;
-}
-
-export function onlyUniqueFilterLast(value, index, self) {
-    return self.lastIndexOf(value) === index;
 }
 
 // a string must stay one value, not explode into characters; a Map gives its keys
@@ -597,23 +581,8 @@ export function isEqualByKeys(obj1, obj2, keys) {
     return keys.every(key => obj1?.[key] === obj2?.[key]);
 }
 
-export function extractKeys(obj, keys, useClone = false) {
-    if (!useClone) {
-        return assignKeys({}, obj, keys);
-    }
-
-    const newObj = {};
-
-    for (const key of keys) {
-        newObj[key] = JSON.clone(obj[key]);
-    }
-
-    return newObj;
-}
-
-export function arrayToObj(arr, primaryKey = 'id', accum = {}) {
-    arr.forEach(obj => accum[obj[primaryKey]] = obj);
-    return accum;
+export function extractKeys(obj, keys) {
+    return assignKeys({}, obj, keys);
 }
 
 export function wait(ms = 200) {

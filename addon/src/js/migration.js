@@ -134,14 +134,14 @@ export async function initLocalData() {
     if (!Object.keys(storageData).length) {
         await Storage.set({version: CURRENT_VERSION});
 
-        const data = stampVersion(JSON.clone(Constants.DEFAULT_OPTIONS));
+        const data = stampVersion(structuredClone(Constants.DEFAULT_OPTIONS));
 
         log.stop('fresh install');
         return {data, error: null};
     }
 
     const data = {
-        ...JSON.clone(Constants.DEFAULT_OPTIONS),
+        ...structuredClone(Constants.DEFAULT_OPTIONS),
         ...storageData,
     };
 

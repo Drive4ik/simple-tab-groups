@@ -373,21 +373,22 @@ export default class GithubGist {
                 };
             }
 
-            const xhr = await new Promise(resolve => {
-                const xhr = new XMLHttpRequest();
+            const {promise, resolve, reject} = Promise.withResolvers();
+            const xhr = new XMLHttpRequest();
 
-                xhr.open(options.method, url, true);
+            xhr.open(options.method, url, true);
 
-                for (const [key, value] of Object.entries(options.headers)) {
-                    xhr.setRequestHeader(key, value);
-                }
+            for (const [key, value] of Object.entries(options.headers)) {
+                xhr.setRequestHeader(key, value);
+            }
 
-                xhr.upload.onprogress = createXHRProgess(0, 70);
-                xhr.onprogress = createXHRProgess(70, 100);
-                xhr.onload = xhr.onerror = xhr.onabort = () => resolve(xhr);
+            xhr.upload.onprogress = createXHRProgess(0, 70);
+            xhr.onprogress = createXHRProgess(70, 100);
+            xhr.onload = resolve;
+            xhr.onerror = xhr.onabort = () => reject(new TypeError('NetworkError when attempting to fetch resource.'));
+            xhr.send(options.body);
 
-                xhr.send(options.body);
-            });
+            await promise;
 
             if (xhr.status >= 200 && xhr.status < 204) {
                 cache.responseLength = xhr.responseText.length;

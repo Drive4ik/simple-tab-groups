@@ -140,7 +140,7 @@ export default {
     },
     computed: {
         filteredGroups() {
-            let searchStr = this.search.toLowerCase(),
+            const searchStr = this.search.toLowerCase(),
                 groups = this.options.showArchivedGroups ? this.groups : this.groups.filter(group => !group.isArchive),
                 filteredGroups = [];
 
@@ -272,7 +272,7 @@ export default {
         },
 
         $_simpleSortTabs(searchStr, a, b) {
-            let aIncludes = Tabs.getTitle(a, true).toLowerCase().includes(searchStr),
+            const aIncludes = Tabs.getTitle(a, true).toLowerCase().includes(searchStr),
                 bIncludes = Tabs.getTitle(b, true).toLowerCase().includes(searchStr);
 
             if (aIncludes && !bIncludes) { // move up
@@ -351,23 +351,19 @@ export default {
                     let tabs = [];
 
                     if (SECTION_SEARCH === this.section) {
-                        tabs = this.filteredGroups.reduce((acc, group) => (acc.push(...group.filteredTabs), acc), []);
+                        tabs = this.filteredGroups.flatMap(group => group.filteredTabs);
                     } else {
                         tabs = group ? group.tabs : this.unSyncTabs;
                     }
 
-                    let tabIds = tabs.map(Tabs.extractId),
+                    const tabIds = tabs.map(Tabs.extractId),
                         tabIndex = tabIds.indexOf(tab.id),
-                        lastTabIndex = -1;
-
-                    this.multipleTabIds.slice().reverse().some(function(tabId) {
-                        return -1 !== (lastTabIndex = tabIds.indexOf(tabId));
-                    });
+                        lastTabIndex = tabIds.indexOf(this.multipleTabIds.findLast(tabId => tabIds.includes(tabId)));
 
                     if (-1 === lastTabIndex) {
                         this.multipleTabIds.push(tab.id);
                     } else if (tabIndex !== lastTabIndex) {
-                        let multipleTabIndex = this.multipleTabIds.indexOf(tabIds[lastTabIndex]);
+                        const multipleTabIndex = this.multipleTabIds.indexOf(tabIds[lastTabIndex]);
 
                         for (let i = Math.min(tabIndex, lastTabIndex), maxIndex = Math.max(tabIndex, lastTabIndex); i <= maxIndex; i++) {
                             if (!this.multipleTabIds.includes(tabIds[i])) {
@@ -400,7 +396,7 @@ export default {
 
             this.multipleTabIds = [];
 
-            let isCurrentGroup = group === this.currentGroup;
+            const isCurrentGroup = group === this.currentGroup;
 
             if (this.PAGES.isSidebar && closePopup) {
                 this.showSectionGroupTabs(group);
@@ -426,7 +422,7 @@ export default {
             } else {
                 this.someGroupAreLoading = true;
 
-                let loadGroupPromise = this.sendMessage('load-custom-group', {
+                const loadGroupPromise = this.sendMessage('load-custom-group', {
                     groupId: group.id,
                     tabId: tab?.id,
                 });
@@ -638,13 +634,13 @@ export default {
         },
 
         selectFirstItemOnSearch() {
-            let groups = this.filteredGroups.filter(group => !group.isArchive);
+            const groups = this.filteredGroups.filter(group => !group.isArchive);
 
             if (!groups.length) {
                 return;
             }
 
-            let [group] = groups,
+            const [group] = groups,
                 [tab] = group.filteredTabs;
 
             this.applyGroup(group, tab, true);
@@ -660,7 +656,7 @@ export default {
             if (event.target.tabIndex > -1) {
                 event.target.classList.add('is-context-active');
             } else {
-                let parent = event.target.closest('[tabindex="0"]');
+                const parent = event.target.closest('[tabindex="0"]');
                 parent && parent.classList.add('is-context-active');
             }
         },
@@ -1316,10 +1312,7 @@ export default {
 
 #loading {
     position: fixed;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: 0;
+    inset: 0;
     height: 100vh;
     width: 100vw;
     background-color: hsla(var(--bulma-scheme-h), var(--bulma-scheme-s), var(--bulma-scheme-invert-l), 0.46);
@@ -1469,31 +1462,29 @@ html {
         }
 
         &[style*="--group-native-color"] {
-            &:before {
+            &::before {
                 content: '';
                 position: absolute;
                 background-color: var(--group-native-color);
+                inset-block: 0;
                 left: 0;
-                top: 0;
-                bottom: 0;
                 width: 3px;
             }
 
-            &.is-opened:before,
-            &.is-multiple-tab-to-move:before {
+            &.is-opened::before,
+            &.is-multiple-tab-to-move::before {
                 left: 3px;
             }
         }
 
 
-        &.is-opened:after,
-        &.is-multiple-tab-to-move:after {
+        &.is-opened::after,
+        &.is-multiple-tab-to-move::after {
             content: '';
             position: absolute;
             background-color: var(--group-icon-color, var(--bulma-info-50));
+            inset-block: 0;
             left: 0;
-            top: 0;
-            bottom: 0;
             width: 3px;
         }
 
@@ -1610,7 +1601,7 @@ html {
     position: absolute;
     top: 0;
     left: 50%;
-    transform: translateX(-50%);
+    translate: -50%;
 }
 
 </style>

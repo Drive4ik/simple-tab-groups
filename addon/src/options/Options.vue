@@ -438,12 +438,12 @@ export default {
                 return;
             }
 
-            let data = {
+            const data = {
                 groups: [],
                 pinnedTabs: [],
             };
 
-            oldOptions.windows.forEach(function(win) {
+            oldOptions.windows.forEach(win => {
                 let oldGroups = {},
                     groups = {};
 
@@ -454,7 +454,7 @@ export default {
                     return;
                 }
 
-                Object.values(oldGroups).forEach(function({id, title, catchRules}) {
+                Object.values(oldGroups).forEach(({id, title, catchRules}) => {
                     groups[id] = {
                         title,
                         tabs: [],
@@ -462,9 +462,9 @@ export default {
                     };
                 });
 
-                win.tabs.forEach(function(oldTab) {
+                win.tabs.forEach(oldTab => {
                     let tabData = {},
-                        tab = oldTab.entries.pop();
+                        tab = oldTab.entries.at(-1);
 
                     if (oldTab.pinned) {
                         data.pinnedTabs.push({
@@ -520,23 +520,23 @@ export default {
                 return;
             }
 
-            let data = {
+            const data = {
                 groups: [],
                 pinnedTabs: [],
             };
 
             if (panoramaOptions.file.version === 1) {
-                panoramaOptions.windows.forEach(function(win) {
-                    let groups = {};
+                panoramaOptions.windows.forEach(win => {
+                    const groups = {};
 
-                    win.groups.forEach(function({id, name: title}) {
+                    win.groups.forEach(({id, name: title}) => {
                         groups[id] = {
                             title,
                             tabs: [],
                         };
                     });
 
-                    win.tabs.forEach(function({url, title, pinned, groupId}) {
+                    win.tabs.forEach(({url, title, pinned, groupId}) => {
                         if (pinned) {
                             data.pinnedTabs.push({url, title, pinned});
                         } else if (groups[groupId]) {
@@ -547,8 +547,8 @@ export default {
                     data.groups.push(...Object.values(groups));
                 });
             } else if (panoramaOptions.file.version === 2) {
-                panoramaOptions.windows.forEach(function(win) {
-                    win.tabGroups?.forEach(function({title, tabs}) {
+                panoramaOptions.windows.forEach(win => {
+                    win.tabGroups?.forEach(({title, tabs}) => {
                         const groupTabs = tabs.map(({url, title}) => ({url, title}));
 
                         if (groupTabs.length) {
@@ -559,7 +559,7 @@ export default {
                         }
                     });
 
-                    win.pinnedTabs?.forEach(function({url, title}) {
+                    win.pinnedTabs?.forEach(({url, title}) => {
                         data.pinnedTabs.push({url, title});
                     });
                 });
@@ -597,12 +597,12 @@ export default {
                 return;
             }
 
-            let data = {
+            const data = {
                 groups: [],
                 pinnedTabs: [],
             };
 
-            syncTabOptions.groups.forEach(function({title, tabs}) {
+            syncTabOptions.groups.forEach(({title, tabs}) => {
                 tabs = tabs.map(({url, title, favIconUrl, pinned}) => ({url, title, favIconUrl, pinned}));
 
                 data.groups.push({
@@ -734,9 +734,8 @@ export default {
             return Groups.getIconUrl(group);
         },
 
-        copyTextSelector(selector) {
-            const content = document.querySelector(selector).textContent.trim();
-            navigator.clipboard.writeText(content);
+        copyText(text) {
+            navigator.clipboard.writeText(text);
         },
 
         isInstalledExtension(id) {
@@ -1539,11 +1538,11 @@ export default {
                         </div>
                         <div class="column is-four-fifths" :key="name + '2'">
                             <div class="is-flex is-align-items-center gap-indent">
-                                <a v-if="item.link" data-copy-target :href="item.link" target="_blank" v-text="item.linkText"></a>
+                                <a v-if="item.link" :href="item.link" target="_blank" v-text="item.linkText"></a>
                                 <!-- eslint-disable-next-line vue/no-v-text-v-html-on-component -->
-                                <wallet v-else-if="item.wallet" data-copy-target class="is-family-monospace" v-text="item.wallet"></wallet>
+                                <wallet v-else-if="item.wallet" class="is-family-monospace" v-text="item.wallet"></wallet>
 
-                                <button class="button" @click="copyTextSelector(`.${name} [data-copy-target]`)">
+                                <button class="button" @click="copyText(item.linkText ?? item.wallet)">
                                     <span class="icon">
                                         <figure class="image is-16x16">
                                             <img src="/icons/copy.svg" />
@@ -1704,12 +1703,12 @@ export default {
 }
 
 @keyframes heartbeat {
-    0% { transform: scale(1); --icon-light: 76%; }
-    10% { transform: scale(1.25); --icon-light: 66%; }
-    20% { transform: scale(1.1); --icon-light: 76%; }
-    30% { transform: scale(1.3); --icon-light: 50%; }
-    50% { transform: scale(1); --icon-light: 76%; }
-    100% { transform: scale(1); }
+    0% { scale: 1; --icon-light: 76%; }
+    10% { scale: 1.25; --icon-light: 66%; }
+    20% { scale: 1.1; --icon-light: 76%; }
+    30% { scale: 1.3; --icon-light: 50%; }
+    50% { scale: 1; --icon-light: 76%; }
+    100% { scale: 1; }
 }
 
 .donate-section {

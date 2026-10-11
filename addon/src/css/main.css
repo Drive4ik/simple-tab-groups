@@ -80,7 +80,7 @@ input {
 }
 
 .rotate-180 {
-    transform: rotate(180deg);
+    rotate: 180deg;
 }
 
 .is-sticky::after {
@@ -100,12 +100,8 @@ input {
     color: var(--discarded-text-color);
 }
 
-.word-break-word {
-    word-break: break-word;
-}
-
-.word-wrap-anywhere {
-    word-wrap: anywhere;
+.overflow-wrap-anywhere {
+    overflow-wrap: anywhere;
 }
 
 .white-space-pre-line {

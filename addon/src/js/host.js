@@ -6,7 +6,7 @@ import Logger from '/js/logger.js';
 import Lang from '/js/lang.js';
 
 const logger = new Logger('Host');
-var versionChecked = false;
+let versionCheck = null; // the check in flight; the other actions wait for it to end
 
 export async function hasPermission() {
     return Permissions.has(Permissions.NATIVE_MESSAGING);
@@ -21,7 +21,7 @@ export async function removePermission() {
 }
 
 export class HostError extends Error {
-    constructor(response) {
+    constructor(response, cause = response) {
         let message;
 
         if (response.message) {
@@ -34,10 +34,9 @@ export class HostError extends Error {
 
         logger.error(`HostError: ${message}`, response);
 
-        super(message, 'STGHost.exe');
+        super(message, {cause});
 
         this.name = 'HostError';
-        this.response = response;
     }
 }
 
@@ -49,13 +48,12 @@ export function getErrorMessage(error) {
     return String(error);
 }
 
-const NO_WAIT_ACTIONS = new Set(['get-version', 'update']);
+async function sendMessage(...args) {
+    await versionCheck;
+    return sendMessageNow(...args);
+}
 
-async function sendMessage(action, params = {}) {
-    if (versionChecked === null && !NO_WAIT_ACTIONS.has(action)) {
-        return Utils.wait(2000).then(() => sendMessage(action, params));
-    }
-
+async function sendMessageNow(action, params = {}) {
     const log = logger.start('sendMessage', `HOST_ACTION#${action}`);
 
     if (params.filePath) {
@@ -77,10 +75,11 @@ async function sendMessage(action, params = {}) {
 }
 
 export async function checkVersion() {
-    versionChecked = null;
+    const {promise, resolve} = Promise.withResolvers();
+    versionCheck = promise;
 
     try {
-        const {data: hostVersion} = await sendMessage('get-version');
+        const {data: hostVersion} = await sendMessageNow('get-version');
 
         const versionDiffIndex = Utils.compareNumericVersions(Constants.HOST.VERSION, hostVersion);
 
@@ -93,7 +92,7 @@ export async function checkVersion() {
                 version = 'latest'; // will update to latest NOT major version
             }
 
-            await sendMessage('update', {version});
+            await sendMessageNow('update', {version});
         }
     } catch (e) {
         if (e instanceof HostError) {
@@ -102,10 +101,11 @@ export async function checkVersion() {
             throw new HostError({
                 lang: 'hostAppNotFound',
                 args: [],
-            });
+            }, e);
         }
     } finally {
-        versionChecked = true;
+        versionCheck = null;
+        resolve();
     }
 }
 

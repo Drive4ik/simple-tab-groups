@@ -124,7 +124,7 @@ async function createNow(createProperties) {
     await new Promise((resolve, reject) => {
         browser.menus.create(createProperties, () => {
             if (browser.runtime.lastError) {
-                reject(new Error(browser.runtime.lastError));
+                reject(browser.runtime.lastError);
             } else {
                 resolve();
             }

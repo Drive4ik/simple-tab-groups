@@ -100,7 +100,7 @@ export default {
         },
         currentDomainRegexp() {
             if (this.currentTabUrl) {
-                let currentDomainRegexp = this.currentTabUrl.hostname.replace(/\./g, '\\.');
+                const currentDomainRegexp = this.currentTabUrl.hostname.replace(/\./g, '\\.');
 
                 if (!this.group.catchTabRules.includes(currentDomainRegexp)) {
                     return currentDomainRegexp;
@@ -111,14 +111,14 @@ export default {
         },
         currentDomainWithSubdomainsRegexp() {
             if (this.currentTabUrl) {
-                let parts = this.currentTabUrl.hostname.split('.');
+                const parts = this.currentTabUrl.hostname.split('.');
 
                 if (parts.length > 2) {
                     if (parts.length === 3 && parts[0] === 'www') {
                         return;
                     }
 
-                    let currentDomainWithSubdomainsRegexp = ['.*', ...parts.slice(-2)].join('\\.');
+                    const currentDomainWithSubdomainsRegexp = ['.*', ...parts.slice(-2)].join('\\.');
 
                     if (!this.group.catchTabRules.includes(currentDomainWithSubdomainsRegexp)) {
                         return currentDomainWithSubdomainsRegexp;
@@ -245,7 +245,7 @@ export default {
             return this.isDefaultGroup ||
                 (
                     !this.group.catchTabContainers.includes(cookieStoreId) &&
-                    this.disabledContainers.hasOwnProperty(cookieStoreId)
+                    Object.hasOwn(this.disabledContainers, cookieStoreId)
                 );
         },
 
@@ -293,7 +293,7 @@ export default {
                 }
             }
 
-            if (changes.hasOwnProperty('title')) {
+            if (Object.hasOwn(changes, 'title')) {
                 const groupId = this.isDefaultGroup ? null : this.group.id;
                 const {defaultGroupProps} = await Groups.getDefaults();
                 changes.title = Groups.createTitle(changes.title, groupId, defaultGroupProps, !this.isDefaultGroup);
@@ -464,13 +464,13 @@ export default {
             <div class="checkboxes as-column containers">
                 <label class="checkbox" :disabled="group.newTabContainer === DEFAULT_CONTAINER.cookieStoreId">
                     <input type="checkbox" v-model="group.excludeContainersForReOpen" :value="DEFAULT_CONTAINER.cookieStoreId" :disabled="group.newTabContainer === DEFAULT_CONTAINER.cookieStoreId" />
-                    <span class="word-break-word" v-text="DEFAULT_CONTAINER.name"></span>
+                    <span class="overflow-wrap-anywhere" v-text="DEFAULT_CONTAINER.name"></span>
                 </label>
                 <label v-for="container in containers" :key="container.cookieStoreId" class="checkbox" :disabled="container.cookieStoreId === group.newTabContainer">
                     <input type="checkbox" v-model="group.excludeContainersForReOpen" :value="container.cookieStoreId" :disabled="container.cookieStoreId === group.newTabContainer" />
                     <span class="icon-text">
                         <figure :class="`icon image is-16x16 userContext-icon identity-icon-${container.icon} identity-color-${container.color}`"></figure>
-                        <span class="word-break-word" v-text="container.name"></span>
+                        <span class="overflow-wrap-anywhere" v-text="container.name"></span>
                     </span>
                 </label>
             </div>
@@ -501,9 +501,9 @@ export default {
                     <input type="checkbox" v-model="group.catchTabContainers" :value="container.cookieStoreId" :disabled="isDisabledContainer(container.cookieStoreId)" />
                     <span class="icon-text">
                         <figure v-if="container.iconUrl" :class="`icon image is-16x16 userContext-icon identity-icon-${container.icon} identity-color-${container.color}`"></figure>
-                        <span class="word-break-word" v-text="container.name"></span>
+                        <span class="overflow-wrap-anywhere" v-text="container.name"></span>
                     </span>
-                    <em class="brackets-round word-break-word hidden-empty" v-text="disabledContainers[container.cookieStoreId] ?? ''"></em>
+                    <em class="brackets-round overflow-wrap-anywhere hidden-empty" v-text="disabledContainers[container.cookieStoreId] ?? ''"></em>
                 </label>
             </div>
         </div>

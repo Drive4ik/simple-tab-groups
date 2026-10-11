@@ -513,7 +513,7 @@ async function onBackgroundMessage(message, sender) {
         ok: false,
     };
 
-    const data = typeof message === 'string' ? { action: message } : message;
+    const data = typeof message === 'string' ? {action: message} : message;
 
     if (!data?.action) {
         result.error = '[STG] invalid "action"';
@@ -665,7 +665,7 @@ async function onBackgroundMessage(message, sender) {
                 break;
             case 'load-custom-group':
                 if (data.groupId === 'new') {
-                    let {ok, group} = await onBackgroundMessage({
+                    const {ok, group} = await onBackgroundMessage({
                         action: 'add-new-group',
                         proposalTitle: data.title,
                     }, sender);
@@ -674,7 +674,7 @@ async function onBackgroundMessage(message, sender) {
                         result.ok = await Groups.apply(getFocusedWindow().id, group.id);
                     }
                 } else if (data.groupId) {
-                    let groupToLoad = groupsById.get(data.groupId);
+                    const groupToLoad = groupsById.get(data.groupId);
 
                     if (groupToLoad) {
                         if (groupToLoad.isArchive) {
@@ -699,7 +699,7 @@ async function onBackgroundMessage(message, sender) {
                         result = await onBackgroundMessage(data, sender);
                     }
                 } else {
-                    let activeTab = await getActiveTab();
+                    const activeTab = await getActiveTab();
 
                     if (Tabs.isCanSendMessage(activeTab)) {
                         Tabs.sendMessage(activeTab.id, {
@@ -780,7 +780,7 @@ async function onBackgroundMessage(message, sender) {
                     result.error = Lang('noGroupsAvailable');
                     Notification(result.error);
                 } else if (!data.groupId) {
-                    let activeTab = await getActiveTab();
+                    const activeTab = await getActiveTab();
 
                     if (Tabs.isCanSendMessage(activeTab)) {
                         Tabs.sendMessage(activeTab.id, {
@@ -803,13 +803,13 @@ async function onBackgroundMessage(message, sender) {
                         });
                     }
                 } else if (data.groupId && !data.title) {
-                    let groupToRename = groupsById.get(data.groupId);
+                    const groupToRename = groupsById.get(data.groupId);
 
                     if (groupToRename) {
-                        let activeTab = await getActiveTab();
+                        const activeTab = await getActiveTab();
 
                         if (Tabs.isCanSendMessage(activeTab)) {
-                            let title = await Tabs.sendMessage(activeTab.id, {
+                            const title = await Tabs.sendMessage(activeTab.id, {
                                 action: 'show-prompt',
                                 promptTitle: Lang('hotkeyActionTitleRenameGroup'),
                                 value: groupToRename.title,
@@ -834,7 +834,7 @@ async function onBackgroundMessage(message, sender) {
                         result = await onBackgroundMessage('rename-group', sender);
                     }
                 } else if (data.groupId && data.title && typeof data.title === 'string') {
-                    let groupToRename = groupsById.get(data.groupId);
+                    const groupToRename = groupsById.get(data.groupId);
 
                     if (groupToRename) {
                         Groups.update(groupToRename.id, {
@@ -872,7 +872,7 @@ async function onBackgroundMessage(message, sender) {
                 }
 
                 if (!data.groupId) {
-                    let activeTab = await getActiveTab();
+                    const activeTab = await getActiveTab();
 
                     if (Tabs.isCanSendMessage(activeTab)) {
                         Tabs.sendMessage(activeTab.id, {
@@ -960,11 +960,11 @@ async function onBackgroundMessage(message, sender) {
                 result.ok = true;
                 break;
             case 'move-selected-tabs-to-custom-group':
-                let activeTab = await getActiveTab(),
+                const activeTab = await getActiveTab(),
                     tabIds = await Tabs.getHighlightedIds(activeTab.windowId, undefined, null);
 
                 if (data.groupId === 'new') {
-                    let {ok} = await onBackgroundMessage({
+                    const {ok} = await onBackgroundMessage({
                         action: 'add-new-group',
                         title: data.title,
                         proposalTitle: activeTab.title,
@@ -973,7 +973,7 @@ async function onBackgroundMessage(message, sender) {
 
                     result.ok = ok;
                 } else if (data.groupId) {
-                    let groupMoveTo = groupsById.get(data.groupId);
+                    const groupMoveTo = groupsById.get(data.groupId);
 
                     if (groupMoveTo) {
                         if (groupMoveTo.isArchive) {
@@ -1022,7 +1022,7 @@ async function onBackgroundMessage(message, sender) {
                             result.ok = true;
                         }
                     } else {
-                        let activeTab = await getActiveTab();
+                        const activeTab = await getActiveTab();
 
                         if (Tabs.isCanSendMessage(activeTab)) {
                             Tabs.sendMessage(activeTab.id, {
@@ -1049,14 +1049,11 @@ async function onBackgroundMessage(message, sender) {
                 break;
             case 'discard-other-groups':
                 {
-                    let { notArchivedGroups } = await Groups.load(null, true);
+                    const {notArchivedGroups} = await Groups.load(null, true);
 
-                    let tabs = notArchivedGroups.reduce(function (acc, gr) {
-                        if (gr.id !== currentGroup?.id && !Cache.getWindowId(gr.id)) {
-                            acc.push(...gr.tabs);
-                        }
-                        return acc;
-                    }, []);
+                    const tabs = notArchivedGroups
+                        .filter(gr => gr.id !== currentGroup?.id && !Cache.getWindowId(gr.id))
+                        .flatMap(gr => gr.tabs);
 
                     await Tabs.discard(tabs);
 
@@ -1065,7 +1062,7 @@ async function onBackgroundMessage(message, sender) {
                 break;
             case 'reload-all-tabs-in-current-group':
                 if (currentGroup) {
-                    let { group } = await Groups.load(currentGroup.id, true);
+                    const {group} = await Groups.load(currentGroup.id, true);
                     await Tabs.reload(group.tabs);
                     result.ok = true;
                 }
@@ -1087,7 +1084,7 @@ async function onBackgroundMessage(message, sender) {
 
                 break;
             case 'exclude-container-for-group':
-                let group = groupsById.get(data.groupId);
+                const group = groupsById.get(data.groupId);
 
                 if (!group || !data.cookieStoreId || Containers.get(data.cookieStoreId).cookieStoreId !== data.cookieStoreId) {
                     throw new Error('invalid groupId or cookieStoreId');
@@ -1208,10 +1205,10 @@ async function saveOptions(_options) {
 
     if (optionsKeys.includes('hotkeys')) {
         const tabs = await Tabs.query({discarded: false}),
-            actionData = JSON.clone({
+            actionData = {
                 action: 'update-hotkeys',
                 hotkeys: options.hotkeys,
-            });
+            };
 
         tabs.forEach(tab => Tabs.sendMessage(tab.id, actionData));
     }
@@ -1389,7 +1386,7 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
         options.showTabsWithThumbnailsInManageGroups = Constants.DEFAULT_OPTIONS.showTabsWithThumbnailsInManageGroups;
     }
 
-    if (data.hasOwnProperty('showTabsWithThumbnailsInManageGroups')) {
+    if (Object.hasOwn(data, 'showTabsWithThumbnailsInManageGroups')) {
         options.showTabsWithThumbnailsInManageGroups = data.showTabsWithThumbnailsInManageGroups;
     }
 
@@ -1439,7 +1436,7 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
                 continue;
             }
 
-            if (newGroup.hasOwnProperty(key)) {
+            if (Object.hasOwn(newGroup, key)) {
                 newGroup[key] = group[key];
             }
         }
@@ -1532,7 +1529,7 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
     let result;
 
     if (clearAddonDataBeforeRestore) {
-        const defaultOptions = JSON.clone(Constants.DEFAULT_OPTIONS);
+        const defaultOptions = structuredClone(Constants.DEFAULT_OPTIONS);
 
         result = Object.assign(defaultOptions, data);
     } else {
@@ -1775,7 +1772,7 @@ async function init() {
 
         await Groups.fillHistory(windows);
 
-        let tabs = Utils.flatTabs(windows);
+        const tabs = Utils.flatTabs(windows);
 
         await Containers.removeUnusedTemporaryContainers(tabs);
         log.log('Containers.removeUnusedTemporaryContainers finish');

@@ -137,7 +137,7 @@ await Promise.all(Object.entries(GROUP_ICON_VIEW_TYPES).map(async ([key, icon]) 
     GROUP_ICON_VIEW_TYPES[key] = await fetch(`/icons/${icon}.svg`).then(response => response.text());
 }))
 Object.freeze(GROUP_ICON_VIEW_TYPES);
-export { GROUP_ICON_VIEW_TYPES };
+export {GROUP_ICON_VIEW_TYPES};
 
 export const DEFAULT_GROUP_ICON_VIEW_TYPE = Object.keys(GROUP_ICON_VIEW_TYPES)[0];
 
@@ -462,15 +462,14 @@ export const DEFAULT_SYNC_OPTIONS = Object.freeze({
     githubGistFileName: GIT_GIST_FILE_NAME_PARTS.start + 'backup' + GIT_GIST_FILE_NAME_PARTS.end,
 });
 
-const BROWSER_HAS_FSYNC = [
+// the browsers whose Firefox Sync carries storage.sync
+export const IS_AVAILABLE_SYNC_STORAGE = [
     'Firefox Mozilla',
     'Zen Mozilla',
     'Floorp Mozilla',
     'Waterfox WaterfoxLimited',
     'r3dfox ESR Eclipse Community',
 ].includes(BROWSER_FULL_NAME);
-
-export const IS_AVAILABLE_SYNC_STORAGE = browser.storage.sync instanceof Object && BROWSER_HAS_FSYNC;
 export const SYNC_STORAGE_FSYNC = 'ff-sync';
 export const SYNC_STORAGE_LOCAL = 'local';
 

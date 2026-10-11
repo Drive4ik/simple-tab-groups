@@ -6,8 +6,7 @@ import backgroundSelf from './background.js';
 
 const mainStorage = localStorage.create(Constants.MODULES.BACKGROUND);
 
-let continueLoad;
-const waitBackgroundPromise = new Promise(resolve => continueLoad = resolve);
+const {promise: waitBackgroundPromise, resolve: continueLoad} = Promise.withResolvers();
 
 function reloadPageOnAddonReady() {
     if (mainStorage.inited) {

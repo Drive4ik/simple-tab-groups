@@ -1,7 +1,7 @@
 # Reference: Firefox behavior of plain `tabs.move` (no native groups)
 
-Verified live on Firefox 154–155 (August 2026) with a throwaway test add-on, in a clean profile
-with no other add-ons. All tests — without pinned tabs. Every fact here is one browser build on one machine;
+Verified live on Firefox 154–155 (August 2026), §7 on Firefox 158 (October 2026), with a throwaway
+test add-on, in a clean profile with no other add-ons. All tests — without pinned tabs. Every fact here is one browser build on one machine;
 a claim is as strong as the runs cited next to it, and no stronger.
 
 Only facts confirmed by an actual test run belong here — never assumptions about how the browser
@@ -243,15 +243,69 @@ previous one, wherever that one is by then.
   | tab index | 0 | 1 |
   | - | - | - |
   | before (window 1) | keep1* | ➕mic1 |
-  | before (window 2) | w* |  |
+  | before (window 2) | w* | |
   | `tabs.move(mic1, {windowId: 2, index: -1})  — microphone is live, mic1 is not active` — settled 258 ms | | |
-  | moved out (window 1) | keep1* |  |
+  | moved out (window 1) | keep1* | |
   | moved out (window 2) | w* | ➕mic1 |
   | `tabs.move(mic1, {windowId: 1, index: -1})  — back` — settled 265 ms | | |
   | moved back (window 1) | keep1* | ➕mic1 |
-  | moved back (window 2) | w* |  |
+  | moved back (window 2) | w* | |
 
   The camera and screen sharing are not measured.
+
+## 7. A cross-window move of a DISCARDED tab drops its `sessions` values; a loaded tab and a same-window move keep them; a value written again right after the resolve stays — until the next cross-window move
+
+- **Gone at the resolve already, and gone for good.** `sessions.getTabValue` returns `undefined`
+  for every key of the moved discarded tab right at the resolve of `tabs.move`, after the browser
+  went quiet, 2000 ms later, and still after the tab is loaded by activation (R32.02). A tab born
+  discarded, never loaded, loses them the same way (R32.06). Nothing announces the loss: the move
+  delivers its `onDetached` / `onAttached` and no `tabs.onUpdated`.
+- **A loaded tab keeps every value through the same move** (R32.01), and **a discarded tab moved
+  inside its own window keeps them too** (R32.03).
+- **`sessions.setTabValue` right after the resolve sticks.** Values written again on the moved
+  discarded tabs are read back after quiet and 2000 ms later — three hidden and discarded tabs
+  moved as one array, every one of them (R32.04). A late write, 2000 ms after the move and after
+  the load, is read back too (R32.02, R32.06).
+- **The next cross-window move loses them again.** The values written again after the first move
+  are gone after the move back (R32.05).
+
+  R32.04, the shape of an unloaded group of the add-on:
+
+  | tab index | 0 | 1 | 2 | 3 |
+  | - | - | - | - | - |
+  | before (window A) | keepA* | m1(h) | m2(h) | m3(h) |
+  | before (window B) | keepB* | | | |
+  | `tabs.move([m1, m2, m3], {windowId: B, index: -1}), then sessions.setTabValue(...) again right at the resolve  // the repair of the add-on` — settled 276 ms | | | | |
+  | after (window A) | keepA* | | | |
+  | after (window B) | keepB* | m1(h) | m2(h) | m3(h) |
+
+  ```text
+      7ms  tabs.onDetached       m1  from index:1
+      7ms  tabs.onAttached       m1  to index:1  [other window]
+      7ms  tabs.onDetached       m2  from index:1
+      7ms  tabs.onAttached       m2  to index:2  [other window]
+      8ms  tabs.onDetached       m3  from index:1
+      8ms  tabs.onAttached       m3  to index:3  [other window]
+  ```
+
+  Every mover: at the resolve `absent, absent` (then written again); after quiet and 2000 ms later
+  `"m1-key1", "m1-key2"` — the written values.
+
+  R32.05, the move back:
+
+  | tab index | 0 | 1 |
+  | - | - | - |
+  | before (window A) | keepA* | mover |
+  | before (window B) | keepB* | |
+  | `tabs.move([mover], {windowId: B, index: -1}), then sessions.setTabValue(...) again right at the resolve  // the repair of the add-on` — settled 264 ms | | |
+  | after (window A) | keepA* | |
+  | after (window B) | keepB* | mover |
+  | `tabs.move([mover], {windowId: A, index: -1})  // back, with the repaired values` — settled 259 ms | | |
+  | back (window A) | keepA* | mover |
+  | back (window B) | keepB* | |
+
+  After the first move: at the resolve `absent, absent` (then written again), after quiet and
+  2000 ms later the written values. Back in window A, 2000 ms later: `absent, absent`.
 
 ## Implications for STG code
 
@@ -278,3 +332,7 @@ previous one, wherever that one is by then.
 5. **A tab with a live microphone can be moved between windows** (§6): `Tabs.move` into a LOADED
    group carries it like any other tab, the capture is not lost on the way. Into an unloaded
    group it is pinned away instead, because it cannot be hidden (BEHAVIOR-TABGROUPS.md §19).
+6. **A discarded tab moved to another window needs its session values written again right
+   after the move** (§7): `Tabs.moveNative` reads them before the move and writes them back after
+   the resolve for every discarded tab whose window changed; a loaded tab and a same-window move
+   need nothing. The loss repeats on every cross-window move, so the repair runs on every move.

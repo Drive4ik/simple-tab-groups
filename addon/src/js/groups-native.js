@@ -662,7 +662,7 @@ export async function snapshotMembership(movedTabs, groups, targetGroupId) {
         }
 
         const memberIds = memberIdsByStableId.get(stableId) ?? movedIds;
-        const wholeMove = [...memberIds].every(id => movedIds.has(id));
+        const wholeMove = memberIds.isSubsetOf(movedIds);
 
         if (wholeMove) {
             return meta;

@@ -1047,7 +1047,7 @@ export async function setActive(tabId = null, tabs = []) {
             id: tabId,
         };
     } else if (tabs.length) { // find lastAccessed tab
-        let maxLastAccessed = Math.max(...tabs.map(tab => tab.lastAccessed));
+        const maxLastAccessed = Math.max(...tabs.map(tab => tab.lastAccessed));
 
         tabToActive = tabs.find(tab => tab.lastAccessed === maxLastAccessed);
     }
@@ -1205,7 +1205,7 @@ async function addNow(groupId, cookieStoreId, url, title) {
 
     const windowId = Cache.getWindowId(groupId);
 
-    let {group} = await Groups.load(groupId, !windowId);
+    const {group} = await Groups.load(groupId, !windowId);
 
     const tab = await create({
         url,
@@ -1223,6 +1223,8 @@ async function addNow(groupId, cookieStoreId, url, title) {
     log.stop(tab);
     return tab;
 }
+
+const THUMBNAIL_HEIGHT = 192;
 
 export async function updateThumbnail(tabId) {
     if (!settings.showTabsWithThumbnailsInManageGroups) {
@@ -1250,22 +1252,17 @@ export async function updateThumbnail(tabId) {
     }
 
     try {
-        const thumbnailBase64 = await browser.tabs.captureTab(tab.id, {
+        const zoom = await browser.tabs.getZoom(tab.id); // the capture is scaled on top of the page zoom
+
+        let thumbnail = await browser.tabs.captureTab(tab.id, {
             format: browser.extensionTypes.ImageFormat.JPEG,
-            quality: 25,
+            quality: 70,
+            scale: THUMBNAIL_HEIGHT / tab.height / zoom, // the browser renders the small picture itself
         });
 
-        const thumbnail = await new Promise((resolve, reject) => {
-            const img = new Image();
-
-            img.onload = () => {
-                resolve(Utils.resizeImage(img, 192, Math.floor(img.width * 192 / img.height), false, 'image/jpeg', 0.7));
-            };
-
-            img.onerror = img.onabort = reject;
-
-            img.src = thumbnailBase64;
-        });
+        if (await Utils.isImageUniform(thumbnail)) {
+            thumbnail = null; // a blank capture: no thumbnail is better than an empty one
+        }
 
         await Cache.setTabThumbnail(tab.id, thumbnail);
 
@@ -1325,7 +1322,7 @@ async function moveNow(tabIds, groupId, params = {}) {
 
     let showPinnedMessage = false;
 
-    tabs = tabs.filter(function(tab) {
+    tabs = tabs.filter(tab => {
         if (tab.pinned) {
             showPinnedMessage = true;
             continueTrackingTabs([tab], skippedTabs);
@@ -1598,7 +1595,7 @@ export async function moveNative(tabs, moveProperties = {}, params = {}) {
 
     tabs = tabs.map(tab => updated.get(tab.id) ?? tab);
 
-    // BUG brorser.session values are lost after moving DISCARDED tabs to ANOTHER window
+    // BUG a cross-window move drops the session values of a discarded tab (docs/BEHAVIOR-MOVE-TABS.md §7): read before the move, written again after it
     const tabAfterMoveNeedFixing = tabAfterMove => {
         const tabBeforeMove = tabsBeforeMoveMap.get(tabAfterMove.id);
         return tabBeforeMove.discarded && tabBeforeMove.windowId !== tabAfterMove.windowId;
@@ -1908,8 +1905,8 @@ export async function remove(tabs, params = {}) {
     return await tabsAction({action: 'remove', ...params}, tabs);
 }
 
-export async function sendMessage(tabId, message = {}) {
-    message.colorScheme = settings.colorScheme;
+export async function sendMessage(tabId, message) {
+    message = {colorScheme: settings.colorScheme, ...message};
     return browser.tabs.sendMessage(tabId, message).catch(() => {});
 }
 
@@ -2057,11 +2054,9 @@ export function isCanSendMessage({browserUrl: url}) {
         return false;
     }
 
-    try {
-        return !restrictedDomains.has(new URL(url).hostname);
-    } catch {
-        return false;
-    }
+    const urlObj = URL.parse(url);
+
+    return !!urlObj && !restrictedDomains.has(urlObj.hostname);
 }
 
 export function extractId(tab) {

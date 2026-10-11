@@ -39,8 +39,8 @@ export default {
                 value: Constants.SYNC_STORAGE_FSYNC,
                 options: {...Constants.DEFAULT_SYNC_OPTIONS},
                 optionsBackup: {},
-                load: this.loadSyncOptions.bind(this),
-                save: this.saveSyncOptions.bind(this),
+                load: this.loadSyncOptions,
+                save: this.saveSyncOptions,
                 gist: null,
                 loadingGist: false,
                 icon: {
@@ -55,8 +55,8 @@ export default {
                 value: Constants.SYNC_STORAGE_LOCAL,
                 options: {...this.localDefaultOptions},
                 optionsBackup: {},
-                load: this.loadLocalOptions.bind(this),
-                save: this.saveLocalOptions.bind(this),
+                load: this.loadLocalOptions,
+                save: this.saveLocalOptions,
                 gist: null,
                 loadingGist: false,
                 icon: {

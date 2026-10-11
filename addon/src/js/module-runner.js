@@ -1,14 +1,4 @@
-
-const MODULES = {
-    browser: async () => browser,
-    tabs: () => import('./tabs.js'),
-    windows: () => import('./windows.js'),
-    groups: () => import('./groups.js'),
-    'menus-main': () => import('./menus-main.js'),
-    'menus-tab': () => import('./menus-tab.js'),
-    'menus-link': () => import('./menus-link.js'),
-    'menus-bookmark': () => import('./menus-bookmark.js'),
-};
+import MODULES from './module-runner-map.js';
 
 /**
  * module descriptor format:
@@ -33,7 +23,7 @@ export default async function runModule(moduleDescriptor, ...extraArgs) {
         moduleArgs = moduleDescriptor.args;
     }
 
-    const mod = await MODULES[moduleName]();
+    const mod = await MODULES.get(moduleName)();
 
     moduleMethod ||= 'default';
     moduleArgs ||= [];

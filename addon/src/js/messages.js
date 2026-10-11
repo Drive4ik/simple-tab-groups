@@ -6,8 +6,8 @@ import {nativeErrorToObject, objectToNativeError, PageStack} from './logger.js';
 const CSPorts = new Set;
 const pending = new Map;
 
-export function normalizeSendData(action, data = {}) {
-    if (typeof action === 'object' && arguments.length === 1) {
+export function normalizeSendData(action, data) {
+    if (typeof action === 'object' && data === undefined) {
         return action;
     }
 
@@ -99,19 +99,21 @@ async function postMessageToBackground(port, ...args) {
         self.logger?.info(`postMessage#${data.action}`, `postId: ${postId} to background`);
     }
 
-    return new Promise((resolve, reject) => {
-        const timer = setTimeout(() => {
-            pending.delete(postId);
-            reject(timerError);
-        }, 60_000 * 2); // 2 minutes
+    const entry = Promise.withResolvers();
 
-        pending.set(postId, {resolve, reject, timer});
+    entry.timer = setTimeout(() => {
+        pending.delete(postId);
+        entry.reject(timerError);
+    }, 60_000 * 2); // 2 minutes
 
-        port.postMessage({
-            postId,
-            data,
-        });
+    pending.set(postId, entry);
+
+    port.postMessage({
+        postId,
+        data,
     });
+
+    return entry.promise;
 }
 
 // BACKGROUND

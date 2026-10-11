@@ -38,23 +38,23 @@ export default {
             this.data = data;
             this.show = true;
 
-            this.$nextTick(function() {
+            this.$nextTick(() => {
                 this.setMenu(event.clientY, event.clientX);
                 this.$el.focus();
 
                 [...this.$el.firstElementChild.children]
                     .filter(node => 'LI' === node.nodeName && !node.classList.contains('is-disabled'))
-                    .forEach(function(node) {
+                    .forEach(node => {
                         node.tabIndex = 0;
-                        node.addEventListener('keydown', function(event) {
+                        node.addEventListener('keydown', event => {
                             if (event.key === 'Enter') {
                                 event.stopPropagation();
                                 event.stopImmediatePropagation();
                                 node.click();
                             }
                         });
-                        node.addEventListener('blur', this.onblur.bind(this));
-                    }, this);
+                        node.addEventListener('blur', this.onblur);
+                    });
             });
         },
 

@@ -115,7 +115,7 @@ export function normalizeError(event) {
         nativeError.fileName === 'undefined' ||
         !nativeError.stack?.length
     ) {
-        let {stack = ''} = nativeError;
+        const {stack = ''} = nativeError;
         nativeError = new Error(JSON.stringify(nativeErrorToObject(nativeError)));
         if (!stack.length) {
             nativeError.stack = stack + `\nFORCE STACK\n` + nativeError.stack;
@@ -134,7 +134,7 @@ export function getFuncName(func) {
 }
 
 export function normalizeArgumentValue(value) {
-    if (value instanceof Error) return normalizeError(value);
+    if (Error.isError(value)) return normalizeError(value);
     if (typeof value === 'string' && value.length > MAX_STRING_LENGTH) {
         return 'VERY_BIG_STRING_LENGTH_' + value.length + ': ' + value.slice(0, 200);
     }

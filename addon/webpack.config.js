@@ -35,7 +35,6 @@ export default {
     },
     experiments: {
         outputModule: true,
-        // topLevelAwait: true,
     },
     output: {
         path: setPath('dist'),

@@ -55,8 +55,7 @@ export default {
     flex-direction: column;
     position: fixed;
     padding-top: 4px;
-    top: 0;
-    left: 0;
+    inset: 0;
     width: 100vw;
     height: 100vh;
     background-color: var(--bulma-body-background-color);

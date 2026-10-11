@@ -15,20 +15,21 @@ export default {
             }
 
             const promptOptions = {title, value, maxlength};
+            const {promise, resolve} = Promise.withResolvers();
 
-            return new Promise(resolve => {
-                promptOptions.resolve = ok => {
-                    if (ok && promptOptions.value.length) {
-                        resolve(promptOptions.value);
-                    } else {
-                        resolve(false);
-                    }
+            promptOptions.resolve = ok => {
+                if (ok && promptOptions.value.length) {
+                    resolve(promptOptions.value);
+                } else {
+                    resolve(false);
+                }
 
-                    this.promptOptions = null;
-                };
+                this.promptOptions = null;
+            };
 
-                this.promptOptions = Vue.observable(promptOptions);
-            });
+            this.promptOptions = Vue.observable(promptOptions);
+
+            return promise;
         },
         confirm(title, text, lang = 'ok', classList = 'is-success') {
             if (this.confirmOptions) {
@@ -36,15 +37,16 @@ export default {
             }
 
             const confirmOptions = {title, text, lang, classList};
+            const {promise, resolve} = Promise.withResolvers();
 
-            return new Promise(resolve => {
-                confirmOptions.resolve = ok => {
-                    resolve(ok);
-                    this.confirmOptions = null;
-                }
+            confirmOptions.resolve = ok => {
+                resolve(ok);
+                this.confirmOptions = null;
+            };
 
-                this.confirmOptions = Vue.observable(confirmOptions);
-            });
+            this.confirmOptions = Vue.observable(confirmOptions);
+
+            return promise;
         },
 
     },

@@ -29,24 +29,20 @@ const indentConfig = {
 const scopeActionRegExp = /(START|STOP|SCOPE) (\d+)/;
 
 export default function Logger(prefix, prefixes = []) {
-    if (this) { // create new logger with prefix
-        this.scope = null;
-        this.stopMessage = null;
-        this.prefixes ??= prefixes;
-        this.enabled = true;
+    this.scope = null;
+    this.stopMessage = null;
+    this.prefixes ??= prefixes;
+    this.enabled = true;
 
-        if (prefix) {
-            this.prefixes.push(prefix);
-        }
-
-        this.indentConfig = indentConfig;
-
-        setLoggerFuncs.call(this);
-
-        return this;
-    } else {
-        Log.apply(new Logger, Array.from(arguments));
+    if (prefix) {
+        this.prefixes.push(prefix);
     }
+
+    this.indentConfig = indentConfig;
+
+    setLoggerFuncs.call(this);
+
+    return this;
 }
 
 function setLoggerFuncs() {
@@ -58,7 +54,7 @@ function setLoggerFuncs() {
 
     consoleKeys.forEach(cKey => this[cKey] = Log.bind(this, cKey));
 
-    this.start = function(...startArgs) {
+    this.start = (...startArgs) => {
         let cKey = 'log';
 
         if (Array.isArray(startArgs[0])) {
@@ -81,9 +77,9 @@ function setLoggerFuncs() {
         logger.stopError = (...args) => logger.error(logger.stopMessage, ...args);
 
         return logger;
-    }.bind(this);
+    };
 
-    this.onCatch = function(message, throwError = true) {
+    this.onCatch = (message, throwError = true) => {
         return (error) => {
             if (typeof message === 'string') {
                 message = `Catch error on: ${message}`;
@@ -116,31 +112,29 @@ function setLoggerFuncs() {
 
             return undefined; // ! important, depends on tabs.filter(Boolean)
         }
-    }.bind(this);
+    };
 
-    this.throwError = function(message, error) {
+    this.throwError = (message, error) => {
         this.onCatch(message, true)(error);
         return this;
-    }.bind(this);
+    };
 
-    this.logError = function(message, error) {
+    this.logError = (message, error) => {
         this.onCatch(message, false)(error);
         return this;
-    }.bind(this);
+    };
 
-    this.isEnabled = function(cKey) {
-        return this.enabled || !!mainStorage.enableDebug || cKey === 'error' || cKey === 'assert';
-    }.bind(this);
+    this.isEnabled = cKey => this.enabled || !!mainStorage.enableDebug || cKey === 'error' || cKey === 'assert';
 
-    this.enable = function() {
+    this.enable = () => {
         this.enabled = true;
         return this;
-    }.bind(this);
+    };
 
-    this.disable = function() {
+    this.disable = () => {
         this.enabled = false;
         return this;
-    }.bind(this);
+    };
 }
 
 function Log(cKey, ...args) {
@@ -204,15 +198,11 @@ export function showLog(log, {cKey, args}) {
     }
 
     if (mainStorage.enableDebug || mainStorage.IS_TEMPORARY) {
-        let argsToConsole = cKey === 'assert'
+        const argsToConsole = cKey === 'assert'
             ? [args[0], this.prefixes.join(prefixGlue), ...args.slice(1)]
             : log[`console.${cKey}`].slice();
 
-        if (!console[cKey]) {
-            cKey = 'log';
-        }
-
-        let indentStr = getIndentAndRemoveScope.call(this.indentConfig, log.indentIndex, argsToConsole);
+        const indentStr = getIndentAndRemoveScope.call(this.indentConfig, log.indentIndex, argsToConsole);
 
         if (log.indentIndex) {
             argsToConsole.splice((cKey === 'assert' ? 1 : 0), 0, indentStr);
@@ -254,7 +244,7 @@ function calcIndent(args) {
 }
 
 function getIndentAndRemoveScope(indentCount, args) {
-    let {action, argIndex} = getAction.call(this, args);
+    const {action, argIndex} = getAction.call(this, args);
 
     if (action === 'START') {
         args[argIndex] = this.startSymbol;
@@ -294,7 +284,7 @@ export function clearErrors() {
 export function getLogs() {
     return logs.slice(-5_000);
 }
-window.clearLogs = function() {
+window.clearLogs = () => {
     clearLogs();
     console.clear();
 }; // for tests
@@ -306,13 +296,13 @@ export function catchFunc(asyncFunc, logger) {
     const name = getFuncName(asyncFunc);
     const fromStack = new Error().stack;
 
-    return async function() {
+    return async function(...args) {
         try {
-            return await asyncFunc.call(this, ...arguments);
+            return await asyncFunc.call(this, ...args);
         } catch (e) {
             e.message = `catchFunc(${name}), error message: ${e.message}`;
             e.stack = [fromStack, 'Native error stack:', e.stack].join('\n');
-            e.arguments = JSON.clone(Array.from(arguments));
+            e.arguments = JSON.clone(args);
             errorEventHandler.call(logger, e);
         }
     };

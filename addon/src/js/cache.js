@@ -179,7 +179,7 @@ export function clearTabOpeners(id) {
 export function getTabChildren(tabIds) {
     const ids = new Set(tabIds);
 
-    return [...tabs.values()].filter(tab => ids.has(tab.openerTabId));
+    return tabs.values().filter(tab => ids.has(tab.openerTabId)).toArray();
 }
 
 // session values, the same for tabs and windows: a record field has three states - no key means

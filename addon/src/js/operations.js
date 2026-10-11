@@ -26,7 +26,7 @@ export function run(name, fn) {
 
     const log = logger.start(name, 'running:', shared.runningCount);
 
-    return Promise.resolve().then(fn).finally(() => {
+    return Promise.try(fn).finally(() => {
         shared.runningCount--;
         QueueCore.leave(entry);
 

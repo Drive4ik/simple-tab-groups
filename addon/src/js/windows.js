@@ -585,7 +585,8 @@ export async function load(withTabs = false, params) {
     windows = windows.filter(Boolean);
 
     if (withTabs) {
-        windows = windows.map(win => (win.tabs = tabs.filter(tab => tab.windowId === win.id), win));
+        const tabsByWindowId = Map.groupBy(tabs, tab => tab.windowId);
+        windows.forEach(win => win.tabs = tabsByWindowId.get(win.id) ?? []);
     }
 
     log.stop();

@@ -19,9 +19,9 @@ Listeners.action.onClicked.add(async () => {
         }
     } catch {
         Notification('needInstallSTGExtension', {
-            tab: {
+            module: ['browser', 'tabs.create', {
                 url: Constants.STG_HOME_PAGE,
-            },
+            }],
         });
     }
 });

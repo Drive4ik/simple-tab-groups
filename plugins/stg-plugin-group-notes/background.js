@@ -124,7 +124,9 @@ async function init() {
     if (settings.autoBackupLocation === MainConstants.AUTO_BACKUP_LOCATIONS.HOST) {
         if (Constants.IS_WINDOWS) {
             if (!await Host.hasPermission()) {
-                Notification('checkBackupSettings', {action: 'open-options'});
+                Notification('checkBackupSettings', {
+                    module: ['browser', 'runtime.openOptionsPage'],
+                });
             }
         } else {
             await browser.storage.local.set({

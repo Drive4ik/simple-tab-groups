@@ -30,7 +30,7 @@ export const BOOKMARKS_FOLDER = 'stg-behavior-tests';
 
 export const NOISY_UPDATE_KEYS =['status', 'url', 'title', 'favIconUrl', 'isArticle', 'audible', 'attention'];
 
-export const ROUNDS = ['round-01', 'round-02', 'round-03', 'round-04', 'round-05', 'round-06', 'round-07', 'round-08', 'round-09', 'round-10', 'round-11', 'round-12', 'round-13', 'round-14', 'round-15', 'round-16', 'round-18', 'round-19', 'round-20', 'round-21', 'round-22', 'round-23', 'round-24', 'round-25', 'round-26', 'round-27', 'round-29', 'round-30', 'round-31'];
+export const ROUNDS = ['round-01', 'round-02', 'round-03', 'round-04', 'round-05', 'round-06', 'round-07', 'round-08', 'round-09', 'round-10', 'round-11', 'round-12', 'round-13', 'round-14', 'round-15', 'round-16', 'round-18', 'round-19', 'round-20', 'round-21', 'round-22', 'round-23', 'round-24', 'round-25', 'round-26', 'round-27', 'round-29', 'round-30', 'round-31', 'round-32'];
 
 export const RUN_KEY = 'testRun';
 export const LOGS_KEY = 'testLogs';

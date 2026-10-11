@@ -100,9 +100,10 @@ All new code is modern ECMAScript only: `async`/`await`, ES modules, `const`/`le
 the `&&=`/`||=`/`??=` operators, `Promise.allSettled()` and so on.
 `Map.prototype.getOrInsert()` / `getOrInsertComputed()` are **native in Firefox 144+, use them**.
 
-- `using` / `await using` are not allowed: the AMO linter (`addons-linter`, the constant
-  `ECMA_VERSION = 16` in `addons-scanner-utils`) parses the code as ES2025 and fails on them with
-  `JS_SYNTAX_ERROR`. The check before a release — `npx addons-linter addon/dist`.
+- `using` / `await using` are not allowed yet: `addons-linter` (the constant `ECMA_VERSION = 17`
+  in `addons-scanner-utils`) parses ES2026, but the AMO validator that checks the uploaded zip is
+  still behind and fails on them with `JS_SYNTAX_ERROR`. The check before a release —
+  `npx addons-linter addon/dist`.
 - Code is code, docs are docs. A comment in the code is a link to a doc and a few words. The
   mechanisms of the add-on live in `docs/DESIGN-*.md`, the facts of the browser in
   `docs/BEHAVIOR-*.md`. A model described in the header of a module — only at the developer's
@@ -117,6 +118,9 @@ the `&&=`/`||=`/`??=` operators, `Promise.allSettled()` and so on.
   the other changes tabs and returns them.
 - An export nobody calls is removed. The exception is a module whose header declares it
   universal: its methods stay even while nothing calls them.
+- A helper may be able to do more than its callers need today, as long as it stays simple: the
+  check of the accepted inputs at its top is also its documentation. Breadth is fine, complexity
+  is not.
 - Logic over convenience. An action that cannot be done in parts lives in one method, and there
   is no convenient form around it: better to build an object somewhere for the sake of one
   value than to have a place where the second part can be forgotten.

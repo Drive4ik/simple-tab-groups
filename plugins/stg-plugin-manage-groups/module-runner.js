@@ -1,7 +1,4 @@
-
-const MODULES = {
-    browser,
-};
+import MODULES from './module-runner-map.js';
 
 /**
  * module descriptor format:
@@ -26,7 +23,7 @@ export default async function runModule(moduleDescriptor, ...extraArgs) {
         moduleArgs = moduleDescriptor.args;
     }
 
-    const mod = await (MODULES[moduleName] ?? import(`./${moduleName}.js`));
+    const mod = await MODULES.get(moduleName)();
 
     moduleMethod ||= 'default';
     moduleArgs ||= [];

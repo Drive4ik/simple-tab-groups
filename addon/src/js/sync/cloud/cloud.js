@@ -180,16 +180,14 @@ async function sync(trust = null, revision = null, progressFunc = null) {
     const Cloud = cloudInstance;
 
     let lastProgressPercent = 0;
-    const createCloudProgress = function(currentProgress, progressDuration) {
-        return fetchProgress => {
-            const durationPart = (progressDuration - currentProgress) / 100;
-            const mainPercent = currentProgress + Math.floor(fetchProgress * durationPart);
+    const createCloudProgress = (currentProgress, progressDuration) => fetchProgress => {
+        const durationPart = (progressDuration - currentProgress) / 100;
+        const mainPercent = currentProgress + Math.floor(fetchProgress * durationPart);
 
-            if (lastProgressPercent !== mainPercent) {
-                lastProgressPercent = mainPercent;
-                progressFunc?.(mainPercent);
-            }
-        };
+        if (lastProgressPercent !== mainPercent) {
+            lastProgressPercent = mainPercent;
+            progressFunc?.(mainPercent);
+        }
     };
 
     let cloudData, cloudInfo;
@@ -1013,7 +1011,7 @@ function assignGroupKeys(localGroup, cloudGroup, sourceOfTruth, changes) {
     ];
 
     // because we also need to be able to compare "defaultGroupProps"
-    const allGroupKeys = [...Object.keys(localGroup), ...Object.keys(cloudGroup)].filter(Utils.onlyUniqueFilter);
+    const allGroupKeys = new Set([...Object.keys(localGroup), ...Object.keys(cloudGroup)]);
 
     for (const key of allGroupKeys) {
         if (EXCLUDE_GROUP_KEYS.includes(key)) {
@@ -1021,8 +1019,8 @@ function assignGroupKeys(localGroup, cloudGroup, sourceOfTruth, changes) {
         }
 
         // sorting for equal json stringify value
-        const localValue = Array.isArray(localGroup[key]) ? localGroup[key].slice().sort() : localGroup[key];
-        const cloudValue = Array.isArray(cloudGroup[key]) ? cloudGroup[key].slice().sort() : cloudGroup[key];
+        const localValue = Array.isArray(localGroup[key]) ? localGroup[key].toSorted() : localGroup[key];
+        const cloudValue = Array.isArray(cloudGroup[key]) ? cloudGroup[key].toSorted() : cloudGroup[key];
 
         if (isEqual(localValue, cloudValue)) {
             continue;
@@ -1235,7 +1233,7 @@ async function eachGroupContainerKeyMap(group, asyncMapFunc) {
     ];
 
     for (const containerKey of GROUP_CONTAINER_KEYS) {
-        if (group.hasOwnProperty(containerKey)) {
+        if (Object.hasOwn(group, containerKey)) {
             const result = [];
 
             for (const cookieStoreId of [group[containerKey]].flat()) {
