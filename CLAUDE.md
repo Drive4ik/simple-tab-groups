@@ -142,6 +142,14 @@ the `&&=`/`||=`/`??=` operators, `Promise.allSettled()` and so on.
 
 Old code in the repository may not follow this — that is normal, it is not rewritten on purpose.
 
+### Lookups are built once
+
+A lookup over a list (which ids each group holds, which tabs each window has) is the rule about
+duplicated logic applied to data: one method of the module that owns the data builds it, and it
+travels to its users as an argument, a `Map` or a `Set` keyed by what they look up by. Collecting
+the same thing at every call site, each with loops of its own, reads badly and drifts apart; a
+method that needs such a lookup asks for it ready-made instead of rebuilding it inside.
+
 ### The design docs match the code
 
 `docs/DESIGN-*.md` describe the code as it is, strictly. Every change of the code that matters —

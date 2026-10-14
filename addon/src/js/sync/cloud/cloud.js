@@ -871,6 +871,29 @@ async function syncGroups(localData, cloudData, sourceOfTruth, changes, newCloud
         }
     }
 
+    // a metadata entry without member tabs is stale (apply collects it once the group is loaded): dropped
+    // here, or it would be reissued below as if the group still held the id
+    for (const localGroup of resultLocalGroups) {
+        localGroup.groupsNative = GroupsNative.referencedGroupsNative(localGroup);
+    }
+
+    // one sub-group id never lives in two STG groups: the merge is per group and can leave one id in two
+    // of them - the first group of the list keeps it, the others get fresh ids, in the local and the cloud
+    // copy alike, or the next merge brings the old id back
+    const localSubGroupIdsByGroupId = GroupsNative.collectSubGroupIds(resultLocalGroups);
+    const resultCloudGroupById = new Map(resultCloudGroups.map(group => [group.id, group]));
+
+    for (const localGroup of resultLocalGroups) {
+        const cloudGroup = resultCloudGroupById.get(localGroup.id);
+        const hasCloudCopy = Boolean(cloudGroup?.uploadToCloud); // a stub holds no sub-groups
+        const copies = hasCloudCopy ? [localGroup, cloudGroup] : [localGroup];
+
+        if (GroupsNative.reissueSubGroupIds(copies, localSubGroupIdsByGroupId)) {
+            changes.local = true;
+            changes.cloud ||= hasCloudCopy;
+        }
+    }
+
     localData.groups = resultLocalGroups;
     cloudData.groups = resultCloudGroups;
 
@@ -976,11 +999,11 @@ function syncGroupUpload(localGroup, cloudGroup, {sourceOfTruth, lastSync, prepa
 function mergeGroupsNative(localGroup, cloudGroup, changes) {
     const entryById = new Map;
 
-    for (const entry of cloudGroup.groupsNative ?? []) {
+    for (const entry of cloudGroup.groupsNative) {
         entryById.set(entry.id, entry);
     }
 
-    for (const entry of localGroup.groupsNative ?? []) {
+    for (const entry of localGroup.groupsNative) {
         if (!entryById.has(entry.id)) {
             entryById.set(entry.id, entry);
         }

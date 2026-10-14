@@ -270,8 +270,7 @@ export default {
                     },
                     groupNativeByTab() {
                         const map = new Map;
-                        const groupsNative = this.groupsNative ?? [];
-                        const groupNativeById = new Map(groupsNative.map(groupNative => [groupNative.id, groupNative]));
+                        const groupNativeById = new Map(this.groupsNative.map(groupNative => [groupNative.id, groupNative]));
 
                         for (const tab of this.tabs) {
                             const groupNative = groupNativeById.get(tab.groupNativeId);

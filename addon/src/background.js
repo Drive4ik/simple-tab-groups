@@ -1409,6 +1409,7 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
     data.hotkeys ??= [];
 
     const existGroupIds = new Set(currentData.groups.map(({id}) => id));
+    const subGroupIdsByGroupId = GroupsNative.collectSubGroupIds(currentData.groups);
     const restoreGroupIds = new Set(data.groups.map(({id}) => id));
 
     for (const groupToRestore of data.groups) {
@@ -1441,7 +1442,7 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
             }
         }
 
-        GroupsNative.reissueSubGroupIds(newGroup, currentData.groups);
+        GroupsNative.reissueSubGroupIds(newGroup, subGroupIdsByGroupId);
 
         // another add-on's backup names extension pages the browser's way
         newGroup.tabs.forEach(Tabs.tabUrlToAddon);

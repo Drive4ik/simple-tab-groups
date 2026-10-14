@@ -46,31 +46,63 @@ function onStorageChanged(changes) {
 //   browser's header drag, which STG's UI does not have. A partial move loses the sub-group,
 //   except a partial move to ANOTHER group with cloneSubGroupsWhenMovingTabs on - then it is
 //   CLONED there under a fresh stable id. Landing inside another sub-group's span always wins.
-//   One id never lives in two STG groups (snapshotMembership/restoreMembership, reissueSubGroupIds).
+//   One id never lives in two STG groups (snapshotMembership/restoreMembership, collectSubGroupIds/reissueSubGroupIds).
 
 function createSubGroupId() {
     return self.crypto.randomUUID().slice(0, 8);
 }
 
-// one sub-group id never lives in two STG groups: a group that comes in from outside (restoreBackup,
-// the undo of a removal) gets a fresh id for every sub-group whose id one of otherGroups holds -
-// the same fresh id in the metadata and on every tab that carries it
-export function reissueSubGroupIds(group, otherGroups) {
-    if (otherGroups.some(({id}) => id === group.id)) {
-        throw new Error(`reissueSubGroupIds: group ${group.id} is among otherGroups, its own ids would count as taken`);
+// the sub-group ids the groups hold, by group id, for reissueSubGroupIds. A group holds the ids its
+// tabs carry (membership lives on the tabs; a metadata entry without members is garbage until apply
+// collects it), so the groups come WITH their tabs - a group read without them throws here. One id
+// never lives in two STG groups, so an id is listed under the FIRST group of the list that holds it:
+// the order of the list decides which group keeps a duplicated id
+export function collectSubGroupIds(groups) {
+    const subGroupIdsByGroupId = new Map;
+    const listedIds = new Set;
+
+    for (const {id, tabs} of groups) {
+        const subGroupIds = subGroupIdsByGroupId.getOrInsert(id, new Set);
+
+        for (const {groupNativeId} of tabs) {
+            if (groupNativeId && !listedIds.has(groupNativeId)) {
+                listedIds.add(groupNativeId);
+                subGroupIds.add(groupNativeId);
+            }
+        }
     }
 
-    const takenIds = new Set(otherGroups.flatMap(({groupsNative}) => groupsNative.map(({id}) => id)));
+    return subGroupIdsByGroupId;
+}
+
+// one sub-group id never lives in two STG groups: a group that comes in from outside (restoreBackup,
+// the undo of a removal, the cloud merge) gets a fresh id for every sub-group whose id another group
+// holds - the same fresh id in the metadata and on every tab that carries it, in every copy of the
+// group (the local and the cloud one). Returns whether anything was reissued
+export function reissueSubGroupIds(copies, subGroupIdsByGroupId) {
+    copies = Array.isArray(copies) ? copies : [copies];
+
+    const groupId = copies[0].id;
+
+    if (copies.some(copy => copy.id !== groupId)) {
+        throw new Error(`reissueSubGroupIds: copies of different groups: ${copies.map(copy => copy.id)}`);
+    }
+
+    const takenIds = new Set(subGroupIdsByGroupId.entries().flatMap(([holderId, ids]) => holderId === groupId ? [] : ids));
     const newIdByOldId = new Map;
     const reissue = id => takenIds.has(id) ? newIdByOldId.getOrInsertComputed(id, createSubGroupId) : id;
 
-    group.groupsNative.forEach(entry => entry.id = reissue(entry.id));
+    for (const copy of copies) {
+        copy.groupsNative.forEach(entry => entry.id = reissue(entry.id));
 
-    for (const tab of group.tabs) {
-        if (tab.groupNativeId) {
-            tab.groupNativeId = reissue(tab.groupNativeId);
+        for (const tab of copy.tabs) {
+            if (tab.groupNativeId) {
+                tab.groupNativeId = reissue(tab.groupNativeId);
+            }
         }
     }
+
+    return newIdByOldId.size > 0;
 }
 
 const liveIdByStableId = new Map;
@@ -214,7 +246,7 @@ function toEntry(stableId, {title, collapsed, color}) {
     return {id: stableId, title, collapsed, color};
 }
 
-function isSameGroupsNative(groupsNativeA = [], groupsNativeB = []) {
+function isSameGroupsNative(groupsNativeA, groupsNativeB) {
     if (groupsNativeA.length !== groupsNativeB.length) {
         return false;
     }
@@ -232,7 +264,7 @@ function isSameGroupsNative(groupsNativeA = [], groupsNativeB = []) {
 
 // drop metadata entries no tab references - hygiene for backup/cloud/undo snapshots
 // (the stored groups get the same garbage collection in apply)
-export function referencedGroupsNative({tabs, groupsNative = []}) {
+export function referencedGroupsNative({tabs, groupsNative}) {
     const referencedIds = new Set(tabs.map(tab => tab.groupNativeId));
     return groupsNative.filter(entry => referencedIds.has(entry.id));
 }
@@ -381,7 +413,7 @@ async function mirrorWindowNow(windowId) {
     const referencedIds = new Set(winTabs.map(tab => Cache.getTabNativeGroupId(tab.id)));
     const groupsNative = liveEntries;
 
-    for (const entry of group.groupsNative ?? []) {
+    for (const entry of group.groupsNative) {
         if (!liveStableIds.has(entry.id) && referencedIds.has(entry.id)) {
             groupsNative.push(entry);
         }
@@ -498,7 +530,7 @@ export function forgetWindow(windowId) {
 }
 
 // check for apply(): live window state already matches the group - nothing to recreate
-async function isLiveStateSame(windowId, {tabs: groupTabs, groupsNative = []}) {
+async function isLiveStateSame(windowId, {tabs: groupTabs, groupsNative}) {
     const liveGroups = await browser.tabGroups.query({windowId});
 
     const liveMetaByStableId = new Map;
@@ -551,7 +583,7 @@ export async function apply(windowId, group) {
 }
 
 async function applyNow(windowId, group) {
-    const groupsNative = group.groupsNative ?? [];
+    const {groupsNative} = group;
     const log = logger.start(applyNow, windowId, 'group:', group.id, 'count:', groupsNative.length);
 
     if (!group.tabs.length) {
@@ -652,7 +684,7 @@ export async function snapshotMembership(movedTabs, groups, targetGroupId) {
     const metaById = new Map;
 
     for (const group of groups) {
-        for (const entry of group.groupsNative ?? []) {
+        for (const entry of group.groupsNative) {
             metaById.set(entry.id, entry);
         }
     }
@@ -794,7 +826,7 @@ export async function restoreMembership(group, movedTabs, snapshot = null) {
         // the mirror picks the created sub-groups up into the active group's metadata
         scheduleMirrorWindow(windowId);
     } else {
-        const groupsNative = group.groupsNative?.slice() ?? [];
+        const groupsNative = group.groupsNative.slice();
         const knownIds = new Set(groupsNative.map(entry => entry.id));
         let groupsNativeChanged = false;
 

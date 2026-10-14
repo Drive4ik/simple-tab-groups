@@ -55,6 +55,12 @@ Stubs bypass the merge of tabs, settings and native sub-groups; a stub never ent
 list of groups. When the gist does not exist yet, the cloud is built from the local data without
 the local copies — for them the cloud is "none".
 
+After the merge one sub-group id lives in one group only (`GroupsNative.reissueSubGroupIds`): the
+merge is per group and can leave one id in two of them, the first group of the list keeps it, the
+others get fresh ids, written into the local and the cloud record alike — a change in one record
+only would be undone by the next merge. A group holds the ids its tabs carry; a metadata entry
+without member tabs is dropped from the local record before that pass.
+
 ## 3. Merging a copy that returns to the cloud
 
 While a copy is local, its tabs never reach the cloud. So when it returns (C1 with a copy that

@@ -721,7 +721,7 @@ async function restoreNow(groupId) {
     await browser.storage.session.remove(restoreId);
 
     await writeQueue.run('restore', async () => {
-        const {groups, groupsById} = await load();
+        const {groups, groupsById} = await load(null, true); // with the tabs: collectSubGroupIds reads them
         const {index} = group;
 
         delete group.index;
@@ -732,7 +732,7 @@ async function restoreNow(groupId) {
             group.id = createId();
         }
 
-        GroupsNative.reissueSubGroupIds(group, groups);
+        GroupsNative.reissueSubGroupIds(group, GroupsNative.collectSubGroupIds(groups));
 
         groups.splice(index, 0, group);
 
