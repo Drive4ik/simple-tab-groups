@@ -44,7 +44,7 @@ import * as Menus from '/js/menus.js';
 import * as MenusMain from '/js/menus-main.js';
 // import * as MenusBookmark from '/js/menus-bookmark.js';
 import * as Groups from '/js/groups.js';
-import * as GroupsNative from '/js/groups-native.js';
+import * as SubGroups from '/js/sub-groups.js';
 import * as GroupsExternal from '/js/groups-external.js';
 import * as Operations from '/js/operations.js';
 import * as Tabs from '/js/tabs.js';
@@ -399,7 +399,7 @@ function addEvents() {
     Tabs.addListeners();
     Windows.addListeners();
     GroupsExternal.addListeners();
-    GroupsNative.addListeners();
+    SubGroups.addListeners();
 
     Permissions.onAdded.add(onPermissionsAdded);
     Permissions.onRemoved.add(onPermissionsRemoved);
@@ -416,7 +416,7 @@ function removeEvents() {
     Tabs.removeListeners();
     Windows.removeListeners();
     GroupsExternal.removeListeners();
-    GroupsNative.removeListeners();
+    SubGroups.removeListeners();
 
     Permissions.onAdded.clear();
     Permissions.onRemoved.clear();
@@ -1315,7 +1315,7 @@ async function createBackup(params = {}, isAutoBackup = false) {
 
     data.groups = groups.map(group => {
         if (!group.isArchive) {
-            group.groupsNative = GroupsNative.referencedGroupsNative(group);
+            group.subGroups = SubGroups.referencedSubGroups(group);
         }
 
         group.tabs = Tabs.prepareForSave(group.tabs, params);
@@ -1409,7 +1409,7 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
     data.hotkeys ??= [];
 
     const existGroupIds = new Set(currentData.groups.map(({id}) => id));
-    const subGroupIdsByGroupId = GroupsNative.collectSubGroupIds(currentData.groups);
+    const subGroupIdsByGroupId = SubGroups.collectSubGroupIds(currentData.groups);
     const restoreGroupIds = new Set(data.groups.map(({id}) => id));
 
     for (const groupToRestore of data.groups) {
@@ -1442,7 +1442,7 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
             }
         }
 
-        GroupsNative.reissueSubGroupIds(newGroup, subGroupIdsByGroupId);
+        SubGroups.reissueSubGroupIds(newGroup, subGroupIdsByGroupId);
 
         // another add-on's backup names extension pages the browser's way
         newGroup.tabs.forEach(Tabs.tabUrlToAddon);

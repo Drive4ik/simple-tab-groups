@@ -21,7 +21,7 @@ By the area of the task:
 - `docs/DESIGN-URLS.md` — extension page addresses
 - `docs/DESIGN-MESSAGES.md` — messages and the content script
 - `docs/DESIGN-CLOUD-UPLOAD.md` — the cloud sync of a group
-- the header of `addon/src/js/groups-native.js` — native groups
+- the header of `addon/src/js/sub-groups.js` — sub-groups, the browser's tab groups inside a group
 - `docs/BEHAVIOR-OPENER.md`, the section "How STG carries the link" — tab openers
 
 `docs/BEHAVIOR-*.md` — measured facts of the browser. Read them when the task touches that
@@ -68,11 +68,12 @@ fact.
   an ES module, the other JS files go through Webpack; new modules use the standard `import` /
   `export`.
 
-## Native groups
+## Sub-groups
 
-Firefox has its own tab groups (`browser.tabGroups`); STG supports them inside its groups. All
-the logic is `js/groups-native.js`, the model is described in the comments of the file; the
-measured facts of the browser — `docs/BEHAVIOR-TABGROUPS.md`.
+Firefox has its own tab groups (`browser.tabGroups`); STG keeps them inside its groups as
+sub-groups. All the logic is `js/sub-groups.js`; the model and the words (sub-group, live group,
+native) are described in the comments of the file; the measured facts of the browser —
+`docs/BEHAVIOR-TABGROUPS.md`.
 
 ## Tab openers (`openerTabId`)
 

@@ -51,11 +51,11 @@ gist, a group that came from a backup or an undo-remove) → the cloud wins.
 | L4 | none | full | drop from the cloud (as before — the removal reaches the other devices) |
 | L5 | none | stub | I had a local copy → drop it; otherwise keep it in its place |
 
-Stubs bypass the merge of tabs, settings and native sub-groups; a stub never enters the local
+Stubs bypass the merge of tabs, settings and sub-groups; a stub never enters the local
 list of groups. When the gist does not exist yet, the cloud is built from the local data without
 the local copies — for them the cloud is "none".
 
-After the merge one sub-group id lives in one group only (`GroupsNative.reissueSubGroupIds`): the
+After the merge one sub-group id lives in one group only (`SubGroups.reissueSubGroupIds`): the
 merge is per group and can leave one id in two of them, the first group of the list keeps it, the
 others get fresh ids, written into the local and the cloud record alike — a change in one record
 only would be undone by the next merge. A group holds the ids its tabs carry; a metadata entry

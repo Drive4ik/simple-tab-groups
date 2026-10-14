@@ -20,7 +20,7 @@ other; its copy on a recreate in another container (`recreate`) is loaded right 
 
 The tabs of a group always sit next to each other: a contiguous run of indexes with no foreign
 tab in between. Every operation keeps the block. A move into a group aims at an edge of the
-block (the anchor follows `newTabPosition`), and when that edge is a native sub-group the moved
+block (the anchor follows `newTabPosition`), and when that edge is a sub-group the moved
 tabs join it. A loaded and an unloaded group must behave the same.
 
 ## 3. The options of a group set the state of its tabs

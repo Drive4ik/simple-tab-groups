@@ -23,7 +23,7 @@ export default {
 
             DEFAULT_COOKIE_STORE_ID: Constants.DEFAULT_COOKIE_STORE_ID,
 
-            defaultAvailableTabKeys: ['id', 'url', 'title', 'favIconUrl', 'status', 'index', 'discarded', 'active', 'cookieStoreId', 'windowId', 'groupNativeId'],
+            defaultAvailableTabKeys: ['id', 'url', 'title', 'favIconUrl', 'status', 'index', 'discarded', 'active', 'cookieStoreId', 'windowId', 'subGroupId'],
 
             currentWindow: null,
             openedWindows: [],
@@ -268,13 +268,13 @@ export default {
                             iconViewType: this.iconViewType,
                         });
                     },
-                    groupNativeByTab() {
+                    subGroupByTab() {
                         const map = new Map;
-                        const groupNativeById = new Map(this.groupsNative.map(groupNative => [groupNative.id, groupNative]));
+                        const subGroupById = new Map(this.subGroups.map(subGroup => [subGroup.id, subGroup]));
 
                         for (const tab of this.tabs) {
-                            const groupNative = groupNativeById.get(tab.groupNativeId);
-                            groupNative && map.set(tab, groupNative);
+                            const subGroup = subGroupById.get(tab.subGroupId);
+                            subGroup && map.set(tab, subGroup);
                         }
 
                         return map;
@@ -326,21 +326,21 @@ export default {
             return tab;
         },
 
-        // set --group-native-color only when the tab belongs to a native group;
-        // when absent, `border: … var(--group-native-color)` collapses (invalid var, no fallback) instead of drawing a transparent line
-        nativeColorStyle(tab, group) {
-            const groupNative = group.groupNativeByTab.get(tab);
+        // set --sub-group-color only when the tab belongs to a sub-group;
+        // when absent, `border: … var(--sub-group-color)` collapses (invalid var, no fallback) instead of drawing a transparent line
+        subGroupColorStyle(tab, group) {
+            const subGroup = group.subGroupByTab.get(tab);
 
-            if (!groupNative) {
+            if (!subGroup) {
                 return null;
             }
 
-            const [lightL, darkL] = groupNative.collapsed
+            const [lightL, darkL] = subGroup.collapsed
                 ? [0.97, 0.48]
                 : [0.48, 0.83];
 
             return {
-                '--group-native-color': `light-dark(oklch(from ${groupNative.color} ${lightL} c h), oklch(from ${groupNative.color} ${darkL} c h))`,
+                '--sub-group-color': `light-dark(oklch(from ${subGroup.color} ${lightL} c h), oklch(from ${subGroup.color} ${darkL} c h))`,
             };
         },
 

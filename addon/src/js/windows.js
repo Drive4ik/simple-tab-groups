@@ -14,7 +14,7 @@ import * as WindowsBroadcast from './broadcast.js?channel=windows';
 import * as Constants from './constants.js';
 import * as Tabs from './tabs.js';
 import * as Groups from './groups.js';
-import * as GroupsNative from './groups-native.js';
+import * as SubGroups from './sub-groups.js';
 import * as Operations from './operations.js';
 import * as Utils from './utils.js';
 import * as Cache from './cache.js';
@@ -340,7 +340,7 @@ async function runGrandRestoreNow(restoredWindowIds) {
 
             const isLoadedGroup = groupToKeep.window.groupId === groupToKeep.id;
 
-            // native membership travels with the tabs in sessions (moveNative restores it for
+            // sub-group membership travels with the tabs in sessions (moveNative restores it for
             // discarded tabs after a cross-window move) - no bookkeeping is needed here
             groupToKeep.tabs = await Tabs.moveToWindow(groupToKeep.tabs, groupToKeep.id, groupToKeep.window.id);
 
@@ -348,9 +348,9 @@ async function runGrandRestoreNow(restoredWindowIds) {
                 log.log('showing group tabs, group', groupToKeep.id, 'in window', groupToKeep.window.id);
                 await Groups.showTabs(groupToKeep, groupToKeep.tabs);
 
-                // the array move above can tear live native groups apart - recreate them from sessions
-                await GroupsNative.apply(groupToKeep.window.id, groupToKeep)
-                    .catch(log.onCatch(['cant apply native groups', groupToKeep.id], false));
+                // the array move above can tear live groups apart - recreate them from sessions
+                await SubGroups.apply(groupToKeep.window.id, groupToKeep)
+                    .catch(log.onCatch(['cant apply sub-groups', groupToKeep.id], false));
 
                 if (groupToKeep.deleteTabAfterMove) {
                     await Tabs.setActive(null, groupToKeep.tabs.filter(tab => !tabsToDelete.has(tab.id)));
@@ -520,7 +520,7 @@ async function onRemoved(windowId) {
     const groupId = Cache.getWindowGroup(windowId);
 
     Cache.removeWindow(windowId);
-    GroupsNative.forgetWindow(windowId);
+    SubGroups.forgetWindow(windowId);
 
     createdBatch.delete(windowId);
     grandRestoreBatch.delete(windowId);
@@ -942,8 +942,8 @@ async function initializeGroupsNow(groups, afterRestoring = false) {
     }
 
     for (const win of windows) {
-        await GroupsNative.reconcileWindow(win.id, afterRestoring)
-            .catch(log.onCatch(['cant reconcile native groups for window', win.id], false));
+        await SubGroups.reconcileWindow(win.id, afterRestoring)
+            .catch(log.onCatch(['cant reconcile sub-groups for window', win.id], false));
     }
 
     log.stop();

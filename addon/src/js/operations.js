@@ -12,7 +12,7 @@ const shared = self[SHARED_KEY] ??= {
     runningCount: 0,
 };
 
-// composite addon flows register here for their whole duration; consumers (the native-groups
+// composite addon flows register here for their whole duration; consumers (the sub-groups
 // mirror) hold their reactions off while isBusy() and catch up on idle. The guarantee lives in
 // the finally: an operation that throws still ends, idle always comes
 export function run(name, fn) {

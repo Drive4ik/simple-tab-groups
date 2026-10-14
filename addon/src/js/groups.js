@@ -18,7 +18,7 @@ import * as MenusMain from './menus-main.js';
 // import * as Messages from './messages.js';
 // import JSON from './json.js';
 import * as Tabs from './tabs.js';
-import * as GroupsNative from './groups-native.js';
+import * as SubGroups from './sub-groups.js';
 import * as Operations from './operations.js';
 import * as Windows from './windows.js';
 import * as Utils from './utils.js';
@@ -116,7 +116,7 @@ async function applyNow(windowId, groupId, activeTabId, applyFromHistory = false
                 await showTabs(groupToShow, groupToShow.tabs);
                 groupToShow.tabs.forEach(tab => tab.hidden = false); // the tab objects were loaded before show
 
-                await GroupsNative.apply(windowId, groupToShow);
+                await SubGroups.apply(windowId, groupToShow);
             }
 
             // link group with window
@@ -134,9 +134,9 @@ async function applyNow(windowId, groupId, activeTabId, applyFromHistory = false
                     return;
                 }
 
-                // unsync tabs are managed by the addon: their native groups are consciously destroyed
+                // unsync tabs are managed by the addon: their sub-groups are consciously destroyed
                 await hideTabs(null, tabs);
-                await GroupsNative.clearMembership(tabs);
+                await SubGroups.clearMembership(tabs);
 
                 let showNotif = mainStorage.showTabsInThisWindowWereHidden ?? 0;
                 if (showNotif < 5) {
@@ -443,7 +443,7 @@ export function create(id, title, defaultGroupProps = {}) {
         afterAutoMoveShowTab: false,
         afterAutoMoveShowOnlyActiveTab: false,
         afterAutoMoveShowNotification: true,
-        groupsNative: [],
+        subGroups: [],
 
         ...defaultGroupProps,
     };
@@ -664,8 +664,8 @@ const RESTORE_GROUP_PREFIX = 'restore-group-';
 async function addUndoRemove(groupToRemove) {
     const restoreId = RESTORE_GROUP_PREFIX + groupToRemove.id;
 
-    // the saved tabs carry their groupNativeId - on restore Tabs.create writes it back into sessions
-    groupToRemove.groupsNative = GroupsNative.referencedGroupsNative(groupToRemove);
+    // the saved tabs carry their subGroupId - on restore Tabs.create writes it back into sessions
+    groupToRemove.subGroups = SubGroups.referencedSubGroups(groupToRemove);
 
     groupToRemove.tabs = Tabs.prepareForSave(groupToRemove.tabs, {
         includeFavIconUrl: true,
@@ -732,7 +732,7 @@ async function restoreNow(groupId) {
             group.id = createId();
         }
 
-        GroupsNative.reissueSubGroupIds(group, GroupsNative.collectSubGroupIds(groups));
+        SubGroups.reissueSubGroupIds(group, SubGroups.collectSubGroupIds(groups));
 
         groups.splice(index, 0, group);
 
@@ -914,12 +914,12 @@ export async function pinSharingTabs(tabs) {
 
     const log = logger.start(pinSharingTabs, tabsToPin.map(Tabs.extractId));
 
-    // pinning strips the native membership itself (docs/BEHAVIOR-TABGROUPS.md §19)
+    // pinning strips the live membership itself (docs/BEHAVIOR-TABGROUPS.md §19)
     await Tabs.pin(tabsToPin);
 
     await Promise.allSettled(tabsToPin.flatMap(tab => [
         Cache.removeTabGroup(tab.id),
-        Cache.removeTabNativeGroupId(tab.id),
+        Cache.removeTabSubGroupId(tab.id),
     ]));
 
     let showNotif = mainStorage.thisTabsWerePinned ?? 0;
@@ -935,7 +935,7 @@ export async function pinSharingTabs(tabs) {
 }
 
 // the tail of a restore, after Tabs.createMultiple: the group's live tabs are sorted into the saved
-// order, then the native groups - a loaded group gets GroupsNative.apply over its WHOLE live list
+// order, then the sub-groups - a loaded group gets SubGroups.apply over its WHOLE live list
 // (reloaded for it: the caller's group object holds the saved tabs), an unloaded one is stripped
 // (the sort can drop hidden tabs onto live-member slots, docs/BEHAVIOR-TABGROUPS.md §11, §12) and
 // hidden by the group's options (hideTabs) - and the links go last: sort first, link last
@@ -947,8 +947,8 @@ export async function settleTabs(group, savedTabs, {live, aligned}) {
     if (windowId) {
         const {group: loadedGroup} = await load(group.id, true);
 
-        await GroupsNative.apply(windowId, loadedGroup)
-            .catch(logger.onCatch(['cant apply native groups', group.id], false));
+        await SubGroups.apply(windowId, loadedGroup)
+            .catch(logger.onCatch(['cant apply sub-groups', group.id], false));
     } else {
         tabs = await hideTabs(group, tabs);
     }
@@ -1055,7 +1055,7 @@ async function archiveToggleNow(groupId) {
             tabsToRemove = group.tabs;
 
             group.isArchive = true;
-            group.groupsNative = GroupsNative.referencedGroupsNative(group);
+            group.subGroups = SubGroups.referencedSubGroups(group);
             group.tabs = Tabs.prepareForSave(group.tabs, {
                 includeFavIconUrl: true,
                 includeThumbnail: true,
@@ -1068,7 +1068,7 @@ async function archiveToggleNow(groupId) {
     });
 
     if (creation) {
-        // outside the queue turn: the settle ends with a native-group apply, and its Groups.update
+        // outside the queue turn: the settle ends with a sub-group apply, and its Groups.update
         // is a turn of this very queue
         await settleTabs(group, savedTabs, creation);
     }

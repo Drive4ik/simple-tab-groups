@@ -786,7 +786,7 @@ export default {
                     <template v-if="group.isArchive">
                         <div v-for="(tab, index) in group.filteredTabs" :key="index"
                             class="tab item is-unselectable space-left"
-                            :style="nativeColorStyle(tab, group)"
+                            :style="subGroupColorStyle(tab, group)"
                             :title="getTabTitle(tab, true)"
                             >
                             <div class="item-icon">
@@ -816,7 +816,7 @@ export default {
                                 'is-active-element': group === currentGroup && tab.active,
                                 'is-multiple-tab-to-move': multipleTabIds.includes(tab.id),
                             }]"
-                            :style="nativeColorStyle(tab, group)"
+                            :style="subGroupColorStyle(tab, group)"
                             :title="getTabTitle(tab, true)"
                             >
                             <figure class="item-icon image is-16x16">
@@ -1033,7 +1033,7 @@ export default {
                     v-for="(tab, tabIndex) in groupToShow.tabs"
                     :key="tabIndex"
                     class="tab item is-unselectable"
-                    :style="nativeColorStyle(tab, groupToShow)"
+                    :style="subGroupColorStyle(tab, groupToShow)"
                     :title="getTabTitle(tab, true)"
                     @mousedown.middle.prevent
                     >
@@ -1072,7 +1072,7 @@ export default {
                             tab.container && `identity-color-${tab.container?.color}`,
                         ]"
                         :title="getTabTitle(tab, true)"
-                        :style="nativeColorStyle(tab, groupToShow)"
+                        :style="subGroupColorStyle(tab, groupToShow)"
 
                         draggable="true"
                         @dragstart="dragHandle($event, 'tab', ['tab'], {item: tab, group: groupToShow})"
@@ -1461,11 +1461,11 @@ html {
             padding-inline-start: calc(var(--bulma-block-spacing) * 2);
         }
 
-        &[style*="--group-native-color"] {
+        &[style*="--sub-group-color"] {
             &::before {
                 content: '';
                 position: absolute;
-                background-color: var(--group-native-color);
+                background-color: var(--sub-group-color);
                 inset-block: 0;
                 left: 0;
                 width: 3px;

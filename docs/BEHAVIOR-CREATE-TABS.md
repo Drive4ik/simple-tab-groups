@@ -1820,7 +1820,7 @@ background and 1005–1008 ms in the pages (§44).
 - **Anchor** for a group — `Tabs.getNewTabIndex(group.tabs)`: afterCurrent → after the tab with
   max `lastAccessed`, otherwise/without permission — end of the group (exactly matches the
   browser, §1). Without group context — end of the window.
-- The anchor may land inside a native subgroup's span → the tab will join that subgroup
+- The anchor may land inside a native group's span → the tab will join that group
   (BEHAVIOR-TABGROUPS.md §7); this is expected, the mirror syncs membership.
 - **A single new tab**: into a loaded group — do NOT pass index, the browser itself will place
   it by newTabPosition, including non-focused windows (§9); into an unloaded one — an
@@ -1876,7 +1876,7 @@ background and 1005–1008 ms in the pages (§44).
   address of the stub page is built with `URLSearchParams`. For such urls `url.length` is the
   exact measure, no byte counting.
 - **An undo-closed tab is a new tab with an old session** (§29): it reaches `Tabs.onCreated`
-  under a fresh id, but `groupId` and `groupNativeId` of the closed tab are already on it, and
+  under a fresh id, but `groupId` and `subGroupId` of the closed tab are already on it, and
   discarded and hidden members of a restored window carry theirs too. The handler may decide
   from that value right away, and whatever it writes there stays: `setTabGroup` binding the tab
   to the window's group is not undone by the restore. A window without a group is the case to

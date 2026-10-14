@@ -719,7 +719,7 @@ pinned or not, is re-pointed at it; an original is removed only once its copy ex
 that could not be created leaves its original where it is, with its links, and out of the
 transfer. The copy is born in place, in the original's window, at its slot (the copy of a live
 sub-group's first member one slot further, BEHAVIOR-TABGROUPS.md §7), with whatever the caller
-builds for it: the transfer builds it with no binding at all — no group, no native sub-group,
+builds for it: the transfer builds it with no binding at all — no group, no sub-group,
 nothing of the original's session but its icon, its thumbnail and the url the tab was asked for
 while it still reports none (`Tabs.fillEmptyUrl`); a container reopen (`onBeforeTabRequest`,
 the temporary-container menu item) keeps the original's group and sub-group, and the copy of a

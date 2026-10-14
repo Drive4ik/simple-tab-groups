@@ -45,7 +45,7 @@ option is known to the cache (`Cache.setUseThumbnails`, set by `tabs.js` at the 
 change of the option, by `restoreBackup` from the backup), the callers do not check it.
 `sortByIndex` — `Tabs.list`.
 
-Saving a tab — `includeGroupId`, `includeGroupNativeId`, `includeFavIconUrl`,
+Saving a tab — `includeGroupId`, `includeSubGroupId`, `includeFavIconUrl`,
 `includeThumbnail`, `includeOpener`, `includeLastAccessed` (`Tabs.prepareForSaveTab`).
 
 Operations:
@@ -58,7 +58,7 @@ Operations:
   itself, `false` forbids it.
 - `activateOther` — `Tabs.hide`: the active tab of the set yields to another visible one.
 - `onlyMutedBySelf` — `Tabs.setMute`: touch only the tabs whose mute the add-on set itself.
-- `ungroupNative` — `Tabs.hide`, `Tabs.remove`: first detach from the live native groups.
+- `ungroupNative` — `Tabs.hide`, `Tabs.remove`: first detach from the live groups.
 - `keepWindowsAlive` — `Tabs.remove`: a window losing its last visible tab gets a temporary one.
 - `startIndex`, `createMissing`, `hideUnloaded` — `createMultiple`.
 - `byMinIndex` — `ensureSorted`.

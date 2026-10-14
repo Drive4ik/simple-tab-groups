@@ -39,7 +39,7 @@ new window for 50–65 ms (§26), and the url of a restored window's active tab 
 `Tabs.fillEmptyUrl` replaces an empty url in a snapshot by what the cache knows,
 `Cache.getTabUrl(id)`: the requested url, else the last reported one (for a snapshot older than
 the mirror, the group lists `runGrandRestoreNow` keeps from its first read). Such filled objects
-come back into the cache: `Groups.load(…, true)` → `GroupsNative.apply` → `Cache.loadTabSession`,
+come back into the cache: `Groups.load(…, true)` → `SubGroups.apply` → `Cache.loadTabSession`,
 `settleTabs`, `reconcile` → `Cache.setTabSession`. So the cache judges emptiness by
 `tab.browserUrl`, the non-enumerable field `browserTabToAddon` sets and `fillEmptyUrl` never
 touches, and stores `tab.url` only when `browserUrl` is not empty (`reportedUrl`). Every object
@@ -48,7 +48,7 @@ that reaches the cache has passed `browserTabToAddon`; an object without `browse
 
 ## 4. Who writes the session values
 
-The session values the cache knows — `Cache.KEYS` of a tab (`groupId`, `groupNativeId`,
+The session values the cache knows — `Cache.KEYS` of a tab (`groupId`, `subGroupId`,
 `favIconUrl`, `thumbnail`) and `groupId` of a window — are written by `cache.js` only. The cache
 remembers the absence of a value too, so a write past it makes the cache a liar; the migrations
 go through `Cache` as well. Operations on one id and one key run one after another (the `Cache`

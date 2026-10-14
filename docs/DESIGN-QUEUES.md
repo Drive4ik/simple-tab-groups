@@ -15,7 +15,7 @@ name, it goes into the log.
 ## 2. The queues, top down
 
 - `Groups` (`groups.js`) — the array of groups in `storage.local`.
-- `NativeGroups` (`groups-native.js`), keyed by window — the native groups of a window; it is
+- `SubGroups` (`sub-groups.js`), keyed by window — the live groups of a window; it is
   also the gate of the window (`withWindowGate`).
 - `MenusTransaction` (`menus.js`, `Menus.transaction`) — a batch of menu calls as one whole:
   everything `menus-main.js` exports, and the listeners of settings and permissions in the menu
@@ -33,11 +33,11 @@ Never for its own and never for one above: both moves hang, and everyone queued 
 Hence:
 
 - Inside a `Groups` move `saveNow` and `updateNow` are called, not `save` and `update`, and
-  nothing that ends with a write of the groups: `settleTabs`, `GroupsNative.apply`,
-  `GroupsNative.restoreMembership`, `Tabs.move`, `Groups.apply`.
+  nothing that ends with a write of the groups: `settleTabs`, `SubGroups.apply`,
+  `SubGroups.restoreMembership`, `Tabs.move`, `Groups.apply`.
 - Under the gate of a window the write of the groups is not awaited: the move of the gate returns
-  the assembled `groupsNative`, and `Groups.update` goes after the gate is left
-  (`GroupsNative.apply`, `mirrorWindow`).
+  the assembled `subGroups`, and `Groups.update` goes after the gate is left
+  (`SubGroups.apply`, `mirrorWindow`).
 - Inside `Menus.transaction` the functions of the menu modules are called, not `MenusMain.*`. A
   single `Menus.update` of one item is not wrapped into a transaction: during a rebuild the item
   may not exist, the error is not fatal and is swallowed by `.catch`.
@@ -49,7 +49,7 @@ Hence:
 ## 4. Operations are not a queue
 
 `Operations.run` (`js/operations.js`): composite flows run in parallel, the module only knows
-whether at least one is running. While `isBusy()`, the observers (the mirror of native groups,
+whether at least one is running. While `isBusy()`, the observers (the mirror of live groups,
 the notifications to the popup) put their work off until `onIdle`.
 
 ## 5. Stuck moves

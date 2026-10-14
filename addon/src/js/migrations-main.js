@@ -203,7 +203,7 @@ export default [{
             afterAutoMoveShowTab: false,
             afterAutoMoveShowOnlyActiveTab: false,
             afterAutoMoveShowNotification: true,
-            groupsNative: [],
+            subGroups: [],
         };
 
         const mainGroupId = data.groups.find(group => group.isMain)?.id;
@@ -383,7 +383,7 @@ export default [{
 
             if (stgNewTabs.length) {
                 for (const tab of stgNewTabs) {
-                    delete tab.groupId; // native groupId conflicts with STG groupId key
+                    delete tab.groupId; // the browser's groupId conflicts with the STG groupId key
                     tab.url = new URL(tab.url).searchParams.get('url');
                 }
 
@@ -553,7 +553,7 @@ export default [{
             });
 
             await Promise.allSettled(tabs.map(async tab => {
-                delete tab.groupId; // native groupId conflicts with STG groupId key
+                delete tab.groupId; // the browser's groupId conflicts with the STG groupId key
                 const groupId = await browser.sessions.getTabValue(tab.id, 'groupId');
 
                 // already a UUID - an interrupted earlier run rewrote this tab; the repeated
@@ -573,22 +573,22 @@ export default [{
                 }
             }));
 
-            // adopt the live native groups of each window: per-tab membership → sessions,
-            // metadata → the STG group that OWNS the member tabs. Hidden tabs keep their native
+            // adopt the live groups of each window as sub-groups: per-tab membership → sessions,
+            // metadata → the STG group that OWNS the member tabs. Hidden tabs keep their live
             // membership (docs/BEHAVIOR-TABGROUPS.md §4) and pre-5.5 STG hid tabs without
             // ungrouping, so one live group can span several STG groups: visible members belong
             // to the window's active group, hidden ones to their unloaded groups. Every
-            // (live group, owner) pair gets its OWN stable id - one id never lives in two STG
+            // (live group, owner) pair gets its OWN sub-group id - one id never lives in two STG
             // groups. The id minting is inlined - group identity must not depend on evolving
             // module code
             await Promise.allSettled(windows.map(async win => {
-                const groupsNativeList = await browser.tabGroups.query({windowId: win.id});
+                const liveGroups = await browser.tabGroups.query({windowId: win.id});
 
-                if (!groupsNativeList.length) {
+                if (!liveGroups.length) {
                     return;
                 }
 
-                const liveById = new Map(groupsNativeList.map(groupNative => [groupNative.id, groupNative]));
+                const liveGroupById = new Map(liveGroups.map(liveGroup => [liveGroup.id, liveGroup]));
                 const activeStgGroupId = await browser.sessions.getWindowValue(win.id, 'groupId');
 
                 const winTabs = await browser.tabs.query({
@@ -596,38 +596,38 @@ export default [{
                     pinned: false,
                 });
 
-                const stableIdByOwnerAndLiveId = new Map;
+                const subGroupIdByOwnerAndLiveId = new Map;
 
                 for (const tab of winTabs) {
-                    const live = liveById.get(tab.groupId);
+                    const liveGroup = liveGroupById.get(tab.groupId);
 
-                    if (!live) {
+                    if (!liveGroup) {
                         continue;
                     }
 
                     const sessionGroupId = await browser.sessions.getTabValue(tab.id, 'groupId');
                     const ownerGroupId = sessionGroupId ?? (tab.hidden ? null : activeStgGroupId) ?? null;
-                    const key = `${ownerGroupId}:${live.id}`;
+                    const key = `${ownerGroupId}:${liveGroup.id}`;
 
-                    let stableId = stableIdByOwnerAndLiveId.get(key);
+                    let subGroupId = subGroupIdByOwnerAndLiveId.get(key);
 
-                    if (!stableId) {
-                        stableId = self.crypto.randomUUID().slice(0, 8);
-                        stableIdByOwnerAndLiveId.set(key, stableId);
+                    if (!subGroupId) {
+                        subGroupId = self.crypto.randomUUID().slice(0, 8);
+                        subGroupIdByOwnerAndLiveId.set(key, subGroupId);
 
                         const ownerGroup = data.groups.find(gr => gr.id === ownerGroupId);
 
                         if (ownerGroup && !ownerGroup.isArchive) {
-                            ownerGroup.groupsNative.push({
-                                id: stableId,
-                                title: live.title,
-                                collapsed: live.collapsed,
-                                color: live.color,
+                            ownerGroup.subGroups.push({
+                                id: subGroupId,
+                                title: liveGroup.title,
+                                collapsed: liveGroup.collapsed,
+                                color: liveGroup.color,
                             });
                         }
                     }
 
-                    await Cache.setTabNativeGroupId(tab.id, stableId);
+                    await Cache.setTabSubGroupId(tab.id, subGroupId);
                 }
             }));
 

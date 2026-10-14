@@ -7,7 +7,7 @@ import * as Menus from '/js/menus.js';
 import * as Containers from '/js/containers.js';
 import * as Tabs from '/js/tabs.js';
 import * as Groups from '/js/groups.js';
-import * as GroupsNative from '/js/groups-native.js';
+import * as SubGroups from '/js/sub-groups.js';
 import * as Windows from '/js/windows.js';
 import * as Storage from '/js/storage.js';
 import Logger from '/js/logger.js';
@@ -233,7 +233,7 @@ export async function openInTemporaryContainer(info, tab) {
     const log = logger.start(openInTemporaryContainer, info, tab);
 
     await Tabs.create({
-        ...GroupsNative.detachTabGroupId(tab),
+        ...SubGroups.detachTabGroupId(tab),
         index: null,
         active: info.button.RIGHT,
         // the original opens its copy: relatedAfterCurrent puts it right after (docs/BEHAVIOR-CREATE-TABS.md §14), a tree makes it a child

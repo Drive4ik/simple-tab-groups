@@ -526,7 +526,7 @@ export default {
                             tab.container && `identity-color-${tab.container?.color}`
                         ]"
                         :title="getTabTitle(tab, true)"
-                        :style="nativeColorStyle(tab, group)"
+                        :style="subGroupColorStyle(tab, group)"
                         @contextmenu.stop.prevent="!group.isArchive && $refs.contextMenuTab.open($event, {tab, group})"
 
                         @click.stop="!group.isArchive && clickOnTab($event, tab, group)"
@@ -1016,7 +1016,7 @@ export default {
                 right: var(--inner-indent);
                 bottom: var(--inner-indent);
                 white-space: nowrap;
-                border-bottom: 2px solid var(--group-native-color);
+                border-bottom: 2px solid var(--sub-group-color);
             }
 
             > .screenshot {
@@ -1094,7 +1094,7 @@ export default {
             > .tab-title {
                 flex-grow: 1;
                 white-space: nowrap;
-                border-bottom: 2px solid var(--group-native-color);
+                border-bottom: 2px solid var(--sub-group-color);
             }
 
             &.is-active-element {

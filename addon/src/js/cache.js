@@ -4,10 +4,10 @@ import * as Utils from './utils.js';
 import Queue from './queue.js';
 
 export const GROUP_KEY = 'groupId';
-export const GROUP_NATIVE_KEY = 'groupNativeId';
+export const SUB_GROUP_KEY = 'subGroupId';
 export const FAVICON_KEY = 'favIconUrl';
 export const THUMBNAIL_KEY = 'thumbnail';
-export const KEYS = [GROUP_KEY, GROUP_NATIVE_KEY, FAVICON_KEY, THUMBNAIL_KEY];
+export const KEYS = [GROUP_KEY, SUB_GROUP_KEY, FAVICON_KEY, THUMBNAIL_KEY];
 
 export const tabs = new Map;
 export const lastTabsState = new Map; // BUG https://bugzilla.mozilla.org/show_bug.cgi?id=1405603
@@ -248,27 +248,27 @@ export async function removeTabGroup(id) {
     await removeValue(tabs, id, GROUP_KEY);
 }
 
-// groupNativeId - membership in a native tab group: the stable string id of the sub-group
-// (createSubGroupId, groups-native.js), never the ephemeral browser group id. The single source of
+// subGroupId - the sub-group of the tab: the stable string id of STG's record of the browser's tab
+// group (createSubGroupId, sub-groups.js), never the live id of the browser. The single source of
 // truth: survives addon and browser restarts and travels with the tab.
-export async function loadTabNativeGroupId(id) {
-    return await loadValue(tabs, id, GROUP_NATIVE_KEY);
+export async function loadTabSubGroupId(id) {
+    return await loadValue(tabs, id, SUB_GROUP_KEY);
 }
 
-export async function setTabNativeGroupId(id, groupNativeId) {
-    if (groupNativeId) {
-        await setValue(tabs, id, GROUP_NATIVE_KEY, groupNativeId);
+export async function setTabSubGroupId(id, subGroupId) {
+    if (subGroupId) {
+        await setValue(tabs, id, SUB_GROUP_KEY, subGroupId);
     } else {
-        await removeTabNativeGroupId(id);
+        await removeTabSubGroupId(id);
     }
 }
 
-export function getTabNativeGroupId(id) {
-    return getValue(tabs, id, GROUP_NATIVE_KEY);
+export function getTabSubGroupId(id) {
+    return getValue(tabs, id, SUB_GROUP_KEY);
 }
 
-export async function removeTabNativeGroupId(id) {
-    await removeValue(tabs, id, GROUP_NATIVE_KEY);
+export async function removeTabSubGroupId(id) {
+    await removeValue(tabs, id, SUB_GROUP_KEY);
 }
 
 // favIconUrl
@@ -313,7 +313,7 @@ export async function loadTabSession(tab, {
 
         await Promise.all([
             loadValue(tabs, tab.id, GROUP_KEY),
-            loadValue(tabs, tab.id, GROUP_NATIVE_KEY),
+            loadValue(tabs, tab.id, SUB_GROUP_KEY),
             includeFavIconUrl && loadValue(tabs, tab.id, FAVICON_KEY),
             includeThumbnail && useThumbnails && loadValue(tabs, tab.id, THUMBNAIL_KEY),
         ]);
@@ -333,7 +333,7 @@ export async function setTabSession(tab, session = null) {
 
     await Promise.all([
         setTabGroup(tab.id, tab.groupId),
-        setTabNativeGroupId(tab.id, tab.groupNativeId),
+        setTabSubGroupId(tab.id, tab.subGroupId),
         setTabFavIcon(tab.id, tab.favIconUrl),
         setTabThumbnail(tab.id, tab.thumbnail),
     ]);
