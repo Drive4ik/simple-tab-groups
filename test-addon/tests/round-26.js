@@ -7,7 +7,7 @@ does the call resolve or reject, what happens to the member next to it, which ev
 (B) tabs.group({tabIds, groupId}) joining an EXISTING group — §3 covers creation only: where the joined
 tab lands from right before the span (R26.05), from right after it (R26.06), from far before it (R26.07),
 what a join of a tab that already IS a member does (R26.08), and where an ARRAY from both sides of the
-span lands and in which order (R26.13) — the shape Tabs.recreate and the native mirror use (§23);
+span lands and in which order (R26.13) — the shape Tabs.recreate and the sub-groups mirror use (§23);
 (C) tabs.hide on an already hidden tab — alone and mixed with a visible one (R26.09): the resolved ids, events (§24);
 (D) tabs.create at the slot of a SINGLE-member span (R26.10) — §7 verified the first-member boundary on
 two-member spans only (§25);
