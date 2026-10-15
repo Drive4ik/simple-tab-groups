@@ -7,7 +7,6 @@ import * as Containers from '/js/containers.js';
 import * as Extensions from '/js/extensions.js';
 import * as Tabs from '/js/tabs.js';
 import * as Groups from '/js/groups.js';
-import * as Utils from '/js/utils.js';
 import * as Windows from '/js/windows.js';
 import * as Cloud from '/js/sync/cloud/cloud.js';
 
@@ -390,7 +389,7 @@ export default {
                 return true;
             });
 
-            const tabsToDiscard = Utils.flatTabs(groupsToDiscard);
+            const tabsToDiscard = groupsToDiscard.flatMap(group => group.tabs);
 
             this.sendMessageModule('Tabs.discard', tabsToDiscard.map(Tabs.extractId));
         },

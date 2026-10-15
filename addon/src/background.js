@@ -1763,7 +1763,7 @@ async function init() {
 
         await Groups.fillHistory(windows);
 
-        const tabs = Utils.flatTabs(windows);
+        const tabs = windows.flatMap(win => win.tabs);
 
         await Containers.removeUnusedTemporaryContainers(tabs);
         log.log('Containers.removeUnusedTemporaryContainers finish');

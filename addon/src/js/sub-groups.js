@@ -302,11 +302,7 @@ async function mirrorWindowNow(windowId) {
     // the adoption votes and the session diff need the sessions
     await Promise.allSettled(winTabs.map(tab => Cache.loadTabSubGroupId(tab.id)));
 
-    const memberTabsByLiveId = new Map(liveGroups.map(liveGroup => [liveGroup.id, []]));
-
-    for (const tab of winTabs) {
-        memberTabsByLiveId.get(liveIdByTabId.get(tab.id))?.push(tab);
-    }
+    const memberTabsByLiveId = Map.groupBy(winTabs, tab => liveIdByTabId.get(tab.id));
 
     const liveSubGroups = liveGroups.map(liveGroup => {
         const subGroupId = subGroupIdByLiveId.get(liveGroup.id)
@@ -552,16 +548,12 @@ async function applyNow(windowId, group) {
 
     await Tabs.ungroup(group.tabs);
 
-    const memberTabsBySubGroupId = new Map(subGroups.map(subGroup => [subGroup.id, []]));
-
-    for (const tab of group.tabs) {
-        memberTabsBySubGroupId.get(tab.subGroupId)?.push(tab);
-    }
+    const memberTabsBySubGroupId = Map.groupBy(group.tabs, tab => tab.subGroupId);
 
     const appliedSubGroups = [];
 
     for (const subGroup of subGroups) {
-        const memberTabs = memberTabsBySubGroupId.get(subGroup.id);
+        const memberTabs = memberTabsBySubGroupId.get(subGroup.id) ?? [];
         const visibleMemberTabs = memberTabs.filter(tab => !tab.hidden);
 
         if (!visibleMemberTabs.length) {

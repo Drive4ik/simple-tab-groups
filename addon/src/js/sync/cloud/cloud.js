@@ -473,7 +473,8 @@ async function syncGroups(localData, cloudData, sourceOfTruth, changes, newCloud
     const resultCloudGroups = [];
 
     const favIconsByUrl = new Map(
-        Utils.flatTabs(...localGroups, ...cloudGroups.filter(group => group.uploadToCloud))
+        [...localGroups, ...cloudGroups.filter(group => group.uploadToCloud)]
+            .flatMap(group => group.tabs)
             .filter(tab => isFavIconAllowed(tab.favIconUrl))
             .map(tab => [tab.url, tab.favIconUrl])
     );

@@ -516,7 +516,7 @@ export default [{
 
                 await Promise.allSettled(preWindows.map(win => Tabs.createTempActiveTab(win.id, false, 'about:blank')));
 
-                const allTabs = Utils.flatTabs(preWindows);
+                const allTabs = preWindows.flatMap(win => win.tabs);
 
                 await Tabs.hide(allTabs);
 

@@ -97,11 +97,13 @@ async function runGrandRestoreNow(restoredWindowIds) {
 
     log.log('all windows', Array.from(allWindowsMap.keys()));
 
+    const savedTabsByGroupId = Map.groupBy(tabsToRestore, tab => tab.groupId);
     const openersToApply = [];
-    function deleteTabsToRestoreByGroup(group) {
-        const savedTabs = tabsToRestore.filter(tab => tab.groupId === group.id);
 
-        if (savedTabs.length) {
+    function deleteTabsToRestoreByGroup(group) {
+        const savedTabs = savedTabsByGroupId.get(group.id);
+
+        if (savedTabs) {
             openersToApply.push({group, savedTabs});
         }
     }
@@ -110,18 +112,20 @@ async function runGrandRestoreNow(restoredWindowIds) {
     for (const win of allWindowsMap.values()) {
         win.groups = [];
 
+        const tabsByGroupId = Map.groupBy(win.tabs, tab => tab.groupId);
+
         for (const gr of groups) {
             if (gr.isArchive) {
                 continue;
             }
 
-            const group = {...gr};
+            const tabs = tabsByGroupId.get(gr.id);
 
-            group.tabs = win.tabs.filter(tab => tab.groupId === group.id);
-
-            if (!group.tabs.length) {
+            if (!tabs) {
                 continue;
             }
+
+            const group = {...gr, tabs};
 
             const glog = log.start('preparing group', gr.id, 'in window', win.id);
 
@@ -151,6 +155,9 @@ async function runGrandRestoreNow(restoredWindowIds) {
     const groupsAlreadyRestored = new Map();
     const sameTabKeys = ['url', 'cookieStoreId'];
 
+    // every window's copy of a group, by the group id
+    const sameGroupsById = Map.groupBy(allWindowsMap.values().flatMap(win => win.groups), group => group.id);
+
     // restore tabs
     for (const win of allWindowsMap.values()) {
         const wlog = log.start('processing window', win.id);
@@ -172,30 +179,13 @@ async function runGrandRestoreNow(restoredWindowIds) {
 
             // only groups of restored windows are processed
 
-            const sameGroupsAllWindows = new Map();
+            // the copies of this group in every window, this one included, the least lastAccessed first
+            const sameGroups = sameGroupsById.get(groupToKeep.id).toSorted(Utils.sortBy('lastAccessed'));
 
-            // ищем востанавливаемую группу во всех окнах
-            for (const w of allWindowsMap.values()) {
-                for (const group of w.groups) {
-                    if (group.id === groupToKeep.id) {
-                        sameGroupsAllWindows.set(group.lastAccessed, group);
-                        break;
-                    }
-                }
-            }
-
-            glog.log('sameGroupsAllWindows:', Array.from(sameGroupsAllWindows.keys()));
+            glog.log('sameGroups lastAccessed:', sameGroups.map(group => group.lastAccessed));
 
             // если группа из всех окон одна
-            if (sameGroupsAllWindows.size === 1) {
-                const [onlyGroup] = sameGroupsAllWindows.values();
-
-                // если группы нет в восстановленных окнах - пропускаем
-                if (!restoredWindowIds.has(onlyGroup.window.id)) {
-                    glog.stop('🛑 group is only in one window but not in the restored one, skip');
-                    continue;
-                }
-
+            if (sameGroups.length === 1) {
                 // вкладки группы есть только в одном восстановленом окне, оставляем её, удаляя из восстановления
                 // она в одном экземпляре и в нужном восстановленном окне
                 // это состояние когда группа открыта в новом окне, все окна одновременно закрылись, а потом одновременно восстановились. удаляем только из восстановления
@@ -206,19 +196,13 @@ async function runGrandRestoreNow(restoredWindowIds) {
 
             // ищем группу с минимальным значением доступа (это когда она загружена в окне),
             // именно в этом окне она и будет оставлена
-            const minGroupLastAccessed = Math.min(...sameGroupsAllWindows.keys());
-
-            glog.log('sameGroupsAllWindows:', Array.from(sameGroupsAllWindows.keys()));
-
-            groupToKeep = sameGroupsAllWindows.get(minGroupLastAccessed);
-
-            sameGroupsAllWindows.delete(minGroupLastAccessed);
-            const otherSameGroupsAllWindows = sameGroupsAllWindows;
+            groupToKeep = sameGroups[0];
+            const otherSameGroups = sameGroups.slice(1);
 
             glog.log('groupToKeep lastAccessed', groupToKeep.lastAccessed, ', window', groupToKeep.window.id);
 
             // ищем вкладки в других окнах, которых нет в окне результующей группы (по url и cookieStoreId)
-            for (const otherSameGroup of otherSameGroupsAllWindows.values()) {
+            for (const otherSameGroup of otherSameGroups) {
                 glog.log('processing other same group in window', otherSameGroup.window.id);
 
                 for (const [index, oTab] of otherSameGroup.tabs.entries()) {
@@ -252,8 +236,8 @@ async function runGrandRestoreNow(restoredWindowIds) {
             }
 
             // удаляем вкладки востановленной группы которых нет в других группах
-            if (otherSameGroupsAllWindows.size) {
-                const allOtherTabs = Utils.flatTabs(Array.from(otherSameGroupsAllWindows.values()));
+            if (otherSameGroups.length) {
+                const allOtherTabs = otherSameGroups.flatMap(group => group.tabs);
 
                 for (const tab of groupToKeep.tabs) {
                     // если вкладка из другого окна - пропускаем
@@ -264,7 +248,7 @@ async function runGrandRestoreNow(restoredWindowIds) {
 
                     const found = allOtherTabs.some(oTab => Tabs.isSame(oTab, tab, sameTabKeys));
 
-                    glog.log('tab', tab.id, 'find result in otherSameGroupsAllWindows:', found);
+                    glog.log('tab', tab.id, 'find result in otherSameGroups:', found);
 
                     if (!found) {
                         tabsToDelete.set(tab.id, tab);
@@ -913,7 +897,7 @@ async function initializeGroupsNow(groups, afterRestoring = false) {
 
     windows = await load(true);
 
-    const tabsById = new Map(Utils.flatTabs(windows).map(tab => [tab.id, tab]));
+    const tabsById = new Map(windows.flatMap(win => win.tabs).map(tab => [tab.id, tab]));
     const remapToFreshTabs = set => new Set(Array.from(set, tab => tabsById.get(tab.id)).filter(Boolean));
     tabsToShow = remapToFreshTabs(tabsToShow);
     tabsToHide = remapToFreshTabs(tabsToHide);

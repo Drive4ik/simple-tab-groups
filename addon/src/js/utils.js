@@ -307,10 +307,6 @@ export async function dataToUUIDv8(data) {
     return bytesToUUIDv8(await sha256Bytes(data));
 }
 
-export function flatTabs(...tabCollections) {
-    return tabCollections.flat().flatMap(({tabs}) => tabs);
-}
-
 export function getLastActiveTab(tabs) {
     return tabs.find(tab => tab.active) || tabs.toSorted(sortBy('lastAccessed')).pop();
 }
