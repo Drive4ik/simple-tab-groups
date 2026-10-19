@@ -1363,6 +1363,14 @@
         "message": "Останнє оновлення",
         "description": "Last update/active relative time"
     },
+    "lastUpdateLocal": {
+        "message": "__MSG_lastUpdate__ у цьому профілі",
+        "description": "The last sync of this profile, followed by a relative time"
+    },
+    "lastUpdateCloud": {
+        "message": "__MSG_lastUpdate__ у хмарі",
+        "description": "The last update of the cloud, followed by a relative time"
+    },
     "cloudHasChanges": {
         "message": "У хмарі є зміни",
         "description": "Shown when the cloud content differs from the last synchronization of this device"

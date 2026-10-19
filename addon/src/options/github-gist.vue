@@ -94,9 +94,6 @@ export default {
             return this.area.options.githubGistToken !== this.area.optionsBackup.githubGistToken ||
                 this.area.options.githubGistFileName !== this.area.optionsBackup.githubGistFileName;
         },
-        syncCloudLastUpdateFull() {
-            return this.syncCloudLastUpdate ? this.formatDate(new Date(this.syncCloudLastUpdate), {dateStyle: 'full'}) : null;
-        },
     },
     created() {
         this.sync.load();
@@ -142,10 +139,6 @@ export default {
             await Storage.set({...this.local.options});
         },
 
-        formatDate(date, options = {}) {
-            return date.toLocaleString(Utils.UI_LANG, {timeStyle: 'short', ...options});
-        },
-
         async loadGistInfo(area) {
             area.gist = null;
 
@@ -163,17 +156,14 @@ export default {
                 const history = gist.history.map((item, index) => {
                     delete item.user;
 
-                    item.committed_at_date = new Date(item.committed_at);
-                    item.committed_at_relative = Utils.relativeTime(item.committed_at_date);
+                    item.committedAt = Utils.dateInfo(item.committed_at);
 
                     const prevItem = gist.history[index - 1];
 
-                    if (prevItem?.committed_at_relative === item.committed_at_relative) {
-                        item.committed_at_time_short = this.formatDate(item.committed_at_date);
-                        prevItem.committed_at_time_short ??= this.formatDate(prevItem.committed_at_date);
+                    if (prevItem?.committedAt.ago === item.committedAt.ago) {
+                        item.showTime = prevItem.showTime = true;
                     }
 
-                    item.committed_at_full = this.formatDate(item.committed_at_date, {dateStyle: 'full'});
                     item.web_url = `${gist.html_url}/${item.version}`;
                     item.version_short = item.version.slice(0, 5);
 
@@ -336,10 +326,16 @@ export default {
                             </ul>
                         </div>
                         <span class="tag is-rounded" v-text="lang('githubSecretTitle')"></span>
-                        <span v-if="syncCloudLastUpdate">
-                            <span class="colon" v-text="lang('lastUpdate')"></span>
-                            <time class="is-underline-dotted" :title="syncCloudLastUpdateFull" :datetime="syncCloudLastUpdate" v-text="syncCloudLastUpdateAgo"></time>
-                        </span>
+                        <div v-if="syncCloudLastUpdate">
+                            <div>
+                                <span class="colon" v-text="lang('lastUpdateLocal')"></span>
+                                <time class="is-underline-dotted" :title="syncCloudLastUpdate.local.full" :datetime="syncCloudLastUpdate.local.datetime" v-text="syncCloudLastUpdate.local.ago"></time>
+                            </div>
+                            <div>
+                                <span class="colon" v-text="lang('lastUpdateCloud')"></span>
+                                <time class="is-underline-dotted" :title="syncCloudLastUpdate.cloud.full" :datetime="syncCloudLastUpdate.cloud.datetime" v-text="syncCloudLastUpdate.cloud.ago"></time>
+                            </div>
+                        </div>
                         <span v-if="syncCloudHasChanges" class="tag is-info" v-text="lang('cloudHasChanges')"></span>
                         <div v-if="area.gist.history.length" class="dropdown focus-within">
                             <div class="dropdown-trigger">
@@ -364,7 +360,7 @@ export default {
                                         v-for="item in area.gist.history"
                                         :key="item.version"
                                         class="dropdown-item"
-                                        :title="lang('restoreBackup') + `: &quot;${item.version_short}&quot; ${item.committed_at_full}`"
+                                        :title="lang('restoreBackup') + `: &quot;${item.version_short}&quot; ${item.committedAt.full}`"
                                         @click.prevent="confirmRestoreBackupItem = item"
                                         tabindex="0"
                                         >
@@ -378,8 +374,8 @@ export default {
                                                 v-text="item.version_short"
                                                 ></a>
                                         </code>
-                                        <span class="is-underline-dotted" v-text="item.committed_at_relative"></span>
-                                        <span v-text="item.committed_at_time_short"></span>
+                                        <span class="is-underline-dotted" v-text="item.committedAt.ago"></span>
+                                        <span v-if="item.showTime" v-text="item.committedAt.time"></span>
                                         <small v-if="item.change_status?.total" class="brackets-round">
                                             <span class="colon">changes</span>
                                             <span class="changes" v-text="item.change_status.total"></span>
@@ -493,7 +489,7 @@ export default {
             <span v-text="lang('areYouSureRestoreBackup')"></span>
             <a :href="confirmRestoreBackupItem.web_url" target="_blank" rel="noreferrer noopener" :title="lang('viewBackup')">
                 <span class="tag is-medium" v-text="confirmRestoreBackupItem.version_short"></span>
-                <span v-text="confirmRestoreBackupItem.committed_at_full"></span>
+                <span v-text="confirmRestoreBackupItem.committedAt.full"></span>
             </a>
         </div>
         <strong v-text="lang('overwriteCurrent')"></strong>

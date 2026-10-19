@@ -305,12 +305,7 @@ export default {
         initLastUpdateBackups() {
             const mainStorage = localStorage.create(Constants.MODULES.BACKGROUND);
             if (mainStorage.autoBackupLastTimeStamp) {
-                const lastBackupDate = new Date(mainStorage.autoBackupLastTimeStamp * 1000);
-                this.lastAutoBackup = {
-                    ago: Utils.relativeTime(lastBackupDate),
-                    full: lastBackupDate.toLocaleString(Utils.UI_LANG, {dateStyle: 'full', timeStyle: 'short'}),
-                    ISO: lastBackupDate.toISOString(),
-                };
+                this.lastAutoBackup = Utils.dateInfo(mainStorage.autoBackupLastTimeStamp);
             } else {
                 this.lastAutoBackup = null;
             }
@@ -1233,7 +1228,7 @@ export default {
                             v-if="lastAutoBackup"
                             class="is-underline-dotted"
                             :title="lastAutoBackup.full"
-                            :datetime="lastAutoBackup.ISO"
+                            :datetime="lastAutoBackup.datetime"
                             v-text="lastAutoBackup.ago"></time>
                         <span v-else>&mdash;</span>
                     </div>

@@ -1199,11 +1199,14 @@ async function saveOptions(_options) {
         return;
     }
 
+    // the sync saves every option: an alarm or a broadcast moves only when its own option changed
+    const changedKeys = optionsKeys.filter(key => JSON.stringify(options[key]) !== JSON.stringify(optionsToSave[key]));
+
     await Storage.set(optionsToSave);
 
     Object.assign(options, optionsToSave);
 
-    if (optionsKeys.includes('hotkeys')) {
+    if (changedKeys.includes('hotkeys')) {
         const tabs = await Tabs.query({discarded: false}),
             actionData = {
                 action: 'update-hotkeys',
@@ -1213,11 +1216,11 @@ async function saveOptions(_options) {
         tabs.forEach(tab => Tabs.sendMessage(tab.id, actionData));
     }
 
-    if (optionsKeys.some(key => ['autoBackupEnable', 'autoBackupIntervalKey', 'autoBackupIntervalValue'].includes(key))) {
+    if (changedKeys.some(key => ['autoBackupEnable', 'autoBackupIntervalKey', 'autoBackupIntervalValue'].includes(key))) {
         await resetLocalBackupAlarm();
     }
 
-    if (optionsKeys.some(key => ['syncEnable', 'syncOptionsLocation', 'syncIntervalKey', 'syncIntervalValue'].includes(key))) {
+    if (changedKeys.some(key => ['syncEnable', 'syncOptionsLocation', 'syncIntervalKey', 'syncIntervalValue'].includes(key))) {
         await resetSyncAlarm();
     }
 
@@ -1250,7 +1253,7 @@ async function resetSyncAlarm(useCurrentTimeAsLastRun = false) {
         options.syncEnable,
         options.syncIntervalKey,
         options.syncIntervalValue,
-        useCurrentTimeAsLastRun ? undefined : storage.autoSyncLastTimeStamp
+        useCurrentTimeAsLastRun ? undefined : Cloud.getLastSyncTime()
     );
 }
 
@@ -1259,10 +1262,12 @@ async function resetAlarm(
         isEnable,
         intervalKey,
         intervalValue,
-        lastAlarmRunUnixTime = Utils.unixNow(),
+        lastAlarmRunTime = null,
         minDelayMinutes = 0.5
     ) {
-    const log = logger.start('resetAlarm', {name, isEnable, intervalKey, intervalValue, lastAlarmRunUnixTime, minDelayMinutes});
+    lastAlarmRunTime ??= Date.now();
+
+    const log = logger.start('resetAlarm', {name, isEnable, intervalKey, intervalValue, lastAlarmRunTime, minDelayMinutes});
 
     await browser.alarms.clear(name);
 
@@ -1281,8 +1286,10 @@ async function resetAlarm(
         periodInMinutes = intervalValue * 60 * 24;
     }
 
-    const minutesNow = Math.floor(Utils.unixNow() / 60);
-    const minutesWhenBackup = periodInMinutes + Math.floor(lastAlarmRunUnixTime / 60);
+    const minutesNow = Math.floor(Date.now() / 60_000);
+    // a stamp from the future - the clock was set back
+    const minutesLastRun = Math.min(minutesNow, Math.floor(lastAlarmRunTime / 60_000));
+    const minutesWhenBackup = periodInMinutes + minutesLastRun;
 
     const delayInMinutes = minutesWhenBackup > minutesNow
         ? minutesWhenBackup - minutesNow
@@ -1334,7 +1341,7 @@ async function createBackup(params = {}, isAutoBackup = false) {
 
         await Bookmarks.exportGroups(data.groups).catch(log.onCatch('cant create bookmarks', false));
 
-        storage.autoBackupLastTimeStamp = Utils.unixNow();
+        storage.autoBackupLastTimeStamp = Date.now();
     } else {
         await File.saveBackup(data, false);
     }
@@ -1424,6 +1431,7 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
 
     const neededContainers = new Set;
     const defaultGroupProps = clearAddonDataBeforeRestore ? data.defaultGroupProps : options.defaultGroupProps;
+    const restoredAt = Date.now();
 
     data.groups = data.groups.map(group => {
         const newGroupId = existGroupIds.has(group.id)
@@ -1446,6 +1454,13 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
 
         // another add-on's backup names extension pages the browser's way
         newGroup.tabs.forEach(Tabs.tabUrlToAddon);
+
+        // a restored archive counts as touched now - DESIGN-CLOUD-UPLOAD.md §5 "Keep local tabs since"
+        if (newGroup.isArchive) {
+            for (const tab of newGroup.tabs) {
+                tab.lastAccessed = restoredAt;
+            }
+        }
 
         for (const tab of newGroup.tabs) {
             if (Containers.isDefault(tab.cookieStoreId) || Containers.isTemporary(tab.cookieStoreId)) {
@@ -1573,9 +1588,8 @@ async function cloudSync({
     let shouldResetSyncAlarm = false;
 
     if (trigger === Cloud.TRIGGER_MANUAL) {
-        const autoSyncLastTimeStamp = (storage.autoSyncLastTimeStamp ?? 0) * 1000;
         const EXTENSION_START_TIME = await getExtensionStartTime();
-        shouldResetSyncAlarm = autoSyncLastTimeStamp < EXTENSION_START_TIME;
+        shouldResetSyncAlarm = (Cloud.getLastSyncTime() ?? 0) < EXTENSION_START_TIME;
     }
 
     const syncSuccessColor = 'hsl(153, 53%, 53%)'; // --bulma-success

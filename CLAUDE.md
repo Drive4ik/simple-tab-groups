@@ -8,7 +8,9 @@ in the root; the notes for the Mozilla reviewers — `addon/README.md`.
 ## Read before writing code
 
 `docs/DESIGN-*.md` — how the add-on is built: the model, the invariants, the methods that carry
-them. Before changing code read the ones every change touches:
+them. **At the start of every session read all of them, in full**, before the first task: the
+model is one whole, and a task touches more of it than its name says. The ones every change
+touches:
 
 - `docs/DESIGN-QUEUES.md` — the queues, who waits for whom
 - `docs/DESIGN-EVENTS.md` — the browser events: own actions muted, the user's mirrored
@@ -104,10 +106,10 @@ the `&&=`/`||=`/`??=` operators, `Promise.allSettled()` and so on.
   in `addons-scanner-utils`) parses ES2026, but the AMO validator that checks the uploaded zip is
   still behind and fails on them with `JS_SYNTAX_ERROR`. The check before a release —
   `npx addons-linter addon/dist`.
-- Code is code, docs are docs. A comment in the code is a link to a doc and a few words. The
-  mechanisms of the add-on live in `docs/DESIGN-*.md`, the facts of the browser in
-  `docs/BEHAVIOR-*.md`. A model described in the header of a module — only at the developer's
-  request.
+- Code is code, docs are docs. Everything is described in `docs/DESIGN-*.md` (the mechanisms of
+  the add-on) and `docs/BEHAVIOR-*.md` (the facts of the browser); the code carries no comments.
+  The one exception is a bug of the browser or a behavior that is not obvious, where the code
+  alone does not tell why it exists — only there a couple of lines with a link to the doc.
 - Code that works around a bug or exists because of one carries the link to the bug itself, in
   every place the bug touches — not only the `§` of the doc. For a bug of the browser that is the
   Bugzilla address: `// BUG https://bugzilla.mozilla.org/show_bug.cgi?id=…`. A comment that marks

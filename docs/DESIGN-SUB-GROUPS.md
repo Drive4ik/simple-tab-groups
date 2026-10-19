@@ -184,8 +184,8 @@ one); the group's own key in the lookup is skipped, its ids are not taken from i
   bring the same group back.
 - **The cloud merge** (`syncGroups`): the merge is per group — `mergeSubGroups` lets the cloud
   record win by id, adds the local-only sub-groups that still have members and drops the
-  unreferenced ones on both sides; `syncTabSubGroup` lets the cloud win the membership of a
-  matched tab. A sub-group moved whole on one device while another device kept its tabs by
+  unreferenced ones on both sides; `syncTabKeys` lets the cloud win the membership of a
+  matched tab, and its `lastAccessed` when the record is an archive (DESIGN-CLOUD-UPLOAD.md §5). A sub-group moved whole on one device while another device kept its tabs by
   `lastAccessed` ends in two groups. So after the merge, over the result lists: the stale
   records are dropped from the local copies (a record without member tabs would be reissued as
   if the group held the id), and the lookup over the local result decides — the first group

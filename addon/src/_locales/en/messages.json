@@ -1375,6 +1375,14 @@
         "message": "Last update",
         "description": "Last update/active relative time"
     },
+    "lastUpdateLocal": {
+        "message": "__MSG_lastUpdate__ in this profile",
+        "description": "The last sync of this profile, followed by a relative time"
+    },
+    "lastUpdateCloud": {
+        "message": "__MSG_lastUpdate__ in the cloud",
+        "description": "The last update of the cloud, followed by a relative time"
+    },
     "cloudHasChanges": {
         "message": "Cloud has changes",
         "description": "Shown when the cloud content differs from the last synchronization of this device"

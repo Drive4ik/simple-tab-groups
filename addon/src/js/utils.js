@@ -4,10 +4,6 @@ import JSON from './json.js';
 
 export const INNER_HTML = 'innerHTML';
 
-export function unixNow() {
-    return Math.floor(Date.now() / 1000);
-}
-
 export function encodeToBytes(str) {
     return new TextEncoder().encode(str);
 }
@@ -706,7 +702,7 @@ export function getFilePathVariables() {
 }
 
 export function relativeTime(input, lang = UI_LANG, style = 'long', numeric = 'auto') {
-    const date = (input instanceof Date) ? input : new Date(input);
+    const date = new Date(input);
     const formatter = new Intl.RelativeTimeFormat(lang, {style, numeric});
     const ranges = {
         year: 3600 * 24 * 365,
@@ -728,4 +724,15 @@ export function relativeTime(input, lang = UI_LANG, style = 'long', numeric = 'a
     }
 
     return formatter.format(0, 'second');
+}
+
+export function dateInfo(input) {
+    const date = new Date(input);
+
+    return {
+        ago: relativeTime(date),
+        time: date.toLocaleString(UI_LANG, {timeStyle: 'short'}),
+        full: date.toLocaleString(UI_LANG, {dateStyle: 'full', timeStyle: 'short'}),
+        datetime: date.toISOString(),
+    };
 }

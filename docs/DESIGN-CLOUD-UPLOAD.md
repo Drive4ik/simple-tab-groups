@@ -13,9 +13,10 @@ treats such a group.
 | Full record | The group in the gist as it is: every key, the tabs, `uploadToCloud: true` |
 | Stub | The group in the gist as `{id, uploadToCloud: false}` — nothing else. The group keeps its place in the `groups` array, the content is gone |
 | Local copy | A group on a device with `uploadToCloud: false`. The copies of one group on different devices live independently and drift apart |
-| Sync memory | After a successful sync, `storage.gist` (next to the gist id and sha) keeps three lists of ids: `uploadedGroupIds` — my groups that were uploaded; `localOnlyGroupIds` — my local copies; `stubGroupIds` — the stubs in the cloud. After a change of the gist or of the file name the memory is empty |
+| Sync memory | After a successful sync, `storage.lastSync` keeps the gist (`gist.id`, `fileName`, `contentSha`, `updatedAt` — the clock of GitHub, shown as the last update of the cloud), three lists of ids: `uploadedGroupIds` — my groups that were uploaded; `localOnlyGroupIds` — my local copies; `stubGroupIds` — the stubs in the cloud; and `time` — the moment of the sync in the clock of this device, taken after the tabs from the cloud are created and before the upload, also the anchor of the auto-sync alarm (`getLastSyncTime`). The memory of another gist or file name is not used |
+| Keep local tabs since | Trust cloud: a local tab absent in the cloud record of its group is kept and uploaded when its `lastAccessed` is later than this moment, else it was removed on another device. `lastAccessed` is the moment the tab was created or last lost the focus, and the active tab of a window reads as now (BEHAVIOR-CREATE-TABS.md §58). The moment is `time` of the sync memory, in the clock of this device like `lastAccessed`; a manual trust cloud (the button, a restore of a revision) takes now instead — no local tab absent in the cloud survives, the active tab of each window aside; no memory, or `time` still in the future at the sync (the clock was set back) — nothing is removed. The gaps — §5 |
 | NewCloudGroups mark | "The cloud has not seen this group yet" (`sync/new-cloud-groups.js`): the group is uploaded instead of being removed as "removed on another device". Set on creation, undo-remove, backup restore and when the checkbox is turned on; cleared only after the group went to the cloud as a full record |
-| Trust local / trust cloud | The sync branch: the cloud has not changed since my last sync → local wins; it has → the cloud wins. A manual sync picks the branch explicitly |
+| Trust local / trust cloud | The sync branch: the cloud has not changed since my last sync (the file blob sha of the gist equals `contentSha` of the sync memory — the content, not a clock) → local wins; it has → the cloud wins. A manual sync picks the branch explicitly |
 
 ## 2. The rules per group
 
@@ -66,8 +67,8 @@ without member tabs is dropped from the local record before that pass.
 
 While a copy is local, its tabs never reach the cloud. So when it returns (C1 with a copy that
 was local last sync, C4 when another device turned the upload on), the absence of a tab in the
-cloud does not mean "removed on another device", and the usual lastAccessed cutoff does not
-apply. The copy and the cloud record merge by union: a tab present on both sides (by URL and
+cloud does not mean "removed on another device", and the usual rule "keep local tabs since" does
+not apply. The copy and the cloud record merge by union: a tab present on both sides (by URL and
 container) is taken once, a tab present on one side only is kept — the cloud tabs are created
 locally, the local tabs go to the cloud. The group settings come from the cloud as in any merge.
 From the next sync on the group is a regular one.
@@ -127,6 +128,27 @@ cloud meanwhile — the sync memory tells "I switched it" from "another device s
   removed and restored with no sync in between is still "mine" for the memory, its checkbox
   counts as my switch; a group the memory does not know (a sync happened between the removal and
   the restore, or the gist changed) is foreign — the cloud wins.
+- **"Keep local tabs since" is a moment, not a memory of the tabs.** A tab opened in the background
+  during the local phase of a sync (between the snapshot and `time`: the removals, the
+  creation of the tabs from the cloud) is not uploaded and lies before the moment: the next trust
+  cloud closes it unless it was activated since. A clock set back by X makes the touches within X
+  after the last sync look earlier than it; the memory is dropped only while `time` still
+  lies in the future. A loaded tab moved to another window gets the moment of the move as its
+  `lastAccessed`, a discarded one keeps its own (BEHAVIOR-MOVE-TABS.md §8): the tabs of a loaded
+  group moved to another window since the last sync count as touched, their removal on another
+  device is undone; an unloaded group moves without a trace. Hide, show, discard, a sort inside
+  the window and a browser restart leave the stamp as it is (BEHAVIOR-CREATE-TABS.md §58,
+  BEHAVIOR-MOVE-TABS.md §8).
+  An archived tab carries `lastAccessed` into the cloud, and a matched archived tab takes the stamp
+  of the cloud record (`syncTabKeys`): after one round every device holds the same stamps and a
+  trust local upload sees no difference in them, while for an archive the comparison crosses the
+  clocks of two devices. A restore of a backup stamps its archived tabs with the moment of the
+  restore (`restoreBackup`): the tabs the user brought back count as touched, like the live tabs of
+  the same backup that are created anew.
+- **The active tab of every window is always kept.** Its `lastAccessed` reads as now, in a window
+  without the focus too (BEHAVIOR-CREATE-TABS.md §58), so a trust cloud uploads it as new even
+  after a removal on another device. To drop it from the cloud: close it locally and sync at once
+  — the other device has nothing left to remove.
 
 ## 6. Data format
 
@@ -134,6 +156,8 @@ cloud meanwhile — the sync memory tells "I switched it" from "another device s
   (`defaultGroupProps`) carry it only when the user changed the default. Migration entry "6"
   fills the groups with `true` - the cloud appeared in 6, the pre-6 data has nothing to carry
   over.
+- Every archived tab carries `lastAccessed`, the moment it was last used before the archiving.
+  The archives of 5.x carry none: migration entry "6" gives them the moment of the migration.
 - In the gist: a full record or a stub `{id, uploadToCloud: false}`. A migration of the gist
-  data must skip the stubs — they have no `tabs`. The sync memory —
-  `storage.gist.uploadedGroupIds`, `localOnlyGroupIds`, `stubGroupIds`.
+  data must skip the stubs — they have no `tabs`. The sync memory — `storage.lastSync`: `gist`,
+  `uploadedGroupIds`, `localOnlyGroupIds`, `stubGroupIds`, `time`.

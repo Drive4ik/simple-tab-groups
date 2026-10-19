@@ -1808,6 +1808,177 @@ background and 1005–1008 ms in the pages (§44).
 - installed again, plain: onInstalled of extension 1, type extension - at the event (+0 ms): getAll rejected - An unexpected error occurred; 50 ms later (+50 ms): enabled:true hostPermissions: lists its own origin; 2000 ms after that (+2069 ms): enabled:true hostPermissions: lists its own origin; a setTimeout of 50 ms took 1005 ms
 - installed again, hidden: onInstalled of extension 1, type extension - at the event (+0 ms): getAll rejected - An unexpected error occurred; 50 ms later (+50 ms): enabled:true hostPermissions: lists its own origin; 2000 ms after that (+2069 ms): enabled:true hostPermissions: lists its own origin; a setTimeout of 50 ms took 1005 ms
 
+### 58. `tab.lastAccessed` is the moment of the creation for a tab created in the background, loaded or born discarded; the active tab of a window reports the moment of the read, the window focused or not; a tab that loses the focus keeps the moment of the switch; hide, discard, show and a browser restart leave the stamp as it is (R34.01–R34.04, R34.07)
+
+§58 comes from `round-34`, run in October 2026. Every stamp is printed as ms from the moment the
+scene of the test was ready, next to the clock read right before and right after it (`read a..b`)
+and the brackets of the calls that may have set it (`the creation a..b`, `the switch to b a..b`).
+The clock of the harness is the `Date.now()` of an extension page, reduced to 1 ms buckets with
+jitter, so a bracket is widened by 1 ms on both sides (`TIMER_PRECISION`). A stamp inside the
+bracket of its own read is the moment of the read, inside the bracket of a call — the moment of
+that call, equal to the previous reading — unchanged. What a `tabs.move` does to the stamp —
+BEHAVIOR-MOVE-TABS.md §8.
+
+- **Created in the background — the moment of the creation, on the resolved object of
+  `tabs.create` already** (R34.01): `born` (`active: false`, loads the page) and `lazy`
+  (`discarded: true`) carry a stamp inside the create call, and the readings after quiet and
+  2000 ms later give the same number — the load (`status: loading` → `complete`) does not touch
+  it.
+- **The active tab reports the moment of the read** (R34.02): `a`, active in window A, and `c`,
+  active in window B, read as the moment of each `tabs.get`, twice, 500 ms apart; window B had the
+  focus and window A did not — the active tab of an unfocused window reads the same way. The
+  background tab `b` keeps the stamp of its creation through both reads.
+- **A switch stamps the tab that loses the focus with the moment of the switch** (R34.03): after
+  `tabs.update(b, {active: true})` the stamp of `a` lies inside that call and is the same 500 ms
+  later, `b` reads as the moment of the read; the switch back does the same the other way round.
+- **Hide, discard and show leave the stamp as it is; the activation of a discarded tab is a switch
+  like any other** (R34.04): `a` and `b` keep their creation stamps through `tabs.hide`,
+  `tabs.discard` of the hidden tabs and `tabs.show`; `a` activated, and loaded by it, reads as the
+  moment of the read, and once `keep` is active again `a` carries the moment of that switch; `b`,
+  never activated, keeps its creation stamp throughout.
+- **A browser restart keeps the stamps** (R34.07): `b`, active once before the restart, and `c`,
+  never activated, come back discarded with the stamps they had — the switch away from `b` and the
+  creation of `c`, 32 s before the reading — and `a`, active, reads as the moment of the read.
+
+R34.01:
+
+| tab index | 0 | 1 | 2 |
+| - | - | - | - |
+| before | keep* | | |
+| `tabs.create({url: born, active: false})` — settled 230 ms | | | |
+| born created | keep* | ➕born | |
+| `tabs.create({url: lazy, active: false, discarded: true})` — settled 260 ms | | | |
+| lazy created | keep* | ➕born | ➕lazy |
+
+```text
+    5ms  tabs.onCreated        born  index:1 group:-1
+    5ms  lastAccessed          born: +2 ms  [the resolved object]  read +1..+6, the creation +1..+6  → = the read, = the creation
+    8ms  tabs.onUpdated        born  {status: loading}
+   14ms  tabs.onUpdated        born  {status: loading}
+   32ms  tabs.onUpdated        born  {status: complete}
+  239ms  lastAccessed          born: +2 ms  [after quiet]  read +239..+239, the creation +1..+6, previous +2  → = the creation, unchanged
+ 2241ms  lastAccessed          born: +2 ms  [2000 ms later]  read +2240..+2242, the creation +1..+6, previous +2  → = the creation, unchanged
+    5ms  tabs.onCreated        lazy  index:2 group:-1
+    5ms  lastAccessed          lazy: +2245 ms  [the resolved object]  read +2244..+2249, the creation +2244..+2249  → = the read, = the creation
+  269ms  lastAccessed          lazy: +2245 ms  [after quiet]  read +2512..+2512, the creation +2244..+2249, previous +2245  → = the creation, unchanged
+ 2270ms  lastAccessed          lazy: +2245 ms  [2000 ms later]  read +4513..+4514, the creation +2244..+2249, previous +2245  → = the creation, unchanged
+(1 tabs.onUpdated dropped, only these keys were kept: hidden/discarded/status)
+```
+
+- born: window A, index 1, active false, discarded false, hidden false, status complete
+- lazy: window A, index 2, active false, discarded true, hidden false, status complete
+
+R34.02:
+
+| tab index | 0 | 1 |
+| - | - | - |
+| scene (window A) | a* | b |
+| scene (window B) | c* | |
+| `tabs.get(a), tabs.get(b), tabs.get(c)  // twice, ACTION_WAIT apart; a active in A, c active in B, b in the background; window A focused: false, window B focused: true` | | |
+
+```text
+    0ms  lastAccessed          a: +419 ms  [first read]  read +419..+419, the scene build -389..+0, window B built +0..+415  → = the read
+    1ms  lastAccessed          b: -239 ms  [first read]  read +419..+419, the scene build -389..+0, window B built +0..+415  → = the scene build
+    1ms  lastAccessed          c: +419 ms  [first read]  read +420..+420, the scene build -389..+0, window B built +0..+415  → = the read
+  504ms  lastAccessed          a: +921 ms  [second read, 500 ms later]  read +920..+923, the scene build -389..+0, window B built +0..+415, previous +419  → = the read
+  506ms  lastAccessed          b: -239 ms  [second read, 500 ms later]  read +923..+925, the scene build -389..+0, window B built +0..+415, previous -239  → = the scene build, unchanged
+  507ms  lastAccessed          c: +924 ms  [second read, 500 ms later]  read +925..+926, the scene build -389..+0, window B built +0..+415, previous +419  → = the read
+```
+
+R34.03:
+
+| tab index | 0 | 1 |
+| - | - | - |
+| before | a* | b |
+| `tabs.update(b, {active: true})` — settled 255 ms | | |
+| b active | a | b* |
+| `tabs.update(a, {active: true})` — settled 255 ms | | |
+| a active again | a* | b |
+
+```text
+  427ms  lastAccessed          a: +5 ms  [before]  read +6..+6  → = the read
+  427ms  lastAccessed          b: -269 ms  [before]  read +6..+6  → other
+    4ms  tabs.onActivated      b  previous:a
+  261ms  lastAccessed          a: +8 ms  [b active]  read +267..+267, the switch to b +6..+10, previous +5  → = the switch to b
+  262ms  lastAccessed          b: +267 ms  [b active]  read +267..+268, the switch to b +6..+10, previous -269  → = the read
+  764ms  lastAccessed          a: +8 ms  [b active, 500 ms later]  read +768..+770, the switch to b +6..+10, previous +8  → = the switch to b, unchanged
+  765ms  lastAccessed          b: +770 ms  [b active, 500 ms later]  read +770..+771, the switch to b +6..+10, previous +267  → = the read
+    5ms  tabs.onActivated      a  previous:b
+  262ms  lastAccessed          a: +1033 ms  [a active again]  read +1033..+1033, the switch to a +771..+776, previous +8  → = the read
+  263ms  lastAccessed          b: +774 ms  [a active again]  read +1033..+1034, the switch to a +771..+776, previous +770  → = the switch to a
+  765ms  lastAccessed          a: +1535 ms  [a active again, 500 ms later]  read +1535..+1536, the switch to a +771..+776, previous +1033  → = the read
+  766ms  lastAccessed          b: +774 ms  [a active again, 500 ms later]  read +1536..+1537, the switch to a +771..+776, previous +774  → = the switch to a, unchanged
+```
+
+R34.04:
+
+| tab index | 0 | 1 | 2 |
+| - | - | - | - |
+| before | keep* | a | b |
+| `tabs.hide([a, b])` — settled 259 ms | | | |
+| hidden | keep* | a(h) | b(h) |
+| `tabs.discard([a, b])  // hidden and discarded, an unloaded group` — settled 259 ms | | | |
+| hidden and discarded | keep* | a(h) | b(h) |
+| `tabs.show([a, b])` — settled 258 ms | | | |
+| shown | keep* | a | b |
+| `tabs.update(a, {active: true})  // a discarded tab loads` — settled 228 ms | | | |
+| a active | keep | a* | b |
+| `tabs.update(keep, {active: true})` — settled 257 ms | | | |
+| keep active again | keep* | a | b |
+
+```text
+  429ms  lastAccessed          a: -273 ms  [before]  read +2..+3  → other
+  429ms  lastAccessed          b: -266 ms  [before]  read +3..+3  → other
+    3ms  tabs.onUpdated        a  {hidden: true}
+    3ms  tabs.onUpdated        b  {hidden: true}
+  265ms  lastAccessed          a: -273 ms  [hidden]  read +268..+268, the hide +3..+6, previous -273  → unchanged
+  266ms  lastAccessed          b: -266 ms  [hidden]  read +268..+269, the hide +3..+6, previous -266  → unchanged
+   23ms  tabs.onUpdated        a  {discarded: true}
+   23ms  tabs.onUpdated        b  {discarded: true}
+  288ms  lastAccessed          a: -273 ms  [hidden and discarded]  read +557..+557, the discard +269..+292, previous -273  → unchanged
+  290ms  lastAccessed          b: -266 ms  [hidden and discarded]  read +557..+559, the discard +269..+292, previous -266  → unchanged
+    1ms  tabs.onUpdated        a  {hidden: false}
+    1ms  tabs.onUpdated        b  {hidden: false}
+  262ms  lastAccessed          a: -273 ms  [shown]  read +820..+821, the show +559..+560, previous -273  → unchanged
+  262ms  lastAccessed          b: -266 ms  [shown]  read +821..+821, the show +559..+560, previous -266  → unchanged
+   10ms  tabs.onUpdated        a  {discarded: false}
+   11ms  tabs.onActivated      a  previous:keep
+  242ms  lastAccessed          a: +1062 ms  [a active]  read +1062..+1062, the switch to a +821..+832, previous -273  → = the read
+  242ms  lastAccessed          b: -266 ms  [a active]  read +1063..+1063, the switch to a +821..+832, previous -266  → unchanged
+  744ms  lastAccessed          a: +1564 ms  [a active, 500 ms later]  read +1564..+1565, the switch to a +821..+832, previous +1062  → = the read
+  746ms  lastAccessed          b: -266 ms  [a active, 500 ms later]  read +1565..+1567, the switch to a +821..+832, previous -266  → unchanged
+    7ms  tabs.onActivated      keep  previous:a
+  268ms  lastAccessed          a: +1571 ms  [keep active again]  read +1834..+1835, the switch to keep +1567..+1575, previous +1564  → = the switch to keep
+  269ms  lastAccessed          b: -266 ms  [keep active again]  read +1835..+1836, the switch to keep +1567..+1575, previous -266  → unchanged
+  772ms  lastAccessed          a: +1571 ms  [keep active again, 500 ms later]  read +2337..+2339, the switch to keep +1567..+1575, previous +1571  → = the switch to keep, unchanged
+  774ms  lastAccessed          b: -266 ms  [keep active again, 500 ms later]  read +2339..+2340, the switch to keep +1567..+1575, previous -266  → unchanged
+(13 tabs.onUpdated dropped, only these keys were kept: hidden/discarded)
+```
+
+- a: window A, index 1, active false, discarded false, hidden false, status complete
+- b: window A, index 2, active false, discarded true, hidden false, status complete
+
+R34.07:
+
+| tab index | 0 | 1 | 2 |
+| - | - | - | - |
+| before the restart | a* | b | c |
+| after the restart | a* | b | c |
+
+```text
+  953ms  lastAccessed          a: +522 ms  [before the restart]  read +522..+523  → = the read
+  953ms  lastAccessed          b: +264 ms  [before the restart]  read +523..+523  → other
+  954ms  lastAccessed          c: -256 ms  [before the restart]  read +523..+524  → other
+    5ms  lastAccessed          a: +32407 ms  [after the restart]  read +32407..+32408, previous +522  → = the read
+    5ms  lastAccessed          b: +264 ms  [after the restart]  read +32408..+32408, previous +264  → unchanged
+    5ms  lastAccessed          c: -256 ms  [after the restart]  read +32408..+32408, previous -256  → unchanged
+```
+
+- after the restart: now is +32406 ms
+- a: window A, index 0, active true, discarded false, hidden false, status complete
+- b: window A, index 1, active false, discarded true, hidden false, status complete
+- c: window A, index 2, active false, discarded true, hidden false, status complete
+
 ---
 
 ## Conclusions for the add-on
@@ -1935,6 +2106,14 @@ background and 1005–1008 ms in the pages (§44).
   `moz-extension://` address in `url`, the content script the address of the web page it runs
   in. `isStgSender` in `background.js` trusts a sender by its `id`, the content script included:
   it sends only an `action` and a `groupId` from its own list, nothing a web page can shape.
+- **`lastAccessed` is the mark of a touch** (§58, BEHAVIOR-MOVE-TABS.md §8): a tab the add-on
+  creates in the background carries the moment of its creation, an activation and the switch
+  away from the tab move it, and nothing the add-on does to an unloaded group — hide, discard,
+  show, a sort inside the window, a cross-window move of hidden and discarded tabs — nor a
+  browser restart touches it. The cloud sync compares it with the moment of its last local sync
+  to tell a tab touched since from one removed on another device (DESIGN-CLOUD-UPLOAD.md §1
+  "Keep local tabs since"): the active tab of every window reads as now and is always kept, and
+  the tabs of a loaded group moved to another window count as touched since the move.
 
 ## Open questions
 

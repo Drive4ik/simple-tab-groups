@@ -166,8 +166,9 @@ export default {
         syncTitle() {
             let result = this.lang('syncStart');
 
-            if (this.syncCloudLastUpdateAgo) {
-                result += ' (' + this.lang('lastUpdate') + `: ${this.syncCloudLastUpdateAgo})`;
+            if (this.syncCloudLastUpdate) {
+                result += `\n${this.lang('lastUpdateLocal')}: ${this.syncCloudLastUpdate.local.ago}`;
+                result += `\n${this.lang('lastUpdateCloud')}: ${this.syncCloudLastUpdate.cloud.ago}`;
             }
 
             if (this.syncCloudHasChanges) {

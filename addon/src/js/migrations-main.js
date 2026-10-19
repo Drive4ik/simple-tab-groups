@@ -53,6 +53,8 @@ export default [{
         'theme',
     ],
     async migration(data, applyToCurrentInstance) {
+        const migratedAt = Date.now();
+
         // options, by data shape
 
         if (Object.hasOwn(data, 'enableDarkTheme')) {
@@ -270,6 +272,11 @@ export default [{
             group.tabs = Tabs.withOffsets(group.tabs.filter(Boolean), undefined, {removeIds: true});
 
             for (const tab of group.tabs) {
+                // the archives of 5.x carry no lastAccessed - DESIGN-CLOUD-UPLOAD.md §6
+                if (group.isArchive) {
+                    tab.lastAccessed ??= migratedAt;
+                }
+
                 if (tab.session) {
                     if (tab.session.favIconUrl) {
                         tab.favIconUrl = tab.session.favIconUrl;
@@ -354,7 +361,8 @@ export default [{
 
             // a crashed earlier run has already consumed these source keys - a repeated run
             // must not overwrite the transferred values with emptiness
-            storage.autoBackupLastTimeStamp = data.autoBackupLastBackupTimeStamp ?? storage.autoBackupLastTimeStamp;
+            // the 5.x stamp is in seconds, 1 is its default: no backup yet
+            storage.autoBackupLastTimeStamp = data.autoBackupLastBackupTimeStamp > 1 ? data.autoBackupLastBackupTimeStamp * 1000 : storage.autoBackupLastTimeStamp;
             storage.mainBookmarksFolderId = localStorage.mainBookmarksFolderId ?? storage.mainBookmarksFolderId;
             storage.showTabsInThisWindowWereHidden = Number(localStorage.showTabsInThisWindowWereHidden) || storage.showTabsInThisWindowWereHidden || 0;
 

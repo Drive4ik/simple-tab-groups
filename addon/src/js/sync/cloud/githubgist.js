@@ -52,10 +52,18 @@ export default class GithubGist {
     }
 
     #processInfo(gist) {
-        gist.lastUpdate = gist.updated_at;
+        gist.updatedAt = gist.updated_at;
+
+        const file = gist.files?.[this.#fileName];
+
         // the file blob sha from raw_url is the only content marker present in every
         // response flavor: equal sha = equal file content
-        gist.contentSha = gist.files?.[this.#fileName]?.raw_url?.match(/\/raw\/([0-9a-f]{40})\//)?.[1] ?? null;
+        gist.contentSha = file?.raw_url?.match(/\/raw\/([0-9a-f]{40,64})\//)?.[1] ?? null;
+
+        if (file && !gist.contentSha) {
+            throw new GithubError(null, {message: `unknown raw_url format: ${file.raw_url}`});
+        }
+
         // the commit sha of the same revision - present only when the response carries history
         gist.commitSha = gist.history?.[0]?.version ?? null;
         return gist;
@@ -263,8 +271,10 @@ export default class GithubGist {
 
         if (isRateLimit) {
             const retryAfterSeconds = Number(response.headers.get('retry-after')) || 0;
-            const resetTime = Number(response.headers.get('x-ratelimit-reset')) * 1000 || 0;
-            const retryAfter = (retryAfterSeconds ? Date.now() + retryAfterSeconds * 1000 : resetTime) || null;
+            // x-ratelimit-reset is a moment of the server's clock: against the Date header of the same response it is a delay
+            const resetDelay = Number(response.headers.get('x-ratelimit-reset')) * 1000 - Date.parse(response.headers.get('date'));
+            const retryDelay = retryAfterSeconds ? retryAfterSeconds * 1000 : resetDelay;
+            const retryAfter = retryDelay > 0 ? Date.now() + retryDelay : null;
 
             throw new GithubError('githubRateLimit', {
                 langArgs: [Utils.relativeTime(retryAfter ?? Date.now())],

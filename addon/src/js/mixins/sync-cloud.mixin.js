@@ -14,7 +14,6 @@ export default {
     data() {
         return {
             syncCloudLastUpdate: null,
-            syncCloudLastUpdateAgo: null,
             syncCloudHasChanges: false,
 
             syncCloudInProgress: false,
@@ -80,10 +79,13 @@ export default {
         syncCloudUpdateInfo() {
             clearTimeout(this.syncCloudUpdateInfoTimer);
 
-            this.syncCloudLastUpdate = storage.gist?.lastUpdate ?? null;
+            const lastSync = storage.lastSync;
 
-            if (this.syncCloudLastUpdate) {
-                this.syncCloudLastUpdateAgo = Utils.relativeTime(this.syncCloudLastUpdate);
+            if (lastSync) {
+                this.syncCloudLastUpdate = {
+                    local: Utils.dateInfo(lastSync.time),
+                    cloud: Utils.dateInfo(lastSync.gist.updatedAt),
+                };
             }
 
             this.syncCloudHasChanges = Boolean(storage.hasChanges);

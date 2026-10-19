@@ -1,6 +1,6 @@
 # Reference: Firefox behavior of plain `tabs.move` (no native groups)
 
-Verified live on Firefox 154–155 (August 2026), §7 on Firefox 158 (October 2026), with a throwaway
+Verified live on Firefox 154–155 (August 2026), §7 on Firefox 158 (October 2026), §8 in October 2026, with a throwaway
 test add-on, in a clean profile with no other add-ons. All tests — without pinned tabs. Every fact here is one browser build on one machine;
 a claim is as strong as the runs cited next to it, and no stronger.
 
@@ -307,6 +307,98 @@ previous one, wherever that one is by then.
   After the first move: at the resolve `absent, absent` (then written again), after quiet and
   2000 ms later the written values. Back in window A, 2000 ms later: `absent, absent`.
 
+## 8. A cross-window move of a LOADED tab stamps `lastAccessed` with the moment of the move; a discarded tab and a hidden + discarded array keep it, and so does any same-window move
+
+§8 comes from `round-34`, run in October 2026. Every stamp is printed as ms from the moment the
+scene of the test was ready, next to the clock read right before and right after it (`read a..b`)
+and the bracket of the move (`the move a..b`); the clock of the harness is the `Date.now()` of an
+extension page, reduced to 1 ms buckets with jitter, so a bracket is widened by 1 ms on both sides
+(`TIMER_PRECISION`). A stamp inside the bracket of the move is the moment of the move, equal to the
+previous reading — unchanged. What the stamp is otherwise — creation, activation, a switch, hide,
+discard, show, a restart — BEHAVIOR-CREATE-TABS.md §58.
+
+- **A loaded tab arrives with the moment of the move** (R34.06): right at the resolve `a` carries
+  a stamp inside the `tabs.move` call, and the readings after quiet and 2000 ms later give the
+  same number. Before the move it held the moment of its creation.
+- **A discarded tab keeps its stamp** (R34.06): `b`, discarded, and `c`, `d`, hidden and discarded
+  and moved as one array, carry their creation stamps unchanged at the resolve, after quiet and
+  2000 ms later; `c` and `d` arrive still hidden (§3).
+- **A same-window move keeps it too** (R34.05): `a`, loaded, moved to the end, and `b`, `c`, hidden
+  and discarded and moved as one array to the end — unchanged after the move and 2000 ms later.
+
+  R34.05:
+
+  | tab index | 0 | 1 | 2 | 3 |
+  | - | - | - | - | - |
+  | before | keep* | a | b(h) | c(h) |
+  | `tabs.move([a], {index: -1})  // loaded` — settled 255 ms | | | | |
+  | a moved | keep* | b(h) | c(h) | a |
+  | `tabs.move([b, c], {index: -1})  // hidden and discarded` — settled 254 ms | | | | |
+  | b, c moved | keep* | a | b(h) | c(h) |
+
+  ```text
+   1043ms  lastAccessed          a: -287 ms  [before]  read +534..+534  → other
+   1044ms  lastAccessed          b: -277 ms  [before]  read +534..+535  → other
+   1044ms  lastAccessed          c: -270 ms  [before]  read +535..+535  → other
+      2ms  tabs.onMoved          a  1 → 3
+    259ms  lastAccessed          a: -287 ms  [a moved]  read +794..+794, the move +535..+537, previous -287  → unchanged
+      2ms  tabs.onMoved          b  1 → 3
+      2ms  tabs.onMoved          c  1 → 3
+    257ms  lastAccessed          b: -277 ms  [b, c moved]  read +1051..+1051, the move +794..+796, previous -277  → unchanged
+    257ms  lastAccessed          c: -270 ms  [b, c moved]  read +1051..+1051, the move +794..+796, previous -270  → unchanged
+   2259ms  lastAccessed          a: -287 ms  [2000 ms later]  read +3051..+3053, previous -287  → unchanged
+   2260ms  lastAccessed          b: -277 ms  [2000 ms later]  read +3053..+3054, previous -277  → unchanged
+   2261ms  lastAccessed          c: -270 ms  [2000 ms later]  read +3054..+3055, previous -270  → unchanged
+  ```
+
+  R34.06:
+
+  | tab index | 0 | 1 | 2 | 3 | 4 |
+  | - | - | - | - | - | - |
+  | before (window A) | keep* | a | b | c(h) | d(h) |
+  | before (window B) | keepB* | | | | |
+  | `tabs.move([a], {windowId: B, index: -1})  // loaded` — settled 257 ms | | | | | |
+  | a moved (window A) | keep* | b | c(h) | d(h) | |
+  | a moved (window B) | keepB* | a | | | |
+  | `tabs.move([b], {windowId: B, index: -1})  // discarded` — settled 257 ms | | | | | |
+  | b moved (window A) | keep* | c(h) | d(h) | | |
+  | b moved (window B) | keepB* | a | b | | |
+  | `tabs.move([c, d], {windowId: B, index: -1})  // hidden and discarded` — settled 260 ms | | | | | |
+  | c, d moved (window A) | keep* | | | | |
+  | c, d moved (window B) | keepB* | a | b | c(h) | d(h) |
+
+  ```text
+   1438ms  lastAccessed          a: -295 ms  [before]  read +974..+975  → other
+   1438ms  lastAccessed          b: -283 ms  [before]  read +975..+975  → other
+   1438ms  lastAccessed          c: -277 ms  [before]  read +975..+975  → other
+   1438ms  lastAccessed          d: -259 ms  [before]  read +975..+975  → other
+     23ms  tabs.onDetached       a  from index:1
+     23ms  tabs.onAttached       a  to index:1  [other window]
+     28ms  lastAccessed          a: +977 ms  [a moved, at the resolve]  read +999..+1003, the move +975..+999, previous -295  → = the move
+    289ms  lastAccessed          a: +977 ms  [a moved, after quiet]  read +1263..+1264, the move +975..+999, previous +977  → = the move, unchanged
+   2292ms  lastAccessed          a: +977 ms  [a moved, 2000 ms later]  read +3265..+3267, the move +975..+999, previous +977  → = the move, unchanged
+      9ms  tabs.onDetached       b  from index:1
+     10ms  tabs.onAttached       b  to index:2  [other window]
+     15ms  lastAccessed          b: -283 ms  [b moved, at the resolve]  read +3279..+3283, the move +3268..+3279, previous -283  → unchanged
+    276ms  lastAccessed          b: -283 ms  [b moved, after quiet]  read +3544..+3544, the move +3268..+3279, previous -283  → unchanged
+   2282ms  lastAccessed          b: -283 ms  [b moved, 2000 ms later]  read +5546..+5550, the move +3268..+3279, previous -283  → unchanged
+     14ms  tabs.onDetached       c  from index:1
+     14ms  tabs.onAttached       c  to index:3  [other window]
+     15ms  tabs.onDetached       d  from index:1
+     15ms  tabs.onAttached       d  to index:4  [other window]
+     19ms  lastAccessed          c: -277 ms  [c, d moved, at the resolve]  read +5567..+5570, the move +5551..+5567, previous -277  → unchanged
+     20ms  lastAccessed          d: -259 ms  [c, d moved, at the resolve]  read +5570..+5571, the move +5551..+5567, previous -259  → unchanged
+    283ms  lastAccessed          c: -277 ms  [c, d moved, after quiet]  read +5833..+5834, the move +5551..+5567, previous -277  → unchanged
+    284ms  lastAccessed          d: -259 ms  [c, d moved, after quiet]  read +5834..+5835, the move +5551..+5567, previous -259  → unchanged
+   2286ms  lastAccessed          c: -277 ms  [c, d moved, 2000 ms later]  read +7835..+7837, the move +5551..+5567, previous -277  → unchanged
+   2287ms  lastAccessed          d: -259 ms  [c, d moved, 2000 ms later]  read +7837..+7838, the move +5551..+5567, previous -259  → unchanged
+  ```
+
+  - a after the move: window B, index 1, active false, discarded false, hidden false, status complete
+  - b after the move: window B, index 2, active false, discarded true, hidden false, status complete
+  - c after the move: window B, index 3, active false, discarded true, hidden true, status complete
+  - d after the move: window B, index 4, active false, discarded true, hidden true, status complete
+
 ## Implications for STG code
 
 1. **A cross-window `tabs.move` reveals hidden tabs** (§1) — never assume a tab is still hidden
@@ -336,3 +428,8 @@ previous one, wherever that one is by then.
    after the move** (§7): `Tabs.moveNative` reads them before the move and writes them back after
    the resolve for every discarded tab whose window changed; a loaded tab and a same-window move
    need nothing. The loss repeats on every cross-window move, so the repair runs on every move.
+7. **A cross-window move of a loaded tab marks it as touched** (§8): its `lastAccessed` becomes
+   the moment of the move, so for the cloud sync the tabs of a loaded group moved to another
+   window count as touched since (DESIGN-CLOUD-UPLOAD.md §1 "Keep local tabs since"); an unloaded
+   group — hidden and discarded tabs — keeps its stamps, and so does a same-window sort
+   (`Tabs.ensureSorted`). What the stamp is otherwise — BEHAVIOR-CREATE-TABS.md §58.
