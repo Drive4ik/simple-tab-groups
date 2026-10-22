@@ -14,6 +14,13 @@ lastTabsState (the diff base of tabs.onUpdated)
     = the state the last processed event left; a read seeds it only for a tab it does not know yet
 ```
 
+The group lists leave the pinned tabs out, the mirror does not: `Tabs.clearPinnedSessions` reads
+them with the session at the start of the add-on and at every window the browser opens, where the
+tabs appear without events the add-on processes (`DESIGN-GROUPS.md` §1, §5). So a pinned tab the
+add-on has never touched is known before its first event: the diff base is there when the tab is
+unpinned, and the unpin binds it to the group of its window (`tabs.js onUpdated`), and the mirror
+holds its opener for a recreate (`getTabChildren`).
+
 The mirror and the base hold only what the browser said. The requested url holds what the add-on
 knows ahead of the browser: a created tab is born on `about:blank` (§12), a tab that starts a
 load reports `about:blank` until the url commits, and the browser gives no honest "in transit"

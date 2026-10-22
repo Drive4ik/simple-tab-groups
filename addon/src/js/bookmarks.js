@@ -159,12 +159,10 @@ export async function exportGroup(group, folderIndex = null) {
     const bookmarksToSave = new Set();
 
     for (const tab of group.tabs) {
-        const url = Extensions.isExtensionUrl(tab.url)
-            ? Extensions.urlToBrowserOrNull(tab.url)
-            : tab.url;
+        const url = Extensions.urlToUUIDOrNull(tab.url);
 
         if (!url) {
-            log.warn('skip tab, no bookmark for a page of an extension the browser cannot serve', {url: tab.url});
+            log.warn('skip tab, the uuid of the extension is unknown', {url: tab.url});
             continue;
         }
 

@@ -107,9 +107,18 @@ the `&&=`/`||=`/`??=` operators, `Promise.allSettled()` and so on.
   still behind and fails on them with `JS_SYNTAX_ERROR`. The check before a release —
   `npx addons-linter addon/dist`.
 - Code is code, docs are docs. Everything is described in `docs/DESIGN-*.md` (the mechanisms of
-  the add-on) and `docs/BEHAVIOR-*.md` (the facts of the browser); the code carries no comments.
-  The one exception is a bug of the browser or a behavior that is not obvious, where the code
-  alone does not tell why it exists — only there a couple of lines with a link to the doc.
+  the add-on) and `docs/BEHAVIOR-*.md` (the facts of the browser); the code explains nothing.
+  A comment on a block or a condition is a label: what the piece does, in a few words, with the
+  doc in parentheses when there is one — `// <what the block does> (docs/DESIGN-….md §N)`. Not
+  how it does it, that is the code; not why, that is the doc. The one exception is a bug of the
+  browser or a behavior that is not obvious, where the code alone does not tell why it exists —
+  only there a couple of lines with a link to the doc.
+- A step of a function that stands apart goes into a bare block `{ … }` with its label above: the
+  function reads as a list of steps, and the variables of a step stay inside it. By judgement,
+  where the code asks to be outlined — a step with intermediate variables of its own, a long one,
+  a loop together with the lines that continue its work after it — and not as a rule for every
+  step. No block around what already sits in an `if` or a `for`, and none for a variable that only
+  feeds the loop below it.
 - Code that works around a bug or exists because of one carries the link to the bug itself, in
   every place the bug touches — not only the `§` of the doc. For a bug of the browser that is the
   Bugzilla address: `// BUG https://bugzilla.mozilla.org/show_bug.cgi?id=…`. A comment that marks

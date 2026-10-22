@@ -1473,18 +1473,19 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
         return newGroup;
     });
 
-    const restoredGroupIds = data.groups.map(group => group.id);
+    const restoredGroups = data.groups;
+    const restoredGroupIds = restoredGroups.map(group => group.id);
 
-    data.groups = [...currentData.groups, ...data.groups];
+    data.groups = [...currentData.groups, ...restoredGroups];
     data.hotkeys = [...currentData.hotkeys, ...data.hotkeys];
 
     data.hotkeys = data.hotkeys.filter((hotkey, index, self) => {
         return self.findIndex(h => h.value === hotkey.value) === index;
     });
 
-    if (data.containers) {
-        const containersStorageMap = new Map;
+    const containersStorageMap = new Map;
 
+    if (data.containers) {
         for (const [cookieStoreId, value] of Object.entries(data.containers)) {
             if (!neededContainers.has(cookieStoreId)) {
                 continue;
@@ -1515,22 +1516,24 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
         includeThumbnail: true,
     });
 
-    await Tabs.reconcile(data.groups, allTabs);
+    await Tabs.reconcile(restoredGroups, allTabs.filter(tab => !existGroupIds.has(tab.groupId)), containersStorageMap);
 
-    if (Array.isArray(data.pinnedTabs)) {
-        const currentPinnedTabs = await Tabs.query({pinned: true}, {withSession: false});
+    {
+        if (Array.isArray(data.pinnedTabs)) {
+            const currentPinnedTabs = await Tabs.query({pinned: true}, {withSession: false});
 
-        data.pinnedTabs = data.pinnedTabs.map(Tabs.tabUrlToAddon).filter(tab => {
-            tab.pinned = true;
-            return !currentPinnedTabs.some(t => t.url === tab.url);
-        });
+            data.pinnedTabs = data.pinnedTabs.map(Tabs.tabUrlToAddon).filter(tab => {
+                tab.pinned = true;
+                return !currentPinnedTabs.some(t => t.url === tab.url);
+            });
 
-        if (data.pinnedTabs.length) {
-            await Tabs.createMultiple(data.pinnedTabs);
+            if (data.pinnedTabs.length) {
+                await Tabs.createMultiple(data.pinnedTabs);
+            }
         }
-    }
 
-    delete data.pinnedTabs;
+        delete data.pinnedTabs;
+    }
 
     let result;
 
@@ -1777,10 +1780,8 @@ async function init() {
 
         await Groups.fillHistory(windows);
 
-        const tabs = windows.flatMap(win => win.tabs);
-
-        await Containers.removeUnusedTemporaryContainers(tabs);
-        log.log('Containers.removeUnusedTemporaryContainers finish');
+        await Tabs.removeUnusedTemporaryContainers();
+        log.log('Tabs.removeUnusedTemporaryContainers finish');
 
         await Tabs.restoreOldExtensionUrls();
         log.log('restoreOldExtensionUrls finish');

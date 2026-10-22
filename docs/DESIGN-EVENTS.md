@@ -13,7 +13,10 @@ A flow that creates, moves or hides tabs itself marks them with skip flags (`ski
 `skip.created`, for whole windows `skipTrackingWindow`) for the time of the operation. The
 handlers level the timing with timeouts (`Utils.wait(50–70)` at the start), because the browser
 delivers the events late — sometimes after the API call has resolved and the flags are gone. A
-handler must remember that its snapshot of the tab may be older than reality.
+handler must remember that its snapshot of the tab may be older than reality. The mute covers what
+the add-on's own actions change: a pin is the user's under the mute too, and `tabs.onUpdated`
+drops the group and the sub-group of a pinned tab in its muted branch as well
+(`DESIGN-GROUPS.md` §1).
 
 ## 2. The user's actions are mirrored into the add-on
 

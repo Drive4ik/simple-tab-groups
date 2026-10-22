@@ -300,8 +300,6 @@ async function sync(trust = null, revision = null, progressFunc = null) {
         await Tabs.remove(Array.from(syncResult.changes.tabsToRemove));
     }
 
-    await Groups.removeArchivedGroupsTabs(syncResult.localData.groups);
-
     progressFunc?.(52);
 
     if (syncResult.changes.local) {
@@ -311,12 +309,10 @@ async function sync(trust = null, revision = null, progressFunc = null) {
             }
 
             const savedTabs = group.tabs;
-            const groupWindowId = Cache.getWindowId(group.id) || savedTabs.find(tab => !tab.new)?.windowId;
 
             for (const tab of savedTabs) {
                 if (tab.new) {
                     tab.groupId = group.id;
-                    tab.windowId = groupWindowId;
                 }
             }
 

@@ -1979,6 +1979,152 @@ R34.07:
 - b: window A, index 1, active false, discarded true, hidden false, status complete
 - c: window A, index 2, active false, discarded true, hidden false, status complete
 
+### 59. A `tabs.query` issued as the first line of `windows.onCreated` of a restored window of 1000 tabs answers 560 ms later with the whole window, the pinned tabs flagged; the pinned tabs are created with `pinned: true` in a batch after 300 ms of plain creations, come back loaded while every other tab is discarded, and the session record of the closed window flags none of them (R35.01)
+
+§59 comes from `round-35`, run twice in October 2026. The window: 1000 tabs on
+`https://example.com/?tab=tN`, created discarded; the first 100 loaded by `tabs.reload` before the
+close, the first 5 pinned, `t0` active; closed by `windows.remove` and brought back by
+`sessions.restore`. The events block is the second run; the first run gave the same picture with
+its query resolved before its first sample at 677 ms.
+
+- **The query of the handler sees the complete window.** `tabs.query({windowId})`, called with
+  nothing before it in `windows.onCreated`, resolved 564 ms after the event — the browser was
+  inserting the tabs meanwhile — and returned all 1000 tabs: `t0`–`t4` pinned at indexes 0–4,
+  `t0` active, 5 loaded, 995 discarded. No reading of the window showed fewer tabs: the first
+  state readable after the event is the complete one, and at the read moment of the add-on,
+  1000 ms after the event, only the loads had moved.
+- **The pinned tabs are not the first created.** The `tabs.onCreated` of the plain tabs ran from
+  84 ms to 466 ms; the five pinned ones came in a batch at 407–409 ms with `pinned: true` set,
+  `t0` with `active: true` and a `tabs.onUpdated {pinned: true}` of its own right before — the only
+  pinned update of the run. The `tabs.onActivated` of `t0` came at 84 ms, before
+  `windows.onCreated` (the first tab, §28).
+- **Pinned tabs come back loaded, the rest discarded.** 100 tabs were loaded before the close;
+  after the restore 5 are loaded, exactly the pinned ones, and 995 are discarded. Every id is
+  fresh.
+- **The session record flags no pinned tab.** `sessions.getRecentlyClosed` listed the window with
+  its 1000 tabs and `pinned` true on none of them, while the restore pinned `t0`–`t4` all the same.
+
+| tab index | 0 |
+| - | - |
+| before (scene window) | x* |
+| `windows.remove(second)` — settled 311 ms | |
+| `sessions.restore(sessionId of the window)` — settled 286 ms | |
+| after (scene window) | x* |
+
+```text
+   84ms  tabs.onActivated         t0  [born]
+   84ms  windows.onCreated        born  type:normal
+   84ms  windows.onCreated+query  1000 tab(s), 5 pinned [t0@0 t1@1 t2@2 t3@3 t4@4], 5 loaded, 995 discarded, active: t0@0  (the query resolved 564 ms after windows.onCreated)
+  407ms  tabs.onUpdated           t0  {pinned: true}  [born]
+  407ms  tabs.onCreated           t0  index:0 pinned:true active:true discarded:false  [born]
+  408ms  tabs.onCreated           t1  index:1 pinned:true active:false discarded:false  [born]
+  408ms  tabs.onCreated           t2  index:2 pinned:true active:false discarded:false  [born]
+  408ms  tabs.onCreated           t3  index:3 pinned:true active:false discarded:false  [born]
+  409ms  tabs.onCreated           t4  index:4 pinned:true active:false discarded:false  [born]
+  466ms  tabs.onCreated           996 more, not pinned, between 84 ms and 466 ms  [born]
+  758ms  window                   1000 tab(s), 5 pinned [t0@0 t1@1 t2@2 t3@3 t4@4], 2 loaded, 995 discarded, active: t0@0  674 ms after windows.onCreated
+  872ms  window                   1000 tab(s), 5 pinned [t0@0 t1@1 t2@2 t3@3 t4@4], 3 loaded, 995 discarded, active: t0@0  788 ms after windows.onCreated
+  907ms  window                   1000 tab(s), 5 pinned [t0@0 t1@1 t2@2 t3@3 t4@4], 5 loaded, 995 discarded, active: t0@0  823 ms after windows.onCreated
+ 1090ms  at the read moment       1000 tab(s), 5 pinned [t0@0 t1@1 t2@2 t3@3 t4@4], 5 loaded, 995 discarded, active: t0@0  1006 ms after windows.onCreated
+(1919 tabs.onUpdated dropped, only these keys were kept: pinned)
+```
+
+- before the close: 1000 tab(s), 5 pinned [t0@0 t1@1 t2@2 t3@3 t4@4], 100 loaded, 900 discarded, active: t0@0
+- session record: 1000 tabs, 0 pinned []
+- restored: 1000 tab(s), 5 pinned [t0@0 t1@1 t2@2 t3@3 t4@4], 5 loaded, 995 discarded, active: t0@0
+- tab ids reused after the restore: 0 of 1000
+
+### 60. `contextualIdentities.remove` of a container with open tabs leaves the tabs alive and unchanged — a plain, a hidden and a pinned one keep the removed `cookieStoreId`, `hidden` and `pinned` — wipes the cookies of the container but keeps its cookie store listed with the tabs, refuses a `tabs.create` into it, and a surviving tab still navigates (R36.01)
+
+§60 comes from `round-36`, run in October 2026. The container `stg-test` held `plain`, `hid`
+(hidden by `tabs.hide`) and `pinned` (created with `pinned: true`), all on pages of the harness, and
+one cookie set through `cookies.set` for `https://example.com/` in its store.
+
+- **The removal resolves and the tabs stay as they were.** The only event is
+  `contextualIdentities.onRemoved`, 3 ms after the call: no `tabs.onRemoved` and no `tabs.onUpdated`
+  for any of the three. Afterwards every one of them is alive under the removed `cookieStoreId`,
+  `hid` still hidden, `pinned` still pinned, all `complete` and not discarded;
+  `tabs.query({cookieStoreId})` with the removed id still returns the three.
+- **The data of the container is wiped, the store is not.** `cookies.getAll({storeId})` returned 1
+  cookie before and 0 after; `cookies.getAllCookieStores()` listed the store with its 3 tabs before
+  and after alike, while `contextualIdentities.get` of the removed id rejects
+  (`Invalid contextual identity: …`).
+- **No new tab can go into it.** `tabs.create({cookieStoreId})` with the removed id rejects
+  (`No cookie store exists with ID …`).
+- **A surviving tab works.** `plain` navigated to `https://example.com/?tab=plain` by `tabs.update`
+  and loaded, still under the removed `cookieStoreId`.
+
+| tab index | 0 | 1 | 2 | 3 |
+| - | - | - | - | - |
+| before | pinned(p) | x* | plain | hid(h) |
+| `contextualIdentities.remove(container)  // plain, hid(h) and pinned(p) are open in it` — settled 254 ms | | | | |
+| after | pinned(p) | x* | plain | hid(h) |
+| `tabs.create({url: new, cookieStoreId: the removed container})` — settled 254 ms | | | | |
+| created | pinned(p) | x* | plain | hid(h) |
+| `tabs.update(plain, {url: https://example.com/?tab=plain})` — settled 1016 ms | | | | |
+| navigated | pinned(p) | x* | plain | hid(h) |
+
+```text
+    3ms  contextualIdentities.onRemoved  stg-test  firefox-container-22
+(5 noisy tabs.onUpdated dropped: status/url/title/favIconUrl/isArticle/audible/attention)
+```
+
+- before: cookies.getAll({storeId}) returns 1 cookie(s); the store is listed by getAllCookieStores with 3 tab(s)
+- contextualIdentities.remove: resolved
+- plain: alive, container the removed container, hidden false, pinned false, discarded false, status complete
+- hid: alive, container the removed container, hidden true, pinned false, discarded false, status complete
+- pinned: alive, container the removed container, hidden false, pinned true, discarded false, status complete
+- contextualIdentities.get(container): rejected - Invalid contextual identity: firefox-container-22
+- after: cookies.getAll({storeId}) returns 0 cookie(s); the store is listed by getAllCookieStores with 3 tab(s)
+- tabs.query({cookieStoreId: container}): 3 tab(s): pinned, plain, hid
+- tabs.create in the removed container: rejected - No cookie store exists with ID firefox-container-22
+- plain after the navigation: url `https://example.com/?tab=plain`, status complete, container the removed container
+
+### 61. A window of type `popup` holds a tab in a container like a normal window — by `windows.create` with a `cookieStoreId` and `type: 'popup'`, by `window.open` with window features from a page of the container, and by `windows.create` with the `tabId` of a container tab; `tabs.query({windowType: 'normal'})` and `windows.getAll({windowTypes: ['normal']})` leave such windows out, `tabs.query({})` and `windows.getAll()` include them (R36.02)
+
+§61 comes from `round-36`, run in October 2026. The three ways were taken one after another in one
+container; `window.open` was called by a page of the harness living in the container, without a
+user gesture, with the features `popup,width=400,height=300`.
+
+- **Every way gives a `popup` window whose tab reports the container.** `windows.create({url,
+  type: 'popup', cookieStoreId})` resolved with a window of type `popup` and `popA` in the
+  container; `window.open` with the features opened `popB` in a new window of type `popup`, in the
+  container of the page; `windows.create({tabId, type: 'popup'})` moved `c` out of the scene window
+  (`tabs.onDetached`) into a window of type `popup`, `c` keeping its container. Every one fired
+  `windows.onCreated` with `type: popup`.
+- **The pop-up blocker comes first for a page of the add-on without a user gesture.** The
+  `window.open` returned `null`; once the pop-up was allowed in the browser's bar the browser opened
+  the blocked window itself, 12 s later in the run — the time the answer took (§23, R21.03).
+- **The normal-window filters hide them.** `tabs.query({windowType: 'normal'})` returned none of
+  `popA`, `popB`, `c`; `tabs.query({})` returned all three. Of the windows of the stand,
+  `windows.getAll({windowTypes: ['normal']})` listed 1 and `windows.getAll()` listed 4.
+
+| tab index | 0 | 1 |
+| - | - | - |
+| before | x* | |
+| `windows.create({url: popA, type: popup, cookieStoreId: container})` — settled 262 ms | | |
+| `tabs.sendMessage(page, {action: open, to: popB, features: popup,width=400,height=300})  // the page lives in the container and calls window.open with window features` | | |
+| `windows.create({tabId: c, type: popup})  // c is a container tab of the scene window` — settled 267 ms | | |
+| after C | x | page* |
+| after (scene window) | x | page* |
+| after (A: popA) | popA* | |
+| after (B: popB) | popB* | |
+| after (C: c) | c* | |
+
+```text
+   78ms  windows.onCreated     type:popup
+12148ms  windows.onCreated     type:popup
+   70ms  tabs.onDetached       c  from index:2
+   70ms  windows.onCreated     type:popup
+```
+
+- A: windows.create resolved, a window of type popup, popA is there, container the container
+- B: window.open returned null (blocked)
+- B: popB opened in a window of type popup, popB is there, container the container
+- C: windows.create resolved, a window of type popup, c is there, container the container
+- tabs.query({windowType: 'normal'}) returns of popA/popB/c: (none); tabs.query({}) returns: popA, popB, c
+- windows of the stand: 1 in windows.getAll({windowTypes: ['normal']}), 4 in windows.getAll()
+
 ---
 
 ## Conclusions for the add-on
@@ -2114,6 +2260,21 @@ R34.07:
   to tell a tab touched since from one removed on another device (DESIGN-CLOUD-UPLOAD.md §1
   "Keep local tabs since"): the active tab of every window reads as now and is always kept, and
   the tabs of a loaded group moved to another window count as touched since the move.
+- **A restored window is complete at the first read after `windows.onCreated`** (§59): the event
+  comes with the first tab only, but a `tabs.query` issued right there answers once the browser
+  has inserted every tab — 560 ms for 1000 tabs in both runs — with the pinned tabs in it and
+  flagged; they are created in a batch within the first half second, loaded, while the rest come
+  back discarded. So the grand restore, 1000 ms after the event, reads complete windows, and
+  `Tabs.clearPinnedSessions` runs there once for the whole batch of restored windows — not per
+  `windows.onCreated`, where five restored windows would mean five reads of the pinned tabs. The
+  session record of a closed window says nothing about pinning, so nothing about it can be learned
+  before the restore.
+- **A container removed under a living tab leaves the tab alive with the site data of the
+  container wiped, and a `popup` window holds a container tab like a normal one** (§60, §61): the
+  cleanup of temporary containers (`Containers.removeTemporaryUnusedBy`) judges "unused"
+  by the list of tabs it is handed, so the list comes from `Tabs.removeUnusedTemporaryContainers`
+  alone — every tab of the browser, with no filter of window type or pinning — and a container a
+  pinned tab or a tab of a `popup` window still uses is kept (DESIGN-GROUPS.md §4).
 
 ## Open questions
 

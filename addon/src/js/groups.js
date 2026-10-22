@@ -916,11 +916,7 @@ export async function pinSharingTabs(tabs) {
 
     // pinning strips the live membership itself (docs/BEHAVIOR-TABGROUPS.md §19)
     await Tabs.pin(tabsToPin);
-
-    await Promise.allSettled(tabsToPin.flatMap(tab => [
-        Cache.removeTabGroup(tab.id),
-        Cache.removeTabSubGroupId(tab.id),
-    ]));
+    await Tabs.clearPinnedSessions(tabsToPin);
 
     let showNotif = mainStorage.thisTabsWerePinned ?? 0;
 
@@ -1080,29 +1076,6 @@ async function archiveToggleNow(groupId) {
     await Browser.actionLoading(false);
 
     await MenusMain.updateGroup(group);
-
-    log.stop();
-}
-
-// live tabs whose sessions point to an archived group are leftovers of an interrupted
-// archiving - their copies already live in the archive, close them
-export async function removeArchivedGroupsTabs(groups) {
-    const archivedGroupIds = new Set(groups.filter(group => group.isArchive).map(group => group.id));
-
-    if (!archivedGroupIds.size) {
-        return;
-    }
-
-    const tabsToRemove = await Tabs.query({pinned: false})
-        .then(tabs => tabs.filter(tab => archivedGroupIds.has(tab.groupId)));
-
-    if (!tabsToRemove.length) {
-        return;
-    }
-
-    const log = logger.start('removeArchivedGroupsTabs', tabsToRemove.map(tab => tab.id));
-
-    await Tabs.remove(tabsToRemove);
 
     log.stop();
 }

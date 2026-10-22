@@ -56,8 +56,9 @@ loudly.
    the picture, the mirror reads visible tabs only and leaves such a tab as it is, session
    included.
 4. **Pinned tabs are outside.** Pinning strips the live membership itself (§19); the add-on drops
-   the session in `tabs.onUpdated {pinned}` and in `Groups.pinSharingTabs`. The mirror never
-   reads pinned tabs.
+   the session through `Tabs.clearPinnedSessions` — in `tabs.onUpdated {pinned}`, in
+   `Groups.pinSharingTabs`, and over every pinned tab at the start and at every window the
+   browser opens (`DESIGN-GROUPS.md` §1). The mirror never reads pinned tabs.
 5. **Unsync tabs** (tabs without a group in a window that gets a group) lose their sub-groups on
    purpose (`clearMembership`): the add-on manages them, their groups are destroyed.
 

@@ -237,7 +237,7 @@ export async function findExistOrCreateSimilar(cookieStoreId, containerData = nu
                 broadcastUpdate({containers});
             }
         } else {
-            storageMap.set(cookieStoreId, await createTemporary());
+            storageMap.set(cookieStoreId, (await createTemporary()).cookieStoreId);
         }
     }
 
@@ -342,8 +342,8 @@ export function mapDefaultContainer(storageData, defaultCookieStoreId) {
     normalize(storageData.defaultGroupProps);
 }
 
-export async function removeUnusedTemporaryContainers(tabs) {
-    const log = logger.start(removeUnusedTemporaryContainers);
+export async function removeTemporaryUnusedBy(tabs) {
+    const log = logger.start(removeTemporaryUnusedBy);
 
     const tabContainers = new Set(tabs.map(tab => tab.cookieStoreId));
 

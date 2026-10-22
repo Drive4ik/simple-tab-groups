@@ -91,6 +91,9 @@ function runGrandRestore(...args) {
 async function runGrandRestoreNow(restoredWindowIds) {
     const log = logger.start(runGrandRestore, Array.from(restoredWindowIds));
 
+    // the pinned tabs of the restored windows are in by now (docs/BEHAVIOR-CREATE-TABS.md §59)
+    await Tabs.clearPinnedSessions();
+
     const allWindowsMap = await load(true).then(windows => new Map(windows.map(win => [win.id, win])));
     const {groups} = await Groups.load();
     const tabsToRestore = await getTabsToRestore();
@@ -765,6 +768,7 @@ async function tryRestoreMissedTabsNow(actionLoading = true) {
     }
 
     const allTabs = await Tabs.query({pinned: false});
+    const liveTabsByGroup = Map.groupBy(allTabs, tab => tab.groupId);
 
     // strict find exist tabs
     const {groupsById} = await Groups.load();
@@ -780,10 +784,12 @@ async function tryRestoreMissedTabsNow(actionLoading = true) {
             continue;
         }
 
-        const newTabParams = Groups.getNewTabParams(group);
+        // the created tabs join the live tabs of the group even when no record matches one of them (docs/DESIGN-GROUPS.md §2)
+        const liveTabs = liveTabsByGroup.get(groupId) ?? [];
+        const newTabParams = {...Groups.getNewTabParams(group), windowId: liveTabs[0]?.windowId};
 
         const tabs = savedTabs.map(tab => {
-            const existTab = allTabs.find(t => !existTabs.has(t) && Tabs.isSame(tab, t));
+            const existTab = liveTabs.find(t => !existTabs.has(t) && Tabs.isSame(tab, t));
 
             if (existTab) {
                 existTabs.add(existTab);
@@ -824,31 +830,41 @@ async function initializeGroupsNow(groups, afterRestoring = false) {
 
     const EXTENSION_START_TIME = await getExtensionStartTime();
 
-    // not after a backup restore: the restored archives hold no copies
-    // of the pre-restore live tabs, those tabs are unlinked below instead
-    if (!afterRestoring) {
-        await Groups.removeArchivedGroupsTabs(groups);
-    }
+    await Tabs.clearPinnedSessions();
 
     let windows = await load(true);
 
     const currentGroupIdsSet = new Set(groups.filter(g => !g.isArchive).map(g => g.id));
+
+    for (const win of windows) {
+        const duplicateGroupedWindows = windows.filter(w => w !== win && w.groupId && w.groupId === win.groupId);
+
+        if (win.groupId && (!currentGroupIdsSet.has(win.groupId) || duplicateGroupedWindows.length)) {
+            for (const w of [win, ...duplicateGroupedWindows]) {
+                delete w.groupId;
+                await Cache.removeWindowSession(w.id);
+            }
+        }
+    }
+
+    // closing the tabs of archived groups (docs/DESIGN-GROUPS.md §5)
+    if (!afterRestoring) {
+        const archivedGroupIds = new Set(groups.filter(group => group.isArchive).map(group => group.id));
+        const leftovers = new Set(windows.flatMap(win => win.tabs).filter(tab => archivedGroupIds.has(tab.groupId)));
+
+        if (leftovers.size) {
+            log.log('closing the leftovers of archived groups:', Array.from(leftovers, Tabs.extractId));
+            await Tabs.remove(Array.from(leftovers));
+            windows.forEach(win => win.tabs = win.tabs.filter(tab => !leftovers.has(tab)));
+        }
+    }
+
     let tabsToShow = new Set();
     let tabsToHide = new Set();
     const moveTabsToWin = new Map();
 
     for (const win of windows) {
         const otherWindows = windows.filter(w => w.id !== win.id);
-        const duplicateGroupedWindows = otherWindows.filter(w => w.groupId && w.groupId === win.groupId);
-
-        if (win.groupId && (!currentGroupIdsSet.has(win.groupId) || duplicateGroupedWindows.length)) {
-            duplicateGroupedWindows.push(win);
-
-            for (const w of duplicateGroupedWindows) {
-                delete w.groupId;
-                await Cache.removeWindowSession(w.id);
-            }
-        }
 
         await Promise.all(win.tabs.map(async tab => {
             if (tab.groupId && !currentGroupIdsSet.has(tab.groupId)) {
@@ -918,8 +934,10 @@ async function initializeGroupsNow(groups, afterRestoring = false) {
     }
 
     if (tabsToHide.size) {
+        await Tabs.activateOutside(Array.from(tabsToHide));
+
         for (const [group, tabs] of tabsByGroup(tabsToHide)) {
-            await Groups.hideTabs(group, tabs, {activateOther: true});
+            await Groups.hideTabs(group, tabs);
         }
 
         log.log('tabsToHide count', tabsToHide.size);

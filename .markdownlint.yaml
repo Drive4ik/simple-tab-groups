@@ -1,0 +1,4 @@
+MD032: false  # Lists should be surrounded by blank lines
+MD022: false  # Headings should be surrounded by blank lines
+MD013: false  # Line length
+MD033: false  # Inline HTML

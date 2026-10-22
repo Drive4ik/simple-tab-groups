@@ -365,7 +365,8 @@ millisecond as its creation) — but **not one opener**: every restored tab repo
 absent, both in the `tabs.onCreated` snapshot and on a later read. The record
 `sessions.getRecentlyClosed()` hands out does not carry the link either — a session tab's keys
 are `active, hidden, highlighted, incognito, index, lastAccessed, pinned, sessionId, title, url,
-windowId`, no `openerTabId`. The same loss as a restart (§8), through the same session store:
+windowId`, no `openerTabId` (`pinned` is among the keys, yet a pinned tab is not flagged by it,
+BEHAVIOR-CREATE-TABS.md §59). The same loss as a restart (§8), through the same session store:
 whoever wants links across an undo-close must save and re-apply them itself.
 
 | tab index | 0 | 1 | 2 | 3 | 4 |

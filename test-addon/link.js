@@ -12,6 +12,6 @@ link.textContent = to;
 
 browser.runtime.onMessage.addListener(message => {
     if (message?.action === 'open') {
-        return Promise.resolve({opened: window.open(message.to, '_blank') !== null});
+        return Promise.resolve({opened: window.open(message.to, '_blank', message.features ?? '') !== null});
     }
 });

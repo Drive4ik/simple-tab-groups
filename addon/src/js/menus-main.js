@@ -137,13 +137,13 @@ async function reopenTabsWithTemporaryContainersNow(info) {
     if (tabsToReopen.length) {
         await Browser.actionLoading();
 
-        const newTabs = await Tabs.recreate(tabsToReopen, tab => ({
+        await Tabs.recreate(tabsToReopen, tab => ({
             ...tab,
             cookieStoreId: Constants.TEMPORARY_CONTAINER,
         }));
 
         if (info.button.RIGHT) {
-            await Containers.removeUnusedTemporaryContainers(newTabs.map((tab, index) => tab ?? tabsToReopen[index]));
+            await Tabs.removeUnusedTemporaryContainers();
         }
 
         await Browser.actionLoading(false);

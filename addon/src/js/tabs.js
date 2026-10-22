@@ -270,6 +270,12 @@ async function onUpdated(tabId, changeInfo, tab) {
             updatedBatch.add(tab.id, updatedKey(Cache.getTabGroup(tab.id), tab.windowId));
         }
 
+        // a pinned tab holds no group (docs/DESIGN-GROUPS.md §1)
+        if (changeInfo.pinned) {
+            logger.log(onUpdated, 'remove group for pinned tab:', tab.id);
+            await clearPinnedSessions([tab]);
+        }
+
         logger.log(onUpdated, '🛑 skip tracking tab:', tab.id, 'window:', tab.windowId);
         return;
     }
@@ -347,11 +353,11 @@ async function onUpdated(tabId, changeInfo, tab) {
             changeInfo.hidden && log.log('remove group for hidden tab', tab.id);
 
             tabGroupId = Cache.getTabGroup(tab.id);
-            await Cache.removeTabGroup(tab.id);
 
             if (changeInfo.pinned) {
-                // pinned tabs can't be in a live group, and the mirror doesn't see pinned tabs - clean up here
-                await Cache.removeTabSubGroupId(tab.id);
+                await clearPinnedSessions([tab]);
+            } else {
+                await Cache.removeTabGroup(tab.id);
             }
         } else if (changeInfo.pinned === false) {
             log.log('tab is unpinned', tab.id);
@@ -693,7 +699,7 @@ function prepareUrlForCreate(url) {
 }
 
 /*
-tabsToCreate - the tabs to create; with createMissing - a mixed list, where only the tabs marked "new: true" are created, the rest are alive already and are kept as they are, an empty slot stays empty
+tabsToCreate - the tabs to create; with createMissing - a mixed list, where only the tabs marked "new: true" are created, the rest are alive already and are kept as they are, an empty slot stays empty; a created tab of an unloaded group goes into the window of the kept tabs of its group - the group stays one block (docs/DESIGN-GROUPS.md §2)
 startIndex - the index of the first created tab in its window, the rest follow it; without it the tabs are appended at the end of the window
 createMissing - see tabsToCreate
 hideUnloaded - true: the created tabs of an unloaded group are hidden plain, past the group's options. false: the caller hides them itself, after its own sort (Groups.settleTabs)
@@ -731,11 +737,20 @@ export async function createMultiple(tabsToCreate, params = {}) {
 
     {
         const nextIndexByWindow = new Map();
+        const keptWindowIdByGroup = new Map();
         let fallbackWindowId = null;
+
+        if (createMissing) {
+            for (const tab of tabsToCreate) {
+                if (tab && !tab.new) {
+                    keptWindowIdByGroup.getOrInsert(tab.groupId, tab.windowId);
+                }
+            }
+        }
 
         for (const [index, tab] of newTabs.entries()) {
             // the window is resolved first and for EVERY tab - a pinned one skips only the index arithmetic
-            const windowId = Cache.getWindowId(tab.groupId) || tab.windowId
+            const windowId = Cache.getWindowId(tab.groupId) || keptWindowIdByGroup.get(tab.groupId) || tab.windowId
                 || (fallbackWindowId ??= await Windows.getFirstNormalWindowId());
 
             if (tab.pinned) {
@@ -1765,7 +1780,7 @@ export async function show(tabs, params = {}) {
     return await tabsAction({action: 'show', ...params}, tabs);
 }
 
-async function activateOutside(tabs) {
+export async function activateOutside(tabs) {
     const ids = new Set(tabs.map(extractId));
     const tempTabs = [];
 
@@ -1822,6 +1837,16 @@ export async function discard(tabs, params = {}) {
 
 export async function pin(tabs) {
     return await tabsAction({action: 'update', skipTracking: true}, tabs, {pinned: true});
+}
+
+// a pinned tab holds no group; without tabs - every pinned tab, read into the mirror (docs/DESIGN-GROUPS.md §1, docs/DESIGN-CACHE.md §1)
+export async function clearPinnedSessions(tabs = null) {
+    tabs ??= await query({pinned: true});
+
+    await Promise.all(tabs.flatMap(tab => [
+        Cache.removeTabGroup(tab.id),
+        Cache.removeTabSubGroupId(tab.id),
+    ]));
 }
 
 export async function group(tabs, windowId, params = {}) {
@@ -1986,6 +2011,11 @@ export function getNewTabContainer(
     return Containers.isDefault(cookieStoreId) ? newTabContainer : cookieStoreId;
 }
 
+// every tab of the browser, the pinned ones and the windows of every type (docs/DESIGN-GROUPS.md §4)
+export async function removeUnusedTemporaryContainers() {
+    await Containers.removeTemporaryUnusedBy(await query({windowType: null}, {raw: true}));
+}
+
 // the page a tab shows: for a tab in reader mode, the page it reads (docs/BEHAVIOR-CREATE-TABS.md §30)
 export function getPageUrl(url) {
     return url?.startsWith(Constants.READER_MODE_PAGE)
@@ -2126,12 +2156,11 @@ export async function restoreOldExtensionUrls(parseUrlFunc = null) {
     }));
 }
 
-export async function reconcile(groups, allTabs) {
+export async function reconcile(groups, allTabs, containersStorageMap = new Map) {
     const log = logger.start(['info', reconcile], 'groups count:', groups.length, 'allTabs count:', allTabs.length);
 
     allTabs = allTabs.slice(); // to prevent bugs...
 
-    const containersStorageMap = new Map;
     const sameTabKeys = ['url', 'cookieStoreId'];
 
     for (const group of groups) {
@@ -2142,7 +2171,6 @@ export async function reconcile(groups, allTabs) {
         log.log('reconcile group', group.id, 'tabs count:', group.tabs.length);
 
         const newTabParams = Groups.getNewTabParams(group);
-        const groupWindowId = Cache.getWindowId(group.id) || group.tabs[0]?.windowId;
         const sessionPromises = [];
         const savedTabs = group.tabs;
         const tabs = [];
@@ -2164,7 +2192,6 @@ export async function reconcile(groups, allTabs) {
                 tabs.push({
                     ...tab,
                     new: true,
-                    windowId: groupWindowId,
                     active: null,
                     index: null,
                     ...newTabParams,

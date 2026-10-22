@@ -50,6 +50,20 @@ open: http(s) or a page of an extension with a known uuid. When reading a tab, t
 not unwrap the keys of pages of other extensions: their page is its own address. The page has no
 fallback for an old address format: the old is cured by the migration only.
 
+An address the key cannot carry — the whole stub address would be over the url limit
+(`BEHAVIOR-CREATE-TABS.md` §20, §54), a `data:` page of a megabyte or more — reaches the page by a
+message (`real-url`, `pendingRealUrls` in `tabs.js`) once the page has loaded, and the page is its
+only holder. The add-on keeps it neither in the tab session nor in its storage, on purpose: such an
+address can weigh hundreds of megabytes (a scanned PDF as `data:`), which would bloat the session
+store and the backups past use and add one more session read per tab to every load. So the tab
+reads as the bare stub page everywhere: in the cache, in the archive, in the backup, in the cloud
+and in `tabsToRestore`. A reload of the page — a discard, a browser restart, a restore from any
+of those — shows the stub without the address, and the page closes itself after 30 seconds. The
+add-on cannot open such an address itself; the page shows it once, the user copies it, and there
+the duty of the add-on ends. This is a decision, not a defect. The `dummy` page (`data:` images,
+PDF and JSON, §18) gets its address the same way and navigates to it at once; only the moments
+before that read as the dummy page.
+
 ## 4. All html pages in one place
 
 Every html page of the add-on is described in `PAGES_CONFIG` in `constants.js`: the path of the
@@ -78,9 +92,12 @@ live tabs, the rest does not matter.
 
 ## 7. Bookmarks, comparisons, the shown url
 
-- **Bookmarks** — for a page of an extension `Extensions.urlToBrowserOrNull`: with a known uuid
-  the bookmark is by uuid, the add-on's own page too; without a known uuid there is no bookmark
-  and `exportGroup` skips the tab; any other address is bookmarked as it is kept.
+- **Bookmarks** — a page of an extension is bookmarked by its uuid (`Extensions.urlToUUIDOrNull`):
+  the one the map knows for an enabled extension, the add-on's own page too, or the one the
+  address of the tab itself carries — a disable keeps the uuid (`BEHAVIOR-CREATE-TABS.md` §48), a
+  removal leaves the old one on a discarded tab (§49); without a known uuid there is no bookmark
+  and `exportGroup` skips the tab; any other address is bookmarked as it is kept. The folder of a
+  group mirrors the tabs bookmarked in the pass: every other bookmark in it is removed.
 - **Comparing with an own page** — `Extensions.isOwnUrl` or
   `Extensions.urlToId(Constants.PAGES.…)`.
 - **The url of a tab for display and search** — `Tabs.getPageUrl`: the reader-mode wrapper is

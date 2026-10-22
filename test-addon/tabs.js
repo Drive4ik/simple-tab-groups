@@ -43,7 +43,7 @@ export async function ungroupWindow(windowId) {
 export async function closeHarnessWindows() {
     const closed = [];
 
-    for (const win of await browser.windows.getAll({windowTypes: ['normal'], populate: false})) {
+    for (const win of await browser.windows.getAll({windowTypes: ['normal', 'popup'], populate: false})) {
         const tabs = await browser.tabs.query({windowId: win.id});
         const ours = openedWindows.has(win.id) || (tabs.length > 0 && tabs.every(tab => nameFromUrl(tab.url)));
 
@@ -58,7 +58,7 @@ export async function closeHarnessWindows() {
     return closed;
 }
 
-// a container that exists for one test only: created before `run`, removed after it, whatever happened inside
+// a container that exists for one test only: created before `run`, removed after it, whatever happened inside - unless the test removed it itself
 export async function withContainer(t, run) {
     t.require('contextualIdentities API present', Boolean(browser.contextualIdentities), 'the cookies and contextualIdentities permissions are missing from the manifest');
 
@@ -69,7 +69,11 @@ export async function withContainer(t, run) {
     try {
         await run(identity.cookieStoreId);
     } finally {
-        await browser.contextualIdentities.remove(identity.cookieStoreId).catch(error => t.note(`container removal failed: ${error.message}`));
+        const alive = await browser.contextualIdentities.get(identity.cookieStoreId).then(() => true, () => false);
+
+        if (alive) {
+            await browser.contextualIdentities.remove(identity.cookieStoreId).catch(error => t.note(`container removal failed: ${error.message}`));
+        }
     }
 }
 

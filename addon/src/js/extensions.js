@@ -267,6 +267,10 @@ export function urlToBrowserOrNull(url) {
     return Utils.isUrlAllowToCreate(url) ? url : null;
 }
 
+export function urlToUUIDOrNull(url) {
+    return !isExtensionUrl(url) || extractUUID(url) ? urlToUUID(url) : null;
+}
+
 /* export function tabsToId(tabs) {
     for (const tab of tabs) {
         tab.url = urlToId(tab.url);
