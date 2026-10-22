@@ -11,6 +11,7 @@ and type popup, window.open with window features from a page that lives in the c
 windows.create with the tabId of a container tab - and which of those tabs
 tabs.query({windowType: 'normal'}) and tabs.query({}) return (R36.02). The facts behind STG's cleanup
 of temporary containers: the list of tabs it is handed must name every container a tab still uses.
+The expectations are the facts of BEHAVIOR-CREATE-TABS.md 60 and 61.
 Needs the cookies and contextualIdentities permissions, creates and removes its own container;
 R36.01 loads ${NETWORK_URL}. R36.02 calls window.open from a page of the add-on without a user
 gesture: when the browser blocks it, the test stops and asks to allow the pop-up in the bar, as
@@ -34,8 +35,9 @@ class ContainersTest extends TabsTest {
 export const testClass = ContainersTest;
 
 const outcome = promise => promise.then(value => ({value}), error => ({error: error.message}));
+const verdict = ({error}) => error ? 'rejected' : 'resolved';
 const container = (tab, cookieStoreId, label = 'the container') => tab.cookieStoreId === cookieStoreId ? label : tab.cookieStoreId;
-const describeCookies = ({value, error}) => error ? `rejected - ${error}` : `returns ${value.length} cookie(s)`;
+const cookiesCount = ({value, error}) => error ? `rejected - ${error}` : value.length;
 
 async function createInContainer(t, name, cookieStoreId, properties = {}) {
     const tab = await browser.tabs.create({windowId: t.win, url: t.tabUrl(name), active: false, cookieStoreId, ...properties});
@@ -46,25 +48,16 @@ async function createInContainer(t, name, cookieStoreId, properties = {}) {
     return tab;
 }
 
-async function describeTab(t, name, cookieStoreId) {
-    const tab = await browser.tabs.get(t.id(name)).catch(() => null);
+async function storeState(cookieStoreId) {
+    const store = (await browser.cookies.getAllCookieStores()).find(store => store.id === cookieStoreId);
 
-    if (!tab) {
-        return 'gone';
-    }
-
-    return `alive, container ${container(tab, cookieStoreId, 'the removed container')}, hidden ${tab.hidden}, pinned ${tab.pinned}, discarded ${tab.discarded}, status ${tab.status}`;
+    return store ? {listed: true, tabs: store.tabIds.length} : {listed: false};
 }
 
-async function describeStore(cookieStoreId) {
-    const stores = await browser.cookies.getAllCookieStores();
-    const store = stores.find(store => store.id === cookieStoreId);
-
-    return store ? `listed by getAllCookieStores with ${store.tabIds.length} tab(s)` : 'not listed by getAllCookieStores';
-}
+const describeStore = ({listed, tabs}) => listed ? `listed by getAllCookieStores with ${tabs} tab(s)` : 'not listed by getAllCookieStores';
 
 // a window the step made: its type, and the container of its named tab once the tab has loaded
-async function describeWindow(t, windowId, name, cookieStoreId) {
+async function inspectWindow(t, windowId, name, cookieStoreId) {
     openedWindows.add(windowId);
     t.trackWindow(windowId);
 
@@ -76,8 +69,10 @@ async function describeWindow(t, windowId, name, cookieStoreId) {
         t.bind(tab.id, name);
     }
 
-    return `a window of type ${win?.type ?? '(gone)'}, ${name} ${tab ? `is there, container ${container(tab, cookieStoreId)}` : 'did not load'}`;
+    return {type: win?.type ?? '(gone)', tab: tab ? 'there' : 'missing', container: tab ? container(tab, cookieStoreId) : '-'};
 }
+
+const describeWay = way => typeof way === 'string' ? way : `a window of type ${way.type}, the tab is ${way.tab}, container ${way.container}`;
 
 // where the page's window.open put the tab: a window that was not there before, or the scene window
 async function findOpened(t, windowsBefore, name) {
@@ -123,22 +118,35 @@ export const tests = [
             t.require('plain, hid and pinned live in the container', containers.every(id => id === cookieStoreId), containers.join(', '));
 
             await browser.cookies.set({url: NETWORK_URL, ...COOKIE, storeId: cookieStoreId});
-            t.note(`before: cookies.getAll({storeId}) ${describeCookies(await outcome(browser.cookies.getAll({storeId: cookieStoreId})))}; the store is ${await describeStore(cookieStoreId)}`);
+
+            const before = {cookies: cookiesCount(await outcome(browser.cookies.getAll({storeId: cookieStoreId}))), store: await storeState(cookieStoreId)};
+            t.note(`before: cookies.getAll({storeId}) returns ${before.cookies} cookie(s); the store is ${describeStore(before.store)}`);
 
             t.watch(['tabs.onCreated', 'tabs.onRemoved', 'tabs.onUpdated', 'tabs.onActivated', 'contextualIdentities.onRemoved']);
             await t.snap('before');
 
             const removed = await t.step('contextualIdentities.remove(container)  // plain, hid(h) and pinned(p) are open in it', () => outcome(browser.contextualIdentities.remove(cookieStoreId)));
+            const eventsOfRemoval = t.queued.map(({spec}) => spec);
 
             t.note(`contextualIdentities.remove: ${removed.error ? `rejected - ${removed.error}` : 'resolved'}`);
 
+            const survivors = {};
+
             for (const name of ['plain', 'hid', 'pinned']) {
-                t.note(`${name}: ${await describeTab(t, name, cookieStoreId)}`);
+                const tab = await browser.tabs.get(t.id(name)).catch(() => null);
+
+                survivors[name] = tab
+                    ? {container: container(tab, cookieStoreId, 'the removed container'), hidden: tab.hidden, pinned: tab.pinned, discarded: tab.discarded, status: tab.status}
+                    : 'gone';
+
+                t.note(`${name}: ${tab ? `alive, container ${survivors[name].container}, hidden ${tab.hidden}, pinned ${tab.pinned}, discarded ${tab.discarded}, status ${tab.status}` : 'gone'}`);
             }
 
             const get = await outcome(browser.contextualIdentities.get(cookieStoreId));
             t.note(`contextualIdentities.get(container): ${get.error ? `rejected - ${get.error}` : 'resolved, the container still exists'}`);
-            t.note(`after: cookies.getAll({storeId}) ${describeCookies(await outcome(browser.cookies.getAll({storeId: cookieStoreId})))}; the store is ${await describeStore(cookieStoreId)}`);
+
+            const after = {cookies: cookiesCount(await outcome(browser.cookies.getAll({storeId: cookieStoreId}))), store: await storeState(cookieStoreId)};
+            t.note(`after: cookies.getAll({storeId}) returns ${after.cookies} cookie(s); the store is ${describeStore(after.store)}`);
 
             const byStore = await outcome(browser.tabs.query({cookieStoreId}));
             t.note(`tabs.query({cookieStoreId: container}): ${byStore.error ? `rejected - ${byStore.error}` : `${byStore.value.length} tab(s): ${byStore.value.map(tab => t.nameOf(tab)).join(', ') || '-'}`}`);
@@ -156,20 +164,38 @@ export const tests = [
 
             t.note(`tabs.create in the removed container: ${created.error ? `rejected - ${created.error}` : `resolved, the tab reports container ${container(created.value, cookieStoreId, 'the removed container')}`}`);
 
-            if (!await browser.tabs.get(t.id('plain')).catch(() => null)) {
-                t.note('plain is gone, nothing to navigate');
-                return;
+            let navigation = 'plain is gone, nothing to navigate';
+
+            if (await browser.tabs.get(t.id('plain')).catch(() => null)) {
+                const to = sceneUrl('plain', NETWORK_URL);
+                const navigated = await t.step(`tabs.update(plain, {url: ${NETWORK_URL}?tab=plain})`, () => outcome(browser.tabs.update(t.id('plain'), {url: to})), {wait: 0, snap: false});
+                const settled = await t.settled({until: state => state.tabs.some(tab => tab.id === t.id('plain') && tab.url === to && tab.status === 'complete')});
+
+                t.data.rows.findLast(row => row.kind === 'action').timing = `settled ${settled.ms} ms`;
+                await t.snap('navigated');
+
+                const plain = await browser.tabs.get(t.id('plain')).catch(() => null);
+
+                navigation = navigated.error
+                    ? `tabs.update rejected - ${navigated.error}`
+                    : plain ? {url: plain.url === to ? 'the url' : plain.url, status: plain.status, container: container(plain, cookieStoreId, 'the removed container')} : 'gone';
             }
 
-            const to = sceneUrl('plain', NETWORK_URL);
-            const navigated = await t.step(`tabs.update(plain, {url: ${NETWORK_URL}?tab=plain})`, () => outcome(browser.tabs.update(t.id('plain'), {url: to})), {wait: 0, snap: false});
-            const settled = await t.settled({until: state => state.tabs.some(tab => tab.id === t.id('plain') && tab.url === to && tab.status === 'complete')});
+            t.note(`plain after the navigation: ${typeof navigation === 'string' ? navigation : `url ${navigation.url}, status ${navigation.status}, container ${navigation.container}`}`);
 
-            t.data.rows.findLast(row => row.kind === 'action').timing = `settled ${settled.ms} ms`;
-            await t.snap('navigated');
-
-            const plain = await browser.tabs.get(t.id('plain')).catch(() => null);
-            t.note(`plain after the navigation: ${navigated.error ? `tabs.update rejected - ${navigated.error}` : plain ? `url ${plain.url}, status ${plain.status}, container ${container(plain, cookieStoreId, 'the removed container')}` : 'gone'}`);
+            t.expect('the removal resolves and fires contextualIdentities.onRemoved alone, no tab event (BEHAVIOR-CREATE-TABS.md §60)', {removed: verdict(removed), events: eventsOfRemoval}, {removed: 'resolved', events: ['contextualIdentities.onRemoved']});
+            t.expectRow('after', ['pinned(p)', 'x*', 'plain', 'hid(h)']);
+            t.expect('the tabs survive unchanged under the removed cookieStoreId (§60)', survivors, {
+                plain: {container: 'the removed container', hidden: false, pinned: false, discarded: false, status: 'complete'},
+                hid: {container: 'the removed container', hidden: true, pinned: false, discarded: false, status: 'complete'},
+                pinned: {container: 'the removed container', hidden: false, pinned: true, discarded: false, status: 'complete'},
+            });
+            t.expect('the cookies of the container are wiped, its store stays listed with the tabs (§60)', {before, after}, {
+                before: {cookies: 1, store: {listed: true, tabs: 3}},
+                after: {cookies: 0, store: {listed: true, tabs: 3}},
+            });
+            t.expect('contextualIdentities.get of the removed id rejects, tabs.query by it still returns the three, tabs.create into it rejects (§60)', {get: verdict(get), query: byStore.error ? 'rejected' : byStore.value.length, create: verdict(created)}, {get: 'rejected', query: 3, create: 'rejected'});
+            t.expect('a surviving tab navigates under the removed cookieStoreId (§60)', navigation, {url: 'the url', status: 'complete', container: 'the removed container'});
         });
     },
 },
@@ -182,6 +208,7 @@ export const tests = [
 
         await withContainer(t, async cookieStoreId => {
             const popups = new Map();
+            const ways = {};
 
             t.watch(['windows.onCreated', 'tabs.onDetached']);
             await t.snap('before');
@@ -193,7 +220,8 @@ export const tests = [
                     popups.set('A: popA', made.value.id);
                 }
 
-                t.note(`A: windows.create ${made.error ? `rejected - ${made.error}` : `resolved, ${await describeWindow(t, made.value.id, 'popA', cookieStoreId)}`}`);
+                ways.A = made.error ? `rejected - ${made.error}` : await inspectWindow(t, made.value.id, 'popA', cookieStoreId);
+                t.note(`A: windows.create ${made.error ? ways.A : `resolved, ${describeWay(ways.A)}`}`);
             }
 
             {
@@ -217,14 +245,16 @@ export const tests = [
                 const found = await findOpened(t, windowsBefore, 'popB');
 
                 if (!found) {
-                    t.note('B: popB appeared neither in a new window nor in the scene window');
+                    ways.B = 'popB appeared neither in a new window nor in the scene window';
                 } else if (found.tab) {
                     t.bind(found.tab.id, 'popB');
-                    t.note(`B: popB opened as a tab of the scene window, container ${container(found.tab, cookieStoreId)}`);
+                    ways.B = {type: 'the scene window', tab: 'there', container: container(found.tab, cookieStoreId)};
                 } else {
                     popups.set('B: popB', found.windowId);
-                    t.note(`B: popB opened in ${await describeWindow(t, found.windowId, 'popB', cookieStoreId)}`);
+                    ways.B = await inspectWindow(t, found.windowId, 'popB', cookieStoreId);
                 }
+
+                t.note(`B: ${typeof ways.B === 'string' ? ways.B : `popB opened in ${describeWay(ways.B)}`}`);
             }
 
             {
@@ -238,23 +268,37 @@ export const tests = [
                     popups.set('C: c', made.value.id);
                 }
 
-                t.note(`C: windows.create ${made.error ? `rejected - ${made.error}` : `resolved, ${await describeWindow(t, made.value.id, 'c', cookieStoreId)}`}`);
+                ways.C = made.error ? `rejected - ${made.error}` : await inspectWindow(t, made.value.id, 'c', cookieStoreId);
+                t.note(`C: windows.create ${made.error ? ways.C : `resolved, ${describeWay(ways.C)}`}`);
             }
 
-            {
-                const names = ['popA', 'popB', 'c'];
-                const found = tabs => tabs.map(tab => nameFromUrl(tab.url)).filter(name => names.includes(name)).join(', ') || '(none)';
-                const ours = windows => windows.filter(win => openedWindows.has(win.id)).length;
+            const names = ['popA', 'popB', 'c'];
+            const found = tabs => tabs.map(tab => nameFromUrl(tab.url)).filter(name => names.includes(name));
+            const ours = windows => windows.filter(win => openedWindows.has(win.id)).length;
+            const reads = {
+                normal: found(await browser.tabs.query({windowType: 'normal'})),
+                all: found(await browser.tabs.query({})).toSorted(),
+                windowsNormal: ours(await browser.windows.getAll({windowTypes: ['normal']})),
+                windowsAll: ours(await browser.windows.getAll()),
+            };
 
-                t.note(`tabs.query({windowType: 'normal'}) returns of ${names.join('/')}: ${found(await browser.tabs.query({windowType: 'normal'}))}; tabs.query({}) returns: ${found(await browser.tabs.query({}))}`);
-                t.note(`windows of the stand: ${ours(await browser.windows.getAll({windowTypes: ['normal']}))} in windows.getAll({windowTypes: ['normal']}), ${ours(await browser.windows.getAll())} in windows.getAll()`);
-            }
+            t.note(`tabs.query({windowType: 'normal'}) returns of ${names.join('/')}: ${reads.normal.join(', ') || '(none)'}; tabs.query({}) returns: ${reads.all.join(', ') || '(none)'}`);
+            t.note(`windows of the stand: ${reads.windowsNormal} in windows.getAll({windowTypes: ['normal']}), ${reads.windowsAll} in windows.getAll()`);
 
             await t.snap('after (scene window)');
 
             for (const [label, windowId] of popups) {
                 await t.snapWindow(`after (${label})`, windowId);
             }
+
+            const popup = {type: 'popup', tab: 'there', container: 'the container'};
+
+            t.expect('every way gives a popup window whose tab reports the container (BEHAVIOR-CREATE-TABS.md §61)', ways, {A: popup, B: popup, C: popup});
+            t.expect('the normal-window filters leave the popup windows out, the unfiltered reads include them (§61)', reads, {normal: [], all: names.toSorted(), windowsNormal: 1, windowsAll: 4});
+            t.expectRow('after C', ['x', 'page*']);
+            t.expectRow('after (A: popA)', ['popA*']);
+            t.expectRow('after (B: popB)', ['popB*']);
+            t.expectRow('after (C: c)', ['c*']);
         });
     },
 },

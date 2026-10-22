@@ -386,6 +386,8 @@ through. So "done" is said only after every item, none skipped:
 4. The syntax check and the editor diagnostics after the last edit of the file; the messages
    between the edits of one pass do not count.
 5. A doubt about a fact of the browser or about foreign code — reread it, do not reason about it.
+6. A fact written into a `BEHAVIOR-*.md` has its expectation in the test that produced it
+   (`t.expect` / `t.expectRow`, `BEHAVIOR-NOTATION.md` §6): the doc and the test change in one pass.
 
 ## Rules without method names
 
