@@ -103,6 +103,19 @@ async function actionAllWindowsNow(details) {
     }
 }
 
+export function actionAllGroups() {
+    return actionQueue.run('all-groups', () => actionAllGroupsNow());
+}
+
+async function actionAllGroupsNow() {
+    Windows ??= await import('./windows.js');
+    const windows = await Windows.load();
+
+    for (const {id} of windows) {
+        await actionGroupNow(null, id);
+    }
+}
+
 export function actionGroup(...args) {
     return actionQueue.run('group', () => actionGroupNow(...args));
 }
@@ -138,7 +151,7 @@ async function actionGroupNow(group, windowId) {
     };
 
     if (group) {
-        details.title = Utils.sliceText(Groups.getTitle(group, 'withContainer'), 43) + ' - ' + Constants.MANIFEST.short_name;
+        details.title = Utils.sliceText(Groups.getTitle(group, 'withContainer', windowId), 43) + ' - ' + Constants.MANIFEST.short_name;
         details.icon = Groups.getIconUrl(group);
         details.isSticky = group.isSticky;
     }
@@ -174,16 +187,10 @@ async function actionLoadingNow(start) {
             title: '__MSG_loading__',
         });
     } else {
-        Windows ??= await import('./windows.js');
-
         await actionNow({
             enable: true,
         });
 
-        const windows = await Windows.load();
-
-        for (const {id} of windows) {
-            await actionGroupNow(null, id);
-        }
+        await actionAllGroupsNow();
     }
 }

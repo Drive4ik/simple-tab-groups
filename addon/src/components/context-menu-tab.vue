@@ -13,6 +13,10 @@ export default {
             type: Array,
             required: true,
         },
+        windowIdByGroupId: {
+            type: Map,
+            required: true,
+        },
         multipleTabIds: {
             type: Array,
             default: () => [],
@@ -111,7 +115,7 @@ export default {
                     <figure :class="['image is-16x16', {'is-sticky': group.isSticky}]">
                         <img :src="group.iconUrlToDisplay" />
                     </figure>
-                    <span v-text="getGroupTitle(group, 'withActiveGroup withContainer')"></span>
+                    <span v-text="getGroupTitle(group, 'withActiveGroup withContainer', windowIdByGroupId.get(group.id))"></span>
                 </li>
 
                 <li

@@ -27,6 +27,8 @@ import Logger, {
     clearErrors,
     errorEventHandler,
     objectToNativeError,
+    setDebug,
+    onDebugChanged,
 } from '/js/logger.js';
 import * as Utils from '/js/utils.js';
 import Notification from '/js/notification.js?add-listeners';
@@ -62,7 +64,7 @@ delete storage.inited;
 storage.IS_TEMPORARY = false;
 
 if (storage.enableDebug === Constants.DEBUG.AUTO) { // if debug was auto-enabled - disable on next start addon/browser
-    delete storage.enableDebug;
+    setDebug(null);
 }
 
 const logger = self.logger = new Logger(Constants.MODULES.BACKGROUND);
@@ -393,6 +395,8 @@ function removeListenerOnBeforeRequest() {
     Listeners.webRequest.onBeforeRequest.remove(onBeforeTabRequest);
 }
 
+let offDebugChanged = null;
+
 function addEvents() {
     logger.info('addEvents');
 
@@ -408,6 +412,11 @@ function addEvents() {
 
     Menus.addListeners();
     MenusMain.addListeners();
+
+    offDebugChanged = onDebugChanged(async () => {
+        await MenusMain.groupsUpdated();
+        await Browser.actionAllGroups();
+    });
 }
 
 function removeEvents() {
@@ -426,6 +435,9 @@ function removeEvents() {
     Notification.removeListeners();
     Menus.removeListeners();
     MenusMain.removeListeners();
+
+    offDebugChanged?.();
+    offDebugChanged = null;
 
     Extensions.removeListeners();
 

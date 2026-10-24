@@ -1081,14 +1081,16 @@ async function archiveToggleNow(groupId) {
 }
 
 export function mapForExternalExtension(group) {
+    const windowId = Cache.getWindowId(group.id) || null;
+
     return {
         id: group.id,
-        title: getTitle(group),
+        title: getTitle(group, '', windowId),
         isArchive: group.isArchive,
         isSticky: group.isSticky,
         iconUrl: getIconUrl(group),
         contextualIdentity: Containers.get(group.newTabContainer),
-        windowId: Cache.getWindowId(group.id) || null,
+        windowId,
     };
 }
 
@@ -1301,7 +1303,7 @@ export function createTitle(title = null, groupId = null, defaultGroupProps = {}
     return title;
 }
 
-export function getTitle({id, title, isArchive, isSticky, tabs, iconViewType, newTabContainer}, args = '') {
+export function getTitle({id, title, isArchive, isSticky, tabs, iconViewType, newTabContainer}, args = '', windowId = null) {
     const withActiveGroup = args.includes('withActiveGroup');
     const withCountTabs = args.includes('withCountTabs');
     const withContainer = args.includes('withContainer');
@@ -1318,7 +1320,7 @@ export function getTitle({id, title, isArchive, isSticky, tabs, iconViewType, ne
     }
 
     if (withActiveGroup) {
-        if (Cache.getWindowId(id)) {
+        if (windowId) {
             beforeTitle.push(Constants.ACTIVE_SYMBOL);
         } else if (isArchive) {
             beforeTitle.push(Constants.DISCARDED_SYMBOL);
@@ -1352,8 +1354,8 @@ export function getTitle({id, title, isArchive, isSticky, tabs, iconViewType, ne
     }
 
     if (mainStorage.enableDebug) {
-        const windowId = Cache.getWindowId(id) || tabs?.[0]?.windowId || 'no window';
-        title = `@${windowId}:#${id.slice(-4)} ${title}`;
+        const debugWindowId = windowId || tabs?.[0]?.windowId || 'no window';
+        title = `@${debugWindowId}:#${id.slice(-4)} ${title}`;
     }
 
     return title;
@@ -1380,7 +1382,7 @@ export function getMenuId(groupId, context) {
 export async function getMenuProperties(group, context, {showArchivedGroups}) {
     return {
         id: getMenuId(group.id, context),
-        title: getTitle(group, 'withSticky withActiveGroup withContainer'),
+        title: getTitle(group, 'withSticky withActiveGroup withContainer', Cache.getWindowId(group.id)),
         icon: getIconUrl(group),
         enabled: !group.isArchive,
         visible: !group.isArchive ? true : showArchivedGroups,

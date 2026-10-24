@@ -27,8 +27,9 @@ name, it goes into the log.
 - `Menus` (`menus.js`) — the map of menus in `storage.session`.
 - `TabsToRestore` (`windows.js`) — the key `tabsToRestore`.
 - `Action` (`browser.js`) — the button of the add-on: icon, title, availability. A move is the
-  whole drawing chain (`actionAllWindows`, `actionLoading`, `actionGroup`, `action`), so the
-  order of the calls is the order of drawing: the last caller is the one that shows.
+  whole drawing chain (`actionAllWindows`, `actionAllGroups`, `actionLoading`, `actionGroup`,
+  `action`), so the order of the calls is the order of drawing: the last caller is the one that
+  shows.
 - `Cache` (`cache.js`), keyed by a session value of a tab or a window.
 
 ## 3. A move waits only for the queues below its own
@@ -45,8 +46,8 @@ Hence:
 - Inside `Menus.transaction` the functions of the menu modules are called, not `MenusMain.*`. A
   single `Menus.update` of one item is not wrapped into a transaction: during a rebuild the item
   may not exist, the error is not fatal and is swallowed by `.catch`.
-- Inside an `Action` move `actionNow`, `actionGroupNow`, `actionAllWindowsNow` are called, not
-  `Browser.action*`.
+- Inside an `Action` move `actionNow`, `actionGroupNow`, `actionAllWindowsNow`,
+  `actionAllGroupsNow` are called, not `Browser.action*`.
 - A decision that depends on the state at the moment of the write is taken inside the move:
   `Groups.update` takes a function, the mirror checks `Operations.isBusy()` in it.
 

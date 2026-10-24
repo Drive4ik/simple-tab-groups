@@ -12,8 +12,8 @@ export default {
             type: Array,
             required: true,
         },
-        openedWindows: {
-            type: Array,
+        windowIdByGroupId: {
+            type: Map,
             required: true,
         },
         showRename: {
@@ -38,7 +38,7 @@ export default {
             this.$refs.contextMenu.open(...args);
         },
         isOpened({id}) {
-            return this.openedWindows.some(win => win.groupId === id);
+            return this.windowIdByGroupId.has(id);
         },
     },
 };

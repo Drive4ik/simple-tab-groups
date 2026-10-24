@@ -2,6 +2,7 @@ import '/js/prefixed-storage.js';
 import Lang from '/js/lang.js?translate-page';
 import {getExtensionStartTime} from '/js/listeners.js';
 import * as Messages from '/js/messages.js';
+import {setDebug} from '/js/logger.js';
 import backgroundSelf from '/js/background.js';
 import * as Constants from '/js/constants.js';
 import * as File from '/js/file.js';
@@ -41,14 +42,14 @@ function isAutoDebug() {
 }
 
 function enableDebug() {
-    mainStorage.enableDebug = Constants.DEBUG.MANUAL;
+    setDebug(Constants.DEBUG.MANUAL);
     debugStatus.classList = 'enabled';
     enableDebugButton.classList.add('hidden');
     disableDebugButton.classList.remove('hidden');
 }
 
 async function disableDebug() {
-    delete mainStorage.enableDebug;
+    setDebug(null);
     debugStatus.classList = '';
     enableDebugButton.classList.remove('hidden');
     disableDebugButton.classList.add('hidden');
@@ -209,7 +210,7 @@ function onClosePage() {
     }
 
     if (wasAutoDebug || isAutoDebug()) {
-        delete mainStorage.enableDebug;
+        setDebug(null);
         Messages.sendMessage('safe-reload-addon');
     }
 }

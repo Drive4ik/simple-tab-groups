@@ -62,3 +62,9 @@ go through `Cache` as well. Operations on one id and one key run one after anoth
 queue, `DESIGN-QUEUES.md`), different keys in parallel. `getTabsSessionAndRemove` hands the
 record of a closing window's tab to `tabsToRestore`: the url is the requested one when there is
 one, and then without a title — a tab still waiting for its page shows the title of no page.
+
+The cache is the background's. A page of the add-on runs its own instance of the module, which
+knows nothing of what the background has read, so a function the pages share with the background
+takes the window of a group from its caller, never from the cache: `Groups.getTitle` gets it as an
+argument — the background passes `Cache.getWindowId`, a page the window it loaded from the
+background.

@@ -4,6 +4,7 @@ import * as Constants from './constants.js';
 import JSON from './json.js';
 import * as Utils from './utils.js';
 import * as Messages from './messages.js';
+import * as DebugBroadcast from './broadcast.js?channel=debug';
 import {normalizeArgumentValue, getStack, getFuncName} from './logger-utils.js';
 
 export * from './logger-utils.js';
@@ -273,6 +274,29 @@ const Errors = {
     },
 };
 
+// the one writer of the debug flag; the change reaches every page and the background (docs/DESIGN-MESSAGES.md §3)
+export function setDebug(mode = null) {
+    if (mode !== null && !Object.values(Constants.DEBUG).includes(mode)) {
+        throw new Error(`unknown debug mode: ${mode}`);
+    }
+
+    if ((mainStorage.enableDebug ?? null) === mode) {
+        return;
+    }
+
+    if (mode) {
+        mainStorage.enableDebug = mode;
+    } else {
+        delete mainStorage.enableDebug;
+    }
+
+    DebugBroadcast.send({action: 'changed', mode});
+}
+
+export function onDebugChanged(func) {
+    return DebugBroadcast.on('changed', ({mode}) => func(mode));
+}
+
 export function getErrors() {
     return Errors.get();
 }
@@ -312,7 +336,7 @@ export function errorEventHandler(event) {
     event.preventDefault?.();
     event.stopImmediatePropagation?.();
 
-    mainStorage.enableDebug = Constants.DEBUG.AUTO;
+    setDebug(Constants.DEBUG.AUTO);
 
     const logger = this instanceof Logger ? this : self.logger;
 

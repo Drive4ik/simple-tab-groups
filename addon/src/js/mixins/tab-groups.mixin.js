@@ -9,6 +9,7 @@ import * as Tabs from '/js/tabs.js';
 import * as Groups from '/js/groups.js';
 import * as Windows from '/js/windows.js';
 import * as Cloud from '/js/sync/cloud/cloud.js';
+import {onDebugChanged} from '/js/logger.js';
 
 const mainStorage = localStorage.create(Constants.MODULES.BACKGROUND);
 
@@ -66,6 +67,10 @@ export default {
         currentGroup() {
             return this.groups.find(group => group.id === this.currentWindow?.groupId);
         },
+        // built whole and never changed in place: Vue 2 does not track a Map, a change is a new Map
+        windowIdByGroupId() {
+            return new Map(this.openedWindows.filter(win => win.groupId).map(win => [win.groupId, win.id]));
+        },
         allTabs() {
             const allTabs = {};
 
@@ -122,6 +127,8 @@ export default {
             const list = this.tabGroupsOffListeners = new Set();
 
             list.add(Containers.onChanged(() => this.onChangedContainers()));
+
+            list.add(onDebugChanged(mode => this.enableDebug = mode));
 
             list.add(Windows.on(['opened', 'closed'], () => this.loadWindows()));
 
@@ -435,7 +442,7 @@ export default {
             this.sendMessageModule('Groups.sort', vector);
         },
         isOpenedGroup(group) {
-            return this.openedWindows.some(win => win.groupId === group.id);
+            return this.windowIdByGroupId.has(group.id);
         },
         async toggleArchiveGroup({id, title, isArchive}) {
             let ok = true;
