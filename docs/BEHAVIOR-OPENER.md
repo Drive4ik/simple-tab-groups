@@ -654,7 +654,9 @@ saved order after the links (R14.14) drew no reaction: no move, no detach.
 6. **After a restart nothing has an opener — with or without TST** (§8, T1). What `tabs.query`
    reports after a restart says nothing about the tree the user still sees in TST. A sync that
    takes "absent" for "removed" wipes the cloud copy of the tree on the first trust-local after
-   every restart; the saved link may only be replaced by another explicit link, never by absence.
+   every restart; in the cloud the saved link may only be replaced by another explicit link, never
+   by absence (`tabsToRestore` is not sticky: its entries are used up by every restore of the tabs
+   of closed windows and by the grand restore, and the record of a later close speaks for itself).
 7. **A self-pointing opener is TST's "detached"** (T4) — read it as no opener; never save it as a
    link and never compute an offset of zero.
 8. **TST re-positions the tabs it links** (T2): right after the links are applied, TST moves each
@@ -742,7 +744,10 @@ first; no parent — no key; an offset of 0 is never written and never read. Sav
 tab ids; pinned tabs are saved without links on purpose. `tabsToRestore` (the tabs of closed
 windows) is one flat list of many groups: an offset lives inside the group's own subsequence of
 it (`Map.groupBy` — the group's entries need not be contiguous), and every rebuild of the list
-goes through `Windows.rebuildTabsToRestore`.
+goes through `Windows.rebuildTabsToRestore`. A tab the list already holds from an earlier close —
+the same url, container and group — is saved once: the record of this close replaces the earlier
+one in its place, so the offsets of the earlier close still reach it and the links of this close
+reach it by id.
 
 **The arithmetic** lives in `js/tabs.js`, one reader per source: `Tabs.getOpenersById(tabs)` —
 who is whose parent by `openerTabId`; `Tabs.getOpenersByOffset(fromTabs, toTabs)` — by the

@@ -85,7 +85,7 @@ function enqueueGrandRestore(windowId) {
 }
 
 function runGrandRestore(...args) {
-    return Operations.run('grand-restore', () => runGrandRestoreNow(...args));
+    return missedTabsQueue.run('grand-restore', () => Operations.run('grand-restore', () => runGrandRestoreNow(...args)));
 }
 
 async function runGrandRestoreNow(restoredWindowIds) {
@@ -378,20 +378,11 @@ async function runGrandRestoreNow(restoredWindowIds) {
         }));
     }
 
-    const result = {
-        shouldRestoreMissedTabs: false,
-    };
-
     if (openersToApply.length) {
-        const restTabsToRestore = await forgetTabsToRestore(openersToApply.flatMap(({savedTabs}) => savedTabs));
-
-        // If multiple windows were closed but only one was restored, it needs to restore the remaining tabs in that window
-        result.shouldRestoreMissedTabs = restTabsToRestore.length > 0;
+        await forgetTabsToRestore(openersToApply.flatMap(({savedTabs}) => savedTabs));
     }
 
     log.stop();
-
-    return result;
 }
 
 const createdBatch = new BatchProcessor(async (windowIds) => {
@@ -434,11 +425,9 @@ async function onCreated(win) {
         await Browser.actionLoading();
     }
 
-    let grandRestoreResult;
-
     try {
         log.log('waiting grand restore, isBatchLeader:', isBatchLeader, '...');
-        grandRestoreResult = await grandRestorePromise;
+        await grandRestorePromise;
         log.info('grand restore finished');
     } catch (e) {
         if (isBatchLeader) {
@@ -478,12 +467,8 @@ async function onCreated(win) {
 
     createdBatch.add(win.id);
 
-    if (grandRestoreResult.callbackResult.shouldRestoreMissedTabs && isBatchLeader) {
-        log.log('running tryRestoreMissedTabs...');
-        await tryRestoreMissedTabs(false).catch(log.onCatch('tryRestoreMissedTabs'));
-    }
-
     if (isBatchLeader) {
+        await tryRestoreMissedTabs(false).catch(log.onCatch('tryRestoreMissedTabs'));
         await Browser.actionLoading(false);
     }
 
@@ -525,9 +510,12 @@ async function onRemoved(windowId) {
                 const twin = prevRestore.find(t => !t.id && Tabs.isSame(t, tab));
 
                 if (twin) {
-                    // the dropped duplicate may be somebody's opener: its id moves onto the kept twin,
-                    // getOpenersById resolves the children there and the rebuild strips it again (removeIds)
-                    twin.id = tab.id;
+                    // saved before: the record of this close replaces it in place (docs/BEHAVIOR-OPENER.md, How STG carries the link)
+                    for (const key of Object.keys(twin)) {
+                        delete twin[key];
+                    }
+
+                    Object.assign(twin, tab);
                     return false;
                 }
 
@@ -720,6 +708,7 @@ export function rebuildTabsToRestore(tabs, keep = () => true) {
 }
 
 const tabsToRestoreQueue = new Queue('TabsToRestore');
+const missedTabsQueue = new Queue('MissedTabs');
 
 async function getTabsToRestore() {
     const {tabsToRestore = []} = await Storage.get('tabsToRestore');
@@ -735,13 +724,11 @@ function forgetTabsToRestore(restoredTabs) {
         } else {
             await Storage.remove('tabsToRestore');
         }
-
-        return tabsToRestore;
     });
 }
 
 export function tryRestoreMissedTabs(...args) {
-    return Operations.run('restore-missed-tabs', () => tryRestoreMissedTabsNow(...args));
+    return missedTabsQueue.run('restore', () => Operations.run('restore-missed-tabs', () => tryRestoreMissedTabsNow(...args)));
 }
 
 async function tryRestoreMissedTabsNow(actionLoading = true) {

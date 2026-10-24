@@ -85,7 +85,10 @@ one separately: the window of their group when it is loaded, else the window of 
 tabs — the kept tabs of the list (`createMissing`: the missing tabs of a group join its live ones,
 §2), and for the tabs of closed windows any live tab of the group (`tryRestoreMissedTabs`: a
 record may match none of them) — else the normal window in focus, else the first normal window by
-id, `Windows.getFirstNormalWindowId`.
+id, `Windows.getFirstNormalWindowId`. The tabs of closed windows come back as soon as a window can
+hold them: at the start of the add-on, after a window closes and after the browser opens a window
+(the leader of the batch of `windows.onCreated`), one run at a time (`MissedTabs`,
+`DESIGN-QUEUES.md` §2); the tabs of an unloaded group come back hidden.
 
 ## 5. Start of the add-on
 

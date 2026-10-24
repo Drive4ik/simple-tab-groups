@@ -9,8 +9,8 @@ in the root; the notes for the Mozilla reviewers — `addon/README.md`.
 
 `docs/DESIGN-*.md` — how the add-on is built: the model, the invariants, the methods that carry
 them. **At the start of every session read all of them, in full**, before the first task: the
-model is one whole, and a task touches more of it than its name says. The ones every change
-touches:
+model is one whole, and a task touches more of it than its name says. An agent launched for a
+task reads them the same way, in full, before its task. The ones every change touches:
 
 - `docs/DESIGN-QUEUES.md` — the queues, who waits for whom
 - `docs/DESIGN-EVENTS.md` — the browser events: own actions muted, the user's mirrored

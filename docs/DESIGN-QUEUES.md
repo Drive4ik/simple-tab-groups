@@ -14,6 +14,10 @@ name, it goes into the log.
 
 ## 2. The queues, top down
 
+- `MissedTabs` (`windows.js`) — the readers of `tabsToRestore` that create tabs and forget what
+  they read: the restore of the tabs of closed windows (`tryRestoreMissedTabs`) and the grand
+  restore (`runGrandRestore`), one at a time, each reading the list after the previous one has
+  forgotten. Above everything: they create tabs and write the groups.
 - `Groups` (`groups.js`) — the array of groups in `storage.local`.
 - `SubGroups` (`sub-groups.js`), keyed by window — the live groups of a window; it is
   also the gate of the window (`withWindowGate`).
