@@ -10,13 +10,20 @@ action is awaited by its event (`downloads.js`). Events are subscribed through
 ## 1. The add-on's own actions are muted in the events
 
 A flow that creates, moves or hides tabs itself marks them with skip flags (`skipTracking`,
-`skip.created`, for whole windows `skipTrackingWindow`) for the time of the operation. The
-handlers level the timing with timeouts (`Utils.wait(50–70)` at the start), because the browser
-delivers the events late — sometimes after the API call has resolved and the flags are gone. A
-handler must remember that its snapshot of the tab may be older than reality. The mute covers what
-the add-on's own actions change: a pin is the user's under the mute too, and `tabs.onUpdated`
-drops the group and the sub-group of a pinned tab in its muted branch as well
-(`DESIGN-GROUPS.md` §1).
+`skip.created`, for whole windows `skipTrackingWindow`) for the time of the operation. The flag
+of a `tabsAction` is set before the call and removed right at its resolve: for a move, a hide and
+a show the browser delivers the events of the call before the promise resolves
+(`BEHAVIOR-MOVE-TABS.md` §2, `BEHAVIOR-CREATE-TABS.md` §62), so the synchronous skip check at the
+top of a handler still sees the flag. Two flags can come later than the events they mute:
+`skip.created` is set once `tabs.create` has resolved, and `skipTrackingWindow` of a restored
+window is set by `windows.onCreated`; `onCreated`, `onUpdated` and `onActivated` wait at their
+start (`Utils.wait(50–70)`) before they judge, and `onUpdated` reads the tab fresh from the
+browser after the wait — an operation may have started meanwhile. The attach and the detach of a
+move are muted per tab only: they can be delivered before `windows.onCreated`
+(`BEHAVIOR-TABGROUPS.md` §17), a window flag is always too late for them. A handler must remember
+that its snapshot of the tab may be older than reality. The mute covers what the add-on's own
+actions change: a pin is the user's under the mute too, and `tabs.onUpdated` drops the group and
+the sub-group of a pinned tab in its muted branch as well (`DESIGN-GROUPS.md` §1).
 
 ## 2. The user's actions are mirrored into the add-on
 

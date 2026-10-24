@@ -1764,6 +1764,7 @@ async function tabsAction({action, ...params}, tabs, ...funcArgs) {
             log.throwError('invalid schema config');
         }
     } finally {
+        // removed right at the resolve: the events of the call come before it (docs/BEHAVIOR-MOVE-TABS.md §2, docs/BEHAVIOR-CREATE-TABS.md §62)
         continueTrackingTabs(skipped);
     }
 

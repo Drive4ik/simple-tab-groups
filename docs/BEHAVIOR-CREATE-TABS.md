@@ -2125,6 +2125,47 @@ user gesture, with the features `popup,width=400,height=300`.
 - tabs.query({windowType: 'normal'}) returns of popA/popB/c: (none); tabs.query({}) returns: popA, popB, c
 - windows of the stand: 1 in windows.getAll({windowTypes: ['normal']}), 4 in windows.getAll()
 
+### 62. `tabs.onUpdated {hidden}` is delivered BEFORE the promise of `tabs.hide()` and of `tabs.show()` resolves — every time, for a settled tab and for a tab hidden right at its create resolve alike (R37.01–R37.06)
+
+§62 comes from `round-37`, run in October 2026 on Firefox 159. Order is judged by one shared
+sequence counter bumped in the listener and right after each await, not by clocks (clock reads are
+clamped to ~1 ms); the clocks put the events 0–2 ms before the resolve. The way of
+BEHAVIOR-MOVE-TABS.md §2.
+
+- **Not one event landed after the resolve.** 710 `{hidden: true}` of `tabs.hide()` and 690
+  `{hidden: false}` of `tabs.show()`, every one delivered, every one before the resolve of its own
+  call — one tab and arrays of 5 and 10, paced and rapid, a `tabs.discard` of the hidden tabs
+  between the hide and the show.
+- **A fresh tab is no different.** A tab hidden by `tabs.hide()` right at the resolve of its
+  `tabs.create` — loaded, still on its way to the page, and born `discarded: true` alike — gets its
+  `{hidden: true}` before the hide resolves, and ends hidden (R37.05).
+
+  | run | calls × tabs | regime | after resolve | hide gap min/med/max ms | show gap min/med/max ms |
+  | - | - | - | - | - | - |
+  | R37.01 | 30 × 1 | paced hide+show | none | 0/0/1 | 0/0/0 |
+  | R37.02 | 60 × 1 | rapid hide+show | none | 0/0/1 | 0/0/1 |
+  | R37.03 | 20 × 5 | paced hide+show | none | 0/0/1 | 0/0/1 |
+  | R37.04 | 40 × 10 | rapid hide+show | none | 0/0/2 | 0/0/1 |
+  | R37.05 | 10 + 10 × 1 | create, hide right at the resolve; loaded, then born discarded | none | 0/0/2 | — |
+  | R37.06 | 20 × 5 | paced hide+discard+show | none | 0/0/0 | 0/0/1 |
+
+  "Paced" waits for the events of each call before the next one; "rapid" fires the calls back to
+  back. Tested exactly this: tabs on the harness's own page, the active tab of the window never
+  among the hidden ones (`tabs.hide` skips it, BEHAVIOR-TABGROUPS.md §9); a deliberately loaded
+  machine was not part of the run.
+
+  R37.05:
+
+  | tab index | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 |
+  | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - |
+  | before | keep* | | | | | | | | | | | | | | | | | | | | |
+  | `10 × tabs.create(loaded) and 10 × tabs.create({discarded: true}), each hidden by tabs.hide() right at the create resolve` | | | | | | | | | | | | | | | | | | | | | |
+  | after | keep* | ➕n1(h) | ➕n2(h) | ➕n3(h) | ➕n4(h) | ➕n5(h) | ➕n6(h) | ➕n7(h) | ➕n8(h) | ➕n9(h) | ➕n10(h) | ➕d1(h) | ➕d2(h) | ➕d3(h) | ➕d4(h) | ➕d5(h) | ➕d6(h) | ➕d7(h) | ➕d8(h) | ➕d9(h) | ➕d10(h) |
+
+  - tabs.hide() → {hidden: true}: 20 expected, 20 delivered
+  - tabs.hide() → {hidden: true} AFTER the resolve: none
+  - tabs.hide() → {hidden: true} before the resolve, gap: min 0 / med 0 / max 2 ms
+
 ---
 
 ## Conclusions for the add-on
@@ -2275,6 +2316,13 @@ user gesture, with the features `popup,width=400,height=300`.
   by the list of tabs it is handed, so the list comes from `Tabs.removeUnusedTemporaryContainers`
   alone — every tab of the browser, with no filter of window type or pinning — and a container a
   pinned tab or a tab of a `popup` window still uses is kept (DESIGN-GROUPS.md §4).
+- **The per-tab mute flag removed right at the resolve covers the add-on's own hide and show**
+  (§62, as BEHAVIOR-MOVE-TABS.md §2 does for a move): `tabs.onUpdated {hidden}` is delivered before
+  `tabs.hide()` and `tabs.show()` resolve, so the synchronous skip check at the top of the
+  `onUpdated` handler runs while `skip.tracking` of `tabsAction` is still set — for the tabs of a
+  group hidden at a switch and for a tab hidden right after its creation (`Tabs.add`,
+  `createMultiple`, `recreate`) alike. A `{hidden}` event that reaches the handler without the flag
+  is a foreign hide or show, and the handler unbinds the tab from its group on a foreign hide.
 
 ## Open questions
 
