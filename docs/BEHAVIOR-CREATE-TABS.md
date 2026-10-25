@@ -2223,7 +2223,7 @@ BEHAVIOR-MOVE-TABS.md §2.
   (status `complete`: a url read from a loading tab is not final, §28) or the browser announces
   `complete` on an empty tab. `Tabs.fillEmptyUrl` replaces an empty url in a
   snapshot by what the cache knows: the requested url, else the last reported one, for a
-  snapshot older than the mirror (the group lists `runGrandRestoreNow` keeps from its first
+  snapshot older than the mirror (the group lists `runGrandRestore` keeps from its first
   read). A newborn active tab is known to nobody but `tabsToRestore` until its request is seen:
   by the time STG reads the window, 1000 ms later, it holds its real url in every run here, and
   on a machine that has not started the load by then the tab is matched by an empty url and the

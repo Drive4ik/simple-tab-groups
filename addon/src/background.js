@@ -48,7 +48,6 @@ import * as MenusMain from '/js/menus-main.js';
 import * as Groups from '/js/groups.js';
 import * as SubGroups from '/js/sub-groups.js';
 import * as GroupsExternal from '/js/groups-external.js';
-import * as Operations from '/js/operations.js';
 import * as Tabs from '/js/tabs.js';
 import * as Windows from '/js/windows.js';
 import * as Extensions from '/js/extensions.js';
@@ -110,10 +109,7 @@ const moveTabsBatch = new BatchProcessor(async (tabIds, groupId) => {
 const reopenTabsBatch = new BatchProcessor(async (paramsByTabId, groupId) => {
     const tabIds = Array.from(paramsByTabId.keys());
     const log = logger.start('reopenTabsBatch', {tabIds, groupId});
-    await Operations.run('reopen-tab-container', () => {
-            return Tabs.recreate(tabIds, tab => paramsByTabId.get(tab.id));
-        })
-        .catch(log.onCatch('Tabs.recreate'));
+    await Tabs.recreate(tabIds, tab => paramsByTabId.get(tab.id)).catch(log.onCatch('Tabs.recreate'));
     log.stop();
 }, {useMap: true});
 

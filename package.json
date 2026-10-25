@@ -4,6 +4,9 @@
     "description": "stg root packages",
     "author": "Drive4ik <drive4ik+stg@protonmail.com>",
     "type": "module",
+    "scripts": {
+        "lint": "eslint"
+    },
     "dependencies": {
         "eslint": "^9.39.2",
         "eslint-plugin-vue": "^10.6.2",

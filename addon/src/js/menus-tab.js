@@ -172,35 +172,35 @@ export function removeListeners() {
 
 async function onStorageChanged(changes) {
     if (Storage.isChangedKey('showContextMenuOnTabs', changes, Boolean)) {
-        await Menus.transaction('tab-settings-changed-context-menu', async () => {
-            logger.log('onStorageChanged', {showContextMenuOnTabs: changes.showContextMenuOnTabs});
+        using transaction = await Menus.transaction('tab-settings-changed-context-menu');
 
-            const exists = await Menus.has(PARENT_ID);
+        logger.log('onStorageChanged', {showContextMenuOnTabs: changes.showContextMenuOnTabs});
 
-            if (changes.showContextMenuOnTabs.newValue) {
-                exists || await createMenus();
-            } else {
-                exists && await removeMenus();
-            }
-        });
+        const exists = await Menus.has(PARENT_ID);
+
+        if (changes.showContextMenuOnTabs.newValue) {
+            exists || await createMenus();
+        } else {
+            exists && await removeMenus();
+        }
     }
 
     if (Storage.isChangedKey('showArchivedGroups', changes, Boolean)) {
-        await Menus.transaction('tab-settings-changed-archived-groups', async () => {
-            const settings = await loadSettings();
+        using transaction = await Menus.transaction('tab-settings-changed-archived-groups');
 
-            if (!settings.showContextMenuOnTabs) {
-                return
-            }
+        const settings = await loadSettings();
 
-            logger.log('onStorageChanged', {showArchivedGroups: changes.showArchivedGroups});
+        if (!settings.showContextMenuOnTabs) {
+            return;
+        }
 
-            const {groups} = await Groups.load();
+        logger.log('onStorageChanged', {showArchivedGroups: changes.showArchivedGroups});
 
-            for (const group of groups) {
-                await updateGroup(group, settings);
-            }
-        });
+        const {groups} = await Groups.load();
+
+        for (const group of groups) {
+            await updateGroup(group, settings);
+        }
     }
 }
 

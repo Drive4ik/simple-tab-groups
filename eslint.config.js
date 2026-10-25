@@ -35,7 +35,7 @@ export default defineConfig([
             'valid-typeof': 'error',
             // 'no-redeclare': 'error',
             'no-undef': 'error',
-            'no-unused-vars': 'warn',
+            'no-unused-vars': ['warn', {ignoreUsingDeclarations: true}],
             // 'no-extra-semi': 'warn',
             // 'semi': 'warn',
         },

@@ -4,7 +4,7 @@ import * as QueueCore from './queue-core.js';
 
 const logger = new Logger('Operations');
 
-const CHECKS_UNTIL_STUCK = 30;
+const STUCK_AFTER = 5 * 60_000;
 
 const SHARED_KEY = Symbol.for('__ext_operations_shared_state__');
 const shared = self[SHARED_KEY] ??= {
@@ -12,13 +12,13 @@ const shared = self[SHARED_KEY] ??= {
     runningCount: 0,
 };
 
-// composite addon flows register here for their whole duration; consumers (the sub-groups
-// mirror) hold their reactions off while isBusy() and catch up on idle. The guarantee lives in
-// the finally: an operation that throws still ends, idle always comes
-export function run(name, fn) {
+// a composite addon flow registers here for its whole duration (`using operation = Operations.start(name)`);
+// consumers (the sub-groups mirror) hold their reactions off while isBusy() and catch up on idle. The
+// guarantee lives in the dispose: an operation that throws still ends, idle always comes
+export function start(name) {
     const entry = QueueCore.enter({
         label: `operation ${name}`,
-        checksUntilStuck: CHECKS_UNTIL_STUCK,
+        stuckAfter: STUCK_AFTER,
         trace: new Error,
     }, QueueCore.STATE_RUNNING);
 
@@ -26,22 +26,24 @@ export function run(name, fn) {
 
     const log = logger.start(name, 'running:', shared.runningCount);
 
-    return Promise.try(fn).finally(() => {
-        shared.runningCount--;
-        QueueCore.leave(entry);
+    return {
+        [Symbol.dispose]() {
+            shared.runningCount--;
+            QueueCore.leave(entry);
 
-        if (!shared.runningCount) {
-            for (const handler of shared.idleHandlers) {
-                try {
-                    handler();
-                } catch (e) {
-                    log.error('idle handler failed:', getFuncName(handler), String(e));
+            if (!shared.runningCount) {
+                for (const handler of shared.idleHandlers) {
+                    try {
+                        handler();
+                    } catch (e) {
+                        log.error('idle handler failed:', getFuncName(handler), String(e));
+                    }
                 }
             }
-        }
 
-        log.stop('running:', shared.runningCount);
-    });
+            log.stop('running:', shared.runningCount);
+        },
+    };
 }
 
 export function isBusy() {

@@ -158,41 +158,41 @@ export function removeListeners() {
 
 async function onPermissionsChanged(permissions) {
     if (Permissions.hasAny(permissions, Permissions.BOOKMARKS)) {
-        await Menus.transaction('bookmark-permission-changed', async () => {
-            const hasPermission = await Bookmarks.hasPermission();
-            const hasMenus = await Menus.has(PARENT_ID);
+        using transaction = await Menus.transaction('bookmark-permission-changed');
 
-            if (hasPermission && !hasMenus) {
-                await createMenus();
-            } else if (!hasPermission && hasMenus) {
-                await removeMenus();
-            }
+        const hasPermission = await Bookmarks.hasPermission();
+        const hasMenus = await Menus.has(PARENT_ID);
 
-            await Menus.update(EXPORT_ALL_GROUPS_ID, {
-                enabled: hasPermission,
-            });
+        if (hasPermission && !hasMenus) {
+            await createMenus();
+        } else if (!hasPermission && hasMenus) {
+            await removeMenus();
+        }
+
+        await Menus.update(EXPORT_ALL_GROUPS_ID, {
+            enabled: hasPermission,
         });
     }
 }
 
 async function onStorageChanged(changes) {
     if (Storage.isChangedKey('showArchivedGroups', changes, Boolean)) {
-        await Menus.transaction('bookmark-settings-changed', async () => {
-            const hasPermission = await Bookmarks.hasPermission();
+        using transaction = await Menus.transaction('bookmark-settings-changed');
 
-            if (!hasPermission) {
-                return
-            }
+        const hasPermission = await Bookmarks.hasPermission();
 
-            logger.log('onStorageChanged showArchivedGroups, updating groups menus...');
+        if (!hasPermission) {
+            return;
+        }
 
-            const settings = await loadSettings();
-            const {groups} = await Groups.load();
+        logger.log('onStorageChanged showArchivedGroups, updating groups menus...');
 
-            for (const group of groups) {
-                await updateGroup(group, settings, true);
-            }
-        });
+        const settings = await loadSettings();
+        const {groups} = await Groups.load();
+
+        for (const group of groups) {
+            await updateGroup(group, settings, true);
+        }
     }
 }
 
@@ -224,11 +224,9 @@ export async function openInTemporaryContainer(info) {
     log.stop();
 }
 
-export function openInGroup(...args) {
-    return Operations.run('bookmarks-open-in-group', () => openInGroupNow(...args));
-}
+export async function openInGroup(groupId, info) {
+    using operation = Operations.start('bookmarks-open-in-group');
 
-async function openInGroupNow(groupId, info) {
     const log = logger.start(openInGroup, groupId, info);
 
     if (!info.bookmarkId) {
@@ -288,11 +286,9 @@ async function openInGroupNow(groupId, info) {
     log.stop('created tabs count:', tabsToCreate.length);
 }
 
-export function createNewGroup(...args) {
-    return Operations.run('bookmarks-create-group', () => createNewGroupNow(...args));
-}
+export async function createNewGroup(info) {
+    using operation = Operations.start('bookmarks-create-group');
 
-async function createNewGroupNow(info) {
     const log = logger.start(createNewGroup, info);
 
     if (!info.bookmarkId) {

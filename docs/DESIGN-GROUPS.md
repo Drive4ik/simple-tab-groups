@@ -11,7 +11,7 @@ The add-on never touches a pinned tab. The one exception is a tab that cannot be
 microphone, a camera or a screen share, `Tabs.isSharing`: wherever the add-on would have to hide
 it, it pins the tab itself and unbinds it from its group completely (`Groups.pinSharingTabs`, the
 first step of `Groups.hideTabs`), and tells the user about it a couple of times
-(`thisTabsWerePinned`). A move into an unloaded group (`moveNow`) pins such tabs in advance,
+(`thisTabsWerePinned`). A move into an unloaded group (`Tabs.move`) pins such tabs in advance,
 before the focus leaves and before the move. Into a loaded group such a tab moves like any
 other; its copy on a recreate in another container (`recreate`) is loaded right away
 (`allowDiscarded: false`). A pinned tab holds no group and no sub-group: `Tabs.clearPinnedSessions`
@@ -56,7 +56,7 @@ The only coupling is `Groups.hideTabs` / `Groups.showTabs`; without a group (`nu
 hide or show, and that is how tabs without a group go in `groups.js` and `windows.js`. Hiding or
 showing the tabs of a group past the coupling is forbidden. `Groups.hideTabs` does not touch an
 already pinned tab at all, and it returns the tabs it hid: without the pinned ones, but with the
-active tab of the window, which the browser refuses to hide (`applyNow` finds it in that list and
+active tab of the window, which the browser refuses to hide (`Groups.apply` finds it in that list and
 hides it in a second pass).
 
 The exception is the tabs `createMultiple` (`hideUnloaded`) or `recreate` hides itself: with an
@@ -99,7 +99,7 @@ private and popup windows do not count — attaches no listener: `init` waits fo
 `windows.onCreated` and reloads the add-on. `initializeGroups` puts the windows and the tabs in
 order. A group or a sub-group session left on a pinned tab — a pin the add-on did not see while it
 was off, or one that landed between the read of a tab and the write of its group inside one
-operation (`moveNow`) — is dropped (`Tabs.clearPinnedSessions`, §1),
+operation (`Tabs.move`) — is dropped (`Tabs.clearPinnedSessions`, §1),
 and the mirror of the cache learns the pinned tabs by that read (`DESIGN-CACHE.md` §1). A live
 tab whose session names an archived group is a
 leftover of an archiving interrupted between the write of the storage and the closing of its tabs:

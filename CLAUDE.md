@@ -102,10 +102,14 @@ All new code is modern ECMAScript only: `async`/`await`, ES modules, `const`/`le
 the `&&=`/`||=`/`??=` operators, `Promise.allSettled()` and so on.
 `Map.prototype.getOrInsert()` / `getOrInsertComputed()` are **native in Firefox 144+, use them**.
 
-- `using` / `await using` are not allowed yet: `addons-linter` (the constant `ECMA_VERSION = 17`
-  in `addons-scanner-utils`) parses ES2026, but the AMO validator that checks the uploaded zip is
-  still behind and fails on them with `JS_SYNTAX_ERROR`. The check before a release —
-  `npx addons-linter addon/dist`.
+- `using` is the form for a turn of a queue, an operation, the gate of a window and a
+  transaction of the menus. The variable holds the thing itself and is never read; inside its
+  block a returned promise is awaited (`return await …`), or the thing is released before the
+  promise settles. Inside a turn a function that takes the same queue is called through
+  `.call(turn, …)` — `docs/DESIGN-QUEUES.md`. `await using` is not needed: every release here
+  is synchronous. Not in `plugins/*` and not in the modules they share (`js/downloads.js`):
+  their minimum Firefox is 128, `using` needs 141. The AMO validator accepts `using` since
+  `addons-linter` 10.14.0; the check before a release — `npx addons-linter addon/dist`.
 - Code is code, docs are docs. Everything is described in `docs/DESIGN-*.md` (the mechanisms of
   the add-on) and `docs/BEHAVIOR-*.md` (the facts of the browser); the code explains nothing.
   A comment on a block or a condition is a label: what the piece does, in a few words, with the
@@ -304,8 +308,8 @@ past it makes it a liar — `docs/DESIGN-CACHE.md`.
 
 ### Queues and operations
 
-A shared resource that is changed by "read, change, write" is changed only by a move of the
-queue of its owner, and a queue is never handed out of its module. A move waits only for the
+A shared resource that is changed by "read, change, write" is changed only by a turn of the
+queue of its owner, and a queue is never handed out of its module. A turn waits only for the
 queues below its own, never for its own or one above. Operations are not a queue: composite
 flows run in parallel, and the observers wait for them to go idle. The queues, their order and
 the rules per queue — `docs/DESIGN-QUEUES.md`.

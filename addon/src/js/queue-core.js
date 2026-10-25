@@ -1,5 +1,5 @@
 // the list of everything running right now (queue turns, operations) and the stuck check over it:
-// an entry that sits in one state for checksUntilStuck checks is logged as stuck, once it ends - as released
+// an entry that stays in one state longer than its stuckAfter is logged as stuck, once it ends - as released
 import Logger from './logger.js';
 import {getStack} from './logger-utils.js';
 
@@ -32,7 +32,6 @@ export function registerQueue(name) {
 export function setState(entry, state) {
     entry.state = state;
     entry.since = Date.now();
-    entry.checks = 0;
 }
 
 export function enter(entry, state) {
@@ -55,13 +54,8 @@ export function leave(entry) {
 function check() {
     shared.checkTimer = entries.size ? setTimeout(check, CHECK_INTERVAL) : null;
 
-    const stuck = [];
-
-    for (const entry of entries) {
-        if (++entry.checks === entry.checksUntilStuck) {
-            stuck.push(entry);
-        }
-    }
+    const now = Date.now();
+    const stuck = [...entries].filter(entry => !entry.reported && now - entry.since >= entry.stuckAfter);
 
     if (stuck.length) {
         report(stuck);

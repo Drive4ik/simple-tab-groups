@@ -45,7 +45,7 @@ new window for 50–65 ms (§26), and the url of a restored window's active tab 
 
 `Tabs.fillEmptyUrl` replaces an empty url in a snapshot by what the cache knows,
 `Cache.getTabUrl(id)`: the requested url, else the last reported one (for a snapshot older than
-the mirror, the group lists `runGrandRestoreNow` keeps from its first read). Such filled objects
+the mirror, the group lists `runGrandRestore` keeps from its first read). Such filled objects
 come back into the cache: `Groups.load(…, true)` → `SubGroups.apply` → `Cache.loadTabSession`,
 `settleTabs`, `reconcile` → `Cache.setTabSession`. So the cache judges emptiness by
 `tab.browserUrl`, the non-enumerable field `browserTabToAddon` sets and `fillEmptyUrl` never

@@ -186,21 +186,17 @@ export function getTabChildren(tabIds) {
 // not read yet, null means read and the session has no value, anything else is the value. Only
 // the load and the remove check the mark (a known "no value" is not read and not removed again);
 // the getters and the copies never let null out of the module. Operations on one id and one
-// key run one after another (queueByKey), different keys in parallel. A record deleted from the
-// store (forgetTab, removeTab, removeWindow) while an operation waits its turn is dead: the load
-// skips it, a write lands in it and nobody reads it again
+// key run one after another (a turn of the queue per sessionKey), different keys in parallel. A
+// record deleted from the store (forgetTab, removeTab, removeWindow) while an operation waits its
+// turn is dead: the load skips it, a write lands in it and nobody reads it again
 async function loadValue(store, id, key) {
     const record = store.getOrInsertComputed(id, createRecord);
 
-    await queueByKey('load', store, id, key, async () => {
-        if (record !== store.get(id)) {
-            return;
-        }
+    using turn = await sessionQueue.wait('load', null, {key: sessionKey(store, id, key)});
 
-        if (record[key] === undefined) {
-            record[key] = await SESSIONS_API.get(store).load(id, key) ?? null;
-        }
-    });
+    if (record === store.get(id) && record[key] === undefined) {
+        record[key] = await SESSIONS_API.get(store).load(id, key) ?? null;
+    }
 
     return getValue(store, id, key);
 }
@@ -208,21 +204,23 @@ async function loadValue(store, id, key) {
 async function setValue(store, id, key, value) {
     const record = store.getOrInsertComputed(id, createRecord);
 
-    await queueByKey('set', store, id, key, async () => {
-        await SESSIONS_API.get(store).set(id, key, value);
-        record[key] = value;
-    });
+    using turn = await sessionQueue.wait('set', null, {key: sessionKey(store, id, key)});
+
+    await SESSIONS_API.get(store).set(id, key, value);
+    record[key] = value;
 }
 
 async function removeValue(store, id, key) {
     const record = store.get(id) ?? createRecord(id);
 
-    await queueByKey('remove', store, id, key, async () => {
-        if (record[key] !== null) {
+    using turn = await sessionQueue.wait('remove', null, {key: sessionKey(store, id, key)});
+
+    if (record[key] !== null) {
+        try {
             await SESSIONS_API.get(store).remove(id, key);
             record[key] = null;
-        }
-    }).catch(() => {});
+        } catch {}
+    }
 }
 
 function getValue(store, id, key) {
@@ -441,6 +439,6 @@ export async function removeWindowSession(id) {
     removeWindow(id);
 }
 
-function queueByKey(name, store, id, key, fn) {
-    return sessionQueue.run(name, fn, `${SESSIONS_API.get(store).name}:${id}:${key}`);
+function sessionKey(store, id, key) {
+    return `${SESSIONS_API.get(store).name}:${id}:${key}`;
 }

@@ -11,13 +11,11 @@ let Windows;
 
 const logger = new Logger('Browser');
 
+// the drawing chain is one turn of the queue (docs/DESIGN-QUEUES.md §2): inside a turn the functions
+// of this module are called through .call(turn, …)
 const actionQueue = new Queue('Action');
 
-export function action(...args) {
-    return actionQueue.run('set', () => actionNow(...args));
-}
-
-async function actionNow({
+export async function action({
     title = Constants.MANIFEST.browser_action.default_title,
     icon = Constants.MANIFEST.browser_action.default_icon,
     popup = Constants.MANIFEST.browser_action.default_popup,
@@ -26,6 +24,8 @@ async function actionNow({
     isSticky = false,
     badgeBackgroundColor = null,
 }) {
+    using turn = await actionQueue.wait('set', this);
+
     const log = logger.start('setAction', {
         title,
         icon,
@@ -85,42 +85,36 @@ async function actionNow({
     log.stop();
 }
 
-export function actionAllWindows(...args) {
-    return actionQueue.run('all-windows', () => actionAllWindowsNow(...args));
-}
+export async function actionAllWindows(details) {
+    using turn = await actionQueue.wait('all-windows', this);
 
-async function actionAllWindowsNow(details) {
     Windows ??= await import('./windows.js');
     const windows = await Windows.load();
 
-    await actionNow(details); // for new windows
+    await action.call(turn, details); // for new windows
 
     for (const {id} of windows) { // for every window
-        await actionNow({
+        await action.call(turn, {
             ...details,
             windowId: id,
         });
     }
 }
 
-export function actionAllGroups() {
-    return actionQueue.run('all-groups', () => actionAllGroupsNow());
-}
+export async function actionAllGroups() {
+    using turn = await actionQueue.wait('all-groups', this);
 
-async function actionAllGroupsNow() {
     Windows ??= await import('./windows.js');
     const windows = await Windows.load();
 
     for (const {id} of windows) {
-        await actionGroupNow(null, id);
+        await actionGroup.call(turn, null, id);
     }
 }
 
-export function actionGroup(...args) {
-    return actionQueue.run('group', () => actionGroupNow(...args));
-}
+export async function actionGroup(group, windowId) {
+    using turn = await actionQueue.wait('group', this);
 
-async function actionGroupNow(group, windowId) {
     const log = logger.start('actionGroup', {groupId: group?.id, windowId});
 
     Groups ??= await import('./groups.js');
@@ -156,7 +150,7 @@ async function actionGroupNow(group, windowId) {
         details.isSticky = group.isSticky;
     }
 
-    await actionNow(details);
+    await action.call(turn, details);
 
     // prependWindowTitle
     let titlePreface = '';
@@ -177,20 +171,18 @@ async function actionGroupNow(group, windowId) {
     log.stop();
 }
 
-export function actionLoading(start = true) {
-    return actionQueue.run(start ? 'loading' : 'restore', () => actionLoadingNow(start));
-}
+export async function actionLoading(start = true) {
+    using turn = await actionQueue.wait(start ? 'loading' : 'restore');
 
-async function actionLoadingNow(start) {
     if (start) {
-        await actionAllWindowsNow({
+        await actionAllWindows.call(turn, {
             title: '__MSG_loading__',
         });
     } else {
-        await actionNow({
+        await action.call(turn, {
             enable: true,
         });
 
-        await actionAllGroupsNow();
+        await actionAllGroups.call(turn);
     }
 }

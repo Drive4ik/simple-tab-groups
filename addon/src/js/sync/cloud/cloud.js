@@ -74,11 +74,11 @@ export async function synchronization(trust = null, revision = null) {
 
         send('sync-start');
 
-        const syncRes = await Operations.run('cloud-sync', () => sync(trust, revision, progress => {
+        const syncRes = await sync(trust, revision, progress => {
             lastProgress = progress;
             log.log('progress', progress);
             send('sync-progress', {progress});
-        }));
+        });
 
         syncResult.ok = true;
         syncResult.progress = 100;
@@ -129,6 +129,8 @@ export function getLastSyncTime() {
 }
 
 async function sync(trust = null, revision = null, progressFunc = null) {
+    using operation = Operations.start('cloud-sync');
+
     const isRestoring = !!revision;
 
     if (isRestoring) {

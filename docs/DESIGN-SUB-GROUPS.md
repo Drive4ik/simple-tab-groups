@@ -78,7 +78,7 @@ composite operation runs (`Operations.isBusy()`, `DESIGN-QUEUES.md`) the window 
 one pass runs on idle: an operation in flight shows transient states — tabs visible and ungrouped
 a moment before they are hidden — that the mirror would honestly record as the user's doing. The
 pass re-checks the operations at three points, after every read, and once more inside the
-`Groups.update` move: a reading that an operation overtook is thrown away, nothing is written.
+`Groups.update` turn: a reading that an operation overtook is thrown away, nothing is written.
 
 **The pass.** It reads the visible tabs of the window raw (their `groupId` is the live id) and
 the live groups, and loads the sessions of the tabs. A live group the module does not know —
@@ -93,7 +93,7 @@ group. A visible tab OUT of every live group is only **nominated** to lose its s
 when its id was live once in that window: the user pulled the tab out or destroyed the group.
 An id the window never saw live is a **pending import** — a tab that arrived with a session the
 window has not materialized yet; the session is the only thing that will materialize it, so it
-stays. The erase itself runs in a second settled pass (`clearWindowSessionsNow`) that re-reads
+stays. The erase itself runs in a second settled pass (`clearWindowSessions`) that re-reads
 the window: a candidate that changed in between — rehidden, regrouped, moved away, its session
 rewritten — is dropped silently. Detection is state-based: any later pass re-nominates a still
 real pull-out, nothing depends on catching an event exactly once. When a session changed, the UI
@@ -107,12 +107,11 @@ only.
 
 ## 5. The window gate
 
-`withWindowGate`: the `SubGroups` queue keyed by window serializes the mirror, the erase,
+`openWindowGate`: the `SubGroups` queue keyed by window serializes the mirror, the erase,
 `apply` and `restoreMembership` within a window, and suppresses the mirror while one of them
-runs — a trigger that arrives under the gate marks the window dirty, and one mirror pass follows
-the release, no event is lost. Nothing under the gate waits for the groups queue: a gated
-operation returns the metadata it has collected, and the write goes after the gate is released
-(`DESIGN-QUEUES.md` §3).
+runs — a trigger that arrives under the gate marks the gate dirty, and one mirror pass follows
+the release, no event is lost. Nothing under the gate waits for the groups queue: the gate is
+left with the metadata collected, and the write goes after it (`DESIGN-QUEUES.md` §3).
 
 ## 6. apply — the storage becomes live groups
 
@@ -147,7 +146,7 @@ rules, in this order:
 4. Landing inside another sub-group's span wins over all of the above — the browser's occupant
    rule (§1): a tab dropped into a span joins it. A mover that arrived inside a live span keeps
    the browser's placement (a cross-window arrival at an inner index joins silently, §20); a
-   drop onto a tab of an unloaded group's sub-group (`destSubGroupId` in `moveNow`) gives the
+   drop onto a tab of an unloaded group's sub-group (`destSubGroupId` in `Tabs.move`) gives the
    movers that sub-group instead of anything carried — the same rule for a group whose spans are
    not live, so a drop into a sub-group behaves the same whether the group is loaded or not.
 

@@ -59,18 +59,9 @@ async function saveAll(menus) {
 const writeQueue = new Queue('Menus');
 const transactionQueue = new Queue('MenusTransaction');
 
-export function transaction(name, fn) {
-    const log = logger.start('transaction', name);
-
-    return transactionQueue.run(name, async () => {
-        log.log('started');
-
-        const result = await fn();
-
-        log.stop();
-
-        return result;
-    });
+// a batch of menu calls as one whole (docs/DESIGN-QUEUES.md §2)
+export function transaction(name) {
+    return transactionQueue.wait(name);
 }
 
 function collectDescendantIds(menus, parentId) {
@@ -91,11 +82,9 @@ export async function has(id) {
     return id in menus;
 }
 
-export function create(createProperties) {
-    return writeQueue.run('create', () => createNow(createProperties));
-}
+export async function create(createProperties) {
+    using turn = await writeQueue.wait('create');
 
-async function createNow(createProperties) {
     const id = createProperties.id ??= crypto.randomUUID();
 
     const log = logger.start('create', createProperties);
@@ -148,11 +137,9 @@ export async function createSeparator(parentId) {
     });
 }
 
-export function update(id, updateProperties) {
-    return writeQueue.run('update', () => updateNow(id, updateProperties));
-}
+export async function update(id, updateProperties) {
+    using turn = await writeQueue.wait('update');
 
-async function updateNow(id, updateProperties) {
     const log = logger.start('update', id, updateProperties);
 
     const menus = await loadAll();
@@ -190,11 +177,9 @@ async function updateNow(id, updateProperties) {
     log.stop();
 }
 
-export function remove(id) {
-    return writeQueue.run('remove', () => removeNow(id));
-}
+export async function remove(id) {
+    using turn = await writeQueue.wait('remove');
 
-async function removeNow(id) {
     const log = logger.start('remove', id);
 
     const menus = await loadAll();
@@ -218,11 +203,9 @@ async function removeNow(id) {
     log.stop();
 }
 
-export function removeChildren(parentId) {
-    return writeQueue.run('remove-children', () => removeChildrenNow(parentId));
-}
+export async function removeChildren(parentId) {
+    using turn = await writeQueue.wait('remove-children');
 
-async function removeChildrenNow(parentId) {
     const log = logger.start('removeChildren', parentId);
 
     const menus = await loadAll();
@@ -243,11 +226,9 @@ async function removeChildrenNow(parentId) {
     log.stop();
 }
 
-export function removeAll() {
-    return writeQueue.run('remove-all', removeAllNow);
-}
+export async function removeAll() {
+    using turn = await writeQueue.wait('remove-all');
 
-async function removeAllNow() {
     const log = logger.start('removeAll');
 
     await browser.menus.removeAll().catch(log.onCatch("can't remove all"));

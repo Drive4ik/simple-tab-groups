@@ -2,11 +2,17 @@
 import * as Constants from './constants.js';
 import * as Utils from './utils.js';
 import * as Permissions from './permissions.js';
+import Queue from './queue.js';
 import Logger from '/js/logger.js';
 import Lang from '/js/lang.js';
 
 const logger = new Logger('Host');
-let versionCheck = null; // the check in flight; the other actions wait for it to end
+
+// one message to the host at a time; the version check holds the turn over its own messages (docs/DESIGN-QUEUES.md §2)
+const hostQueue = new Queue('Host');
+
+// the folder dialog and the update wait for the user and the network (docs/DESIGN-QUEUES.md §5)
+const LONG_ACTION_STUCK_AFTER = 10 * 60_000;
 
 export async function hasPermission() {
     return Permissions.has(Permissions.NATIVE_MESSAGING);
@@ -48,12 +54,9 @@ export function getErrorMessage(error) {
     return String(error);
 }
 
-async function sendMessage(...args) {
-    await versionCheck;
-    return sendMessageNow(...args);
-}
+async function sendMessage(action, params = {}, stuckAfter) {
+    using turn = await hostQueue.wait(action, this, {stuckAfter});
 
-async function sendMessageNow(action, params = {}) {
     const log = logger.start('sendMessage', `HOST_ACTION#${action}`);
 
     if (params.filePath) {
@@ -75,11 +78,10 @@ async function sendMessageNow(action, params = {}) {
 }
 
 export async function checkVersion() {
-    const {promise, resolve} = Promise.withResolvers();
-    versionCheck = promise;
+    using turn = await hostQueue.wait('check-version', null, {stuckAfter: LONG_ACTION_STUCK_AFTER});
 
     try {
-        const {data: hostVersion} = await sendMessageNow('get-version');
+        const {data: hostVersion} = await sendMessage.call(turn, 'get-version');
 
         const versionDiffIndex = Utils.compareNumericVersions(Constants.HOST.VERSION, hostVersion);
 
@@ -92,7 +94,7 @@ export async function checkVersion() {
                 version = 'latest'; // will update to latest NOT major version
             }
 
-            await sendMessageNow('update', {version});
+            await sendMessage.call(turn, 'update', {version});
         }
     } catch (e) {
         if (e instanceof HostError) {
@@ -103,9 +105,6 @@ export async function checkVersion() {
                 args: [],
             }, e);
         }
-    } finally {
-        versionCheck = null;
-        resolve();
     }
 }
 
@@ -131,7 +130,7 @@ export async function openBackupFolder() {
 export async function selectBackupFolder() {
     const {data} = await sendMessage('select-backup-folder', {
         dialogTitle: Lang('selectBackupFolder'),
-    });
+    }, LONG_ACTION_STUCK_AFTER);
     return data;
 }
 

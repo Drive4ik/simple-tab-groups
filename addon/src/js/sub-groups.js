@@ -138,24 +138,27 @@ function adoptLiveGroup(liveId, memberTabs = []) {
 
 // docs/DESIGN-SUB-GROUPS.md §5: nothing under the gate waits for the groups queue
 const windowQueue = new Queue('SubGroups');
-const gatedWindows = new Map; // windowId → {dirty}
+const gatedWindows = new Map; // windowId → the gate
 
-function withWindowGate(windowId, name, operation) {
-    return windowQueue.run(name, async () => {
-        const gate = {dirty: false};
+// the gate of the window, released by `using`: a mirror trigger under it marks it dirty, one pass follows the release
+async function openWindowGate(windowId, name) {
+    const turn = await windowQueue.wait(name, null, {key: windowId});
 
-        gatedWindows.set(windowId, gate);
-
-        try {
-            return await operation();
-        } finally {
+    const gate = {
+        dirty: false,
+        [Symbol.dispose]() {
+            turn[Symbol.dispose]();
             gatedWindows.delete(windowId);
 
             if (gate.dirty) {
                 scheduleMirrorWindow(windowId);
             }
-        }
-    }, windowId);
+        },
+    };
+
+    gatedWindows.set(windowId, gate);
+
+    return gate;
 }
 
 function onCreated(liveGroup) {
@@ -275,117 +278,118 @@ export function scheduleMirrorWindow(windowId) {
 }
 
 async function mirrorWindow(windowId) {
-    const changes = await withWindowGate(windowId, 'mirror', () => mirrorWindowNow(windowId));
+    let groupId;
+    let subGroups;
 
-    if (changes) {
-        await Groups.update(changes.groupId, () => deferMirror(windowId) ? {} : {subGroups: changes.subGroups});
-    }
-}
+    // the pass under the gate; the write goes after the gate is released (docs/DESIGN-QUEUES.md §3)
+    {
+        using gate = await openWindowGate(windowId, 'mirror');
 
-async function mirrorWindowNow(windowId) {
-    const log = logger.start(mirrorWindowNow, windowId);
+        const log = logger.start(mirrorWindow, windowId);
 
-    if (deferMirror(windowId)) {
-        log.stop('deferred, operations are busy (1/3)');
-        return;
-    }
+        if (deferMirror(windowId)) {
+            log.stop('deferred, operations are busy (1/3)');
+            return;
+        }
 
-    const [winTabs, liveGroups] = await Promise.all([
-        queryWindowTabs(windowId),
-        browser.tabGroups.query({windowId}),
-    ]);
+        const [winTabs, liveGroups] = await Promise.all([
+            queryWindowTabs(windowId),
+            browser.tabGroups.query({windowId}),
+        ]);
 
-    const liveIdByTabId = new Map(winTabs.map(tab => {
-        return [tab.id, tab.groupId === TAB_GROUP_ID_NONE ? undefined : tab.groupId];
-    }));
+        const liveIdByTabId = new Map(winTabs.map(tab => {
+            return [tab.id, tab.groupId === TAB_GROUP_ID_NONE ? undefined : tab.groupId];
+        }));
 
-    // the adoption votes and the session diff need the sessions
-    await Promise.allSettled(winTabs.map(tab => Cache.loadTabSubGroupId(tab.id)));
+        // the adoption votes and the session diff need the sessions
+        await Promise.allSettled(winTabs.map(tab => Cache.loadTabSubGroupId(tab.id)));
 
-    const memberTabsByLiveId = Map.groupBy(winTabs, tab => liveIdByTabId.get(tab.id));
+        const memberTabsByLiveId = Map.groupBy(winTabs, tab => liveIdByTabId.get(tab.id));
 
-    const liveSubGroups = liveGroups.map(liveGroup => {
-        const subGroupId = subGroupIdByLiveId.get(liveGroup.id)
-            ?? adoptLiveGroup(liveGroup.id, memberTabsByLiveId.get(liveGroup.id));
+        const liveSubGroups = liveGroups.map(liveGroup => {
+            const subGroupId = subGroupIdByLiveId.get(liveGroup.id)
+                ?? adoptLiveGroup(liveGroup.id, memberTabsByLiveId.get(liveGroup.id));
 
-        markMaterialized(windowId, subGroupId);
+            markMaterialized(windowId, subGroupId);
 
-        return toSubGroup(subGroupId, liveGroup);
-    });
+            return toSubGroup(subGroupId, liveGroup);
+        });
 
-    // an operation that started while we were reading makes every conclusion below stale
-    if (deferMirror(windowId)) {
-        log.stop('deferred, operations are busy (2/3)');
-        return;
-    }
+        // an operation that started while we were reading makes every conclusion below stale
+        if (deferMirror(windowId)) {
+            log.stop('deferred, operations are busy (2/3)');
+            return;
+        }
 
-    // live membership wins; a tab out of every live group is only nominated (docs/DESIGN-SUB-GROUPS.md §4)
-    let sessionsChanged = false;
-    const clearCandidates = new Map; // tabId → sessionId at nomination time
+        // live membership wins; a tab out of every live group is only nominated (docs/DESIGN-SUB-GROUPS.md §4)
+        let sessionsChanged = false;
+        const clearCandidates = new Map; // tabId → sessionId at nomination time
 
-    await Promise.allSettled(winTabs.map(tab => {
-        const liveId = liveIdByTabId.get(tab.id);
-        const sessionId = Cache.getTabSubGroupId(tab.id);
+        await Promise.allSettled(winTabs.map(tab => {
+            const liveId = liveIdByTabId.get(tab.id);
+            const sessionId = Cache.getTabSubGroupId(tab.id);
 
-        if (liveId) {
-            const subGroupId = subGroupIdByLiveId.get(liveId);
+            if (liveId) {
+                const subGroupId = subGroupIdByLiveId.get(liveId);
 
-            if (subGroupId !== sessionId) {
-                sessionsChanged = true;
-                return Cache.setTabSubGroupId(tab.id, subGroupId);
+                if (subGroupId !== sessionId) {
+                    sessionsChanged = true;
+                    return Cache.setTabSubGroupId(tab.id, subGroupId);
+                }
+            } else if (sessionId && isMaterialized(windowId, sessionId)) {
+                clearCandidates.set(tab.id, sessionId);
             }
-        } else if (sessionId && isMaterialized(windowId, sessionId)) {
-            clearCandidates.set(tab.id, sessionId);
+        }));
+
+        if (clearCandidates.size) {
+            scheduleClearWindow(windowId, clearCandidates);
         }
-    }));
 
-    if (clearCandidates.size) {
-        scheduleClearWindow(windowId, clearCandidates);
-    }
+        groupId = Cache.getWindowGroup(windowId);
 
-    const groupId = Cache.getWindowGroup(windowId);
-
-    if (!groupId) {
-        log.stop('no active group, sessions only');
-        return;
-    }
-
-    const {group} = await Groups.load(groupId);
-
-    if (!group) {
-        log.stop('group not found');
-        return;
-    }
-
-    if (sessionsChanged) {
-        // membership lives on the tabs - the UI has to refetch them, a metadata broadcast isn't enough
-        Tabs.sendUpdatedGroup(groupId);
-    }
-
-    // pending imports stay while a visible tab references them
-    const liveSubGroupIds = new Set(liveSubGroups.map(subGroup => subGroup.id));
-    const referencedIds = new Set(winTabs.map(tab => Cache.getTabSubGroupId(tab.id)));
-    const subGroups = liveSubGroups;
-
-    for (const subGroup of group.subGroups) {
-        if (!liveSubGroupIds.has(subGroup.id) && referencedIds.has(subGroup.id)) {
-            subGroups.push(subGroup);
+        if (!groupId) {
+            log.stop('no active group, sessions only');
+            return;
         }
+
+        const {group} = await Groups.load(groupId);
+
+        if (!group) {
+            log.stop('group not found');
+            return;
+        }
+
+        if (sessionsChanged) {
+            // membership lives on the tabs - the UI has to refetch them, a metadata broadcast isn't enough
+            Tabs.sendUpdatedGroup(groupId);
+        }
+
+        // pending imports stay while a visible tab references them
+        const liveSubGroupIds = new Set(liveSubGroups.map(subGroup => subGroup.id));
+        const referencedIds = new Set(winTabs.map(tab => Cache.getTabSubGroupId(tab.id)));
+
+        subGroups = liveSubGroups;
+
+        for (const subGroup of group.subGroups) {
+            if (!liveSubGroupIds.has(subGroup.id) && referencedIds.has(subGroup.id)) {
+                subGroups.push(subGroup);
+            }
+        }
+
+        if (deferMirror(windowId)) {
+            log.stop('deferred, operations are busy (3/3)');
+            return;
+        }
+
+        if (isSameSubGroups(group.subGroups, subGroups)) {
+            log.stop('no metadata changes');
+            return;
+        }
+
+        log.stop('metadata changed, count:', subGroups.length);
     }
 
-    if (deferMirror(windowId)) {
-        log.stop('deferred, operations are busy (3/3)');
-        return;
-    }
-
-    if (isSameSubGroups(group.subGroups, subGroups)) {
-        log.stop('no metadata changes');
-        return;
-    }
-
-    log.stop('metadata changed, count:', subGroups.length);
-
-    return {groupId, subGroups};
+    await Groups.update(groupId, () => deferMirror(windowId) ? {} : {subGroups});
 }
 
 // the second settled pass of the erase (docs/DESIGN-SUB-GROUPS.md §4): anything that changed in between
@@ -419,13 +423,11 @@ function deferClearWindow(windowId, candidates) {
     }
 }
 
-function clearWindowSessions(windowId, candidates) {
-    return withWindowGate(windowId, 'clear-sessions', () => clearWindowSessionsNow(windowId, candidates));
-}
+async function clearWindowSessions(windowId, candidates) {
+    using gate = await openWindowGate(windowId, 'clear-sessions');
 
-async function clearWindowSessionsNow(windowId, pending) {
     if (Operations.isBusy()) {
-        deferClearWindow(windowId, pending);
+        deferClearWindow(windowId, candidates);
         return;
     }
 
@@ -433,16 +435,16 @@ async function clearWindowSessionsNow(windowId, pending) {
 
     // an operation that started while we were reading makes the nomination stale - put it back
     if (Operations.isBusy()) {
-        deferClearWindow(windowId, pending);
+        deferClearWindow(windowId, candidates);
         return;
     }
 
-    const log = logger.start(clearWindowSessionsNow, windowId, 'candidates:', pending.size);
+    const log = logger.start(clearWindowSessions, windowId, 'candidates:', candidates.size);
 
     let cleared = 0;
 
     for (const tab of winTabs) {
-        const sessionId = pending.get(tab.id);
+        const sessionId = candidates.get(tab.id);
 
         if (!sessionId || tab.groupId !== TAB_GROUP_ID_NONE) {
             continue;
@@ -523,76 +525,72 @@ async function isLiveStateSame(windowId, {tabs: groupTabs, subGroups}) {
 
 // docs/DESIGN-SUB-GROUPS.md §6: only the garbage collection changes subGroups here
 export async function apply(windowId, group) {
-    const subGroups = await withWindowGate(windowId, 'apply', () => applyNow(windowId, group));
+    // the pass under the gate; the write goes after the gate is released (docs/DESIGN-QUEUES.md §3)
+    {
+        using gate = await openWindowGate(windowId, 'apply');
 
-    if (subGroups) {
-        await Groups.update(group.id, {subGroups});
-    }
-}
+        const log = logger.start(apply, windowId, 'group:', group.id, 'count:', group.subGroups.length);
 
-async function applyNow(windowId, group) {
-    const {subGroups} = group;
-    const log = logger.start(applyNow, windowId, 'group:', group.id, 'count:', subGroups.length);
+        if (!group.tabs.length) {
+            log.stop('tabs are empty');
+            return;
+        }
 
-    if (!group.tabs.length) {
-        log.stop('tabs are empty');
-        return;
-    }
+        await Promise.all(group.tabs.map(tab => Cache.loadTabSession(tab)));
 
-    await Promise.all(group.tabs.map(tab => Cache.loadTabSession(tab)));
+        if (await isLiveStateSame(windowId, group)) {
+            log.stop('live state already matches');
+            return;
+        }
 
-    if (await isLiveStateSame(windowId, group)) {
-        log.stop('live state already matches');
-        return;
-    }
+        await Tabs.ungroup(group.tabs);
 
-    await Tabs.ungroup(group.tabs);
+        const memberTabsBySubGroupId = Map.groupBy(group.tabs, tab => tab.subGroupId);
 
-    const memberTabsBySubGroupId = Map.groupBy(group.tabs, tab => tab.subGroupId);
+        const appliedSubGroups = [];
 
-    const appliedSubGroups = [];
+        for (const subGroup of group.subGroups) {
+            const memberTabs = memberTabsBySubGroupId.get(subGroup.id) ?? [];
+            const visibleMemberTabs = memberTabs.filter(tab => !tab.hidden);
 
-    for (const subGroup of subGroups) {
-        const memberTabs = memberTabsBySubGroupId.get(subGroup.id) ?? [];
-        const visibleMemberTabs = memberTabs.filter(tab => !tab.hidden);
-
-        if (!visibleMemberTabs.length) {
-            if (memberTabs.length) {
-                appliedSubGroups.push(subGroup); // members exist but aren't visible - keep as is
+            if (!visibleMemberTabs.length) {
+                if (memberTabs.length) {
+                    appliedSubGroups.push(subGroup); // members exist but aren't visible - keep as is
+                }
+                // no members at all - dropped (garbage collection)
+                continue;
             }
-            // no members at all - dropped (garbage collection)
-            continue;
+
+            try {
+                const liveId = await Tabs.group(visibleMemberTabs, windowId);
+
+                await browser.tabGroups.update(liveId, {
+                    collapsed: subGroup.collapsed,
+                    color: subGroup.color,
+                    title: subGroup.title,
+                });
+
+                linkLiveGroup(liveId, subGroup.id);
+                markMaterialized(windowId, subGroup.id);
+                appliedSubGroups.push(subGroup);
+            } catch (e) {
+                // the members still reference subGroup.id in the sessions, the next apply retries
+                appliedSubGroups.push(subGroup);
+                log.logError(['cant apply sub-group', subGroup], e);
+            }
         }
 
-        try {
-            const liveId = await Tabs.group(visibleMemberTabs, windowId);
-
-            await browser.tabGroups.update(liveId, {
-                collapsed: subGroup.collapsed,
-                color: subGroup.color,
-                title: subGroup.title,
-            });
-
-            linkLiveGroup(liveId, subGroup.id);
-            markMaterialized(windowId, subGroup.id);
-            appliedSubGroups.push(subGroup);
-        } catch (e) {
-            // the members still reference subGroup.id in the sessions, the next apply retries
-            appliedSubGroups.push(subGroup);
-            log.logError(['cant apply sub-group', subGroup], e);
+        if (isSameSubGroups(group.subGroups, appliedSubGroups)) {
+            log.stop();
+            return;
         }
+
+        group.subGroups = appliedSubGroups;
+
+        log.stop('metadata changed, count:', appliedSubGroups.length);
     }
 
-    if (isSameSubGroups(group.subGroups, appliedSubGroups)) {
-        log.stop();
-        return;
-    }
-
-    group.subGroups = appliedSubGroups;
-
-    log.stop('metadata changed, count:', appliedSubGroups.length);
-
-    return appliedSubGroups;
+    await Groups.update(group.id, {subGroups: group.subGroups});
 }
 
 export async function hasLiveGroups(windowId) {
@@ -695,62 +693,62 @@ export async function restoreMembership(group, movedTabs, snapshot = null) {
     const log = logger.start(restoreMembership, 'group:', group.id, {windowId}, 'carried:', snapshot.size);
 
     if (windowId) {
-        await withWindowGate(windowId, 'restore-membership', async () => {
-            const [winTabs, liveGroups] = await Promise.all([
-                queryWindowTabs(windowId),
-                browser.tabGroups.query({windowId}),
-            ]);
+        using gate = await openWindowGate(windowId, 'restore-membership');
 
-            const liveIdByTabId = new Map(winTabs.map(tab => [tab.id, tab.groupId]));
-            const liveIdsInWindow = new Set(liveGroups.map(liveGroup => liveGroup.id));
-            const memberTabsBySubGroup = new Map;
+        const [winTabs, liveGroups] = await Promise.all([
+            queryWindowTabs(windowId),
+            browser.tabGroups.query({windowId}),
+        ]);
 
-            for (const tab of movedTabs) {
-                const subGroup = snapshot.get(tab.id);
+        const liveIdByTabId = new Map(winTabs.map(tab => [tab.id, tab.groupId]));
+        const liveIdsInWindow = new Set(liveGroups.map(liveGroup => liveGroup.id));
+        const memberTabsBySubGroup = new Map;
 
-                if (liveIdByTabId.get(tab.id) !== TAB_GROUP_ID_NONE) {
-                    continue;
-                }
+        for (const tab of movedTabs) {
+            const subGroup = snapshot.get(tab.id);
 
-                if (subGroup) {
-                    memberTabsBySubGroup.getOrInsert(subGroup, []).push(tab);
-                } else if (Cache.getTabSubGroupId(tab.id)) {
-                    // the moved tab objects come from moveNative with the session keys stripped - ask the cache, not the object
-                    delete tab.subGroupId;
-                    await Cache.removeTabSubGroupId(tab.id);
-                }
+            if (liveIdByTabId.get(tab.id) !== TAB_GROUP_ID_NONE) {
+                continue;
             }
 
-            for (const [subGroup, memberTabs] of memberTabsBySubGroup) {
-                try {
-                    for (const tab of memberTabs) {
-                        if (Cache.getTabSubGroupId(tab.id) !== subGroup.id) {
-                            tab.subGroupId = subGroup.id;
-                            await Cache.setTabSubGroupId(tab.id, subGroup.id);
-                        }
-                    }
-
-                    // the sub-group was carried here earlier and is still live - join it
-                    const existingLiveId = liveIdBySubGroupId.get(subGroup.id);
-                    const joinLiveId = liveIdsInWindow.has(existingLiveId) ? existingLiveId : null;
-
-                    const liveId = await Tabs.group(memberTabs, windowId, {joinLiveGroupId: joinLiveId});
-
-                    if (!joinLiveId) {
-                        await browser.tabGroups.update(liveId, {
-                            collapsed: subGroup.collapsed,
-                            color: subGroup.color,
-                            title: subGroup.title,
-                        });
-
-                        linkLiveGroup(liveId, subGroup.id);
-                        markMaterialized(windowId, subGroup.id);
-                    }
-                } catch (e) {
-                    log.logError(['cant restore sub-group', subGroup], e);
-                }
+            if (subGroup) {
+                memberTabsBySubGroup.getOrInsert(subGroup, []).push(tab);
+            } else if (Cache.getTabSubGroupId(tab.id)) {
+                // the moved tab objects come from moveNative with the session keys stripped - ask the cache, not the object
+                delete tab.subGroupId;
+                await Cache.removeTabSubGroupId(tab.id);
             }
-        });
+        }
+
+        for (const [subGroup, memberTabs] of memberTabsBySubGroup) {
+            try {
+                for (const tab of memberTabs) {
+                    if (Cache.getTabSubGroupId(tab.id) !== subGroup.id) {
+                        tab.subGroupId = subGroup.id;
+                        await Cache.setTabSubGroupId(tab.id, subGroup.id);
+                    }
+                }
+
+                // the sub-group was carried here earlier and is still live - join it
+                const existingLiveId = liveIdBySubGroupId.get(subGroup.id);
+                const joinLiveId = liveIdsInWindow.has(existingLiveId) ? existingLiveId : null;
+
+                const liveId = await Tabs.group(memberTabs, windowId, {joinLiveGroupId: joinLiveId});
+
+                if (!joinLiveId) {
+                    await browser.tabGroups.update(liveId, {
+                        collapsed: subGroup.collapsed,
+                        color: subGroup.color,
+                        title: subGroup.title,
+                    });
+
+                    linkLiveGroup(liveId, subGroup.id);
+                    markMaterialized(windowId, subGroup.id);
+                }
+            } catch (e) {
+                log.logError(['cant restore sub-group', subGroup], e);
+            }
+        }
 
         // the mirror picks the created sub-groups up into the metadata
         scheduleMirrorWindow(windowId);

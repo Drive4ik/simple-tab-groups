@@ -84,11 +84,10 @@ function enqueueGrandRestore(windowId) {
     };
 }
 
-function runGrandRestore(...args) {
-    return missedTabsQueue.run('grand-restore', () => Operations.run('grand-restore', () => runGrandRestoreNow(...args)));
-}
+async function runGrandRestore(restoredWindowIds) {
+    using turn = await missedTabsQueue.wait('grand-restore');
+    using operation = Operations.start('grand-restore');
 
-async function runGrandRestoreNow(restoredWindowIds) {
     const log = logger.start(runGrandRestore, Array.from(restoredWindowIds));
 
     // the pinned tabs of the restored windows are in by now (docs/BEHAVIOR-CREATE-TABS.md §59)
@@ -504,27 +503,27 @@ async function onRemoved(windowId) {
     if (tabsToRestore.length) {
         log.info('start merge tabs');
 
-        await tabsToRestoreQueue.run('add', async () => {
-            const prevRestore = await getTabsToRestore();
-            const tabsToRestoreFiltered = tabsToRestore.filter(tab => {
-                const twin = prevRestore.find(t => !t.id && Tabs.isSame(t, tab));
+        using turn = await tabsToRestoreQueue.wait('add');
 
-                if (twin) {
-                    // saved before: the record of this close replaces it in place (docs/BEHAVIOR-OPENER.md, How STG carries the link)
-                    for (const key of Object.keys(twin)) {
-                        delete twin[key];
-                    }
+        const prevRestore = await getTabsToRestore();
+        const tabsToRestoreFiltered = tabsToRestore.filter(tab => {
+            const twin = prevRestore.find(t => !t.id && Tabs.isSame(t, tab));
 
-                    Object.assign(twin, tab);
-                    return false;
+            if (twin) {
+                // saved before: the record of this close replaces it in place (docs/BEHAVIOR-OPENER.md, How STG carries the link)
+                for (const key of Object.keys(twin)) {
+                    delete twin[key];
                 }
 
-                return true;
-            });
+                Object.assign(twin, tab);
+                return false;
+            }
 
-            await Storage.set({
-                tabsToRestore: rebuildTabsToRestore([...prevRestore, ...tabsToRestoreFiltered]),
-            });
+            return true;
+        });
+
+        await Storage.set({
+            tabsToRestore: rebuildTabsToRestore([...prevRestore, ...tabsToRestoreFiltered]),
         });
 
         removedBatch.add(windowId);
@@ -580,12 +579,10 @@ export async function get(windowId = browser.windows.WINDOW_ID_CURRENT) {
     return win;
 }
 
-export function create(...args) {
-    return Operations.run('create-window', () => createNow(...args));
-}
+export async function create(groupId, activeTabId) {
+    using operation = Operations.start('create-window');
 
-async function createNow(groupId, activeTabId) {
-    const log = logger.start(createNow, {groupId, activeTabId});
+    const log = logger.start(create, {groupId, activeTabId});
 
     if (!groupId) {
         log.throwError('No group id');
@@ -715,23 +712,22 @@ async function getTabsToRestore() {
     return tabsToRestore;
 }
 
-function forgetTabsToRestore(restoredTabs) {
-    return tabsToRestoreQueue.run('forget', async () => {
-        const tabsToRestore = rebuildTabsToRestore(await getTabsToRestore(), tab => !restoredTabs.some(t => Tabs.isSame(t, tab)));
+async function forgetTabsToRestore(restoredTabs) {
+    using turn = await tabsToRestoreQueue.wait('forget');
 
-        if (tabsToRestore.length) {
-            await Storage.set({tabsToRestore});
-        } else {
-            await Storage.remove('tabsToRestore');
-        }
-    });
+    const tabsToRestore = rebuildTabsToRestore(await getTabsToRestore(), tab => !restoredTabs.some(t => Tabs.isSame(t, tab)));
+
+    if (tabsToRestore.length) {
+        await Storage.set({tabsToRestore});
+    } else {
+        await Storage.remove('tabsToRestore');
+    }
 }
 
-export function tryRestoreMissedTabs(...args) {
-    return missedTabsQueue.run('restore', () => Operations.run('restore-missed-tabs', () => tryRestoreMissedTabsNow(...args)));
-}
+export async function tryRestoreMissedTabs(actionLoading = true) {
+    using turn = await missedTabsQueue.wait('restore');
+    using operation = Operations.start('restore-missed-tabs');
 
-async function tryRestoreMissedTabsNow(actionLoading = true) {
     const log = logger.start(['info', tryRestoreMissedTabs]);
 
     const tabsToRestore = await getTabsToRestore();
@@ -808,11 +804,9 @@ async function tryRestoreMissedTabsNow(actionLoading = true) {
     log.stop();
 }
 
-export function initializeGroups(...args) {
-    return Operations.run('initialize-groups', () => initializeGroupsNow(...args));
-}
+export async function initializeGroups(groups, afterRestoring = false) {
+    using operation = Operations.start('initialize-groups');
 
-async function initializeGroupsNow(groups, afterRestoring = false) {
     const log = logger.start(initializeGroups, {afterRestoring});
 
     const EXTENSION_START_TIME = await getExtensionStartTime();

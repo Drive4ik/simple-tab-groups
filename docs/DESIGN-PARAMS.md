@@ -30,7 +30,7 @@ positional, before `params`. The rules:
 - Nobody writes into `params`. A different value for a callee is a new object:
   `Tabs.query({pinned: false}, {...params, includeFavIconUrl: false})`.
 - The default of a key lives only at its consumer; the links in between pass `undefined`
-  through. A default that depends on loaded data (`showTab` from the group in `moveNow`) is read
+  through. A default that depends on loaded data (`showTab` from the group in `Tabs.move`) is read
   right after the load, still as one constant.
 - The constant is named like the key, so a function of the module never carries such a name
   (`skipTrackingTabs`, not `skipTracking`).

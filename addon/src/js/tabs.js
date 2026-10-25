@@ -940,6 +940,8 @@ async function queryLiveMembers(windowIds) {
 // docs/BEHAVIOR-OPENER.md "How STG carries the link" - A transfer (§3, §6, §7, Implications 10)
 // a copy that could not be created is an empty slot in the result: its original stays where it is, with its links
 export async function recreate(tabs, buildTabFunc) {
+    using operation = Operations.start('recreate-tabs');
+
     const log = logger.start(recreate, 'tabs:', tabs.map(extractId));
 
     const originals = await list(tabs, {sortByIndex: true});
@@ -1211,12 +1213,10 @@ export async function createTempActiveTab(windowId, createPinnedTab = true, newT
     }
 }
 
-export function add(...args) {
-    return Operations.run('add-tab', () => addNow(...args));
-}
+export async function add(groupId, cookieStoreId, url, title) {
+    using operation = Operations.start('add-tab');
 
-async function addNow(groupId, cookieStoreId, url, title) {
-    const log = logger.start(addNow, {groupId, cookieStoreId, url, title});
+    const log = logger.start(add, {groupId, cookieStoreId, url, title});
 
     const windowId = Cache.getWindowId(groupId);
 
@@ -1292,15 +1292,13 @@ export async function updateThumbnail(tabId) {
     }
 }
 
-export function move(...args) {
-    return Operations.run('move-tabs', () => moveNow(...args));
-}
+export async function move(tabIds, groupId, params = {}) {
+    using operation = Operations.start('move-tabs');
 
-async function moveNow(tabIds, groupId, params = {}) {
     const auto = params.auto ?? false;
     const newTabIndex = params.newTabIndex ?? null;
 
-    const log = logger.start(moveNow, {tabIds, groupId, params});
+    const log = logger.start(move, {tabIds, groupId, params});
 
     const groupWindowId = Cache.getWindowId(groupId);
     const {group, groups} = await Groups.load(groupId, !groupWindowId);
@@ -1425,7 +1423,7 @@ async function moveNow(tabIds, groupId, params = {}) {
         return [];
     }
 
-    return applyGroupAndNotify(group, groupId, windowId, tabs, activeTabs, tempTabs, {showTab, showOnlyActiveTab, showNotification}, log);
+    return await applyGroupAndNotify(group, groupId, windowId, tabs, activeTabs, tempTabs, {showTab, showOnlyActiveTab, showNotification}, log);
 }
 
 // the group's tabs gather as one block in the window at their own first tab there, or at the

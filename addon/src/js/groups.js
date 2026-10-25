@@ -57,11 +57,9 @@ export async function applyByHistory(direction, windowId, groups) {
     return apply(windowId, nextGroupId, undefined, true);
 }
 
-export function apply(...args) {
-    return Operations.run('apply-group', () => applyNow(...args));
-}
+export async function apply(windowId, groupId, activeTabId, applyFromHistory = false) {
+    using operation = Operations.start('apply-group');
 
-async function applyNow(windowId, groupId, activeTabId, applyFromHistory = false) {
     const log = logger.start(apply, 'groupId:', groupId, 'windowId:', windowId, 'activeTabId:', activeTabId);
 
     windowId ??= (await Windows.getFocusedNormalWindow())?.id;
@@ -314,13 +312,13 @@ if (Constants.IS_BACKGROUND_PAGE) {
 
         const log = logger.start('Containers.onChanged listener');
 
-        await writeQueue.run('containers-changed', async () => {
-            const {groups} = await load();
+        using turn = await writeQueue.wait('containers-changed');
 
-            if (normalizeContainersInGroups(groups)) {
-                await saveNow(groups);
-            }
-        });
+        const {groups} = await load();
+
+        if (normalizeContainersInGroups(groups)) {
+            await save.call(turn, groups);
+        }
 
         log.stop();
     });
@@ -376,21 +374,18 @@ export async function load(groupId = null, withTabs = false, params) {
 // composite operations, sync and UI edits must not interleave (lost update)
 const writeQueue = new Queue('Groups');
 
-export function save(groups, withMessage = false) {
-    return writeQueue.run('save', async () => {
-        if (typeof groups === 'function') {
-            groups = await groups();
+// inside a turn of this queue: save.call(turn, groups) (docs/DESIGN-QUEUES.md §3)
+export async function save(groups, withMessage = false) {
+    using turn = await writeQueue.wait('save', this);
 
-            if (!groups) {
-                return groups;
-            }
+    if (typeof groups === 'function') {
+        groups = await groups();
+
+        if (!groups) {
+            return groups;
         }
+    }
 
-        return saveNow(groups, withMessage);
-    });
-}
-
-async function saveNow(groups, withMessage = false) {
     const log = logger.start('save', {withMessage});
 
     if (!Array.isArray(groups)) {
@@ -489,15 +484,13 @@ export async function saveDefault(defaultGroupProps) {
     log.stop();
 }
 
-export function add(...args) {
-    return Operations.run('add-group', () => addNow(...args));
-}
+export async function add(windowId, tabIds = [], title = null) {
+    using operation = Operations.start('add-group');
 
-async function addNow(windowId, tabIds = [], title = null) {
     tabIds = tabIds?.slice?.() || [];
     title = title?.slice(0, 256);
 
-    const log = logger.start(addNow, {windowId, tabIds, title});
+    const log = logger.start(add, {windowId, tabIds, title});
 
     const windowGroupId = Cache.getWindowGroup(windowId);
 
@@ -510,11 +503,16 @@ async function addNow(windowId, tabIds = [], title = null) {
         }
     }
 
-    const newGroup = await writeQueue.run('add', async () => {
+    let newGroup;
+
+    // the turn of the groups queue: read, change, write; the rest goes after it (docs/DESIGN-QUEUES.md §3)
+    {
+        using turn = await writeQueue.wait('add');
+
         const {groups} = await load();
         const {defaultGroupProps} = await getDefaults();
 
-        const newGroup = create(createId(), title, defaultGroupProps);
+        newGroup = create(createId(), title, defaultGroupProps);
 
         groups.push(newGroup);
 
@@ -522,10 +520,8 @@ async function addNow(windowId, tabIds = [], title = null) {
 
         NewCloudGroups.add(newGroup.id);
 
-        await saveNow(groups);
-
-        return newGroup;
-    });
+        await save.call(turn, groups);
+    }
 
     if (windowId) {
         await Cache.setWindowGroup(windowId, newGroup.id);
@@ -548,12 +544,10 @@ async function addNow(windowId, tabIds = [], title = null) {
     return newGroup;
 }
 
-export function remove(...args) {
-    return Operations.run('remove-group', () => removeNow(...args));
-}
+export async function remove(groupIds) {
+    using operation = Operations.start('remove-group');
 
-async function removeNow(groupIds) {
-    const log = logger.start(removeNow, groupIds);
+    const log = logger.start(remove, groupIds);
 
     const idsToRemove = Utils.toSet(groupIds);
     const windowIdByGroupId = new Map;
@@ -573,25 +567,31 @@ async function removeNow(groupIds) {
         }
     }
 
-    const removedGroups = await writeQueue.run('remove', async () => {
+    let removedGroups;
+
+    // the turn of the groups queue: read, change, write; the rest goes after it (docs/DESIGN-QUEUES.md §3)
+    {
+        using turn = await writeQueue.wait('remove');
+
         const {groups} = await load(null, true);
         const {defaultGroupProps} = await getDefaults();
 
-        const groupsToRemove = groups.filter(group => idsToRemove.has(group.id));
+        removedGroups = groups.filter(group => idsToRemove.has(group.id));
 
-        if (!groupsToRemove.length) {
-            return groupsToRemove;
+        if (!removedGroups.length) {
+            log.stopError('groups', groupIds, 'not found');
+            return;
         }
 
         const restGroups = groups.filter(group => !idsToRemove.has(group.id));
 
         // the tabs close before the storage cut: an abort in between leaves an empty group,
         // never hidden orphan tabs whose group is already gone
-        await Tabs.remove(groupsToRemove.flatMap(group => group.isArchive ? [] : group.tabs), {ungroupNative: false, keepWindowsAlive: false});
+        await Tabs.remove(removedGroups.flatMap(group => group.isArchive ? [] : group.tabs), {ungroupNative: false, keepWindowsAlive: false});
 
         let defaultGroupPropsChanged = false;
 
-        for (const group of groupsToRemove) {
+        for (const group of removedGroups) {
             group.index = groups.indexOf(group);
 
             if (removeRefs(group, restGroups, defaultGroupProps)) {
@@ -599,18 +599,11 @@ async function removeNow(groupIds) {
             }
         }
 
-        await saveNow(restGroups);
+        await save.call(turn, restGroups);
 
         if (defaultGroupPropsChanged) {
             await saveDefault(defaultGroupProps);
         }
-
-        return groupsToRemove;
-    });
-
-    if (!removedGroups.length) {
-        log.stopError('groups', groupIds, 'not found');
-        return;
     }
 
     for (const group of removedGroups) {
@@ -699,11 +692,9 @@ async function addUndoRemove(groupToRemove) {
     }
 }
 
-export function restore(...args) {
-    return Operations.run('restore-group', () => restoreNow(...args));
-}
+export async function restore(groupId) {
+    using operation = Operations.start('restore-group');
 
-async function restoreNow(groupId) {
     const log = logger.start('restore', groupId);
 
     const restoreId = RESTORE_GROUP_PREFIX + groupId;
@@ -720,7 +711,10 @@ async function restoreNow(groupId) {
 
     await browser.storage.session.remove(restoreId);
 
-    await writeQueue.run('restore', async () => {
+    // the turn of the groups queue: read, change, write; the rest goes after it (docs/DESIGN-QUEUES.md §3)
+    {
+        using turn = await writeQueue.wait('restore');
+
         const {groups, groupsById} = await load(null, true); // with the tabs: collectSubGroupIds reads them
         const {index} = group;
 
@@ -740,8 +734,8 @@ async function restoreNow(groupId) {
 
         NewCloudGroups.add(group.id);
 
-        await saveNow(groups);
-    });
+        await save.call(turn, groups);
+    }
 
     if (group.tabs.length && !group.isArchive) {
         await Browser.actionLoading();
@@ -760,11 +754,9 @@ async function restoreNow(groupId) {
     log.stop('success restored', group.id);
 }
 
-export function update(groupId, updateData) {
-    return writeQueue.run('update', () => updateNow(groupId, updateData));
-}
+export async function update(groupId, updateData) {
+    using turn = await writeQueue.wait('update');
 
-async function updateNow(groupId, updateData) {
     const log = logger.start('update', {groupId, updateData});
 
     const {group, groupIndex, groups} = await load(groupId);
@@ -805,7 +797,7 @@ async function updateNow(groupId, updateData) {
 
     Object.assign(group, updateData);
 
-    await saveNow(groups);
+    await save.call(turn, groups);
 
     sendUpdated({
         id: groupId,
@@ -836,15 +828,19 @@ async function updateNow(groupId, updateData) {
 export async function move(groupId, newGroupIndex) {
     const log = logger.start('move', {groupId, newGroupIndex});
 
-    const groups = await writeQueue.run('move', async () => {
-        const {groups, groupIndex} = await load(groupId);
+    let groups;
 
-        groups.splice(newGroupIndex, 0, groups.splice(groupIndex, 1)[0]);
+    // the turn of the groups queue: read, change, write; the menus go after it (docs/DESIGN-QUEUES.md §3)
+    {
+        using turn = await writeQueue.wait('move');
 
-        await saveNow(groups, true);
+        const loaded = await load(groupId);
 
-        return groups;
-    });
+        groups = loaded.groups;
+        groups.splice(newGroupIndex, 0, groups.splice(loaded.groupIndex, 1)[0]);
+
+        await save.call(turn, groups, true);
+    }
 
     await MenusMain.groupsUpdated(groups);
 
@@ -858,8 +854,13 @@ export async function sort(vector = 'asc') {
         log.throwError(`invalid sort vector: ${vector}`);
     }
 
-    const groups = await writeQueue.run('sort', async () => {
-        const {groups} = await load();
+    let groups;
+
+    // the turn of the groups queue: read, change, write; the menus go after it (docs/DESIGN-QUEUES.md §3)
+    {
+        using turn = await writeQueue.wait('sort');
+
+        ({groups} = await load());
 
         if ('asc' === vector) {
             groups.sort(Utils.sortBy('title'));
@@ -867,10 +868,8 @@ export async function sort(vector = 'asc') {
             groups.sort(Utils.sortBy('title', undefined, true));
         }
 
-        await saveNow(groups, true);
-
-        return groups;
-    });
+        await save.call(turn, groups, true);
+    }
 
     await MenusMain.groupsUpdated(groups);
 
@@ -954,11 +953,9 @@ export async function settleTabs(group, savedTabs, {live, aligned}) {
     return tabs.map(Cache.applyTabSession);
 }
 
-export function unload(...args) {
-    return Operations.run('unload-group', () => unloadNow(...args));
-}
+export async function unload(groupId) {
+    using operation = Operations.start('unload-group');
 
-async function unloadNow(groupId) {
     const log = logger.start('unload', groupId);
 
     if (!groupId) {
@@ -1012,11 +1009,9 @@ async function unloadNow(groupId) {
     return true;
 }
 
-export function archiveToggle(...args) {
-    return Operations.run('archive-toggle', () => archiveToggleNow(...args));
-}
+export async function archiveToggle(groupId) {
+    using operation = Operations.start('archive-toggle');
 
-async function archiveToggleNow(groupId) {
     const log = logger.start('archiveToggle', groupId);
 
     await Browser.actionLoading();
@@ -1031,12 +1026,18 @@ async function archiveToggleNow(groupId) {
         }
     }
 
-    const {group, tabsToRemove, savedTabs, creation} = await writeQueue.run('archive-toggle', async () => {
-        const {group, groups} = await load(groupId, true);
+    let group;
+    let tabsToRemove = [];
+    let savedTabs = null;
+    let creation = null;
 
-        let tabsToRemove = [],
-            savedTabs = null,
-            creation = null;
+    // the turn of the groups queue: read, change, write; the rest goes after it (docs/DESIGN-QUEUES.md §3)
+    {
+        using turn = await writeQueue.wait('archive-toggle');
+
+        const loaded = await load(groupId, true);
+
+        group = loaded.group;
 
         log.log('group.isArchive', group.isArchive, '=>', !group.isArchive);
 
@@ -1058,10 +1059,8 @@ async function archiveToggleNow(groupId) {
             });
         }
 
-        await saveNow(groups);
-
-        return {group, tabsToRemove, savedTabs, creation};
-    });
+        await save.call(turn, loaded.groups);
+    }
 
     if (creation) {
         // outside the queue turn: the settle ends with a sub-group apply, and its Groups.update
