@@ -9,8 +9,8 @@ implementation
 
 uses
   System.SysUtils, System.Classes, System.Net.HttpClient, System.Net.HttpClientComponent,
-  System.JSON, System.Generics.Collections, System.Hash, System.IOUtils,
-  Winapi.Windows, System.Math, Settings, Utils, Logger;
+  System.Net.URLClient, System.Net.URI, System.JSON, System.Generics.Collections, System.Hash,
+  System.IOUtils, Winapi.Windows, System.Math, Settings, Utils, Logger;
 
 const RELEASES_API_URL = 'https://api.github.com/repos/Drive4ik/simple-tab-groups/releases';
 const TAG_START: string = 'v';
@@ -53,11 +53,24 @@ begin
   Result := SameText(ActualHex, DigestParts[1]);
 end;
 
+function IsTrustedDownloadHost(const Url: String): Boolean;
+var
+  Uri: TURI;
+begin
+  Uri := TURI.Create(Url);
+  Result := SameText(Uri.Scheme, 'https') and
+    (SameText(Uri.Host, 'github.com') or Uri.Host.EndsWith('.github.com') or
+     Uri.Host.EndsWith('.githubusercontent.com'));
+end;
+
 function Fetch(const Url: String; const Accept: String = 'application/vnd.github+json'): TMemoryStream;
 var
   HTTP: TNetHTTPClient;
   Resp: IHTTPResponse;
 begin
+  if not IsTrustedDownloadHost(Url) then
+    raise Exception.Create('Refusing to fetch from untrusted URL: ' + Url);
+
   Result := TMemoryStream.Create;
 
   HTTP := TNetHTTPClient.Create(nil);
