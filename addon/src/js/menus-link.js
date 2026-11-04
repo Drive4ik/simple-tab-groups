@@ -15,10 +15,10 @@ const SETTING_KEYS = ['showContextMenuOnLinks', 'showArchivedGroups'];
 
 const MODULE_NAME = 'menus-link';
 
-const logger = new Logger(MODULE_NAME).disable();
+const logger = new Logger(MODULE_NAME, {debugOnly: true});
 
 export async function create(withExtra = true) {
-    const log = logger.start(create, {withExtra});
+    using log = logger.start(create, {withExtra});
     const settings = await loadSettings();
 
     if (settings.showContextMenuOnLinks) {
@@ -29,11 +29,11 @@ export async function create(withExtra = true) {
         // there are no extra menus
     }
 
-    log.stop(settings);
+    log.log(settings);
 }
 
 export async function remove(withExtra = true) {
-    const log = logger.start(remove, {withExtra});
+    using log = logger.start(remove, {withExtra});
 
     if (await Menus.has(PARENT_ID)) {
         await removeMenus();
@@ -42,8 +42,6 @@ export async function remove(withExtra = true) {
     if (withExtra) {
         // there are no extra menus
     }
-
-    log.stop();
 }
 
 async function createMenus(settings = null) {
@@ -172,7 +170,7 @@ async function onStorageChanged(changes) {
 
 // actions
 export async function openInTemporaryContainer(info) {
-    const log = logger.start(openInTemporaryContainer, info);
+    using log = logger.start(openInTemporaryContainer, info);
 
     await Tabs.create({
         url: info.linkUrl,
@@ -180,24 +178,20 @@ export async function openInTemporaryContainer(info) {
         active: info.button.RIGHT,
         cookieStoreId: Constants.TEMPORARY_CONTAINER,
     }, {skipTrackingCreated: false});
-
-    log.stop();
 }
 
 export async function openInGroup(groupId, info, tab) {
-    const log = logger.start(openInGroup, groupId, info);
+    using log = logger.start(openInGroup, groupId, info);
 
     const newTab = await Tabs.add(groupId, undefined, info.linkUrl, info.linkText);
 
     if (info.button.RIGHT) {
         await Groups.apply(tab?.windowId, groupId, newTab.id); // the window of the click; a link in the sidebar has no tab, then the window in focus
     }
-
-    log.stop();
 }
 
 export async function createNewGroup(info, tab) {
-    const log = logger.start(createNewGroup, info);
+    using log = logger.start(createNewGroup, info);
 
     let {ok, group, error} = await self.onBackgroundMessage({
         action: 'add-new-group',
@@ -218,7 +212,7 @@ export async function createNewGroup(info, tab) {
         }
     }
 
-    log.stop(ok);
+    log.log(ok);
 }
 
 // helpers

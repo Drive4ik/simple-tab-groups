@@ -2166,6 +2166,81 @@ BEHAVIOR-MOVE-TABS.md §2.
   - tabs.hide() → {hidden: true} AFTER the resolve: none
   - tabs.hide() → {hidden: true} before the resolve, gap: min 0 / med 0 / max 2 ms
 
+### 63. A port of `runtime.connect` seen from the end that was late to listen: a message posted before that end attached `port.onMessage` is lost, a disconnect made before it attached `port.onDisconnect` is never reported to it and leaves `port.error` null, `port.postMessage` into such a port throws; a connect nobody listens to is refused on the page 2 ms later, after its first `postMessage` has returned without an error (R38.01–R38.04)
+
+§63 comes from `round-38`, run in October 2026. The background gets the port of a page in
+`runtime.onConnect` and attaches `port.onMessage` and `port.onDisconnect` to it only 500 ms later
+(`ACTION_WAIT`); the page acts right after `runtime.connect`, in the same task, and reports every
+result of its own calls by `runtime.sendMessage`. The shape of the add-on at its start: the pages
+connect while the background still loads its modules, and `listeners.js` hands the ports to the
+handler later (DESIGN-LISTENERS.md §2).
+
+- **Nothing queues a port message.** The page posts n=1, n=2, n=3 right after the connect, every
+  call returns without an error; when the listener is attached 500 ms later, none of the three
+  arrives, and n=4 asked for after the attach arrives at once (R38.01). The page cannot tell: its
+  `postMessage` into a port the other end does not listen to yet returns like any other.
+- **A disconnect is announced once, to the listeners present.** A page that calls
+  `port.disconnect()` right after the connect still reaches `runtime.onConnect` (35 ms, `port.error`
+  null); `port.onDisconnect` attached 500 ms later never fires, `port.error` stays null, and
+  `port.postMessage` into the port throws `Attempt to postMessage on disconnected port`. A
+  disconnect made after the attach fires `onDisconnect` once (2 ms, `port.error` null), and the
+  same `postMessage` throws the same (R38.02). A page closed by `tabs.remove` after the background
+  got its port behaves the same way: no late `onDisconnect`, `port.error` null, the throw; closed
+  after the attach — `onDisconnect` once (10 ms) and the throw (R38.03).
+- **No `runtime.onConnect` listener at all:** the page's `postMessage` right after the connect
+  returns without an error, 2 ms later the page's own `port.onDisconnect` fires with `port.error`
+  `Could not establish connection. Receiving end does not exist.`, and a `postMessage` 1002 ms
+  later throws `Attempt to postMessage on disconnected port` (R38.04).
+
+R38.01:
+
+```text
+   31ms  runtime.onConnect     page, port.error: null
+   33ms  page reports          page: port.postMessage n=1 right after the connect - ok
+   33ms  page reports          page: port.postMessage n=2 right after the connect - ok
+   33ms  page reports          page: port.postMessage n=3 right after the connect - ok
+    0ms  port.postMessage      page: ok
+    1ms  port.onMessage        page: {"n":4}
+```
+
+- posted before the listener and delivered after it: none
+- delivered after the control: 4
+
+R38.02:
+
+```text
+   35ms  runtime.onConnect     early, port.error: null
+    0ms  port.postMessage      early: throws: Attempt to postMessage on disconnected port
+   38ms  runtime.onConnect     late, port.error: null
+    0ms  port.postMessage      late: ok
+    2ms  port.onDisconnect     late, port.error: null
+    0ms  port.postMessage      late: throws: Attempt to postMessage on disconnected port
+```
+
+- early, disconnected before the listener: port.onDisconnect fired 0 time(s), port.error: null
+- late, disconnected after the listener: port.onDisconnect fired 1 time(s), port.error: null
+
+R38.03:
+
+```text
+   27ms  runtime.onConnect     early, port.error: null
+    0ms  port.postMessage      early: throws: Attempt to postMessage on disconnected port
+   39ms  runtime.onConnect     late, port.error: null
+   10ms  port.onDisconnect     late, port.error: null
+    1ms  port.postMessage      late: throws: Attempt to postMessage on disconnected port
+```
+
+- early, closed before the listener: port.onDisconnect fired 0 time(s), port.error: null
+- late, closed after the listener: port.onDisconnect fired 1 time(s), port.error: null
+
+R38.04:
+
+```text
+   25ms  page reports          page: port.postMessage right after the connect - ok
+   26ms  page reports          page: port.onDisconnect - 2 ms after the connect, port.error: Could not establish connection. Receiving end does not exist.
+ 1027ms  page reports          page: port.postMessage later - 1002 ms after the connect, port.onDisconnect fired before it: true, throws: Attempt to postMessage on disconnected port
+```
+
 ---
 
 ## Conclusions for the add-on

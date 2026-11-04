@@ -4,9 +4,15 @@ export const SCENE_URL = browser.runtime.getURL('tab.html');
 export const NAVIGATE_URL = browser.runtime.getURL('navigate.html');
 export const MANAGEMENT_URL = browser.runtime.getURL('management.html');
 export const SENDER_URL = browser.runtime.getURL('sender.html');
+export const PORT_URL = browser.runtime.getURL('port.html');
+export const MESSAGE_URL = browser.runtime.getURL('message.html');
+export const ORDER_URL = browser.runtime.getURL('order.html');
 export const CONTENT_SCRIPT_URL = browser.runtime.getManifest().content_scripts[0].matches[0].slice(0, -1);
 export const NETWORK_URL = 'https://example.com/';
 export const READER_URL = 'https://en.wikipedia.org/wiki/Main_Page';
+export const AUTH_CREDENTIALS = {username: 'stg', password: 'stg'};
+export const AUTH_URL = `https://httpbin.org/basic-auth/${AUTH_CREDENTIALS.username}/${AUTH_CREDENTIALS.password}`; // answers 401 until these credentials come
+export const DEAD_PROXY_PORTS = [65535, 65534, 65533, 65532, 65531, 65530, 65529]; // ports of localhost nothing listens on and the browser does not ban: a proxy there refuses the connection; one per case, a failed proxy is remembered for its failoverTimeout
 export const NEW_TAB_POSITIONS = ['atEnd', 'afterCurrent', 'relatedAfterCurrent'];
 
 export const SETTING_WAIT = 100;
@@ -31,7 +37,7 @@ export const BOOKMARKS_FOLDER = 'stg-behavior-tests';
 
 export const NOISY_UPDATE_KEYS =['status', 'url', 'title', 'favIconUrl', 'isArticle', 'audible', 'attention'];
 
-export const ROUNDS = ['round-01', 'round-02', 'round-03', 'round-04', 'round-05', 'round-06', 'round-07', 'round-08', 'round-09', 'round-10', 'round-11', 'round-12', 'round-13', 'round-14', 'round-15', 'round-16', 'round-18', 'round-19', 'round-20', 'round-21', 'round-22', 'round-23', 'round-24', 'round-25', 'round-26', 'round-27', 'round-29', 'round-31', 'round-32', 'round-33', 'round-34', 'round-35', 'round-36', 'round-37'];
+export const ROUNDS = ['round-01', 'round-02', 'round-03', 'round-04', 'round-05', 'round-06', 'round-07', 'round-08', 'round-09', 'round-10', 'round-11', 'round-12', 'round-13', 'round-14', 'round-15', 'round-16', 'round-18', 'round-19', 'round-20', 'round-21', 'round-22', 'round-23', 'round-24', 'round-25', 'round-26', 'round-27', 'round-29', 'round-31', 'round-32', 'round-33', 'round-34', 'round-35', 'round-36', 'round-37', 'round-38', 'round-39'];
 
 export const RUN_KEY = 'testRun';
 export const LOGS_KEY = 'testLogs';

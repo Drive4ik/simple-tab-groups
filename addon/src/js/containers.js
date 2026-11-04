@@ -32,7 +32,7 @@ const shared = self[SHARED_KEY] ??= {
         name: await Storage.get('temporaryContainerTitle')
             .then(data => data.temporaryContainerTitle || Promise.reject(new Error('is empty')))
             .catch(e => {
-                logger.logError("can't get temporaryContainerTitle from storage", e);
+                logger.error("can't get temporaryContainerTitle from storage", e);
                 return Lang('temporaryContainerTitle');
             }),
     },
@@ -78,16 +78,15 @@ export function removeListeners() {
 }
 
 async function load() {
-    const log = logger.start(load);
+    using log = logger.start(load);
 
     let result = {};
 
     try {
         const containersArray = await browser.contextualIdentities.query({});
         result = Object.fromEntries(containersArray.map(container => [container.cookieStoreId, container]));
-        log.stop();
     } catch (e) {
-        log.logError("can't load containers", e).stopError();
+        log.error("can't load containers", e);
     }
 
     return result;
@@ -147,7 +146,7 @@ function processOnChangedListeners() {
         try {
             listener();
         } catch (e) {
-            logger.logError(['onChangedListener:', listener.name], e);
+            logger.error('onChangedListener:', listener.name, e);
         }
     }
 }
@@ -165,21 +164,21 @@ export function isTemporary(cookieStoreId, contextualIdentity = containers[cooki
 }
 
 export async function createTemporary() {
-    const log = logger.start(createTemporary);
+    using log = logger.start(createTemporary);
 
     const {cookieStoreId} = await create({
         name: TEMPORARY.name + TEMPORARY_SUFIX,
         color: TEMPORARY.color,
         icon: TEMPORARY.icon,
-    }).catch(log.onCatch("can't create"));
+    }).catch(log.catch("can't create"));
 
     const contextualIdentity = await update(cookieStoreId, {
         name: createTemporaryName(cookieStoreId),
-    }).catch(log.onCatch("can't update"));
+    }).catch(log.catch("can't update"));
 
     broadcastUpdate({containers});
 
-    log.stop(cookieStoreId);
+    log.log(cookieStoreId);
 
     return contextualIdentity;
 }
@@ -343,22 +342,22 @@ export function mapDefaultContainer(storageData, defaultCookieStoreId) {
 }
 
 export async function removeTemporaryUnusedBy(tabs) {
-    const log = logger.start(removeTemporaryUnusedBy);
+    using log = logger.start(removeTemporaryUnusedBy);
 
     const tabContainers = new Set(tabs.map(tab => tab.cookieStoreId));
 
     const tempContainersToRemove = Object.keys(containers)
         .filter(cookieStoreId => isTemporary(cookieStoreId) && !tabContainers.has(cookieStoreId));
 
-    await remove(tempContainersToRemove).catch(log.onCatch("can't remove"));
+    await remove(tempContainersToRemove).catch(log.catch("can't remove"));
 
     broadcastUpdate({containers});
 
-    log.stop('removed count:', tempContainersToRemove.length);
+    log.log('removed count:', tempContainersToRemove.length);
 }
 
 export async function updateTemporaryContainerTitle(temporaryContainerTitle) {
-    const log = logger.start(updateTemporaryContainerTitle, temporaryContainerTitle);
+    using log = logger.start(updateTemporaryContainerTitle, temporaryContainerTitle);
 
     // find temporary containers before update title
     const cookieStoreIds = Object.keys(containers).filter(cookieStoreId => isTemporary(cookieStoreId));
@@ -372,7 +371,7 @@ export async function updateTemporaryContainerTitle(temporaryContainerTitle) {
     for (const cookieStoreId of cookieStoreIds) {
         await update(cookieStoreId, {
             name: createTemporaryName(cookieStoreId),
-        }).catch(log.onCatch(["can't update", cookieStoreId]));
+        }).catch(log.catch("can't update", cookieStoreId));
     }
 
     if (contextParams.has('add-listeners')) {
@@ -387,7 +386,7 @@ export async function updateTemporaryContainerTitle(temporaryContainerTitle) {
 
     broadcastUpdate(broadcastUpdateData);
 
-    log.stop('updated count:', cookieStoreIds.length);
+    log.log('updated count:', cookieStoreIds.length);
 }
 
 function createTemporaryName(cookieStoreId) {

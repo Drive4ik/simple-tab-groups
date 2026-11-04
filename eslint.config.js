@@ -40,4 +40,11 @@ export default defineConfig([
             // 'semi': 'warn',
         },
     },
+
+    {
+        files: ['addon/test/**/*.js'], // the tests run in Node, as ES modules: process and the like, no require
+        languageOptions: {
+            globals: globals.nodeBuiltin,
+        },
+    },
 ]);

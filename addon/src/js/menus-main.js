@@ -21,7 +21,7 @@ const logger = new Logger(MODULE_NAME);
 export async function create(withExtra = true) {
     using transaction = await Menus.transaction('create');
 
-    const log = logger.start(create, {withExtra});
+    using log = logger.start(create, {withExtra});
 
     await Menus.removeAll();
 
@@ -38,14 +38,12 @@ export async function create(withExtra = true) {
             module: [MODULE_NAME, 'reopenTabsWithTemporaryContainers'],
         });
     }
-
-    log.stop();
 }
 
 export async function remove(withExtra = true) {
     using transaction = await Menus.transaction('remove');
 
-    const log = logger.start(remove, {withExtra});
+    using log = logger.start(remove, {withExtra});
 
     await MenusBookmark.remove(withExtra);
     await MenusTab.remove(withExtra);
@@ -56,8 +54,6 @@ export async function remove(withExtra = true) {
             await Menus.remove(REOPEN_TEMP_TABS_ID);
         }
     }
-
-    log.stop();
 }
 
 export function addListeners() {
@@ -124,7 +120,7 @@ export async function groupsUpdated(groups) {
 export async function reopenTabsWithTemporaryContainers(info) {
     using operation = Operations.start('reopen-temp-containers');
 
-    const log = logger.start(reopenTabsWithTemporaryContainers, info);
+    using log = logger.start(reopenTabsWithTemporaryContainers, info);
 
     const allTabs = await Tabs.query({}, {
         includeFavIconUrl: true,
@@ -147,5 +143,5 @@ export async function reopenTabsWithTemporaryContainers(info) {
         await Browser.actionLoading(false);
     }
 
-    log.stop('reopened tabs count:', tabsToReopen.length);
+    log.log('reopened tabs count:', tabsToReopen.length);
 }

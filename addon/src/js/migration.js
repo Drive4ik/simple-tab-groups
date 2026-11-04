@@ -44,11 +44,11 @@ for (const migrations of [mainMigrations, syncMigrations]) {
 
     for (const {version} of migrations) {
         if (typeof version !== 'string' || version.split('.').length > 1) {
-            throw new Error(`migration version "${version}" must be a major version string, like "6"`);
+            throw logger.error(`migration version "${version}" must be a major version string, like "6"`);
         }
 
         if (prevVersion !== null && Utils.compareNumericVersions(prevVersion, version) !== -1) {
-            throw new Error(`migration versions must be unique and ascending: "${prevVersion}" -> "${version}"`);
+            throw logger.error(`migration versions must be unique and ascending: "${prevVersion}" -> "${version}"`);
         }
 
         prevVersion = version;
@@ -67,7 +67,7 @@ export function isDataVersionNewer(version) {
 export default async function migrate(data, applyToCurrentInstance = false) {
     const DATA_VERSION = data?.version;
 
-    const log = logger.start('migrate',
+    using log = logger.start('migrate',
         'data version:', DATA_VERSION,
         'CURRENT_VERSION:', CURRENT_VERSION,
         'applyToCurrentInstance:', applyToCurrentInstance
@@ -81,12 +81,12 @@ export default async function migrate(data, applyToCurrentInstance = false) {
     };
 
     if (!DATA_VERSION) {
-        log.throwError('data.version is not defined');
+        throw log.error('data.version is not defined');
     }
 
     if (isDataVersionNewer(DATA_VERSION)) {
         result.error = 'updateAddonToLatestVersion';
-        log.stopError(result.error);
+        log.warn(result.error);
         return result;
     }
 
@@ -95,20 +95,18 @@ export default async function migrate(data, applyToCurrentInstance = false) {
 
     for (const migration of mainMigrations) {
         if (Utils.compareNumericVersions(DATA_VERSION, migration.version) === -1) {
-            const mlog = log.start('', 'apply version:', migration.version, '...');
+            using mlog = log.start('', 'apply version:', migration.version, '...');
 
             await migration.migration?.(data, applyToCurrentInstance);
 
             migration.remove?.forEach(key => originalKeys.has(key) && keysToRemove.add(key));
 
             result.migrated = true;
-
-            mlog.stop();
         }
     }
 
     if (!result.migrated) {
-        log.stop('data format is actual', DATA_VERSION);
+        log.log('data format is actual', DATA_VERSION);
         return result;
     }
 
@@ -122,12 +120,12 @@ export default async function migrate(data, applyToCurrentInstance = false) {
         result.keysToRemove = Array.from(keysToRemove);
     }
 
-    log.stop('migration from', DATA_VERSION, 'to', CURRENT_VERSION, 'has been finished');
+    log.log('migration from', DATA_VERSION, 'to', CURRENT_VERSION, 'has been finished');
     return result;
 }
 
 export async function initLocalData() {
-    const log = logger.start('initLocalData');
+    using log = logger.start('initLocalData');
 
     const storageData = await Storage.getRaw();
 
@@ -136,7 +134,7 @@ export async function initLocalData() {
 
         const data = stampVersion(structuredClone(Constants.DEFAULT_OPTIONS));
 
-        log.stop('fresh install');
+        log.log('fresh install');
         return {data, error: null};
     }
 
@@ -153,7 +151,7 @@ export async function initLocalData() {
     const result = await migrate(data, true);
 
     if (result.error) {
-        log.stopError(result.error);
+        log.log(result.error);
         return {data: null, error: result.error};
     }
 
@@ -168,12 +166,11 @@ export async function initLocalData() {
         }
     }
 
-    log.stop();
     return {data: result.data, error: null};
 }
 
 export async function migrateSyncData(data) {
-    const log = logger.start('migrateSyncData', 'data version:', data.version);
+    using log = logger.start('migrateSyncData', 'data version:', data.version);
 
     const result = {
         data,
@@ -183,13 +180,13 @@ export async function migrateSyncData(data) {
     };
 
     if (!Object.keys(data).length) {
-        log.stop('sync area is empty');
+        log.log('sync area is empty');
         return result;
     }
 
     if (isDataVersionNewer(data.version)) {
         result.error = 'updateAddonToLatestVersion';
-        log.stopError(result.error);
+        log.warn(result.error);
         return result;
     }
 
@@ -210,6 +207,6 @@ export async function migrateSyncData(data) {
 
     result.migrated = keysToRemove.size > 0 || JSON.stringify(data) !== dataBefore;
 
-    log.stop('migrated:', result.migrated);
+    log.log('migrated:', result.migrated);
     return result;
 }

@@ -11,7 +11,7 @@ const SAVE_TRY_COUNT = 5; // issue #374: backups that failed for no known reason
 
 export async function load(accept = '*/*', readAs = 'text') { // readAs: text, url. null when the user closes the dialog without a file
     if (!['text', 'url'].includes(readAs)) {
-        throw new Error('wrong readAs parameter');
+        throw logger.error('wrong readAs parameter');
     }
 
     const {promise, resolve, reject} = Promise.withResolvers();
@@ -72,7 +72,7 @@ export async function save(data, filePath = 'file-name', options = {}) {
 
     filePath = Utils.format(filePath, Utils.getFilePathVariables());
 
-    const log = logger.start('save', {filePath, saveAs, clearOnComplete, throwError});
+    using log = logger.start('save', {filePath, saveAs, clearOnComplete, throwError});
 
     const blob = typeof data === 'string'
         ? new Blob([data], {type: 'text/plain'})
@@ -91,12 +91,12 @@ export async function save(data, filePath = 'file-name', options = {}) {
                     await Downloads.eraseId(id);
                 }
 
-                log.stop(id);
+                log.log(id);
                 return id;
             }
 
             if (error === Downloads.InterruptReason.USER_CANCELED) { // the user canceled the download in the downloads panel
-                log.stop('canceled by the user');
+                log.log('canceled by the user');
                 return;
             }
 
@@ -109,16 +109,15 @@ export async function save(data, filePath = 'file-name', options = {}) {
         }
     } catch (e) {
         if (Downloads.isCanceledByUser(e)) {
-            log.stop('canceled by the user');
+            log.log('canceled by the user');
             return;
         }
-
-        log.logError(e.message, e);
-        log.stopError();
 
         if (throwError) {
             throw e;
         }
+
+        log.error(e);
     }
 }
 
@@ -171,6 +170,6 @@ export async function openBackupFolder() {
     try {
         await testBackupFilePath(autoBackupFilePath, true);
     } catch (e) {
-        logger.logError(String(e), e);
+        logger.warn(e);
     }
 }

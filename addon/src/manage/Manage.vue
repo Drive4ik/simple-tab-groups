@@ -11,7 +11,7 @@ import contextMenuGroup from '../components/context-menu-group.vue';
 
 import '/js/prefixed-storage.js';
 import * as Constants from '/js/constants.js';
-import Logger, {errorEventHandler} from '/js/logger.js';
+import Logger from '/js/logger.js';
 import Lang from '/js/lang.js?translate-page';
 import * as Groups from '/js/groups.js';
 import * as Tabs from '/js/tabs.js';
@@ -24,8 +24,8 @@ import optionsMixin from '/js/mixins/options.mixin.js';
 import popupHelpersMixin from '/js/mixins/popup-helpers.mixin.js';
 import tabGroupsMixin from '/js/mixins/tab-groups.mixin.js';
 
-window.logger = new Logger(Constants.MODULES.MANAGE);
-Vue.config.errorHandler = errorEventHandler.bind(window.logger);
+window.logger = new Logger(Constants.PAGES.current);
+Vue.config.errorHandler = (error, vm, info) => window.logger.handleError(error, info);
 Vue.mixin(globalMixin);
 
 const storage = localStorage.create(Constants.MODULES.MANAGE);
@@ -68,7 +68,7 @@ export default {
         window.$vm = this;
     },
     async mounted() {
-        const log = window.logger.start('mounted');
+        using log = window.logger.start('mounted');
 
         await Promise.all([
             this.optionsLoadPromise,
@@ -82,8 +82,6 @@ export default {
         this.isLoading = false;
         this.setFocusOnSearch();
         this.setupListeners();
-
-        log.stop();
     },
     watch: {
         async 'options.showTabsWithThumbnailsInManageGroups'(value) {
@@ -793,7 +791,7 @@ export default {
     </footer> -->
 
     <div
-        v-if="enableDebug"
+        v-if="debugMode"
         id="debug-message"
         class="tag is-warning is-medium is-clickable"
         @click="openDebugPage"

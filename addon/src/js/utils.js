@@ -581,10 +581,6 @@ export function wait(ms = 200) {
     return new Promise(resolve => setTimeout(resolve, ms, ms));
 }
 
-export function getNameFromPath(path) {
-    return new URL(path).pathname.split('/').pop().split('.').slice(0, -1).join('.');
-}
-
 /* a < b : - index of version type (major=-1, minor=-2...)
    a > b : + index of version type (major=1, minor=2...)
    a = b : 0 */

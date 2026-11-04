@@ -55,7 +55,7 @@ async function onClicked(wrappedId) {
         } catch (e) {
             if (notification.logError) {
                 if (self.logger) {
-                    self.logger.logError(e, e);
+                    self.logger.error(e);
                 } else {
                     console.error(e);
                 }

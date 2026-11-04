@@ -17,19 +17,8 @@ import '/js/prefixed-storage.js';
 import * as Constants from '/js/constants.js';
 import * as Browser from '/js/browser.js';
 import * as Messages from '/js/messages.js';
-import Logger, {
-    catchFunc,
-    addLog,
-    showLog,
-    getLogs,
-    clearLogs,
-    getErrors,
-    clearErrors,
-    errorEventHandler,
-    objectToNativeError,
-    setDebug,
-    onDebugChanged,
-} from '/js/logger.js';
+import Logger, {Logs, Errors, showLog, setDebug, onDebugChanged, setTemporaryInstall} from '/js/logger.js';
+import {objectToNativeError} from '/js/logger-utils.js';
 import * as Utils from '/js/utils.js';
 import Notification from '/js/notification.js?add-listeners';
 import JSON from '/js/json.js';
@@ -60,20 +49,16 @@ import * as NewCloudGroups from '/js/sync/new-cloud-groups.js';
 const storage = localStorage.create(Constants.MODULES.BACKGROUND);
 
 delete storage.inited;
-storage.IS_TEMPORARY = false;
+setTemporaryInstall(false);
 
-if (storage.enableDebug === Constants.DEBUG.AUTO) { // if debug was auto-enabled - disable on next start addon/browser
+// if debug was auto-enabled before - disable it now (after restart addon/browser)
+if (storage.debugMode === Constants.DEBUG.AUTO) {
     setDebug(null);
 }
 
 const logger = self.logger = new Logger(Constants.MODULES.BACKGROUND);
 
-self.loggerFuncs = {
-    getLogs,
-    clearLogs,
-    getErrors,
-    clearErrors,
-};
+self.loggerFuncs = {Logs, Errors};
 
 const options = self.options = {};
 
@@ -101,16 +86,14 @@ function sendExternalMessage(...args) {
 
 const moveTabsBatch = new BatchProcessor(async (tabIds, groupId) => {
     tabIds = Array.from(tabIds);
-    const log = logger.start('moveTabsBatch', {tabIds, groupId});
-    await Tabs.move(tabIds, groupId, {auto: true}).catch(log.onCatch('Tabs.move'));
-    log.stop();
+    using log = logger.start('moveTabsBatch', {tabIds, groupId});
+    await Tabs.move(tabIds, groupId, {auto: true}).catch(log.catch('Tabs.move'));
 });
 
 const reopenTabsBatch = new BatchProcessor(async (paramsByTabId, groupId) => {
     const tabIds = Array.from(paramsByTabId.keys());
-    const log = logger.start('reopenTabsBatch', {tabIds, groupId});
-    await Tabs.recreate(tabIds, tab => paramsByTabId.get(tab.id)).catch(log.onCatch('Tabs.recreate'));
-    log.stop();
+    using log = logger.start('reopenTabsBatch', {tabIds, groupId});
+    await Tabs.recreate(tabIds, tab => paramsByTabId.get(tab.id)).catch(log.catch('Tabs.recreate'));
 }, {useMap: true});
 
 // BUG https://bugzilla.mozilla.org/show_bug.cgi?id=1683646
@@ -134,7 +117,7 @@ async function getRequestedTab(tabId, requestedUrl) {
     return tab;
 }
 
-const onBeforeTabRequest = catchFunc(async function onBeforeTabRequest({
+const onBeforeTabRequest = logger.catchFunc(async function onBeforeTabRequest({
     tabId,
     url: requestedUrl,
     cookieStoreId,
@@ -143,7 +126,7 @@ const onBeforeTabRequest = catchFunc(async function onBeforeTabRequest({
     frameId,
     method,
 }) {
-    const log = logger.start(onBeforeTabRequest, {
+    using log = logger.start(onBeforeTabRequest, {
         tabId,
         requestedUrl,
         cookieStoreId,
@@ -154,19 +137,19 @@ const onBeforeTabRequest = catchFunc(async function onBeforeTabRequest({
     });
 
     if (frameId !== 0 || tabId === browser.tabs.TAB_ID_NONE) {
-        log.stop('exclude');
+        log.log('exclude');
         return {};
     }
 
     Cache.setTabRequestedUrl(tabId, requestedUrl);
 
     if (Containers.isTemporary(cookieStoreId)) {
-        log.stop('exclude temporary container');
+        log.log('exclude temporary container');
         return {};
     }
 
     if (canceledRequests.has(requestId)) {
-        log.stop('stop by requestId', requestId);
+        log.log('stop by requestId', requestId);
         return {cancel: true};
     }
 
@@ -177,7 +160,7 @@ const onBeforeTabRequest = catchFunc(async function onBeforeTabRequest({
     log.log('final originUrl', originUrl);
 
     if (Tabs.isSkippedTracking(tabId)) {
-        log.stop('🛑 tab was skiped from tracking');
+        log.log('🛑 tab was skiped from tracking');
         return {};
     }
 
@@ -186,17 +169,17 @@ const onBeforeTabRequest = catchFunc(async function onBeforeTabRequest({
     let tab = await getRequestedTab(tabId, requestedUrl);
 
     if (!tab) {
-        log.stopWarn('tab not found', tabId);
+        log.warn('tab not found', tabId);
         return {};
     }
 
     if (Tabs.isPinned(tab)) {
-        log.stop('tab is pinned');
+        log.log('tab is pinned');
         return {};
     }
 
     if (!tab.groupId) {
-        log.stop('tab does not have group id');
+        log.log('tab does not have group id');
         return {};
     }
 
@@ -208,7 +191,7 @@ const onBeforeTabRequest = catchFunc(async function onBeforeTabRequest({
 
     if (destGroup) {
         if (!canRecreateTab && Tabs.getNewTabContainer(tab, destGroup) !== tab.cookieStoreId) {
-            log.stop('skip move: only GET request can be reopened in another container', {method, destGroupId: destGroup.id});
+            log.log('skip move: only GET request can be reopened in another container', {method, destGroupId: destGroup.id});
             return {};
         }
 
@@ -216,7 +199,7 @@ const onBeforeTabRequest = catchFunc(async function onBeforeTabRequest({
         tab = await Tabs.get(tabId, {withSession: false});
 
         if (!tab) {
-            log.stopWarn('tab not found', tabId);
+            log.warn('tab not found', tabId);
             return {};
         }
 
@@ -225,19 +208,19 @@ const onBeforeTabRequest = catchFunc(async function onBeforeTabRequest({
         }
 
         moveTabsBatch.add(tab.id, destGroup.id);
-        log.stop('move tab from groupId:', tabGroup.id, 'to groupId:', destGroup.id);
+        log.log('move tab from groupId:', tabGroup.id, 'to groupId:', destGroup.id);
         return {};
     }
 
     const newTabContainer = Tabs.getNewTabContainer(tab, tabGroup);
 
     if (tab.cookieStoreId === newTabContainer) {
-        log.stop('cookieStoreId is equal');
+        log.log('cookieStoreId is equal');
         return {};
     }
 
     if (!canRecreateTab) {
-        log.stop('only GET request can be reopened in another container', method);
+        log.log('only GET request can be reopened in another container', method);
         return {};
     }
 
@@ -283,7 +266,7 @@ const onBeforeTabRequest = catchFunc(async function onBeforeTabRequest({
             });
         }
 
-        log.stop('deny reopen tab in required conteiner by extension', originExt.id);
+        log.log('deny reopen tab in required conteiner by extension', originExt.id);
         return {};
     }
 
@@ -295,7 +278,7 @@ const onBeforeTabRequest = catchFunc(async function onBeforeTabRequest({
     tab = await getRequestedTab(tabId, requestedUrl);
 
     if (!tab) {
-        log.stop('tab not found, maybe reopened by another extension', tabId);
+        log.log('tab not found, maybe reopened by another extension', tabId);
         return {};
     }
 
@@ -323,22 +306,20 @@ const onBeforeTabRequest = catchFunc(async function onBeforeTabRequest({
 
     reopenTabsBatch.add([tab.id, newTabParams], tabGroup.id);
 
-    log.stop('reopen tab');
+    log.log('reopen tab');
     return {cancel: true};
-}, logger);
+});
 
-const onPermissionsAdded = catchFunc(async function onPermissionsAdded(permissions) {
-    const log = logger.start('onPermissionsAdded', permissions);
+const onPermissionsAdded = logger.catchFunc(async function onPermissionsAdded(permissions) {
+    using log = logger.start('onPermissionsAdded', permissions);
 
     if (Permissions.hasAny(permissions, Permissions.BROWSER_SETTINGS)) {
         await BrowserSettings.set(options.browserSettings);
     }
+});
 
-    log.stop();
-}, logger);
-
-const onPermissionsRemoved = catchFunc(async function onPermissionsRemoved(permissions) {
-    const log = logger.start('onPermissionsRemoved', permissions);
+const onPermissionsRemoved = logger.catchFunc(async function onPermissionsRemoved(permissions) {
+    using log = logger.start('onPermissionsRemoved', permissions);
 
     if (Permissions.hasAny(permissions, Permissions.NATIVE_MESSAGING)) {
         if (options.autoBackupLocation === Constants.AUTO_BACKUP_LOCATIONS.HOST) {
@@ -351,31 +332,27 @@ const onPermissionsRemoved = catchFunc(async function onPermissionsRemoved(permi
     // if (Permissions.hasAny(permissions, Permissions.BOOKMARKS)) {
     //     await MenusMain.permissionChanged();
     // }
-
-    log.stop();
-}, logger);
+});
 
 async function onAlarm({name}) {
-    const log = logger.start('onAlarm', {name});
+    using log = logger.start('onAlarm', {name});
 
     if (name === LOCAL_BACKUP_ALARM_NAME) {
         await createBackup({
             includeFavIconUrl: options.autoBackupIncludeTabFavIcons,
             includeThumbnail: options.autoBackupIncludeTabThumbnails,
         }, true)
-            .catch(log.onCatch(["can't createBackup()", {
+            .catch(log.catch("can't createBackup()", {
                 autoBackupIncludeTabFavIcons: options.autoBackupIncludeTabFavIcons,
                 autoBackupIncludeTabThumbnails: options.autoBackupIncludeTabThumbnails,
-            }]));
+            }));
     } else if (name === Cloud.ALARM_NAME) {
         await cloudSync({trigger: Cloud.TRIGGER_AUTO})
-            .catch(log.onCatch("can't auto cloudSync"));
+            .catch(log.catch("can't auto cloudSync"));
     } else if (name === Cloud.ALARM_NAME_RETRY) {
         await cloudSync({trigger: Cloud.TRIGGER_RETRY})
-            .catch(log.onCatch("can't cloudSync retry"));
+            .catch(log.catch("can't cloudSync retry"));
     }
-
-    log.stop();
 }
 
 // wait for reload addon if found update
@@ -447,18 +424,18 @@ Listeners.runtime.onMessage.add(onBackgroundMessage);
 Listeners.commands.onCommand.add(name => onBackgroundMessage(name, self));
 
 Listeners.runtime.onMessageExternal.add(async function onMessageExternal(request, sender) {
-    const log = logger.start(['info', 'onMessageExternal'], `RECEIVED-EXTERNAL-ACTION#${request?.action}`, {request, sender});
+    using log = logger.start(['info', 'onMessageExternal'], `RECEIVED-EXTERNAL-ACTION#${request?.action}`, {request, sender});
 
     if (request?.action === 'ignore-ext-for-reopen-container') {
         ignoreExtForReopenContainer.add(sender.id);
-        log.stop('add to ignore', sender.id, 'done');
+        log.log('add to ignore', sender.id, 'done');
         return {
             ok: true,
         };
     }
 
     if (!storage.inited) {
-        log.stopWarn('background not inited');
+        log.warn('background not inited');
         return {
             ok: false,
             error: `[STG] I'm not loaded yet.`,
@@ -468,7 +445,7 @@ Listeners.runtime.onMessageExternal.add(async function onMessageExternal(request
     const extensionRules = {};
 
     if (!Utils.isAllowExternalRequestAndSender(request, sender, extensionRules)) {
-        log.stopWarn('sender is not allowed');
+        log.warn('sender is not allowed');
         return {
             ok: false,
             error: '[STG] Your extension/action does not in white list. If you want to add your extension/action to white list - please contact with me.',
@@ -477,18 +454,14 @@ Listeners.runtime.onMessageExternal.add(async function onMessageExternal(request
     }
 
     if (!request?.action || typeof request.action !== 'string') {
-        log.stopWarn('unknown action');
+        log.warn('unknown action');
         return {
             ok: false,
             error: 'unknown action',
         };
     }
 
-    const result = await onBackgroundMessage(request, sender);
-
-    log.stop();
-
-    return result;
+    return await onBackgroundMessage(request, sender);
 });
 
 self.saveOptions = saveOptions;
@@ -536,8 +509,8 @@ async function onBackgroundMessage(message, sender) {
             return result;
 
         case 'save-log':
-            addLog(data.log);
-            showLog.call(data.logger, data.log, data.options);
+            Logs.add(data.log);
+            showLog(data.log);
             result.ok = true;
             return result;
 
@@ -550,7 +523,7 @@ async function onBackgroundMessage(message, sender) {
                     url: Constants.PAGES.HELP.DEBUG,
                 }],
                 expires: Notification.MAX_EXPIRES,
-            });
+            }).catch(logger.catchSilent('show-error-notification'));
 
             result.ok = true;
             return result;
@@ -577,17 +550,18 @@ async function onBackgroundMessage(message, sender) {
             try {
                 return await moduleMethod(...data.args);
             } catch (e) {
-                logger.throwError([
+                throw logger.error(
                     'onBackgroundMessage call internal module:', `ACTION#${data.action}`,
                     'args:', data.args,
                     // 'sender:', senderToLogs,
                     objectToNativeError(data.breadcrumbs),
-                ], e);
+                    e,
+                );
             }
         }
     }
 
-    const log = logger.start(
+    using log = logger.start(
         ['info', 'onBackgroundMessage'],
         ...(isSTGMessage ? [`ACTION#${data.action}`] : [sender.id, `RECEIVED-EXTERNAL-ACTION#${data.action}`, data])
     );
@@ -598,7 +572,7 @@ async function onBackgroundMessage(message, sender) {
 
         const getFocusedWindow = () => {
             if (!focusedWindow) {
-                throw new Error('no normal window in focus');
+                throw log.error('no normal window in focus');
             }
 
             return focusedWindow;
@@ -1087,7 +1061,7 @@ async function onBackgroundMessage(message, sender) {
                     result.group = group || null;
                     result.ok = true;
                 } else {
-                    throw new Error(data.windowId ? 'Invalid window id' : 'windowId is required');
+                    throw log.error(data.windowId ? 'Invalid window id' : 'windowId is required');
                 }
 
                 break;
@@ -1095,7 +1069,7 @@ async function onBackgroundMessage(message, sender) {
                 const group = groupsById.get(data.groupId);
 
                 if (!group || !data.cookieStoreId || Containers.get(data.cookieStoreId).cookieStoreId !== data.cookieStoreId) {
-                    throw new Error('invalid groupId or cookieStoreId');
+                    throw log.error('invalid groupId or cookieStoreId');
                 }
 
                 await Groups.update(data.groupId, group => {
@@ -1162,31 +1136,31 @@ async function onBackgroundMessage(message, sender) {
                     result.ok = syncResult.ok;
 
                     if (!syncResult.ok) {
-                        throw objectToNativeError(syncResult);
+                        result.error = syncResult.error.message;
                     }
                 } else {
                     result.error = Lang('syncIsDisabled');
                 }
                 break;
             default:
-                throw new Error(`Action '${data.action}' is wrong`);
+                throw log.error(`Action '${data.action}' is wrong`);
         }
 
     } catch (e) {
         result.error = '[STG] ' + String(e);
-        log.logError(e.message || e, e);
+        log.error(e);
     }
 
-    result.error ? log.stopError(result.error) : log.stop();
+    log.assert(!result.error, result.error);
 
     return result;
 }
 
 async function saveOptions(_options) {
-    const log = logger.start('saveOptions');
+    using log = logger.start('saveOptions');
 
     if (!storage.inited) {
-        log.stopError('background not yet inited');
+        log.warn('background not yet inited');
         return;
     }
 
@@ -1196,14 +1170,14 @@ async function saveOptions(_options) {
         if (Constants.ALL_OPTION_KEYS.includes(key)) {
             optionsToSave[key] = Utils.isPrimitive(value) ? value : JSON.clone(value);
         } else if (!Constants.NON_OPTION_KEYS.includes(key)) {
-            log.throwError(`option key "${key}" is unknown`);
+            throw log.error(`option key "${key}" is unknown`);
         }
     }
 
     const optionsKeys = Object.keys(optionsToSave);
 
     if (!optionsKeys.length) {
-        log.stop('options not found');
+        log.log('options not found');
         return;
     }
 
@@ -1239,8 +1213,6 @@ async function saveOptions(_options) {
     sendMessageFromBackground('options-updated', {
         keys: optionsKeys,
     });
-
-    log.stop();
 }
 
 const LOCAL_BACKUP_ALARM_NAME = 'local-backup';
@@ -1275,12 +1247,12 @@ async function resetAlarm(
     ) {
     lastAlarmRunTime ??= Date.now();
 
-    const log = logger.start('resetAlarm', {name, isEnable, intervalKey, intervalValue, lastAlarmRunTime, minDelayMinutes});
+    using log = logger.start('resetAlarm', {name, isEnable, intervalKey, intervalValue, lastAlarmRunTime, minDelayMinutes});
 
     await browser.alarms.clear(name);
 
     if (!isEnable) {
-        log.stop(name, 'is disabled');
+        log.log(name, 'is disabled');
         return;
     }
 
@@ -1307,18 +1279,16 @@ async function resetAlarm(
         delayInMinutes,
         periodInMinutes,
     });
-
-    log.stop();
 }
 
 async function createBackup(params = {}, isAutoBackup = false) {
-    const log = logger.start('createBackup', {params, isAutoBackup});
+    using log = logger.start('createBackup', {params, isAutoBackup});
 
     const data = stampVersion(await Storage.get());
     const {groups} = await Groups.load(null, true, params);
 
     if (isAutoBackup && (!groups.length || groups.filter(gr => !gr.isArchive).every(gr => !gr.tabs.length))) {
-        log.stopWarn('skip create auto backup, groups are empty');
+        log.warn('skip create auto backup, groups are empty');
         return false;
     }
 
@@ -1347,14 +1317,12 @@ async function createBackup(params = {}, isAutoBackup = false) {
             await Host.saveBackup(data);
         }
 
-        await Bookmarks.exportGroups(data.groups).catch(log.onCatch('cant create bookmarks', false));
+        await Bookmarks.exportGroups(data.groups).catch(log.catchSilent('cant create bookmarks'));
 
         storage.autoBackupLastTimeStamp = Date.now();
     } else {
         await File.saveBackup(data, false);
     }
-
-    log.stop();
 
     return true;
 }
@@ -1370,7 +1338,7 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
         }
 
         if (!group.tabs) {
-            throw new Error(`group "${group.id}" has no tabs and is not a cloud stub`);
+            throw logger.error(`group "${group.id}" has no tabs and is not a cloud stub`);
         }
 
         return true;
@@ -1594,7 +1562,7 @@ async function cloudSync({
         trust = null,
         revision = null,
     }) {
-    const log = logger.start(cloudSync, {trust, trigger, revision: revision?.slice(0, 7) ?? null});
+    using log = logger.start(cloudSync, {trust, trigger, revision: revision?.slice(0, 7) ?? null});
 
     let shouldResetSyncAlarm = false;
 
@@ -1640,17 +1608,22 @@ async function cloudSync({
     }));
     clearTimeout(cloudSyncResetTimer);
 
-    const syncResult = await Cloud.synchronization(trust, revision);
+    let syncResult;
 
-    actionListeners.forEach(off => off());
+    try {
+        syncResult = await Cloud.synchronization(trust, revision);
+    } finally {
+        actionListeners.forEach(off => off());
+    }
 
     if (syncResult.inProgress) {
-        log.stopWarn('sync in progress');
+        syncResult.error = {message: 'sync in progress'};
+        log.warn(syncResult.error.message);
         return syncResult;
     }
 
     if (await Cloud.shouldShowSyncErrorNotification(syncResult, trigger)) {
-        Notification(objectToNativeError(syncResult), {
+        Notification(objectToNativeError(syncResult.error), {
             id: Cloud.ERROR_NOTIFICATION_ID,
             module: ['tabs', 'createUrlOnce', Constants.PAGES.SETTINGS + '#backup/sync'],
             expires: trigger === Cloud.TRIGGER_MANUAL ? undefined : Cloud.RETRY_DELAY_MINUTES * 60,
@@ -1672,11 +1645,7 @@ async function cloudSync({
         await resetSyncAlarm(true);
     }
 
-    if (syncResult.ok) {
-        log.stop(syncResult);
-    } else {
-        log.stopError(syncResult);
-    }
+    log.log(syncResult);
 
     return syncResult;
 }
@@ -1690,10 +1659,10 @@ self.removeListenerOnBeforeRequest = removeListenerOnBeforeRequest;
 // { reason: "update", previousVersion: "3.0.1", temporary: true }
 // { reason: "install", temporary: true }
 Listeners.runtime.onInstalled.add(async ({reason, previousVersion, temporary}) => {
-    const log = logger.start('runtime.onInstalled', {reason, previousVersion, temporary});
+    using log = logger.start('runtime.onInstalled', {reason, previousVersion, temporary});
 
     if (temporary) {
-        storage.IS_TEMPORARY = true;
+        setTemporaryInstall(true);
         log.log('addon is temp');
     } else if (
         reason === browser.runtime.OnInstalledReason.INSTALL ||
@@ -1708,12 +1677,10 @@ Listeners.runtime.onInstalled.add(async ({reason, previousVersion, temporary}) =
             active: true,
         }, {skipTrackingCreated: false});
     }
-
-    log.stop();
 });
 
 async function init() {
-    const log = logger.start(['info', '[init]']);
+    using log = logger.start(['info', '[init]']);
 
     try {
         const {data, error} = await initLocalData();
@@ -1759,7 +1726,7 @@ async function init() {
             log.error('no windows found');
             storage.notFoundWindowsAddonStoppedWorking = 1;
             // Notification('notFoundWindowsAddonStoppedWorking');
-            Listeners.windows.onCreated.add(() => browser.runtime.reload());
+            Listeners.windows.onCreated.add(win => Windows.isNormal(win) && browser.runtime.reload(), {waitListener: false});
             throw '';
         } else if (storage.notFoundWindowsAddonStoppedWorking) {
             log.warn('try run grand restore, attempt:', storage.notFoundWindowsAddonStoppedWorking);
@@ -1767,13 +1734,12 @@ async function init() {
             try {
                 await Promise.all(windows.map(win => Windows.GrandRestore(win.id)));
             } catch (e) {
-                log.logError('cant grand restore', e);
+                log.error('cant grand restore', e);
                 if (storage.notFoundWindowsAddonStoppedWorking++ < 10) {
                     browser.runtime.reload();
                 } else {
                     await setActionToReloadAddon();
                 }
-                log.stop();
                 return;
             }
 
@@ -1824,16 +1790,11 @@ async function init() {
 
         log.log('loading groups for creating cache...');
         await Groups.load(null, true, {includeFavIconUrl: true}); // load favIconUrls, speed up first run popup
-
-        log.stop();
     } catch (e) {
         await setActionToReloadAddon();
 
         if (e) {
-            errorEventHandler.call(log, e);
-            log.stopError('with errors');
-        } else {
-            log.stop();
+            log.handleError(e, 'with errors:');
         }
     }
 }

@@ -10,7 +10,8 @@ import * as Operations from '/js/operations.js';
 import * as MenusMain from '/js/menus-main.js';
 import Lang from '/js/lang.js';
 import JSON from '/js/json.js';
-import Logger, {nativeErrorToObject, objectToNativeError} from '/js/logger.js';
+import Logger from '/js/logger.js';
+import {nativeErrorToObject, objectToNativeError} from '/js/logger-utils.js';
 import GithubGist from './githubgist.js';
 import CloudError from './error.js';
 import * as CloudBroadcast from '/js/broadcast.js?channel=cloud';
@@ -53,7 +54,7 @@ function send(action, data = {}) {
 
 export async function synchronization(trust = null, revision = null) {
     if (!canDoSynchronization) {
-        throw new Error('synchronization is not available in this context');
+        throw logger.error('synchronization is not available in this context');
     }
 
     const syncResult = {
@@ -65,7 +66,7 @@ export async function synchronization(trust = null, revision = null) {
         return syncResult;
     }
 
-    const log = logger.start(synchronization, {trust, revision: revision?.slice(0, 7) ?? null});
+    using log = logger.start(synchronization, {trust, revision: revision?.slice(0, 7) ?? null});
 
     let lastProgress = 0;
 
@@ -87,21 +88,17 @@ export async function synchronization(trust = null, revision = null) {
         delete storage.lastError;
 
         send('sync-end', syncResult);
-
-        log.stop();
     } catch (e) {
-        syncResult.langId = e.langId;
         syncResult.temporary = e.temporary ?? false;
         syncResult.retryAfter = e.retryAfter ?? null;
         syncResult.progress = lastProgress;
-        Object.assign(syncResult, nativeErrorToObject(e));
+        syncResult.error = nativeErrorToObject(e);
 
         storage.lastError = String(e);
 
         send('sync-error', syncResult);
 
-        log.logError('cant sync', e);
-        log.stopError();
+        log.error('cant sync', e);
     } finally {
         inProgress = false;
         send('sync-finish', syncResult);
@@ -137,17 +134,17 @@ async function sync(trust = null, revision = null, progressFunc = null) {
         trust = TRUST_CLOUD;
     }
 
-    const log = logger.start('sync', {trust, isRestoring});
+    using log = logger.start('sync', {trust, isRestoring});
 
     if (trust && trust !== TRUST_LOCAL && trust !== TRUST_CLOUD) {
-        log.throwError('unknown source of trust argument');
+        throw log.error('unknown source of trust argument');
     }
 
     const {syncOptionsLocation} = await Storage.get('syncOptionsLocation');
 
     if (syncOptionsLocation === Constants.SYNC_STORAGE_FSYNC) {
         if (!SyncStorage.IS_AVAILABLE) {
-            log.throwError('sync not supported', new CloudError('ffSyncNotSupported'));
+            throw log.error('sync not supported', new CloudError('ffSyncNotSupported'));
         }
     }
 
@@ -160,7 +157,7 @@ async function sync(trust = null, revision = null, progressFunc = null) {
             ? await SyncStorage.get()
             : await Storage.get(null, Constants.DEFAULT_SYNC_OPTIONS);
     } catch (error) {
-        log.throwError('get sync options', error);
+        throw log.error('get sync options', error);
     }
 
     progressFunc?.(10);
@@ -173,7 +170,7 @@ async function sync(trust = null, revision = null, progressFunc = null) {
             syncOptions.githubGistFileName
         );
     } catch (error) {
-        log.throwError('create GithubGist instance', error);
+        throw log.error('create GithubGist instance', error);
     }
 
     const Cloud = cloudInstance;
@@ -194,8 +191,8 @@ async function sync(trust = null, revision = null, progressFunc = null) {
     try {
         [cloudData, cloudInfo] = await Cloud.getContent(revision, true, createCloudProgress(10, 45));
     } catch (error) {
-        if (error.langId !== 'githubNotFound' || isRestoring) {
-            log.throwError('get GithubGist content', error);
+        if (error.lang !== 'githubNotFound' || isRestoring) {
+            throw log.error('get GithubGist content', error);
         }
     }
 
@@ -255,7 +252,7 @@ async function sync(trust = null, revision = null, progressFunc = null) {
         }
 
         syncResult = await syncData(localData, cloudData, sourceOfTruth, syncContext, createCloudProgress(46, 48))
-            .catch(log.onCatch('cant sync'));
+            .catch(log.catch('cant sync'));
 
         if (!hasCloudData || isRestoring) {
             syncResult.changes.cloud = true;
@@ -345,10 +342,10 @@ async function sync(trust = null, revision = null, progressFunc = null) {
         // on top of the fresh cloud; a restore replaces the cloud deliberately - no check
         if (!isRestoring && hasCloudData) {
             const latestCommitSha = await Cloud.getLatestCommitSha()
-                .catch(log.onCatch('get latest commit sha'));
+                .catch(log.catch('get latest commit sha'));
 
             if (latestCommitSha !== cloudInfo.commitSha) {
-                log.throwError('gist changed during sync', new CloudError(null, {
+                throw log.error('gist changed during sync', new CloudError(null, {
                     message: 'the cloud was updated from another device during synchronization',
                     temporary: true,
                 }));
@@ -359,7 +356,7 @@ async function sync(trust = null, revision = null, progressFunc = null) {
             const description = Lang('githubGistBackupDescription');
             cloudInfo = await Cloud.setContent(syncResult.cloudData, description, createCloudProgress(55, 100));
         } catch (error) {
-            log.throwError('set GithubGist content', error);
+            throw log.error('set GithubGist content', error);
         }
     }
 
@@ -383,8 +380,6 @@ async function sync(trust = null, revision = null, progressFunc = null) {
     const uploadedGroupIds = new Set(syncResult.cloudData.groups.filter(group => group.uploadToCloud).map(group => group.id));
     NewCloudGroups.remove(syncContext.newCloudGroupIds.intersection(uploadedGroupIds));
 
-    log.stop();
-
     delete syncResult.localData;
     delete syncResult.cloudData;
 
@@ -392,7 +387,7 @@ async function sync(trust = null, revision = null, progressFunc = null) {
 }
 
 async function syncData(localData, cloudData, sourceOfTruth, syncContext, progressFunc = null) {
-    const log = logger.start('syncData', {
+    using log = logger.start('syncData', {
         localVersion: localData.version,
         cloudVersion: cloudData.version,
     });
@@ -406,7 +401,7 @@ async function syncData(localData, cloudData, sourceOfTruth, syncContext, progre
     if (resultMigrate.migrated) {
         cloudData = resultMigrate.data;
     } else if (resultMigrate.error) {
-        log.throwError('migrate data', new CloudError(resultMigrate.error));
+        throw log.error('migrate data', new CloudError(resultMigrate.error, {expected: true}));
     }
 
     const changes = {
@@ -432,8 +427,6 @@ async function syncData(localData, cloudData, sourceOfTruth, syncContext, progre
 
     progressFunc?.(100);
 
-    log.stop();
-
     return {
         localData,
         cloudData,
@@ -443,7 +436,7 @@ async function syncData(localData, cloudData, sourceOfTruth, syncContext, progre
 }
 
 async function syncGroups(localData, cloudData, sourceOfTruth, syncContext, changes) {
-    const log = logger.start('syncGroups');
+    using log = logger.start('syncGroups');
 
     const localGroups = localData.groups;
     const cloudGroups = cloudData.groups;
@@ -462,7 +455,7 @@ async function syncGroups(localData, cloudData, sourceOfTruth, syncContext, chan
     const cloudOpeners = new Map(cloudGroups.map(group => [group.id, Tabs.getOpeners(group.tabs ?? [])]));
 
     function prepareForSaveTabs(tabs, prepareFor, groupIsArchive) {
-        if (prepareFor !== TRUST_LOCAL && prepareFor !== TRUST_CLOUD) throw new Error('invalid "prepareFor" argument');
+        if (prepareFor !== TRUST_LOCAL && prepareFor !== TRUST_CLOUD) throw log.error('invalid "prepareFor" argument');
 
         // local syncTabFavIcons have already been synchronized and it's equal to cloud
         const includeFavIconUrl = localData.syncTabFavIcons;
@@ -844,8 +837,6 @@ async function syncGroups(localData, cloudData, sourceOfTruth, syncContext, chan
 
     localData.groups = resultLocalGroups;
     cloudData.groups = resultCloudGroups;
-
-    log.stop();
 }
 
 function createStub(groupId) {
@@ -969,7 +960,7 @@ function mergeSubGroups(localGroup, cloudGroup, changes) {
 function assignGroupKeys(localGroup, cloudGroup, sourceOfTruth, changes) {
     const isDefaultGroup = !localGroup.tabs && !cloudGroup.tabs;
 
-    const log = logger.start('assignGroupKeys', {isDefaultGroup});
+    using log = logger.start('assignGroupKeys', {isDefaultGroup});
 
     const EXCLUDE_GROUP_KEYS = [
         'tabs',
@@ -1022,12 +1013,10 @@ function assignGroupKeys(localGroup, cloudGroup, sourceOfTruth, changes) {
             log.log('local group key changed:', key);
         }
     }
-
-    log.stop();
 }
 
 async function syncOptions(localData, cloudData, sourceOfTruth, changes) {
-    const log = logger.start('syncOptions');
+    using log = logger.start('syncOptions');
 
     const EXCLUDE_OPTION_KEY_STARTS_WITH = [
         'defaultGroupProps',
@@ -1085,8 +1074,6 @@ async function syncOptions(localData, cloudData, sourceOfTruth, changes) {
     }
 
     assignGroupKeys(localData.defaultGroupProps, cloudData.defaultGroupProps, sourceOfTruth, changes);
-
-    log.stop();
 }
 
 async function syncContainers(localData, cloudData) {
@@ -1217,17 +1204,15 @@ function isFavIconAllowed(favIconUrl) {
 }
 
 function isNetworkError(error) {
-    const message = String(error);
-
     const NETWORK_ERROR_PARTS = [
         'NetworkError',
         'NS_ERROR_NET_',
     ];
 
-    const isNetErr = NETWORK_ERROR_PARTS.some(part => message.includes(part));
+    const isNetErr = NETWORK_ERROR_PARTS.some(part => String(error).includes(part));
 
     if (isNetErr) {
-        logger.warn('network error:', message);
+        logger.warn('network error:', error);
     }
 
     return isNetErr;
@@ -1236,7 +1221,7 @@ function isNetworkError(error) {
 // a temporary error is worth a retry; the github errors carry the flag themselves,
 // isNetworkError is the fallback for the other sources
 function isTemporaryError(syncResult) {
-    return Boolean(syncResult.temporary) || isNetworkError(objectToNativeError(syncResult));
+    return Boolean(syncResult.temporary) || isNetworkError(objectToNativeError(syncResult.error));
 }
 
 export function onSyncUiRequestListener() {
@@ -1248,7 +1233,7 @@ export async function shouldShowSyncErrorNotification(syncResult, trigger) {
         return false;
     }
 
-    if (syncResult.langId === 'githubInvalidToken' && syncResult.cause?.isEmpty) {
+    if (syncResult.error.lang === 'githubInvalidToken' && syncResult.error.cause?.isEmpty) {
         return false;
     }
 

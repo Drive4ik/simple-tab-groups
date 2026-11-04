@@ -5,16 +5,24 @@ import JSON from './json.js';
 import * as Utils from './utils.js';
 import * as Messages from './messages.js';
 import * as DebugBroadcast from './broadcast.js?channel=debug';
-import {normalizeArgumentValue, getStack, getFuncName} from './logger-utils.js';
-
-export * from './logger-utils.js';
+import {normalizeArgumentValue, getStack, getFuncName, toError} from './logger-utils.js';
 
 const prefixGlue = '.'; // ➡️  →
 
 const storage = localStorage.create(Constants.MODULES.LOGGER);
 const mainStorage = localStorage.create(Constants.MODULES.BACKGROUND);
 
+// the flags every record is gated by, read from the storage once: setDebug and setTemporaryInstall write them, the debug channel brings a change to every document (docs/DESIGN-LOGGER.md §6)
+let debugMode = mainStorage.debugMode ?? null;
+let isTemporaryInstall = mainStorage.IS_TEMPORARY ?? false;
+
+onDebugChanged(mode => debugMode = mode);
+
+const MAX_LOGS = 10_000;
+const LOGS_TRIM_STEP = 100; // the list grows this far past MAX_LOGS before it is cut back
+const MAX_ERRORS = 50;
 const logs = [];
+const writtenErrors = new WeakSet; // the Error objects already written as warn or error: the first line decides the level, the catchers' lines stay in the file
 
 const backgroundConnect = Constants.IS_BACKGROUND_PAGE
     ? null
@@ -25,269 +33,309 @@ const indentConfig = {
     startSymbol: '▷', // 🔻⚡️
     stopSymbol: '◁', // 🔺⭕️
     index: 0,
-    indexByKey: {},
 };
 const scopeActionRegExp = /(START|STOP|SCOPE) (\d+)/;
 
-export default function Logger(prefix, prefixes = []) {
-    this.scope = null;
-    this.stopMessage = null;
-    this.prefixes ??= prefixes;
-    this.enabled = true;
+export default class Logger {
+    prefixes;
+    scope = null;
+    #enabled;
+    #debugOnly;
+    #indent = null;
+    #started = false;
 
-    if (prefix) {
-        this.prefixes.push(prefix);
+    constructor(prefix, {prefixes = [], enabled = true, debugOnly = false} = {}) {
+        this.prefixes = [...prefixes, prefix].filter(Boolean);
+        this.#enabled = enabled;
+        this.#debugOnly = debugOnly;
     }
 
-    this.indentConfig = indentConfig;
-
-    setLoggerFuncs.call(this);
-
-    return this;
-}
-
-function setLoggerFuncs() {
-    const consoleKeys = ['log', 'info', 'warn', 'error', 'debug', 'assert'];
-
-    if (consoleKeys.every(cKey => typeof this[cKey] === 'function')) {
-        return;
+    get #level() {
+        return this.#debugOnly ? 'debug' : 'log';
     }
 
-    consoleKeys.forEach(cKey => this[cKey] = Log.bind(this, cKey));
-
-    this.start = (...startArgs) => {
-        let cKey = 'log';
-
-        if (Array.isArray(startArgs[0])) {
-            cKey = startArgs[0].shift();
-            startArgs = [...startArgs[0], ...startArgs.slice(1)];
-        }
-
-        startArgs = normalizeArgumentValue(startArgs);
-
-        const logger = new Logger(startArgs.shift(), this.prefixes.slice());
-
-        logger.enabled = this.enabled;
-        logger.scope = Utils.getRandomInt();
-        logger.stopMessage = `STOP ${logger.scope}`;
-
-        logger[cKey](`START ${logger.scope}`, ...startArgs);
-
-        logger.stop = (...args) => logger.log(logger.stopMessage, ...args);
-        logger.stopWarn = (...args) => logger.warn(logger.stopMessage, ...args);
-        logger.stopError = (...args) => logger.error(logger.stopMessage, ...args);
-
-        return logger;
-    };
-
-    this.onCatch = (message, throwError = true) => {
-        return (error) => {
-            if (typeof message === 'string') {
-                message = `Catch error on: ${message}`;
-            } else if (Array.isArray(message)) {
-                message.unshift(`Catch error on:`);
-            }
-
-            error ??= typeof message === 'object' ? new Error(JSON.stringify(message)) : new Error(message);
-
-            const args = [...[message].flat(), error];
-
-            // fromErrorEventHandler need for prevent loop throw/catch
-            if (mainStorage.IS_TEMPORARY && mainStorage.enableDebug && !this.fromErrorEventHandler) {
-                throwError = true;
-            }
-
-            this.enable();
-
-            delete this.fromErrorEventHandler;
-
-            if (throwError && this.stopMessage) {
-                args.unshift(this.stopMessage);
-            }
-
-            this.error(...args);
-
-            if (throwError) {
-                throw error;
-            }
-
-            return undefined; // ! important, depends on tabs.filter(Boolean)
-        }
-    };
-
-    this.throwError = (message, error) => {
-        this.onCatch(message, true)(error);
-        return this;
-    };
-
-    this.logError = (message, error) => {
-        this.onCatch(message, false)(error);
-        return this;
-    };
-
-    this.isEnabled = cKey => this.enabled || !!mainStorage.enableDebug || cKey === 'error' || cKey === 'assert';
-
-    this.enable = () => {
-        this.enabled = true;
-        return this;
-    };
-
-    this.disable = () => {
-        this.enabled = false;
-        return this;
-    };
-}
-
-function Log(cKey, ...args) {
-    setLoggerFuncs.call(this);
-
-    if (!this.isEnabled(cKey)) {
-        return;
-    }
-
-    if (cKey === 'assert' && args[0]) {
-        return;
-    } else if (cKey === 'debug' && !mainStorage.IS_TEMPORARY && !mainStorage.enableDebug) {
-        return;
-    }
-
-    args = normalizeArgumentValue(args);
-
-    const argsToLog = [this.prefixes.join(prefixGlue), ...args];
-
-    if (this.scope && !args.some(l => l?.includes?.(this.scope))) {
-        argsToLog.push(`SCOPE ${this.scope}`);
-    }
-
-    const log = {
-        [`console.${cKey}`]: JSON.clone(argsToLog),
-        indentIndex: calcIndent.call(this.indentConfig, argsToLog),
-        time: Date.now(),
-        stack: getStack(new Error),
-    };
-
-    if (cKey === 'error') {
-        Errors.add(log);
-    }
-
-    if (Constants.IS_BACKGROUND_PAGE) {
-        addLog(log);
-    } else {
-        backgroundConnect.sendMessage('save-log', {
-            log,
-            logger: JSON.clone(this),
-            options: {
-                cKey,
-                args: JSON.clone(args),
-            },
+    create(prefix) {
+        return new Logger(prefix, {
+            prefixes: this.prefixes,
+            enabled: this.#enabled,
+            debugOnly: this.#debugOnly,
         });
     }
 
-    showLog.call(this, log, {cKey, args});
+    enable() {
+        this.#enabled = true;
+        return this;
+    }
+
+    disable() {
+        this.#enabled = false;
+        return this;
+    }
+
+    log(...args) {
+        return this.#log(this.#level, args);
+    }
+
+    info(...args) {
+        return this.#log('info', args);
+    }
+
+    warn(...args) {
+        return this.#log('warn', args);
+    }
+
+    debug(...args) {
+        return this.#log('debug', args);
+    }
+
+    assert(...args) {
+        return this.#log('assert', args);
+    }
+
+    error(...args) {
+        this.#log('error', args);
+
+        const error = args.findLast(Error.isError) ?? new Error(args.join(' '));
+        writtenErrors.add(error);
+        return error;
+    }
+
+    start(...args) {
+        let cKey = this.#level;
+
+        if (Array.isArray(args[0])) {
+            [cKey, ...args] = [...args[0], ...args.slice(1)];
+        }
+
+        const log = this.create(normalizeArgumentValue(args.shift()));
+
+        log.scope = Utils.getRandomInt();
+
+        log.#started = log.#log(cKey, [`START ${log.scope}`, ...args], 'START');
+
+        log[Symbol.dispose] = () => log.stop();
+
+        return log;
+    }
+
+    stop(...args) {
+        if (this.#started) {
+            this.#started = false;
+            this.#write(this.#level, [`STOP ${this.scope}`, ...args], 'STOP');
+        }
+    }
+
+    catch(...args) {
+        return error => {
+            throw this.error('Catch error on:', ...args, error);
+        };
+    }
+
+    catchSilent(...args) {
+        return error => {
+            this.error('[silent] Catch error on:', ...args, error);
+            return undefined; // ! important, depends on tabs.filter(Boolean)
+        };
+    }
+
+    catchFunc(func) {
+        const logger = this;
+        const name = getFuncName(func);
+        const wrapStack = new Error().stack;
+
+        return async function(...args) {
+            try {
+                return await func.call(this, ...args);
+            } catch (e) {
+                const error = toError(e);
+                error.stack = [wrapStack, 'Native error stack:', error.stack].join('\n');
+                error.arguments = args;
+                logger.handleError(error, `catchFunc(${name}):`);
+            }
+        };
+    }
+
+    handleError(event, ...details) {
+        const error = toError(event);
+
+        setDebug(Constants.DEBUG.AUTO);
+        this.error(...details, error);
+        showErrorNotificationMessage();
+    }
+
+    #allows(cKey, args) {
+        if (cKey === 'assert') return !args[0];
+        if (cKey === 'error' || cKey === 'warn') return true;
+        if (cKey === 'debug' && !debugMode) return false;
+        return this.#enabled || debugMode === Constants.DEBUG.MANUAL;
+    }
+
+    #log(cKey, args, action = null) {
+        if (!this.#allows(cKey, args)) {
+            return false;
+        }
+
+        this.#write(cKey, args, action);
+
+        return true;
+    }
+
+    #write(cKey, args, action = null) {
+        const errors = args.filter(Error.isError);
+
+        args = args.map(normalizeArgumentValue);
+
+        const argsToLog = [this.prefixes.join(prefixGlue), ...args];
+
+        if (this.scope && !action) {
+            argsToLog.push(`SCOPE ${this.scope}`);
+        }
+
+        const log = {
+            [`console.${cKey}`]: argsToLog,
+            indentIndex: this.#calcIndent(action),
+            time: Date.now(),
+            stack: getStack(new Error),
+        };
+
+        if ((cKey === 'error' || cKey === 'warn') && !errors.some(error => writtenErrors.has(error))) {
+            if (cKey === 'error') {
+                Errors.add(log);
+            }
+
+            errors.forEach(error => writtenErrors.add(error));
+        }
+
+        if (Constants.IS_BACKGROUND_PAGE) {
+            Logs.add(log);
+        } else {
+            backgroundConnect.postMessage('save-log', {log});
+        }
+
+        showLog(log);
+    }
+
+    #calcIndent(action) {
+        if (action === 'START') {
+            this.#indent = indentConfig.index++;
+        } else if (action === 'STOP' && indentConfig.index > 0) {
+            indentConfig.index--;
+        }
+
+        return this.#indent ?? indentConfig.index;
+    }
 }
 
-export function addLog(log) {
-    logs.push(log);
+function isDebugging() {
+    return Boolean(debugMode) || isTemporaryInstall;
 }
 
-export function showLog(log, {cKey, args}) {
-    setLoggerFuncs.call(this);
-
-    // if (!this.isEnabled(cKey)) {
-    if (!this.enabled) {
+export function showLog(log) {
+    if (!isDebugging()) {
         return;
     }
 
-    if (mainStorage.enableDebug || mainStorage.IS_TEMPORARY) {
-        const argsToConsole = cKey === 'assert'
-            ? [args[0], this.prefixes.join(prefixGlue), ...args.slice(1)]
-            : log[`console.${cKey}`].slice();
+    const consoleKey = Object.keys(log).find(key => key.startsWith('console.'));
+    const cKey = consoleKey.slice('console.'.length);
+    const args = log[consoleKey].slice();
 
-        const indentStr = getIndentAndRemoveScope.call(this.indentConfig, log.indentIndex, argsToConsole);
-
-        if (log.indentIndex) {
-            argsToConsole.splice((cKey === 'assert' ? 1 : 0), 0, indentStr);
-        }
-
-        argsToConsole.push('(' + log.stack.slice(0, 2).join(' ◁ ') + ')');
-
-        console[cKey].call(console, ...argsToConsole);
+    if (cKey === 'assert') {
+        [args[0], args[1]] = [args[1], args[0]];
     }
+
+    const indentStr = getIndentAndRemoveScope(log.indentIndex, args);
+
+    if (log.indentIndex) {
+        args.splice(cKey === 'assert' ? 1 : 0, 0, indentStr);
+    }
+
+    args.push('(' + log.stack.slice(0, 2).join(' ◁ ') + ')');
+
+    console[cKey](...args);
 }
 
 function getAction(args) {
-    let action, key,
+    let action,
         argIndex = args.findIndex(arg => {
-            [, action, key] = scopeActionRegExp.exec(arg) || [];
+            [, action] = scopeActionRegExp.exec(arg) || [];
             return action;
         });
 
-    return {action, key, argIndex};
-}
-
-function calcIndent(args) {
-    let {action, key} = getAction.call(this, args),
-        indentCount = this.index;
-
-    if (action === 'START') {
-        indentCount = this.indexByKey[key] = this.index++;
-    } else if (action === 'STOP') {
-        indentCount = this.indexByKey[key];
-
-        if (this.index > 0) {
-            this.index--;
-        }
-    } else if (action === 'SCOPE') {
-        indentCount = this.indexByKey[key];
-    }
-
-    return indentCount;
+    return {action, argIndex};
 }
 
 function getIndentAndRemoveScope(indentCount, args) {
-    const {action, argIndex} = getAction.call(this, args);
+    const {action, argIndex} = getAction(args);
 
     if (action === 'START') {
-        args[argIndex] = this.startSymbol;
+        args[argIndex] = indentConfig.startSymbol;
     } else if (action === 'STOP') {
-        args[argIndex] = this.stopSymbol;
+        args[argIndex] = indentConfig.stopSymbol;
     } else if (action === 'SCOPE') {
         args.splice(argIndex, 1);
     }
 
-    return this.indentSymbol.repeat(indentCount);
+    return indentConfig.indentSymbol.repeat(indentCount);
 }
 
-const Errors = {
+export const Logs = {
+    add(log) {
+        logs.push(log);
+
+        if (logs.length > MAX_LOGS + LOGS_TRIM_STEP) {
+            logs.splice(0, logs.length - MAX_LOGS);
+        }
+    },
+    get() {
+        return structuredClone(logs.slice(-MAX_LOGS)); // a copy, like Errors.get: the debug page rewrites the records it saves
+    },
+    clear() {
+        logs.length = 0;
+    },
+};
+
+export const Errors = {
+    add(log) {
+        const errors = [...Errors.get(), log].slice(-MAX_ERRORS);
+
+        while (errors.length) {
+            try {
+                storage.errors = errors;
+                return;
+            } catch {
+                errors.shift(); // the quota of localStorage: the oldest give way
+            }
+        }
+
+        console.error('the quota of localStorage, the error record is lost:', log);
+    },
     get() {
         return JSON.clone(storage.errors) ?? [];
-    },
-    add(error) {
-        const errors = Errors.get();
-
-        errors.push(error);
-
-        storage.errors = errors.slice(-50);
     },
     clear() {
         delete storage.errors;
     },
 };
 
-// the one writer of the debug flag; the change reaches every page and the background (docs/DESIGN-MESSAGES.md §3)
+window.clearLogs = () => {
+    Logs.clear();
+    console.clear();
+}; // for tests
+
+// the one writer of the debug flag; the change reaches every page and the background (docs/DESIGN-LOGGER.md §6)
 export function setDebug(mode = null) {
     if (mode !== null && !Object.values(Constants.DEBUG).includes(mode)) {
         throw new Error(`unknown debug mode: ${mode}`);
     }
 
-    if ((mainStorage.enableDebug ?? null) === mode) {
+    if ((mainStorage.debugMode ?? null) === mode) {
         return;
     }
 
     if (mode) {
-        mainStorage.enableDebug = mode;
+        mainStorage.debugMode = mode;
     } else {
-        delete mainStorage.enableDebug;
+        delete mainStorage.debugMode;
     }
 
     DebugBroadcast.send({action: 'changed', mode});
@@ -297,66 +345,23 @@ export function onDebugChanged(func) {
     return DebugBroadcast.on('changed', ({mode}) => func(mode));
 }
 
-export function getErrors() {
-    return Errors.get();
-}
-
-export function clearErrors() {
-    Errors.clear();
-}
-
-export function getLogs() {
-    return logs.slice(-5_000);
-}
-window.clearLogs = () => {
-    clearLogs();
-    console.clear();
-}; // for tests
-export function clearLogs() {
-    logs.length = 0;
-}
-
-export function catchFunc(asyncFunc, logger) {
-    const name = getFuncName(asyncFunc);
-    const fromStack = new Error().stack;
-
-    return async function(...args) {
-        try {
-            return await asyncFunc.call(this, ...args);
-        } catch (e) {
-            e.message = `catchFunc(${name}), error message: ${e.message}`;
-            e.stack = [fromStack, 'Native error stack:', e.stack].join('\n');
-            e.arguments = JSON.clone(args);
-            errorEventHandler.call(logger, e);
-        }
-    };
-}
-
-export function errorEventHandler(event) {
-    event.preventDefault?.();
-    event.stopImmediatePropagation?.();
-
-    setDebug(Constants.DEBUG.AUTO);
-
-    const logger = this instanceof Logger ? this : self.logger;
-
-    if (logger) {
-        logger.fromErrorEventHandler = true;
-        logger.logError(event.message, event);
-    } else {
-        console.error(event.message, event);
-    }
-
-    showErrorNotificationMessage();
+export function setTemporaryInstall(value) {
+    mainStorage.IS_TEMPORARY = isTemporaryInstall = Boolean(value);
 }
 
 function showErrorNotificationMessage() {
     if (Constants.IS_BACKGROUND_PAGE) {
-        self.onBackgroundMessage('show-error-notification', self);
+        self.onBackgroundMessage?.('show-error-notification', self); // the background is not up yet: nobody can show it
     } else {
-        backgroundConnect.sendMessage('show-error-notification');
+        backgroundConnect.postMessage('show-error-notification');
     }
 }
 
+function errorEventHandler(event) {
+    const logger = self.logger ?? new Logger(Constants.PAGES.current);
+
+    logger.handleError(event);
+}
+
 self.addEventListener('error', errorEventHandler);
-self.addEventListener('unhandledrejection', e => errorEventHandler(e.reason));
+self.addEventListener('unhandledrejection', errorEventHandler);

@@ -149,6 +149,7 @@ with the permissions its manifest lists (`tabs`, `tabGroups`, `tabHide`, `sessio
 `browserSettings`, `menus`, `cookies`, `contextualIdentities`, `webRequest`, `webRequestBlocking`,
 `management`, which reads the add-ons of a profile prepared for a test about them, `downloads`,
 which writes the files of the downloads round into a folder of its own and removes them again,
+`proxy`, which lets the round about several listeners of one event route its own requests,
 the `<all_urls>` host permission, which covers the `example.com` page an injected script asks for
 the microphone on and lets a `webRequest` listener see every main-frame load, and the optional
 `bookmarks` permission, granted by hand where a test asks for it). The manifest also declares a

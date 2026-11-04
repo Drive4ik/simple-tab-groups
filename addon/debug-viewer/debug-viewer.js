@@ -366,6 +366,7 @@ new window.Vue({
                         //     consoleValue.stack = consoleValue.stack.split('\n');
                         // }
                         stacks.push(consoleValue);
+                        messages.push(consoleValue.lang ? `${consoleValue.message} [${consoleValue.lang}]` : consoleValue.message);
                     } else {
                         messages.push(consoleValue);
                     }

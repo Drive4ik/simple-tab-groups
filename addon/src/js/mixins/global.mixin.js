@@ -1,9 +1,9 @@
 import * as Messages from '/js/messages.js';
 import Logger from '/js/logger.js';
-import * as Utils from '/js/utils.js';
+import * as Constants from '/js/constants.js';
 
 const MODULE_NAME = 'global.mixin';
-const logger = new Logger(MODULE_NAME, [Utils.getNameFromPath(location.href)]);
+const logger = new Logger(MODULE_NAME, {prefixes: [Constants.PAGES.current]});
 
 let rootInstance = null;
 

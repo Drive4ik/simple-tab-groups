@@ -5,6 +5,9 @@ tabs. Inspired by the classic "Tab Groups" add-on that Mozilla removed from the 
 add-on does, the companion plugins, the Gesturefy commands, the build and the links — `README.md`
 in the root; the notes for the Mozilla reviewers — `addon/README.md`.
 
+**The add-on is one whole: a change in one place must not break the logic of another place,
+which may rely on the behavior of the code being edited.**
+
 ## Read before writing code
 
 `docs/DESIGN-*.md` — how the add-on is built: the model, the invariants, the methods that carry
@@ -22,6 +25,8 @@ By the area of the task:
 - `docs/DESIGN-GROUPS.md` — groups, tabs and windows
 - `docs/DESIGN-URLS.md` — extension page addresses
 - `docs/DESIGN-MESSAGES.md` — messages and the content script
+- `docs/DESIGN-LOGGER.md` — the logger: records, scopes, errors, the debug flag
+- `docs/DESIGN-LISTENERS.md` — `listeners.js`: the subscription to the browser events
 - `docs/DESIGN-CLOUD-UPLOAD.md` — the cloud sync of a group
 - `docs/DESIGN-SUB-GROUPS.md` — sub-groups, the browser's tab groups inside a group
 - `docs/BEHAVIOR-OPENER.md`, the section "How STG carries the link" — tab openers
@@ -102,13 +107,15 @@ All new code is modern ECMAScript only: `async`/`await`, ES modules, `const`/`le
 the `&&=`/`||=`/`??=` operators, `Promise.allSettled()` and so on.
 `Map.prototype.getOrInsert()` / `getOrInsertComputed()` are **native in Firefox 144+, use them**.
 
-- `using` is the form for a turn of a queue, an operation, the gate of a window and a
-  transaction of the menus. The variable holds the thing itself and is never read; inside its
-  block a returned promise is awaited (`return await …`), or the thing is released before the
-  promise settles. Inside a turn a function that takes the same queue is called through
-  `.call(turn, …)` — `docs/DESIGN-QUEUES.md`. `await using` is not needed: every release here
-  is synchronous. Not in `plugins/*` and not in the modules they share (`js/downloads.js`):
-  their minimum Firefox is 128, `using` needs 141. The AMO validator accepts `using` since
+- `using` is the form for a turn of a queue, an operation, the gate of a window, a transaction
+  of the menus and a scope of the log: the `STOP` of a scope is written by the end of its block.
+  A scope that outlives its block (the log of an operation ends with the operation, not with the
+  function that started it) is closed by hand. Inside its block a returned promise is awaited
+  (`return await …`), or the thing is released before the promise settles. Inside a turn a function that takes the same queue is called
+  through `.call(turn, …)` — `docs/DESIGN-QUEUES.md`. Things that end together are one
+  `DisposableStack` (the turn of a menu transaction with its log). `await using` is not needed:
+  every release here is synchronous. Not in `plugins/*` and not in the modules they share ("Modules
+  shared with the plugins" below): their minimum Firefox is 128, `using` needs 141. The AMO validator accepts `using` since
   `addons-linter` 10.14.0; the check before a release — `npx addons-linter addon/dist`.
 - Code is code, docs are docs. Everything is described in `docs/DESIGN-*.md` (the mechanisms of
   the add-on) and `docs/BEHAVIOR-*.md` (the facts of the browser); the code explains nothing.
@@ -173,10 +180,52 @@ trivia is not. They may name methods, files and the keys that matter, never loca
 never line numbers. Nothing unverified, invented or imprecise goes in: a claim about the browser
 is a `§` of a `BEHAVIOR-*.md`, a claim about the code is read from the code.
 
+### The logger and the log viewer go together
+
+`addon/src/js/logger.js` and `addon/debug-viewer/` are changed together. Every change of the
+logger, however small, is checked against the viewer: what changed in a record, the viewer must
+be able to show. The viewer shows the logs sent from every version of the add-on, so new things
+are added to it and old ones are never removed.
+
+### Log levels
+
+The `error` level has a side effect: the record goes into the saved errors, the ones the user
+sends in the debug file. So `error` is only for what must be there: a defect of the add-on (an
+argument check, an impossible state) and a refusal of the browser or of the host the code did
+not expect. An expected refusal — the rules of the add-on, the user's choice, data newer than
+the add-on, a refusal of the browser the code retries or works around — is `warn`. An error
+object is passed as it is, never as its text: the stack travels with it. One cause is one
+record of `warn` or `error`, where it happened: the first writer of an error object decides its
+level, a catcher above writes it again only into the file, and a caller that wants a trace of
+its own writes an ordinary line. Several places keep `error` whatever the cause. A refusal that
+is thrown: the throw and the record are one line, the code stays readable, and the record keeps
+who asked, in case the caller is needed later or is harmful. A rejection the code swallows: that
+is a safety net, and the file must show where the net catches most often, so that the logic is
+rebuilt to avoid that place before it bursts.
+
 ### Manifest V3 is ahead
 
 The add-on is on MV2, the move to MV3 is planned. All new development takes every MV3 trait
-into account. Events are subscribed through `addon/src/js/listeners.js`.
+into account. Events are subscribed through `addon/src/js/listeners.js` (`docs/DESIGN-LISTENERS.md`).
+
+### Modules shared with the plugins
+
+`plugins/modules/` holds the copies of the modules the plugins share with the add-on:
+`constants.js`, `lang.js`, `listeners.js`, `module-runner.js`, `notification.js`,
+`downloads.js`, `utils.js`. The developer copies a module there by hand from `addon/src/js/`
+once the module is ready, and `plugins/modules/copy-modules.bat` spreads the copies into every
+plugin (`xcopy /U`: only the files a plugin already has). The assistant never touches
+`plugins/modules/` or the copies in the plugins: a change of a shared module in `addon/src/js/`
+is reported, and the plugins run the old copy until the developer copies the new one. Their
+minimum Firefox is 128: no `using` in these modules.
+
+### A universal module keeps its promise for any add-on
+
+`listeners.js`, `lang.js` and the other modules shared with the plugins (above) promise their
+behavior to any add-on that imports them, not to STG alone. A promise the module breaks under some permitted use is a bug of the module, even when
+STG and its plugins never use it that way: another add-on may, and will do exactly what counts as
+unreachable in STG. A change of such a module is weighed against every permitted use, not
+against the calls STG makes today.
 
 ### Which version is being worked on
 

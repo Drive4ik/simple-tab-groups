@@ -1,5 +1,5 @@
 import Listeners, {getExtensionStartTime} from './listeners.js\
-?windows.onCreated\
+?windows.onCreated={"keepAllPending":true}\
 &windows.onFocusChanged\
 &windows.onRemoved\
 &storage.local.onChanged\
@@ -47,6 +47,17 @@ export function removeListeners() {
     Broadcast.off(addRestoreTabOnRemoved);
 }
 
+// a page of the add-on never handles these events: it imports the module for its helpers only
+if (!Constants.IS_BACKGROUND_PAGE) {
+    unsubscribeListeners();
+}
+
+function unsubscribeListeners() {
+    Listeners.windows.onCreated.unsubscribe();
+    Listeners.windows.onFocusChanged.unsubscribe();
+    Listeners.windows.onRemoved.unsubscribe();
+}
+
 function send(action, data = {}) {
     WindowsBroadcast.send({action, ...data}, {
         includeSelf: false,
@@ -71,8 +82,9 @@ function enqueueGrandRestore(windowId) {
     const isBatchLeader = grandRestoreBatch.size() === 0;
 
     const promise = grandRestoreBatch.add(windowId);
+    const continueTracking = () => Tabs.continueTrackingWindow(windowId);
 
-    promise.finally(() => Tabs.continueTrackingWindow(windowId));
+    promise.then(continueTracking, continueTracking);
 
     return {
         promise,
@@ -88,7 +100,7 @@ async function runGrandRestore(restoredWindowIds) {
     using turn = await missedTabsQueue.wait('grand-restore');
     using operation = Operations.start('grand-restore');
 
-    const log = logger.start(runGrandRestore, Array.from(restoredWindowIds));
+    using log = logger.start(runGrandRestore, Array.from(restoredWindowIds));
 
     // the pinned tabs of the restored windows are in by now (docs/BEHAVIOR-CREATE-TABS.md §59)
     await Tabs.clearPinnedSessions();
@@ -129,7 +141,7 @@ async function runGrandRestore(restoredWindowIds) {
 
             const group = {...gr, tabs};
 
-            const glog = log.start('preparing group', gr.id, 'in window', win.id);
+            using glog = log.start('preparing group', gr.id, 'in window', win.id);
 
             group.isLoaded = group.id === win.groupId;
 
@@ -147,8 +159,6 @@ async function runGrandRestore(restoredWindowIds) {
 
             group.window = win;
             win.groups.push(group);
-
-            glog.stop('finished preparing group');
         }
     }
 
@@ -162,20 +172,20 @@ async function runGrandRestore(restoredWindowIds) {
 
     // restore tabs
     for (const win of allWindowsMap.values()) {
-        const wlog = log.start('processing window', win.id);
+        using wlog = log.start('processing window', win.id);
 
         // не восстановленное окно пропускаем
         if (!restoredWindowIds.has(win.id)) {
-            wlog.stop('🛑 skip not restored window');
+            wlog.log('🛑 skip not restored window');
             continue;
         }
 
         // ищем группу которую надо восстановить и оставить, вкладки этой группы в других окнах переместить/удалить
         for (let groupToKeep of win.groups) {
-            const glog = wlog.start('find groupToKeep', 'for group:', groupToKeep.id);
+            using glog = wlog.start('find groupToKeep', 'for group:', groupToKeep.id);
 
             if (groupsAlreadyRestored.has(groupToKeep.id)) {
-                glog.stop('🛑 already restored, skip');
+                glog.log('🛑 already restored, skip');
                 continue;
             }
 
@@ -192,7 +202,7 @@ async function runGrandRestore(restoredWindowIds) {
                 // она в одном экземпляре и в нужном восстановленном окне
                 // это состояние когда группа открыта в новом окне, все окна одновременно закрылись, а потом одновременно восстановились. удаляем только из восстановления
                 deleteTabsToRestoreByGroup(groupToKeep);
-                glog.stop('🛑 group is only in one window and in the restored one, delete its tabs from restore as they are already restored');
+                glog.log('🛑 group is only in one window and in the restored one, delete its tabs from restore as they are already restored');
                 continue;
             }
 
@@ -260,11 +270,7 @@ async function runGrandRestore(restoredWindowIds) {
 
             groupsAlreadyRestored.set(groupToKeep.id, groupToKeep);
             deleteTabsToRestoreByGroup(groupToKeep);
-
-            glog.stop('finished processing group');
         }
-
-        wlog.stop('finished processing window');
     }
 
     const activeTabs = [];
@@ -336,7 +342,7 @@ async function runGrandRestore(restoredWindowIds) {
 
                 // the array move above can tear live groups apart - recreate them from sessions
                 await SubGroups.apply(groupToKeep.window.id, groupToKeep)
-                    .catch(log.onCatch(['cant apply sub-groups', groupToKeep.id], false));
+                    .catch(log.catchSilent('cant apply sub-groups', groupToKeep.id));
 
                 if (groupToKeep.deleteTabAfterMove) {
                     await Tabs.setActive(null, groupToKeep.tabs.filter(tab => !tabsToDelete.has(tab.id)));
@@ -380,8 +386,6 @@ async function runGrandRestore(restoredWindowIds) {
     if (openersToApply.length) {
         await forgetTabsToRestore(openersToApply.flatMap(({savedTabs}) => savedTabs));
     }
-
-    log.stop();
 }
 
 const createdBatch = new BatchProcessor(async (windowIds) => {
@@ -394,10 +398,10 @@ const createdBatch = new BatchProcessor(async (windowIds) => {
 const createdFlowAlignmentBatch = new BatchProcessor(null, {batchDelay: 1000});
 
 async function onCreated(win) {
-    const log = logger.start(['info', onCreated], win.id);
+    using log = logger.start(['info', onCreated], win.id);
 
     if (!isNormal(win)) {
-        log.stop('not a normal window');
+        log.log('not a normal window');
         return;
     }
 
@@ -405,7 +409,7 @@ async function onCreated(win) {
 
     if (skip.nextCreation) {
         skip.nextCreation = false;
-        log.stop('🛑 skip', win.id);
+        log.log('🛑 skip', win.id);
         return;
     }
 
@@ -432,18 +436,16 @@ async function onCreated(win) {
         if (isBatchLeader) {
             await Browser.actionLoading(false);
         }
-        log.logError('🛑 GrandRestore', e);
-        log.stopError();
+        log.error('🛑 GrandRestore', e);
         return;
     }
 
-    win = await get(win.id).catch(log.onCatch(['window not found:', win], false));
+    win = await get(win.id);
 
     if (!win) {
         if (isBatchLeader) {
             await Browser.actionLoading(false);
         }
-        log.stopError('🛑 window not found');
         return;
     }
 
@@ -467,11 +469,9 @@ async function onCreated(win) {
     createdBatch.add(win.id);
 
     if (isBatchLeader) {
-        await tryRestoreMissedTabs(false).catch(log.onCatch('tryRestoreMissedTabs'));
+        await tryRestoreMissedTabs(false).catch(log.catch('tryRestoreMissedTabs'));
         await Browser.actionLoading(false);
     }
-
-    log.stop();
 }
 
 function onFocusChanged(windowId) {
@@ -486,7 +486,7 @@ const removedBatch = new BatchProcessor(async (windowIds) => {
 }, {batchDelay: 250});
 
 async function onRemoved(windowId) {
-    const log = logger.start(['info', onRemoved], windowId);
+    using log = logger.start(['info', onRemoved], windowId);
 
     const groupId = Cache.getWindowGroup(windowId);
 
@@ -533,8 +533,6 @@ async function onRemoved(windowId) {
         const {group} = await Groups.load(groupId);
         await MenusMain.groupUnloaded(group);
     }
-
-    log.stop();
 }
 
 function onStorageChanged(changes) {
@@ -546,7 +544,7 @@ function onStorageChanged(changes) {
 
 // methods
 export async function load(withTabs = false, params) {
-    const log = logger.start(load, {withTabs, params});
+    using log = logger.start(load, {withTabs, params});
 
     let [tabs, windows] = await Promise.all([
         withTabs ? Tabs.query({pinned: false}, params) : false,
@@ -562,30 +560,28 @@ export async function load(withTabs = false, params) {
         const tabsByWindowId = Map.groupBy(tabs, tab => tab.windowId);
         windows.forEach(win => win.tabs = tabsByWindowId.get(win.id) ?? []);
     }
-
-    log.stop();
     return windows.sort(Utils.sortBy('id'));
 }
 
 export async function get(windowId = browser.windows.WINDOW_ID_CURRENT) {
-    const log = logger.start(get, {windowId});
+    using log = logger.start(get, {windowId});
 
     const win = await browser.windows.get(windowId)
         .then(Cache.loadWindowSession)
-        .catch(log.onCatch(['get', windowId]));
+        .catch(() => null); // a window that has just closed (docs/DESIGN-EVENTS.md §1)
 
     log.assert(win, 'windowId', windowId, 'not found');
-    log.stop(win);
+    log.log(win);
     return win;
 }
 
 export async function create(groupId, activeTabId) {
     using operation = Operations.start('create-window');
 
-    const log = logger.start(create, {groupId, activeTabId});
+    using log = logger.start(create, {groupId, activeTabId});
 
     if (!groupId) {
-        log.throwError('No group id');
+        throw log.error('No group id');
     }
 
     const groupWindowId = Cache.getWindowId(groupId);
@@ -594,7 +590,7 @@ export async function create(groupId, activeTabId) {
 
     if (groupWindowId) {
         await Groups.apply(groupWindowId, groupId, activeTabId);
-        log.stop('load exist window', groupWindowId);
+        log.log('load exist window', groupWindowId);
     } else {
         log.log('creating new window for group', groupId);
         skip.nextCreation = true;
@@ -602,14 +598,19 @@ export async function create(groupId, activeTabId) {
 
         log.log('applying group to window', win.id);
         await Groups.apply(win.id, groupId, activeTabId);
-        log.stop('load new window', win);
+        log.log('load new window', win);
     }
 }
 
 export async function setFocus(windowId) {
-    return await browser.windows.update(windowId, {
-        focused: true,
-    }).catch(logger.onCatch(['setFocus', windowId]));
+    try {
+        return await browser.windows.update(windowId, {
+            focused: true,
+        });
+    } catch (e) {
+        logger.warn('window not found', windowId, e); // the window closed meanwhile
+        return null;
+    }
 }
 
 export function isNormal(win) {
@@ -617,18 +618,18 @@ export function isNormal(win) {
 }
 
 export async function isNormalId(windowId) {
-    const log = logger.start(isNormalId, windowId);
+    using log = logger.start(isNormalId, windowId);
 
     const win = await browser.windows.get(windowId).catch(() => null);
 
     if (!win) {
-        log.stopWarn(false);
+        log.warn('window not found');
         return false;
     }
 
     const normal = isNormal(win);
 
-    log.stop(normal);
+    log.log(normal);
     return normal;
 }
 
@@ -652,7 +653,7 @@ export async function getFirstNormalWindowId() {
 }
 
 export async function createPopup(createData, once = true) {
-    const log = logger.start(createPopup, createData);
+    using log = logger.start(createPopup, createData);
 
     createData = {
         focused: true,
@@ -668,7 +669,7 @@ export async function createPopup(createData, once = true) {
             windowTypes: [createData.type],
             populate: true,
         }).catch(e => {
-            log.logError(["can't get", createData.type], e);
+            log.error("can't get", createData.type, e);
             return [];
         });
 
@@ -679,9 +680,9 @@ export async function createPopup(createData, once = true) {
         }
     }
 
-    win ??= await browser.windows.create(createData).catch(log.onCatch(createData));
+    win ??= await browser.windows.create(createData).catch(log.catch(createData));
 
-    log.stop(win);
+    log.log(win);
 
     return win;
 }
@@ -728,19 +729,19 @@ export async function tryRestoreMissedTabs(actionLoading = true) {
     using turn = await missedTabsQueue.wait('restore');
     using operation = Operations.start('restore-missed-tabs');
 
-    const log = logger.start(['info', tryRestoreMissedTabs]);
+    using log = logger.start(['info', tryRestoreMissedTabs]);
 
     const tabsToRestore = await getTabsToRestore();
 
     if (!tabsToRestore.length) {
-        log.stop('tabs not found');
+        log.log('tabs not found');
         return;
     }
 
     const windows = await load();
 
     if (!windows.length) {
-        log.stopWarn('windows not found');
+        log.warn('windows not found');
         return;
     }
 
@@ -788,10 +789,9 @@ export async function tryRestoreMissedTabs(actionLoading = true) {
 
         const needRestoreGroupCount = tabs.filter(tab => tab.new).length;
 
-        const logCreate = log.start('creating and settle tabs for group', groupId, 'tabs count:', needRestoreGroupCount);
+        using logCreate = log.start('creating and settle tabs for group', groupId, 'tabs count:', needRestoreGroupCount);
         const creation = await Tabs.createMultiple(tabs, {createMissing: true, hideUnloaded: false});
         await Groups.settleTabs(group, savedTabs, creation);
-        logCreate.stop();
     }
 
     log.log('filtering and saving tabs that have already been restored');
@@ -800,14 +800,12 @@ export async function tryRestoreMissedTabs(actionLoading = true) {
     if (actionLoading) {
         await Browser.actionLoading(false);
     }
-
-    log.stop();
 }
 
 export async function initializeGroups(groups, afterRestoring = false) {
     using operation = Operations.start('initialize-groups');
 
-    const log = logger.start(initializeGroups, {afterRestoring});
+    using log = logger.start(initializeGroups, {afterRestoring});
 
     const EXTENSION_START_TIME = await getExtensionStartTime();
 
@@ -875,7 +873,7 @@ export async function initializeGroups(groups, afterRestoring = false) {
                     if (Tabs.isLoading(tab) || tab.url.startsWith('file:') || tab.lastAccessed > EXTENSION_START_TIME) {
                         await Cache.setTabGroup(tab.id, win.groupId)
                             .then(() => tab.groupId = win.groupId)
-                            .catch(log.onCatch(["can't setTabGroup", tab.id, 'group', win.groupId], false));
+                            .catch(log.catchSilent("can't setTabGroup", tab.id, 'group', win.groupId));
                     } else {
                         tabsToHide.add(tab);
                     }
@@ -926,10 +924,8 @@ export async function initializeGroups(groups, afterRestoring = false) {
 
     for (const win of windows) {
         await SubGroups.reconcileWindow(win.id, afterRestoring)
-            .catch(log.onCatch(['cant reconcile sub-groups for window', win.id], false));
+            .catch(log.catchSilent('cant reconcile sub-groups for window', win.id));
     }
-
-    log.stop();
 
     return windows;
 }

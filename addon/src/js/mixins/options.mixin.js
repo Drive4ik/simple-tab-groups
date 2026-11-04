@@ -1,11 +1,10 @@
 
 import * as Constants from '/js/constants.js';
 import * as Storage from '/js/storage.js';
-import * as Utils from '/js/utils.js';
 import Logger from '/js/logger.js';
 
 const MODULE_NAME = 'options.mixin';
-const logger = new Logger(MODULE_NAME, [Utils.getNameFromPath(location.href)]);
+const logger = new Logger(MODULE_NAME, {prefixes: [Constants.PAGES.current]});
 
 let colorSchemeMediaListenerAdded = false;
 

@@ -37,33 +37,33 @@ async function setSetting(name, value) {
 }
 
 export async function get() {
-    const log = logger.start('get');
+    using log = logger.start('get');
     const resultRaw = {};
 
     for (const name of Object.keys(Constants.BROWSER_SETTINGS_SCHEME)) {
         try {
             resultRaw[name] = await getSetting(name);
         } catch (e) {
-            log.logError(name, e);
+            log.error(name, e);
         }
     }
 
-    log.stop(resultRaw);
+    log.log(resultRaw);
     return resultRaw;
 }
 
 export async function set(settings = {}) {
-    const log = logger.start('set', settings);
+    using log = logger.start('set', settings);
     const resultRaw = {};
 
     for (const [name, value] of Object.entries(settings)) {
         try {
             resultRaw[name] = await setSetting(name, value);
         } catch (e) {
-            log.logError(String(e), e);
+            log.error(e);
         }
     }
 
-    log.stop(resultRaw);
+    log.log(resultRaw);
     return resultRaw;
 }

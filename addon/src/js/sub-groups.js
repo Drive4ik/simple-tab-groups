@@ -60,7 +60,7 @@ export function reissueSubGroupIds(copies, subGroupIdsByGroupId) {
     const groupId = copies[0].id;
 
     if (copies.some(copy => copy.id !== groupId)) {
-        throw new Error(`reissueSubGroupIds: copies of different groups: ${copies.map(copy => copy.id)}`);
+        throw logger.error(`reissueSubGroupIds: copies of different groups: ${copies.map(copy => copy.id)}`);
     }
 
     const takenIds = new Set(subGroupIdsByGroupId.entries().flatMap(([holderId, ids]) => holderId === groupId ? [] : ids));
@@ -235,7 +235,7 @@ export function referencedSubGroups({tabs, subGroups}) {
 }
 
 const mirrorBatch = new BatchProcessor((_windowIds, windowId) => {
-    return mirrorWindow(windowId).catch(logger.onCatch(['mirrorWindow failed', windowId], false));
+    return mirrorWindow(windowId).catch(logger.catchSilent('mirrorWindow failed', windowId));
 }, {batchDelay: 150});
 
 // the mirror reads settled states only: parked while an operation runs, one pass per window on idle
@@ -285,10 +285,10 @@ async function mirrorWindow(windowId) {
     {
         using gate = await openWindowGate(windowId, 'mirror');
 
-        const log = logger.start(mirrorWindow, windowId);
+        using log = logger.start(mirrorWindow, windowId);
 
         if (deferMirror(windowId)) {
-            log.stop('deferred, operations are busy (1/3)');
+            log.log('deferred, operations are busy (1/3)');
             return;
         }
 
@@ -317,7 +317,7 @@ async function mirrorWindow(windowId) {
 
         // an operation that started while we were reading makes every conclusion below stale
         if (deferMirror(windowId)) {
-            log.stop('deferred, operations are busy (2/3)');
+            log.log('deferred, operations are busy (2/3)');
             return;
         }
 
@@ -348,14 +348,14 @@ async function mirrorWindow(windowId) {
         groupId = Cache.getWindowGroup(windowId);
 
         if (!groupId) {
-            log.stop('no active group, sessions only');
+            log.log('no active group, sessions only');
             return;
         }
 
         const {group} = await Groups.load(groupId);
 
         if (!group) {
-            log.stop('group not found');
+            log.log('group not found');
             return;
         }
 
@@ -377,16 +377,16 @@ async function mirrorWindow(windowId) {
         }
 
         if (deferMirror(windowId)) {
-            log.stop('deferred, operations are busy (3/3)');
+            log.log('deferred, operations are busy (3/3)');
             return;
         }
 
         if (isSameSubGroups(group.subGroups, subGroups)) {
-            log.stop('no metadata changes');
+            log.log('no metadata changes');
             return;
         }
 
-        log.stop('metadata changed, count:', subGroups.length);
+        log.log('metadata changed, count:', subGroups.length);
     }
 
     await Groups.update(groupId, () => deferMirror(windowId) ? {} : {subGroups});
@@ -398,7 +398,7 @@ const deferredClearCandidates = new Map; // windowId → Map(tabId → sessionId
 
 const clearBatch = new BatchProcessor((candidates, windowId) => {
     return clearWindowSessions(windowId, candidates)
-        .catch(logger.onCatch(['clearWindowSessions failed', windowId], false));
+        .catch(logger.catchSilent('clearWindowSessions failed', windowId));
 }, {batchDelay: 150, useMap: true});
 
 Operations.onIdle(function clearDeferredWindows() {
@@ -439,7 +439,7 @@ async function clearWindowSessions(windowId, candidates) {
         return;
     }
 
-    const log = logger.start(clearWindowSessions, windowId, 'candidates:', candidates.size);
+    using log = logger.start(clearWindowSessions, windowId, 'candidates:', candidates.size);
 
     let cleared = 0;
 
@@ -459,7 +459,7 @@ async function clearWindowSessions(windowId, candidates) {
     }
 
     if (!cleared) {
-        log.stop('nothing confirmed');
+        log.log('nothing confirmed');
         return;
     }
 
@@ -473,7 +473,7 @@ async function clearWindowSessions(windowId, candidates) {
     // the freed records are garbage collected by the next mirror pass
     scheduleMirrorWindow(windowId);
 
-    log.stop('cleared:', cleared);
+    log.log('cleared:', cleared);
 }
 
 export function forgetWindow(windowId) {
@@ -529,17 +529,17 @@ export async function apply(windowId, group) {
     {
         using gate = await openWindowGate(windowId, 'apply');
 
-        const log = logger.start(apply, windowId, 'group:', group.id, 'count:', group.subGroups.length);
+        using log = logger.start(apply, windowId, 'group:', group.id, 'count:', group.subGroups.length);
 
         if (!group.tabs.length) {
-            log.stop('tabs are empty');
+            log.log('tabs are empty');
             return;
         }
 
         await Promise.all(group.tabs.map(tab => Cache.loadTabSession(tab)));
 
         if (await isLiveStateSame(windowId, group)) {
-            log.stop('live state already matches');
+            log.log('live state already matches');
             return;
         }
 
@@ -564,6 +564,10 @@ export async function apply(windowId, group) {
             try {
                 const liveId = await Tabs.group(visibleMemberTabs, windowId);
 
+                if (!liveId) {
+                    continue;
+                }
+
                 await browser.tabGroups.update(liveId, {
                     collapsed: subGroup.collapsed,
                     color: subGroup.color,
@@ -572,22 +576,20 @@ export async function apply(windowId, group) {
 
                 linkLiveGroup(liveId, subGroup.id);
                 markMaterialized(windowId, subGroup.id);
-                appliedSubGroups.push(subGroup);
             } catch (e) {
-                // the members still reference subGroup.id in the sessions, the next apply retries
-                appliedSubGroups.push(subGroup);
-                log.logError(['cant apply sub-group', subGroup], e);
+                log.warn('cant apply sub-group', subGroup, e);
+            } finally {
+                appliedSubGroups.push(subGroup); // the members still reference subGroup.id in the sessions, the next apply retries
             }
         }
 
         if (isSameSubGroups(group.subGroups, appliedSubGroups)) {
-            log.stop();
             return;
         }
 
         group.subGroups = appliedSubGroups;
 
-        log.stop('metadata changed, count:', appliedSubGroups.length);
+        log.log('metadata changed, count:', appliedSubGroups.length);
     }
 
     await Groups.update(group.id, {subGroups: group.subGroups});
@@ -690,7 +692,7 @@ export async function restoreMembership(group, movedTabs, snapshot = null) {
     snapshot ??= new Map;
 
     const windowId = Cache.getWindowId(group.id);
-    const log = logger.start(restoreMembership, 'group:', group.id, {windowId}, 'carried:', snapshot.size);
+    using log = logger.start(restoreMembership, 'group:', group.id, {windowId}, 'carried:', snapshot.size);
 
     if (windowId) {
         using gate = await openWindowGate(windowId, 'restore-membership');
@@ -735,7 +737,7 @@ export async function restoreMembership(group, movedTabs, snapshot = null) {
 
                 const liveId = await Tabs.group(memberTabs, windowId, {joinLiveGroupId: joinLiveId});
 
-                if (!joinLiveId) {
+                if (liveId && !joinLiveId) {
                     await browser.tabGroups.update(liveId, {
                         collapsed: subGroup.collapsed,
                         color: subGroup.color,
@@ -746,7 +748,7 @@ export async function restoreMembership(group, movedTabs, snapshot = null) {
                     markMaterialized(windowId, subGroup.id);
                 }
             } catch (e) {
-                log.logError(['cant restore sub-group', subGroup], e);
+                log.warn('cant restore sub-group', subGroup, e);
             }
         }
 
@@ -785,13 +787,11 @@ export async function restoreMembership(group, movedTabs, snapshot = null) {
             await Groups.update(group.id, {subGroups});
         }
     }
-
-    log.stop();
 }
 
 // docs/DESIGN-SUB-GROUPS.md §9: after a backup restore the storage is the truth, otherwise the browser
 export async function reconcileWindow(windowId, afterRestoring = false) {
-    const log = logger.start(reconcileWindow, windowId, {afterRestoring});
+    using log = logger.start(reconcileWindow, windowId, {afterRestoring});
 
     if (afterRestoring) {
         const groupId = Cache.getWindowGroup(windowId);
@@ -799,12 +799,12 @@ export async function reconcileWindow(windowId, afterRestoring = false) {
 
         if (group) {
             await apply(windowId, group);
-            log.stop('applied sub-groups');
+            log.log('applied sub-groups');
         } else {
-            log.stop('no active group');
+            log.log('no active group');
         }
     } else {
         await mirrorWindow(windowId);
-        log.stop('mirrored from browser');
+        log.log('mirrored from browser');
     }
 }

@@ -20,10 +20,10 @@ const SET_ICON_TO_GROUP_ID = 'set-tab-icon-as-group-icon';
 
 const MODULE_NAME = 'menus-tab';
 
-const logger = new Logger(MODULE_NAME).disable();
+const logger = new Logger(MODULE_NAME, {debugOnly: true});
 
 export async function create(withExtra = true) {
-    const log = logger.start(create, {withExtra});
+    using log = logger.start(create, {withExtra});
     const settings = await loadSettings();
 
     if (settings.showContextMenuOnTabs) {
@@ -34,11 +34,11 @@ export async function create(withExtra = true) {
         // there are no extra menus
     }
 
-    log.stop(settings);
+    log.log(settings);
 }
 
 export async function remove(withExtra = true) {
-    const log = logger.start(remove, {withExtra});
+    using log = logger.start(remove, {withExtra});
 
     if (await Menus.has(PARENT_ID)) {
         await removeMenus();
@@ -47,8 +47,6 @@ export async function remove(withExtra = true) {
     if (withExtra) {
         // there are no extra menus
     }
-
-    log.stop();
 }
 
 async function createMenus(settings = null) {
@@ -225,12 +223,12 @@ async function onWindowFocusChanged(windowId) {
 
     await Menus.update(SET_ICON_TO_GROUP_ID, {
         enabled: Boolean(groupId),
-    }).catch(logger.onCatch(['cant update', SET_ICON_TO_GROUP_ID], false));
+    }).catch(logger.catchSilent('cant update', SET_ICON_TO_GROUP_ID));
 }
 
 // actions
 export async function openInTemporaryContainer(info, tab) {
-    const log = logger.start(openInTemporaryContainer, info, tab);
+    using log = logger.start(openInTemporaryContainer, info, tab);
 
     await Tabs.create({
         ...SubGroups.detachTabGroupId(tab),
@@ -240,30 +238,26 @@ export async function openInTemporaryContainer(info, tab) {
         openerTabId: tab.id,
         cookieStoreId: Constants.TEMPORARY_CONTAINER,
     }, {skipTrackingCreated: false});
-
-    log.stop();
 }
 
 export async function setIconAsGroupIcon(info, tab) {
-    const log = logger.start(setIconAsGroupIcon, info, tab);
+    using log = logger.start(setIconAsGroupIcon, info, tab);
 
     const groupId = await browser.sessions.getWindowValue(tab.windowId, 'groupId');
 
     if (!groupId) {
         await Menus.update(info.menuItemId, {enabled: false})
-            .catch(log.onCatch(['cant update', info.menuItemId], false));
-        log.stopWarn('no group found');
+            .catch(log.catchSilent('cant update', info.menuItemId));
+        log.warn('no group found');
         return;
     }
 
     tab = Tabs.normalizeFavIcon(tab);
     await Groups.setIconUrl(groupId, tab.favIconUrl);
-
-    log.stop();
 }
 
 export async function moveToGroup(groupId, info, tab) {
-    const log = logger.start(moveToGroup, info, tab);
+    using log = logger.start(moveToGroup, info, tab);
 
     const tabIds = await Tabs.getHighlightedIds(tab.windowId, tab);
 
@@ -274,12 +268,10 @@ export async function moveToGroup(groupId, info, tab) {
     if (!info.button.RIGHT && Menus.isControlPressed(info)) {
         await Tabs.discard(tabIds);
     }
-
-    log.stop();
 }
 
 export async function createNewGroup(info, tab) {
-    const log = logger.start(createNewGroup, info, tab);
+    using log = logger.start(createNewGroup, info, tab);
 
     const tabIds = await Tabs.getHighlightedIds(tab.windowId, tab);
 
@@ -289,8 +281,6 @@ export async function createNewGroup(info, tab) {
         tabIds: tabIds,
         windowId: info.button.RIGHT ? tab.windowId : undefined,
     }, self);
-
-    log.stop();
 }
 
 // helpers

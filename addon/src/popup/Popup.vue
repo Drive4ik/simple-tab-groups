@@ -12,7 +12,7 @@ import contextMenuGroup from '../components/context-menu-group.vue';
 
 import '/js/prefixed-storage.js';
 import * as Constants from '/js/constants.js';
-import Logger, {errorEventHandler} from '/js/logger.js';
+import Logger from '/js/logger.js';
 import Lang from '/js/lang.js';
 import * as Containers from '/js/containers.js';
 import * as Groups from '/js/groups.js';
@@ -27,10 +27,8 @@ import popupHelpersMixin from '/js/mixins/popup-helpers.mixin.js';
 import syncCloudMixin from '/js/mixins/sync-cloud.mixin.js';
 import tabGroupsMixin from '/js/mixins/tab-groups.mixin.js';
 
-const MODULE_NAME = Constants.PAGES.isSidebar ? Constants.MODULES.SIDEBAR : Constants.MODULES.POPUP;
-
-window.logger = new Logger(MODULE_NAME);
-Vue.config.errorHandler = errorEventHandler.bind(window.logger);
+window.logger = new Logger(Constants.PAGES.current);
+Vue.config.errorHandler = (error, vm, info) => window.logger.handleError(error, info);
 Vue.mixin(globalMixin);
 
 const storage = localStorage.create(Constants.MODULES.POPUP);
@@ -86,7 +84,7 @@ export default {
         window.$vm = this;
     },
     async mounted() {
-        const log = window.logger.start('mounted');
+        using log = window.logger.start('mounted');
 
         await Promise.all([
             this.optionsLoadPromise,
@@ -104,8 +102,6 @@ export default {
         if (this.options.openGroupAfterChange && this.currentGroup) {
             this.showSectionGroupTabs(this.currentGroup);
         }
-
-        log.stop();
     },
     watch: {
         isLoading() {
@@ -228,7 +224,7 @@ export default {
                     this.syncCloudProgress = 15;
                 }
 
-                const confirmed = await this.confirm(result.name, result.message, 'openSettings', 'is-info');
+                const confirmed = await this.confirm(result.error.name, result.error.message, 'openSettings', 'is-info');
 
                 if (confirmed) {
                     this.openOptionsPage('backup/sync');
@@ -1286,7 +1282,7 @@ export default {
         ></popup-helpers>
 
     <div
-        v-if="enableDebug"
+        v-if="debugMode"
         id="debug-message"
         class="tag is-warning is-medium is-clickable"
         @click="openDebugPage"

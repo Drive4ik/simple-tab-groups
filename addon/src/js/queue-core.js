@@ -23,7 +23,7 @@ const {entries, queueNames} = shared;
 
 export function registerQueue(name) {
     if (queueNames.has(name)) {
-        throw new Error(`queue "${name}" already exists`);
+        throw logger.error(`queue "${name}" already exists`);
     }
 
     queueNames.add(name);

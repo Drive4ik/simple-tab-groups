@@ -7,7 +7,7 @@ import runModule from './module-runner.js';
 
 export const {ContextType, ItemType} = browser.menus;
 
-const logger = new Logger('Menus').disable();
+const logger = new Logger('Menus', {debugOnly: true});
 
 const STORAGE_KEY = 'menu';
 
@@ -24,7 +24,7 @@ export function removeListeners() {
 }
 
 async function onClicked(info, tab) {
-    const log = logger.start('onClicked', {info, tab});
+    using log = logger.start('onClicked', {info, tab});
 
     const {[info.menuItemId]: menu} = await loadAll();
 
@@ -41,10 +41,8 @@ async function onClicked(info, tab) {
 
         log.log('execute module', menu.module);
 
-        await runModule(menu.module, info, tab).catch(log.onCatch(['execute module', menu.module, info, tab]));
+        await runModule(menu.module, info, tab).catch(log.catch('execute module', menu.module, info, tab));
     }
-
-    log.stop();
 }
 
 async function loadAll() {
@@ -59,9 +57,16 @@ async function saveAll(menus) {
 const writeQueue = new Queue('Menus');
 const transactionQueue = new Queue('MenusTransaction');
 
-// a batch of menu calls as one whole (docs/DESIGN-QUEUES.md §2)
-export function transaction(name) {
-    return transactionQueue.wait(name);
+// a batch of menu calls as one whole (docs/DESIGN-QUEUES.md §2); the log of the transaction closes with its turn
+export async function transaction(name) {
+    const stack = new DisposableStack();
+    const log = stack.use(logger.start('transaction', name));
+
+    stack.use(await transactionQueue.wait(name));
+
+    log.log('started');
+
+    return stack;
 }
 
 function collectDescendantIds(menus, parentId) {
@@ -87,12 +92,12 @@ export async function create(createProperties) {
 
     const id = createProperties.id ??= crypto.randomUUID();
 
-    const log = logger.start('create', createProperties);
+    using log = logger.start('create', createProperties);
 
     const menus = await loadAll();
 
     if (menus[id]) {
-        log.throwError([id, 'already exists']);
+        throw log.error(`menu ${id} already exists`);
     }
 
     const {context} = createProperties;
@@ -118,14 +123,14 @@ export async function create(createProperties) {
                 resolve();
             }
         });
-    }).catch(log.onCatch(["can't create", createProperties]));
+    }).catch(log.catch("can't create", createProperties));
 
     createProperties.module = module;
 
     menus[id] = createProperties;
     await saveAll(menus);
 
-    log.stop(id);
+    log.log(id);
 
     return id;
 }
@@ -140,12 +145,12 @@ export async function createSeparator(parentId) {
 export async function update(id, updateProperties) {
     using turn = await writeQueue.wait('update');
 
-    const log = logger.start('update', id, updateProperties);
+    using log = logger.start('update', id, updateProperties);
 
     const menus = await loadAll();
 
     if (!menus[id]) {
-        log.throwError([id, "doesn't exist"]);
+        throw log.error(`menu ${id} doesn't exist`);
     }
 
     delete updateProperties.id; // for easy coding
@@ -164,7 +169,7 @@ export async function update(id, updateProperties) {
     }
 
     if (Object.keys(updateProperties).length) {
-        await browser.menus.update(id, updateProperties).catch(log.onCatch(["can't update", updateProperties]));
+        await browser.menus.update(id, updateProperties).catch(log.catch("can't update", updateProperties));
     }
 
     if (module) {
@@ -173,22 +178,20 @@ export async function update(id, updateProperties) {
 
     Object.assign(menus[id], updateProperties);
     await saveAll(menus);
-
-    log.stop();
 }
 
 export async function remove(id) {
     using turn = await writeQueue.wait('remove');
 
-    const log = logger.start('remove', id);
+    using log = logger.start('remove', id);
 
     const menus = await loadAll();
 
     if (!menus[id]) {
-        log.throwError([id, "doesn't exist"]);
+        throw log.error(`menu ${id} doesn't exist`);
     }
 
-    await browser.menus.remove(id).catch(log.onCatch(["can't remove", id]));
+    await browser.menus.remove(id).catch(log.catch("can't remove", id));
 
     const descendantIds = collectDescendantIds(menus, id);
 
@@ -199,14 +202,12 @@ export async function remove(id) {
     }
 
     await saveAll(menus);
-
-    log.stop();
 }
 
 export async function removeChildren(parentId) {
     using turn = await writeQueue.wait('remove-children');
 
-    const log = logger.start('removeChildren', parentId);
+    using log = logger.start('removeChildren', parentId);
 
     const menus = await loadAll();
 
@@ -215,27 +216,23 @@ export async function removeChildren(parentId) {
     // Remove only direct children from browser (browser cascades to sub-children)
     for (const id of descendantIds) {
         if (menus[id].parentId === parentId) {
-            await browser.menus.remove(id).catch(log.onCatch(["can't remove child", id]));
+            await browser.menus.remove(id).catch(log.catch("can't remove child", id));
         }
 
         delete menus[id];
     }
 
     await saveAll(menus);
-
-    log.stop();
 }
 
 export async function removeAll() {
     using turn = await writeQueue.wait('remove-all');
 
-    const log = logger.start('removeAll');
+    using log = logger.start('removeAll');
 
-    await browser.menus.removeAll().catch(log.onCatch("can't remove all"));
+    await browser.menus.removeAll().catch(log.catch("can't remove all"));
 
     await saveAll({});
-
-    log.stop();
 }
 
 export function isControlPressed(info) {

@@ -5,7 +5,8 @@ import JSON from './json.js';
 
 const mainStorage = localStorage.create(Constants.MODULES.BACKGROUND);
 
-const MAX_STRING_LENGTH = 1024 * 1024 * 0.1; // ~100KB
+const MAX_LENGTH = 1024 * 100; // a string, or the JSON of an object
+const HEAD_LENGTH = 100;
 
 const UNNECESSARY_LOG_STRINGS = [
     Constants.STG_BASE_URL + 'js/',
@@ -17,17 +18,20 @@ const UNNECESSARY_LOG_STRINGS = [
 const DELETE_STACK_LINE_INCLUDES = [
     'vue.runtime.esm.js',
     'listeners.js',
+    'logger.js',
+    'logger-utils.js',
+    'json.js',
 ];
 
 const DELETE_STACK_LINE_STARTS_WITH = [
-    'Log',
-    'normalizeError',
-    'PageStack',
-    'setLoggerFuncs',
     'sendMessage',
     'sendExternalMessage',
     'getArgumentsModuleCall',
-    'catchFunc',
+];
+
+const KEEP_STACK_LINE_INCLUDES = [
+    'host.js',
+    'tabs.js',
 ];
 
 function removeUnnecessaryStrings(str) {
@@ -39,7 +43,7 @@ export function getStack(e, start = 0, to = 50) {
         .split('\n')
         .filter(Boolean)
         .filter(line => !DELETE_STACK_LINE_INCLUDES.some(str => line.includes(str)))
-        .filter(line => !DELETE_STACK_LINE_STARTS_WITH.some(str => line.startsWith(str)))
+        .filter(line => !DELETE_STACK_LINE_STARTS_WITH.some(str => line.startsWith(str)) || KEEP_STACK_LINE_INCLUDES.some(str => line.includes(str)))
         .slice(start, to);
 }
 
@@ -58,7 +62,7 @@ function responseToObject(response) {
         status: response.status,
         statusText: response.statusText,
         redirected: response.redirected,
-        headers: mainStorage.enableDebug === Constants.DEBUG.MANUAL
+        headers: mainStorage.debugMode === Constants.DEBUG.MANUAL
             ? Object.fromEntries(response.headers.entries())
             : 'deny',
     };
@@ -78,6 +82,7 @@ export function nativeErrorToObject(nativeError) {
     return {
         name: nativeError.name,
         message: nativeError.message,
+        lang: nativeError.lang,
         fileName: removeUnnecessaryStrings(nativeError.fileName),
         lineNumber: nativeError.lineNumber,
         columnNumber: nativeError.columnNumber,
@@ -97,6 +102,7 @@ export function objectToNativeError(obj) {
     const error = new Error(obj.message, options);
     error.name = obj.name || 'objectToNativeError';
     error.message = obj.message;
+    error.lang = obj.lang;
     error.fileName = obj.fileName;
     error.lineNumber = obj.lineNumber;
     error.columnNumber = obj.columnNumber;
@@ -106,11 +112,8 @@ export function objectToNativeError(obj) {
     return error;
 }
 
-export function normalizeError(event) {
-    let nativeError = event?.error || event || {};
-
+function normalizeError(nativeError) {
     if (
-        typeof nativeError === 'string' ||
         !String(nativeError.name).toLowerCase().includes('error') ||
         nativeError.fileName === 'undefined' ||
         !nativeError.stack?.length
@@ -133,21 +136,52 @@ export function getFuncName(func) {
     return func.name || String(func).slice(0, 50);
 }
 
+export function toError(event) {
+    let error = event;
+
+    if (event instanceof Event) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+
+        error = event instanceof PromiseRejectionEvent ? event.reason : (event.error ?? event.message);
+    }
+
+    if (!Error.isError(error)) {
+        error = new Error(String(error));
+    }
+
+    return error;
+}
+
 export function normalizeArgumentValue(value) {
-    if (Error.isError(value)) return normalizeError(value);
-    if (typeof value === 'string' && value.length > MAX_STRING_LENGTH) {
-        return 'VERY_BIG_STRING_LENGTH_' + value.length + ': ' + value.slice(0, 200);
-    }
-    if (Array.isArray(value)) return value.map(normalizeArgumentValue);
-    if (value && typeof value === 'object') {
-        const clone = JSON.clone(value);
-        for (const [key, val] of Object.entries(clone)) {
-            clone[key] = normalizeArgumentValue(val);
-        }
-        return clone;
-    }
+    if (typeof value === 'string') return cutString(value);
     if (typeof value === 'function') return getFuncName(value);
+    if (!value || typeof value !== 'object') return value;
+
+    const json = JSON.stringify(value, replacer);
+
+    if (json.length > MAX_LENGTH) {
+        const shape = Array.isArray(value) ? `${value.length} items` : Object.keys(value).join(', ');
+
+        return `VERY_BIG_OBJECT_LENGTH_${json.length}: ${shape}`;
+    }
+
+    return JSON.parse(json);
+}
+
+function replacer(key, value) {
+    if (Error.isError(value)) return normalizeError(value);
+    if (typeof value === 'function') return getFuncName(value);
+    if (typeof value === 'string') return cutString(value);
     return value;
+}
+
+function cutString(str) {
+    if (str.length > MAX_LENGTH) {
+        return `VERY_BIG_STRING_LENGTH_${str.length}: ${str.slice(0, HEAD_LENGTH)}`;
+    }
+
+    return str;
 }
 
 export class PageStack extends Error {

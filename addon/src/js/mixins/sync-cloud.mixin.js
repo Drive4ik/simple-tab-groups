@@ -1,12 +1,9 @@
 
 import '/js/prefixed-storage.js';
-import {objectToNativeError} from '/js/logger.js';
+import {objectToNativeError} from '/js/logger-utils.js';
 import * as Constants from '/js/constants.js';
 import * as Utils from '/js/utils.js';
 import * as Cloud from '/js/sync/cloud/cloud.js';
-
-// const MODULE_NAME = 'sync-cloud.mixin';
-// const logger = new Logger(MODULE_NAME, [Utils.getNameFromPath(location.href)]);
 
 const storage = localStorage.create(Constants.MODULES.CLOUD);
 
@@ -45,7 +42,7 @@ export default {
         }));
 
         list.add(Cloud.on('sync-error', e => {
-            this.syncCloudErrorMessage = String(objectToNativeError(e));
+            this.syncCloudErrorMessage = String(objectToNativeError(e.error));
         }));
 
         list.add(Cloud.on('sync-finish', syncResult => {

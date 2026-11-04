@@ -21,10 +21,10 @@ const EXPORT_ALL_GROUPS_ID = 'exportAllGroups';
 
 const MODULE_NAME = 'menus-bookmark';
 
-const logger = new Logger(MODULE_NAME).disable();
+const logger = new Logger(MODULE_NAME, {debugOnly: true});
 
 export async function create(withExtra = true) {
-    const log = logger.start(create, {withExtra});
+    using log = logger.start(create, {withExtra});
     const hasPermission = await Bookmarks.hasPermission();
 
     if (hasPermission) {
@@ -42,11 +42,11 @@ export async function create(withExtra = true) {
         });
     }
 
-    log.stop({hasPermission});
+    log.log({hasPermission});
 }
 
 export async function remove(withExtra = true) {
-    const log = logger.start(remove, {withExtra});
+    using log = logger.start(remove, {withExtra});
 
     if (await Menus.has(PARENT_ID)) {
         await removeMenus();
@@ -57,8 +57,6 @@ export async function remove(withExtra = true) {
             await Menus.remove(EXPORT_ALL_GROUPS_ID);
         }
     }
-
-    log.stop();
 }
 
 async function createMenus() {
@@ -198,11 +196,11 @@ async function onStorageChanged(changes) {
 
 // actions
 export async function openInTemporaryContainer(info) {
-    const log = logger.start(openInTemporaryContainer, info);
+    using log = logger.start(openInTemporaryContainer, info);
 
     if (!info.bookmarkId) {
         Notification('bookmarkNotAllowed');
-        log.stopWarn('bookmarkNotAllowed');
+        log.warn('bookmarkNotAllowed');
         return;
     }
 
@@ -210,7 +208,7 @@ export async function openInTemporaryContainer(info) {
 
     if (bookmark.type !== Bookmarks.BOOKMARK) {
         Notification('bookmarkNotAllowed');
-        log.stopWarn('bookmarkNotAllowed');
+        log.warn('bookmarkNotAllowed');
         return;
     }
 
@@ -220,18 +218,16 @@ export async function openInTemporaryContainer(info) {
         active: info.button.RIGHT,
         cookieStoreId: Constants.TEMPORARY_CONTAINER,
     }, {skipTrackingCreated: false});
-
-    log.stop();
 }
 
 export async function openInGroup(groupId, info) {
     using operation = Operations.start('bookmarks-open-in-group');
 
-    const log = logger.start(openInGroup, groupId, info);
+    using log = logger.start(openInGroup, groupId, info);
 
     if (!info.bookmarkId) {
         Notification('bookmarkNotAllowed');
-        log.stopWarn('bookmarkNotAllowed');
+        log.warn('bookmarkNotAllowed');
         return;
     }
 
@@ -283,17 +279,17 @@ export async function openInGroup(groupId, info) {
         // Notification('tabsNotCreated');
     }
 
-    log.stop('created tabs count:', tabsToCreate.length);
+    log.log('created tabs count:', tabsToCreate.length);
 }
 
 export async function createNewGroup(info) {
     using operation = Operations.start('bookmarks-create-group');
 
-    const log = logger.start(createNewGroup, info);
+    using log = logger.start(createNewGroup, info);
 
     if (!info.bookmarkId) {
         Notification('bookmarkNotAllowed');
-        log.stop('bookmarkNotAllowed');
+        log.warn('bookmarkNotAllowed');
         return;
     }
 
@@ -361,18 +357,15 @@ export async function createNewGroup(info) {
     } else {
         Notification('bookmarkNotAllowed');
     }
-
-    log.stop();
 }
 
 export async function exportAllGroups() {
-    const log = logger.start(exportAllGroups);
+    using log = logger.start(exportAllGroups);
     await Browser.actionLoading();
     const {groups} = await Groups.load(null, true);
     await Bookmarks.exportGroups(groups);
     await Browser.actionLoading(false);
     // Notification('allGroupsExported'); // ? maybe not needed anymore
-    log.stop();
 }
 
 // helpers

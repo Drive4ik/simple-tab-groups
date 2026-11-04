@@ -4,7 +4,7 @@ The group option "Upload to the cloud" (`group.uploadToCloud`, `true` by default
 group becomes **local**: its content and settings neither go to the cloud nor come from it — on
 this device and on every other one, because by `id` it is one and the same group. This document
 describes how the cloud sync (`addon/src/js/sync/cloud/cloud.js`, function `syncGroupUpload`)
-treats such a group.
+treats such a group, and how an attempt of the sync runs, is retried and reported (§7).
 
 ## 1. Terms
 
@@ -161,3 +161,56 @@ cloud meanwhile — the sync memory tells "I switched it" from "another device s
 - In the gist: a full record or a stub `{id, uploadToCloud: false}`. A migration of the gist
   data must skip the stubs — they have no `tabs`. The sync memory — `storage.lastSync`: `gist`,
   `uploadedGroupIds`, `localOnlyGroupIds`, `stubGroupIds`, `time`.
+
+## 7. A sync attempt and its failure
+
+How an attempt runs, how a failure is retried and reported, and what the user sees. The code is
+`cloudSync`, `resetSyncAlarm` and `onAlarm` in `background.js`; `synchronization`,
+`shouldShowSyncErrorNotification`, `getSyncRetryDelayInMinutes` and `isTemporaryError` in
+`cloud.js`; the classification of the GitHub responses in `githubgist.js`; `CloudError` in
+`error.js`.
+
+```txt
+trigger ──▶ cloudSync ──▶ Cloud.synchronization ──▶ the events of the `cloud` channel ──▶ the button, the popup, the options page
+                                    │
+                                    └─ failure ──▶ temporary? ──▶ a retry in 3, 6, 9 minutes, quietly
+                                                         └─ no ──▶ a notification at once (auto) / the page (manual)
+```
+
+- **Three triggers.** The alarm `cloud` on the schedule of the options (`TRIGGER_AUTO`); the
+  alarm `cloud-retry` (`TRIGGER_RETRY`); by hand — the button of the options page or of the popup
+  (`BG.cloudSync`) and the command `start-cloud-sync` (`TRIGGER_MANUAL`).
+- **The schedule.** `resetSyncAlarm` sets a repeating alarm with the period of the options; the
+  first run is counted from the last successful sync (`storage.lastSync.time`), half a minute at
+  the least. It is set at the start of the background, on a change of the sync options, and after
+  a manual sync when the last successful one was before the start: the manual sync then counts as
+  the run, so the auto sync does not follow it at once. The retry counter is cleared at the start
+  of the add-on.
+- **The attempt.** `synchronization` sends `sync-start`, `sync-progress`, `sync-end` or
+  `sync-error`, and `sync-finish` on the `cloud` channel. The background draws the ring of
+  progress on the button of the add-on: green at the end, red on a failure, the ordinary button
+  five seconds later. The popup shows the progress on its sync button and, on a failure, the
+  warning icon with the text in the title; the options page shows the same in its block. The
+  result of a failed attempt carries the error as an object, `syncResult.error`
+  (`nativeErrorToObject`), next to `temporary` and `retryAfter`; the text of the failure goes
+  into `storage.lastError`, the page reads it every 30 seconds.
+- **Two kinds of failure.** Temporary: the network, a GitHub 5xx, the rate limit with its
+  `retry-after`, the gist changed from another device during the sync. Permanent: a bad token,
+  no gist, data newer than the add-on. A temporary one is retried by `cloud-retry` in 3, 6 and 9
+  minutes, or at the moment GitHub names, three times at most (`MAX_RETRY_ATTEMPTS`); a
+  permanent one is not retried.
+- **The notification `cloud-error`.** One at a time, a new one replaces the old. Auto and a
+  permanent failure: at once. A retry: only after the third failed one. Manual: the pages are
+  asked first whether one listens to the channel (`sync-ui-request`), and an open page shows the
+  error itself; without a page — a hotkey — the notification. It lives 3 minutes after an auto
+  or a retry and 45 seconds after a manual one; a click opens the options page at the sync
+  section. An empty token is never notified: the sync is on but not set up.
+- **The period is not touched.** A failure of any kind leaves the alarm `cloud` as it is: the
+  next period tries again.
+
+The intent: transient trouble does not bother the user — three quiet retries, then a voice. A
+permanent failure needs the user's hand, so it is told at once and again every period until it
+is fixed, a bad token and data newer than the add-on alike. An open page owns the error. The
+button of the add-on shows that a sync runs and how it ended. In the log a temporary failure and
+an expected one (`expected` of `CloudError`: data newer than the add-on) are `warn`, the rest
+`error` (`DESIGN-LOGGER.md` §3).

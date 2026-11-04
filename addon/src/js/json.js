@@ -15,8 +15,10 @@ function getCircularReplacer() {
     };
 }
 
-export function stringify(obj = null, space = null) {
-    return JSON.stringify(obj, getCircularReplacer(), space);
+export function stringify(obj = null, replacer = null, space = null) {
+    const circular = getCircularReplacer();
+
+    return JSON.stringify(obj, replacer ? (key, value) => circular(key, replacer(key, value)) : circular, space);
 }
 
 export function clone(obj = null) {

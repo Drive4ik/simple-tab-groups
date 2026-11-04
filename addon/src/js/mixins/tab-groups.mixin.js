@@ -18,7 +18,7 @@ export default {
         this.PAGES = Constants.PAGES;
 
         return {
-            enableDebug: mainStorage.enableDebug,
+            debugMode: mainStorage.debugMode,
             isLoading: true,
 
             DEFAULT_COOKIE_STORE_ID: Constants.DEFAULT_COOKIE_STORE_ID,
@@ -128,7 +128,7 @@ export default {
 
             list.add(Containers.onChanged(() => this.onChangedContainers()));
 
-            list.add(onDebugChanged(mode => this.enableDebug = mode));
+            list.add(onDebugChanged(mode => this.debugMode = mode));
 
             list.add(Windows.on(['opened', 'closed'], () => this.loadWindows()));
 

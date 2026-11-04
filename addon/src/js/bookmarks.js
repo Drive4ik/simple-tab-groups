@@ -93,30 +93,28 @@ async function getGroup(group, createIfNeed) {
 }
 
 export async function removeGroup(group) {
-    const log = logger.start('removeGroup', group.id);
+    using log = logger.start('removeGroup', group.id);
 
     if (await hasPermission()) {
         const groupBookmarkFolder = await getGroup(group);
 
         if (groupBookmarkFolder) {
             await browser.bookmarks.removeTree(groupBookmarkFolder.id)
-                .catch(log.onCatch(groupBookmarkFolder));
+                .catch(log.catch(groupBookmarkFolder));
 
             delete storage[group.id];
 
-            log.stop('success');
+            log.log('success');
 
             return true;
         }
     }
 
-    log.stop();
-
     return false;
 }
 
 export async function updateGroupTitle(group) {
-    const log = logger.start('updateGroupTitle', {groupId: group.id, title: group.title});
+    using log = logger.start('updateGroupTitle', {groupId: group.id, title: group.title});
 
     if (await hasPermission()) {
         const groupBookmarkFolder = await getGroup(group);
@@ -124,24 +122,22 @@ export async function updateGroupTitle(group) {
         if (groupBookmarkFolder) {
             await browser.bookmarks.update(groupBookmarkFolder.id, {
                 title: group.title,
-            }).catch(log.onCatch(groupBookmarkFolder));
+            }).catch(log.catch(groupBookmarkFolder));
 
-            log.stop('success');
+            log.log('success');
 
             return true;
         }
     }
 
-    log.stop();
-
     return false;
 }
 
 export async function exportGroup(group, folderIndex = null) {
-    const log = logger.start('exportGroup', {groupId: group.id, folderIndex});
+    using log = logger.start('exportGroup', {groupId: group.id, folderIndex});
 
     if (!await hasPermission()) {
-        log.stop('no permission');
+        log.log('no permission');
         return false;
     }
 
@@ -199,16 +195,14 @@ export async function exportGroup(group, folderIndex = null) {
         }
     }
 
-    log.stop();
-
     return true;
 }
 
 export async function exportGroups(groups) {
-    const log = logger.start('exportGroups');
+    using log = logger.start('exportGroups');
 
     if (!await hasPermission()) {
-        log.stop('no permission');
+        log.log('no permission');
         return false;
     }
 
@@ -219,8 +213,6 @@ export async function exportGroups(groups) {
             await exportGroup(group, folderIndex++);
         }
     }
-
-    log.stop();
 
     return true;
 }

@@ -81,6 +81,14 @@ export const PAGES = {
         return location.href.startsWith(PAGES.MANAGE);
     },
     isOptions: location.href.startsWith(MANIFEST.options_ui.page),
+    get current() { // the name of the page the code runs in
+        if (IS_BACKGROUND_PAGE) return MODULES.BACKGROUND;
+        if (PAGES.isSidebar) return MODULES.SIDEBAR;
+        if (PAGES.isPopup) return MODULES.POPUP;
+        if (PAGES.isManage) return MODULES.MANAGE;
+        if (PAGES.isOptions) return MODULES.OPTIONS;
+        return location.pathname.split('/').pop().split('.')[0]; // a help page by its file
+    },
 };
 
 for (const path of PAGE_PATHS) {

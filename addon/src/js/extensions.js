@@ -65,7 +65,7 @@ async function onChangedListener(ext) {
         try {
             listener();
         } catch (e) {
-            logger.logError(['onChangedListener:', listener.name], e);
+            logger.error('onChangedListener:', listener.name, e);
         }
     }
 }
@@ -220,7 +220,7 @@ export async function loadIconUrl(id, defaultUrl = null, size = 32) {
             return data.icons[size] || data.icon_url || defaultUrl;
         }
     } catch (e) {
-        logger.logError(["can't load icon for", id], e);
+        logger.warn("can't load icon for", id, e);
     }
 
     return defaultUrl;

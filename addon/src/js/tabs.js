@@ -1,7 +1,7 @@
 
 import Listeners from '/js/listeners.js\
 ?tabs.onActivated\
-&tabs.onCreated\
+&tabs.onCreated={"keepAllPending":true}\
 &tabs.onUpdated\
 &tabs.onRemoved\
 &tabs.onMoved\
@@ -62,6 +62,21 @@ export function removeListeners() {
     Listeners.tabs.onMoved.remove(onMoved);
     Listeners.tabs.onDetached.remove(onDetached);
     Listeners.tabs.onAttached.remove(onAttached);
+}
+
+// a page of the add-on never handles these events: it imports the module for its helpers only
+if (!Constants.IS_BACKGROUND_PAGE) {
+    unsubscribeListeners();
+}
+
+function unsubscribeListeners() {
+    Listeners.tabs.onActivated.unsubscribe();
+    Listeners.tabs.onCreated.unsubscribe();
+    Listeners.tabs.onUpdated.unsubscribe();
+    Listeners.tabs.onRemoved.unsubscribe();
+    Listeners.tabs.onMoved.unsubscribe();
+    Listeners.tabs.onDetached.unsubscribe();
+    Listeners.tabs.onAttached.unsubscribe();
 }
 
 function send(action, data) {
@@ -159,7 +174,7 @@ async function onCreated(tab) {
     try {
         await processCreated(tab);
     } catch (error) {
-        logger.logError(['onCreated failed for tab:', tabId], error);
+        logger.error('onCreated failed for tab:', tabId, error);
     } finally {
         pendingOnCreatedById.delete(tabId);
         resolve();
@@ -208,7 +223,7 @@ async function processCreated(tab) {
     }
 
     await Cache.setTabGroup(tab.id, null, tab.windowId)
-        .catch(logger.onCatch("onCreated can't set group", false));
+        .catch(logger.catchSilent("onCreated can't set group"));
 
     Cache.applyTabSession(tab);
 
@@ -316,7 +331,7 @@ async function onUpdated(tabId, changeInfo, tab) {
         return;
     }
 
-    const log = logger.start(onUpdated, tabId, changeInfo);
+    using log = logger.start(onUpdated, tabId, changeInfo);
 
     // the cache takes what the event announced, not the difference
     const announced = changeInfo;
@@ -326,19 +341,19 @@ async function onUpdated(tabId, changeInfo, tab) {
     Cache.setTab(tab, announced);
 
     if (!changeInfo) {
-        log.stop('🛑 changeInfo keys have not changed');
+        log.log('🛑 changeInfo keys have not changed');
         return;
     }
 
     if (isPinned(tab) && !Object.hasOwn(changeInfo, 'pinned')) {
-        log.stop('🛑 tab is pinned');
+        log.log('🛑 tab is pinned');
         return;
     }
 
     if (Utils.isAvailableFavIconUrl(tab.favIconUrl)) {
         if (changeInfo.favIconUrl) {
             await Cache.setTabFavIcon(tab.id, changeInfo.favIconUrl)
-                .catch(log.onCatch(['cant set favIcon', tab, changeInfo], false));
+                .catch(log.catchSilent('cant set favIcon', tab, changeInfo));
         }
     } else if (isLoaded(tab) && !tab.discarded) {
         await Cache.removeTabFavIcon(tab.id);
@@ -363,7 +378,7 @@ async function onUpdated(tabId, changeInfo, tab) {
             log.log('tab is unpinned', tab.id);
 
             await Cache.setTabGroup(tab.id, null, tab.windowId)
-                .catch(log.onCatch(["can't set group to tab, !pinned", tab.id], false));
+                .catch(log.catchSilent("can't set group to tab, !pinned", tab.id));
 
             tabGroupId = Cache.getTabGroup(tab.id);
         } else if (changeInfo.hidden === false) {
@@ -374,11 +389,11 @@ async function onUpdated(tabId, changeInfo, tab) {
             if (tab.groupId) {
                 log.log('call apply group for tab', tab.id, 'groupId', tab.groupId);
                 await Groups.apply(tab.windowId, tab.groupId, tab.id)
-                    .catch(log.onCatch(["can't apply group", tab.groupId], false));
+                    .catch(log.catchSilent("can't apply group", tab.groupId));
             } else {
                 log.log('call setTabGroup for tab', tab.id);
                 await Cache.setTabGroup(tab.id, null, tab.windowId)
-                    .catch(log.onCatch(["can't set group to tab, !hidden", tab.id], false));
+                    .catch(log.catchSilent("can't set group to tab, !hidden", tab.id));
 
                 tabGroupId = Cache.getTabGroup(tab.id);
             }
@@ -386,8 +401,6 @@ async function onUpdated(tabId, changeInfo, tab) {
 
         tabGroupId && updatedBatch.add(tab.id, tabGroupId);
         updatedBatch.add(tab.id, unsyncKey(tab.windowId));
-
-        log.stop();
         return;
     }
 
@@ -399,8 +412,6 @@ async function onUpdated(tabId, changeInfo, tab) {
     if (isLoaded(changeInfo)) {
         await updateThumbnail(tab.id);
     }
-
-    log.stop();
 }
 
 function onRemoved(tabId, {isWindowClosing, windowId}) {
@@ -521,10 +532,10 @@ async function onAttached(tabId, {newWindowId}) { // called when tabs.move()
         return;
     }
 
-    const log = logger.start(onAttached, {tabId, newWindowId});
+    using log = logger.start(onAttached, {tabId, newWindowId});
 
     await Cache.setTabGroup(tabId, null, newWindowId)
-        .catch(log.onCatch("can't set group"));
+        .catch(log.catchSilent("can't set group"));
 
     // a single moved tab arrives ungrouped, a group moved whole arrives with its membership and
     // the same live id, both without any groupId event (docs/BEHAVIOR-TABGROUPS.md §16, §17) -
@@ -547,8 +558,6 @@ async function onAttached(tabId, {newWindowId}) { // called when tabs.move()
         const {group} = await Groups.load(groupId);
         await Groups.showTabs(group, [attachedTab]);
     }
-
-    log.stop();
 }
 
 function onStorageChanged(changes) {
@@ -568,7 +577,7 @@ export async function create({url, active, pinned, title, index, windowId, opene
     const allowDiscarded = params.allowDiscarded ?? true;
 
     if (!Constants.IS_BACKGROUND_PAGE) {
-        throw new Error('is not background');
+        throw logger.error('is not background');
     }
 
     const tab = {};
@@ -713,19 +722,19 @@ export async function createMultiple(tabsToCreate, params = {}) {
     const hideUnloaded = params.hideUnloaded ?? true;
 
     if (!Array.isArray(tabsToCreate)) {
-        throw new Error('tabs must be an array');
+        throw logger.error('tabs must be an array');
     }
 
     const newTabs = createMissing ? tabsToCreate.filter(tab => tab?.new) : tabsToCreate;
 
-    const log = logger.start(createMultiple, 'count:', newTabs.length, {
+    using log = logger.start(createMultiple, 'count:', newTabs.length, {
         startIndex,
         createMissing,
         hideUnloaded,
     });
 
     if (!newTabs.length) {
-        log.stop('no tabs to create');
+        log.log('no tabs to create');
 
         const aligned = tabsToCreate.map(tab => tab?.new ? undefined : tab);
 
@@ -771,7 +780,7 @@ export async function createMultiple(tabsToCreate, params = {}) {
         }
 
         if (startIndex !== null && nextIndexByWindow.size > 1) {
-            throw new Error('startIndex is a placement in one window, the tabs are in several');
+            throw log.error('startIndex is a placement in one window, the tabs are in several');
         }
     }
 
@@ -784,7 +793,7 @@ export async function createMultiple(tabsToCreate, params = {}) {
                 openerTabId: undefined,
             });
         } catch (error) {
-            log.logError(['failed to create tab:', tab, 'reason:'], error);
+            log.error('failed to create tab:', tab, 'reason:', error);
             return undefined;
         }
     }));
@@ -818,8 +827,6 @@ export async function createMultiple(tabsToCreate, params = {}) {
         ? tabsToCreate.map(tab => tab?.new ? created[next++] : tab)
         : created;
 
-    log.stop();
-
     return {
         created: created.filter(Boolean),
         live: aligned.filter(Boolean),
@@ -830,7 +837,7 @@ export async function createMultiple(tabsToCreate, params = {}) {
 // the offsets are read from "fromTabs", the links are given to "toTabs" - the same tabs at the same indexes
 export function getOpenersByOffset(fromTabs, toTabs = fromTabs) {
     if (fromTabs.length !== toTabs.length) {
-        throw new Error('fromTabs and toTabs must have the same length');
+        throw logger.error('fromTabs and toTabs must have the same length');
     }
 
     const openers = new Map;
@@ -942,7 +949,7 @@ async function queryLiveMembers(windowIds) {
 export async function recreate(tabs, buildTabFunc) {
     using operation = Operations.start('recreate-tabs');
 
-    const log = logger.start(recreate, 'tabs:', tabs.map(extractId));
+    using log = logger.start(recreate, 'tabs:', tabs.map(extractId));
 
     const originals = await list(tabs, {sortByIndex: true});
     const windowIds = new Set(originals.map(tab => tab.windowId));
@@ -977,7 +984,7 @@ export async function recreate(tabs, buildTabFunc) {
             copyByOldId.set(tab.id, copy);
             insertedByWindow.set(tab.windowId, inserted + 1);
         } catch (error) {
-            log.logError(['failed to create tab:', tab, 'reason:'], error);
+            log.error('failed to create tab:', tab, 'reason:', error);
         }
     }
 
@@ -1021,7 +1028,7 @@ export async function recreate(tabs, buildTabFunc) {
 
     const newTabs = tabs.map(tab => copyByOldId.get(extractId(tab)));
 
-    log.stop('new tabs:', newTabs.map(tab => tab?.id ?? null));
+    log.log('new tabs:', newTabs.map(tab => tab?.id ?? null));
 
     return newTabs;
 }
@@ -1055,7 +1062,7 @@ export async function createUrlOnce(url) {
 }
 
 export async function setActive(tabId = null, tabs = []) {
-    const log = logger.start(setActive, tabId, 'from tabs:', tabs.map(extractId));
+    using log = logger.start(setActive, tabId, 'from tabs:', tabs.map(extractId));
 
     let tabToActive = null;
 
@@ -1070,14 +1077,17 @@ export async function setActive(tabId = null, tabs = []) {
     }
 
     if (tabToActive) {
+        try {
+            await browser.tabs.update(tabToActive.id, {
+                active: true,
+            });
+        } catch (e) {
+            log.warn('tab not found', tabToActive.id, e); // a stale id from the UI or from a notification
+            return null;
+        }
+
         tabs.forEach(tab => tab.active = tab.id === tabToActive.id);
-
-        await browser.tabs.update(tabToActive.id, {
-            active: true,
-        }).catch(log.onCatch(tabToActive.id));
     }
-
-    log.stop();
     return tabToActive;
 }
 
@@ -1131,11 +1141,11 @@ export async function query(queryInfo = {}, params) {
         }
     }
 
-    const log = logger.start(query, queryParams);
+    using log = logger.start(query, queryParams);
 
     const tabs = await prepare(await browser.tabs.query(queryParams), params);
 
-    log.stop('count:', tabs.length);
+    log.log('count:', tabs.length);
 
     return tabs;
 }
@@ -1186,16 +1196,16 @@ export async function list(tabs, params = {}) {
 }
 
 export async function createTempActiveTab(windowId, createPinnedTab = true, newTabUrl) {
-    const log = logger.start(createTempActiveTab, {windowId, createPinnedTab, newTabUrl});
+    using log = logger.start(createTempActiveTab, {windowId, createPinnedTab, newTabUrl});
 
     const pinnedTabs = await query({windowId, pinned: true}, {withSession: false});
 
     if (pinnedTabs.length) {
         if (!pinnedTabs.some(tab => tab.active)) {
             await setActive(Utils.getLastActiveTab(pinnedTabs).id);
-            log.stop('setActive pinned');
+            log.log('setActive pinned');
         } else {
-            log.stop('pinned is active');
+            log.log('pinned is active');
         }
         // no not return USER pinned tab, because it shouldn't be removed as a temp tab
     } else {
@@ -1208,7 +1218,7 @@ export async function createTempActiveTab(windowId, createPinnedTab = true, newT
             groupId: createPinnedTab ? undefined : Cache.getWindowGroup(windowId),
         });
 
-        log.stop('created temp tab', tempTab);
+        log.log('created temp tab', tempTab);
         return tempTab;
     }
 }
@@ -1216,7 +1226,7 @@ export async function createTempActiveTab(windowId, createPinnedTab = true, newT
 export async function add(groupId, cookieStoreId, url, title) {
     using operation = Operations.start('add-tab');
 
-    const log = logger.start(add, {groupId, cookieStoreId, url, title});
+    using log = logger.start(add, {groupId, cookieStoreId, url, title});
 
     const windowId = Cache.getWindowId(groupId);
 
@@ -1235,7 +1245,7 @@ export async function add(groupId, cookieStoreId, url, title) {
         await Groups.hideTabs(group, [tab]);
     }
 
-    log.stop(tab);
+    log.log(tab);
     return tab;
 }
 
@@ -1246,23 +1256,23 @@ export async function updateThumbnail(tabId) {
         return;
     }
 
-    const log = logger.start(updateThumbnail, {tabId});
+    using log = logger.start(updateThumbnail, {tabId});
 
     const tab = await get(tabId, {withSession: false});
 
     if (!tab) {
-        log.stop('!tab');
+        log.log('!tab');
         return;
     }
 
     if (!isLoaded(tab)) {
-        log.stop('tab is loading');
+        log.log('tab is loading');
         return;
     }
 
     if (tab.discarded) {
         reload(tab.id);
-        log.stop('tab is discarded, reloading');
+        log.log('tab is discarded, reloading');
         return;
     }
 
@@ -1286,9 +1296,9 @@ export async function updateThumbnail(tabId) {
             changeInfo: {thumbnail},
         });
 
-        log.stop('success');
+        log.log('success');
     } catch (e) {
-        log.stopWarn('cant create thumbnail', e);
+        log.warn('cant create thumbnail', e);
     }
 }
 
@@ -1298,13 +1308,13 @@ export async function move(tabIds, groupId, params = {}) {
     const auto = params.auto ?? false;
     const newTabIndex = params.newTabIndex ?? null;
 
-    const log = logger.start(move, {tabIds, groupId, params});
+    using log = logger.start(move, {tabIds, groupId, params});
 
     const groupWindowId = Cache.getWindowId(groupId);
     const {group, groups} = await Groups.load(groupId, !groupWindowId);
 
     if (!group) {
-        log.stopError('group not found', groupId);
+        log.warn('group not found', groupId);
         return [];
     }
 
@@ -1323,7 +1333,7 @@ export async function move(tabIds, groupId, params = {}) {
     if (tabs.length) {
         tabIds = tabs.map(extractId);
     } else {
-        log.stop('tabs are empty');
+        log.log('tabs are empty');
         return [];
     }
 
@@ -1419,7 +1429,7 @@ export async function move(tabIds, groupId, params = {}) {
     }
 
     if (!tabs.length) {
-        log.stop('empty tabs');
+        log.log('empty tabs');
         return [];
     }
 
@@ -1554,7 +1564,7 @@ async function applyGroupAndNotify(group, groupId, windowId, tabs, activeTabs, t
     }
 
     if (applyGroup || !showNotification) {
-        log.stop('no notify, count:', tabs.length);
+        log.log('no notify, count:', tabs.length);
         return tabs;
     }
 
@@ -1576,7 +1586,7 @@ async function applyGroupAndNotify(group, groupId, windowId, tabs, activeTabs, t
         module: ['groups', 'apply', null, groupId, firstTab.id],
     });
 
-    log.stop('with notify, count:', tabs.length);
+    log.log('with notify, count:', tabs.length);
     return tabs;
 }
 
@@ -1584,7 +1594,7 @@ export async function moveNative(tabs, moveProperties = {}, params = {}) {
     tabs = Array.isArray(tabs) ? tabs : [tabs];
 
     const tabsLengthBefore = tabs.length;
-    const log = logger.start(moveNative, 'tabs:', tabs.map(extractId), {moveProperties, params});
+    using log = logger.start(moveNative, 'tabs:', tabs.map(extractId), {moveProperties, params});
 
     tabs = await list(tabs, {includeFavIconUrl: true, includeThumbnail: true});
     const tabsBeforeMoveMap = new Map(tabs.map(tab => [tab.id, tab]));
@@ -1655,9 +1665,9 @@ export async function moveNative(tabs, moveProperties = {}, params = {}) {
     mirrorWindowIds.forEach(id => SubGroups.scheduleMirrorWindow(id));
 
     if (tabs.length !== tabsLengthBefore) {
-        log.stopWarn('some tabs were not moved, before:', tabsLengthBefore, 'after:', tabs.length);
+        log.warn('some tabs were not moved, before:', tabsLengthBefore, 'after:', tabs.length);
     } else {
-        log.stop('tabs count:', tabs.length);
+        log.log('tabs count:', tabs.length);
     }
 
     return tabs;
@@ -1673,7 +1683,7 @@ const tabsActionSchema = new Map([
     ['update', {sendOneByOne: true, returnsTabs: true}],
     ['reload', {sendOneByOne: true}],
     ['move', {sendArray: true, returnsTabs: true, skipTracking: true}],
-    ['group', {sendAsIs: true, skipTracking: true, defaultValue: browser.tabGroups.TAB_GROUP_ID_NONE}], // the browser's own argument object → the browser's groupId; defaultValue on fail
+    ['group', {sendAsIs: true, skipTracking: true}], // the browser's own argument object → the browser's groupId, null on fail
     ['ungroup', {sendArray: true, sendOneByOne: true, skipTracking: true}],
 ]);
 
@@ -1681,28 +1691,28 @@ async function tabsAction({action, ...params}, tabs, ...funcArgs) {
     const schema = tabsActionSchema.get(action);
 
     if (!schema) {
-        throw new Error(`invalid action: ${action}`);
+        throw logger.error(`invalid action: ${action}`);
     }
 
     if (action === 'create') {
-        throw new Error('create is not sent by tabsAction');
+        throw logger.error('create is not sent by tabsAction');
     }
 
     const skipTracking = params.skipTracking ?? schema.skipTracking ?? false;
 
     if (!tabs) {
-        throw new Error(`invalid tabs`);
+        throw logger.error('invalid tabs');
     }
 
     tabs = Array.isArray(tabs) ? tabs : [tabs];
 
-    let result = schema.defaultValue ?? [];
+    let result = schema.sendAsIs ? null : [];
 
     const tabIds = tabs.map(extractId);
-    const log = logger.start(tabsAction, `browser.tabs.${action}(`,tabIds,...funcArgs,')', {skipTracking});
+    using log = logger.start(tabsAction, `browser.tabs.${action}(`,tabIds,...funcArgs,')', {skipTracking});
 
     if (!tabs.length) {
-        log.stop('tabs are empty');
+        log.log('tabs are empty');
         return result;
     }
 
@@ -1736,10 +1746,10 @@ async function tabsAction({action, ...params}, tabs, ...funcArgs) {
             try {
                 result = await browser.tabs[action](...funcArgs);
             } catch (e) {
-                log.logError(`fail ${action} tabs`, e);
+                log.warn(`fail ${action} tabs`, e);
             }
 
-            log.stop(result, ')');
+            log.log(result, ')');
 
             return result;
         }
@@ -1750,16 +1760,16 @@ async function tabsAction({action, ...params}, tabs, ...funcArgs) {
                 result ||= tabIds;
             } catch (e) {
                 if (schema.sendOneByOne) {
-                    log.logError(`fail ${action} tabs as array of ids, doing it one by one`, e);
+                    log.warn(`fail ${action} tabs as array of ids, doing it one by one`, e);
                     await sendOneByOne();
                 } else {
-                    log.throwError(`fail ${action} tabs`, e);
+                    throw log.error(`fail ${action} tabs`, e);
                 }
             }
         } else if (schema.sendOneByOne) {
             await sendOneByOne();
         } else {
-            log.throwError('invalid schema config');
+            throw log.error('invalid schema config');
         }
     } finally {
         // removed right at the resolve: the events of the call come before it (docs/BEHAVIOR-MOVE-TABS.md §2, docs/BEHAVIOR-CREATE-TABS.md §62)
@@ -1770,7 +1780,7 @@ async function tabsAction({action, ...params}, tabs, ...funcArgs) {
         result.forEach(browserTabToAddon);
     }
 
-    log.stop(result.map(extractId), ')');
+    log.log(result.map(extractId), ')');
 
     return result;
 }
@@ -1898,7 +1908,7 @@ async function ensureWindowsAlive(tabsToRemove) {
     for (const [windowId, windowTabs] of Map.groupBy(visibleTabs, tab => tab.windowId)) {
         if (windowTabs.every(tab => removedIds.has(tab.id))) {
             await createTempActiveTab(windowId, false)
-                .catch(logger.onCatch(['cant create temp tab in window', windowId], false));
+                .catch(logger.catchSilent('cant create temp tab in window', windowId));
         }
     }
 }
@@ -2052,7 +2062,7 @@ export function getTitle({id, index, title, url, discarded, windowId, lastAccess
         title = (discarded ? Constants.DISCARDED_SYMBOL : Constants.ACTIVE_SYMBOL) + ' ' + title;
     }
 
-    if (mainStorage.enableDebug && id) {
+    if (mainStorage.debugMode && id) {
         let lastDate = new Date(lastAccessed);
 
         if (lastDate.getTime()) {
@@ -2156,7 +2166,7 @@ export async function restoreOldExtensionUrls(parseUrlFunc = null) {
 }
 
 export async function reconcile(groups, allTabs, containersStorageMap = new Map) {
-    const log = logger.start(['info', reconcile], 'groups count:', groups.length, 'allTabs count:', allTabs.length);
+    using log = logger.start(['info', reconcile], 'groups count:', groups.length, 'allTabs count:', allTabs.length);
 
     allTabs = allTabs.slice(); // to prevent bugs...
 
@@ -2207,8 +2217,6 @@ export async function reconcile(groups, allTabs, containersStorageMap = new Map)
         await applyOpeners(savedTabs, aligned);
     }
 
-    log.stop();
-
     return groups;
 }
 
@@ -2235,14 +2243,12 @@ export async function ensureSorted(tabs, params = {}) {
         ? Math.min(...liveTabs.map(tab => tab.index))
         : liveTabs[0]?.index;
 
-    const log = logger.start(ensureSorted, 'tabs:', liveTabs.map(extractId), {isBlock, startIndex: String(startIndex)});
+    using log = logger.start(ensureSorted, 'tabs:', liveTabs.map(extractId), {isBlock, startIndex: String(startIndex)});
 
     // the array lands as one block in list order around its first tab (docs/BEHAVIOR-MOVE-TABS.md §5)
     if (!isBlock && Number.isInteger(startIndex)) {
         liveTabs = await moveNative(liveTabs, {index: startIndex}, params);
     }
-
-    log.stop();
 
     return liveTabs;
 }

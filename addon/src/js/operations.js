@@ -36,7 +36,7 @@ export function start(name) {
                     try {
                         handler();
                     } catch (e) {
-                        log.error('idle handler failed:', getFuncName(handler), String(e));
+                        log.error('idle handler failed:', getFuncName(handler), e);
                     }
                 }
             }

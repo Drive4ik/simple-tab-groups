@@ -2,10 +2,10 @@
 
 How the handlers of the browser events in `addon/src/js/tabs.js` and `windows.js` tell the
 add-on's own actions from the user's, what the add-on does about other add-ons, and how an own
-action is awaited by its event (`downloads.js`). Events are subscribed through
-`addon/src/js/listeners.js` (the MV3-ready module); the browser facts are in
-`BEHAVIOR-CREATE-TABS.md`, `BEHAVIOR-MOVE-TABS.md`, `BEHAVIOR-REMOVE-TABS.md`,
-`BEHAVIOR-TABGROUPS.md` and `BEHAVIOR-DOWNLOADS.md`.
+action is awaited by its event (`downloads.js`). The subscription to the events is
+`DESIGN-LISTENERS.md`; the browser facts are in `BEHAVIOR-CREATE-TABS.md`,
+`BEHAVIOR-MOVE-TABS.md`, `BEHAVIOR-REMOVE-TABS.md`, `BEHAVIOR-TABGROUPS.md` and
+`BEHAVIOR-DOWNLOADS.md`.
 
 ## 1. The add-on's own actions are muted in the events
 

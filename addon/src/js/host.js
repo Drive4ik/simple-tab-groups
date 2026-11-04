@@ -38,11 +38,12 @@ export class HostError extends Error {
             message = 'Unknown error';
         }
 
-        logger.error(`HostError: ${message}`, response);
-
         super(message, {cause});
 
         this.name = 'HostError';
+        this.lang = response.lang;
+
+        logger.error(`HostError: ${message}`, response, this);
     }
 }
 
@@ -56,8 +57,7 @@ export function getErrorMessage(error) {
 
 async function sendMessage(action, params = {}, stuckAfter) {
     using turn = await hostQueue.wait(action, this, {stuckAfter});
-
-    const log = logger.start('sendMessage', `HOST_ACTION#${action}`);
+    using log = logger.start('sendMessage', `HOST_ACTION#${action}`);
 
     if (params.filePath) {
         params.filePath = Utils.format(params.filePath, Utils.getFilePathVariables());
@@ -69,11 +69,10 @@ async function sendMessage(action, params = {}, stuckAfter) {
     });
 
     if (response.ok) {
-        log.stop(response);
+        log.log(response);
         return response;
     }
 
-    log.stopError();
     throw new HostError(response);
 }
 

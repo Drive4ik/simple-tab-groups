@@ -28,6 +28,7 @@
         "webRequestBlocking",
         "management",
         "downloads",
+        "proxy",
         "<all_urls>"
     ],
 

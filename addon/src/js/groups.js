@@ -1,6 +1,6 @@
 import './prefixed-storage.js';
 
-import Logger, {errorEventHandler} from './logger.js';
+import Logger from './logger.js';
 import Queue from './queue.js';
 import backgroundSelf from './background.js'; // TODO refactor to use Broadcast
 import * as GroupsBroadcast from './broadcast.js?channel=groups';
@@ -59,16 +59,15 @@ export async function applyByHistory(direction, windowId, groups) {
 
 export async function apply(windowId, groupId, activeTabId, applyFromHistory = false) {
     using operation = Operations.start('apply-group');
-
-    const log = logger.start(apply, 'groupId:', groupId, 'windowId:', windowId, 'activeTabId:', activeTabId);
+    using log = logger.start(apply, 'groupId:', groupId, 'windowId:', windowId, 'activeTabId:', activeTabId);
 
     windowId ??= (await Windows.getFocusedNormalWindow())?.id;
 
     if (!windowId) {
-        log.stopError('no window was found for apply');
+        log.warn('no window was found for apply');
         return false;
     } else if (windowsWithLoadingGroups.has(windowId)) {
-        log.stopWarn('window in loading state now', windowId);
+        log.warn('window in loading state now', windowId);
         return false;
     }
 
@@ -83,10 +82,10 @@ export async function apply(windowId, groupId, activeTabId, applyFromHistory = f
 
         if (groupWindowId) {
             if (activeTabId) {
-                Tabs.setActive(activeTabId);
+                await Tabs.setActive(activeTabId);
             }
 
-            Windows.setFocus(groupWindowId);
+            await Windows.setFocus(groupWindowId);
         } else {
             // magic
 
@@ -95,11 +94,12 @@ export async function apply(windowId, groupId, activeTabId, applyFromHistory = f
             const tabsIdsToRemove = new Set;
 
             if (!groupToShow) {
-                log.throwError('groupToShow not found');
+                throw log.error('groupToShow not found');
             }
 
             if (groupToShow.isArchive) {
                 Notification(['groupIsArchived', groupToShow.title]);
+                log.log('group is archived');
                 throw '';
             }
 
@@ -207,7 +207,7 @@ export async function apply(windowId, groupId, activeTabId, applyFromHistory = f
                     } else {
                         if (tabs.length === 1 && Utils.isUrlEmpty(tabs[0].url)) {
                             await Cache.setTabGroup(tabs[0].id, groupToShow.id)
-                                .catch(log.onCatch(["can't set group", groupToShow.id, tabs[0]], false));
+                                .catch(log.catchSilent("can't set group", groupToShow.id, tabs[0]));
                             addTabs.push(Cache.applyTabSession(tabs[0]));
                         } else {
                             await Tabs.create({
@@ -252,15 +252,13 @@ export async function apply(windowId, groupId, activeTabId, applyFromHistory = f
         result = false;
 
         if (e) {
-            errorEventHandler.call(log, e);
+            log.handleError(e);
 
             await Browser.actionGroup(null, windowId);
         }
     } finally {
         windowsWithLoadingGroups.delete(windowId);
     }
-
-    result ? log.stop() : log.stopError();
 
     return result;
 }
@@ -310,7 +308,7 @@ if (Constants.IS_BACKGROUND_PAGE) {
             return;
         }
 
-        const log = logger.start('Containers.onChanged listener');
+        using log = logger.start('Containers.onChanged listener');
 
         using turn = await writeQueue.wait('containers-changed');
 
@@ -319,13 +317,11 @@ if (Constants.IS_BACKGROUND_PAGE) {
         if (normalizeContainersInGroups(groups)) {
             await save.call(turn, groups);
         }
-
-        log.stop();
     });
 }
 
 export async function load(groupId = null, withTabs = false, params) {
-    const log = logger.start('load', groupId, {withTabs, params});
+    using log = logger.start('load', groupId, {withTabs, params});
 
     const [
         allTabs,
@@ -356,8 +352,6 @@ export async function load(groupId = null, withTabs = false, params) {
         }
     }
 
-    log.stop();
-
     const groupIndex = groups.findIndex(group => group.id === groupId);
 
     return {
@@ -386,10 +380,10 @@ export async function save(groups, withMessage = false) {
         }
     }
 
-    const log = logger.start('save', {withMessage});
+    using log = logger.start('save', {withMessage});
 
     if (!Array.isArray(groups)) {
-        log.throwError('groups has invalid type');
+        throw log.error('groups has invalid type');
     }
 
     await Storage.set({groups});
@@ -403,8 +397,6 @@ export async function save(groups, withMessage = false) {
     if (withMessage) {
         sendUpdatedAll();
     }
-
-    log.stop();
 
     return groups;
 }
@@ -477,11 +469,9 @@ export async function getDefaults() {
 }
 
 export async function saveDefault(defaultGroupProps) {
-    const log = logger.start('saveDefault', defaultGroupProps);
+    using log = logger.start('saveDefault', defaultGroupProps);
 
     await Storage.set({defaultGroupProps});
-
-    log.stop();
 }
 
 export async function add(windowId, tabIds = [], title = null) {
@@ -490,7 +480,7 @@ export async function add(windowId, tabIds = [], title = null) {
     tabIds = tabIds?.slice?.() || [];
     title = title?.slice(0, 256);
 
-    const log = logger.start(add, {windowId, tabIds, title});
+    using log = logger.start(add, {windowId, tabIds, title});
 
     const windowGroupId = Cache.getWindowGroup(windowId);
 
@@ -498,7 +488,7 @@ export async function add(windowId, tabIds = [], title = null) {
         const result = await unload(windowGroupId);
 
         if (!result) {
-            log.stopError('cant unload');
+            log.log('cant unload');
             return;
         }
     }
@@ -540,14 +530,14 @@ export async function add(windowId, tabIds = [], title = null) {
 
     await MenusMain.groupAdded(newGroup, windowId);
 
-    log.stop(newGroup.id);
+    log.log(newGroup.id);
     return newGroup;
 }
 
 export async function remove(groupIds) {
     using operation = Operations.start('remove-group');
 
-    const log = logger.start(remove, groupIds);
+    using log = logger.start(remove, groupIds);
 
     const idsToRemove = Utils.toSet(groupIds);
     const windowIdByGroupId = new Map;
@@ -562,7 +552,7 @@ export async function remove(groupIds) {
         if (await unload(groupId)) {
             windowIdByGroupId.set(groupId, windowId);
         } else {
-            log.warn('cant unload, skip removing group', groupId);
+            log.log('cant unload, skip removing group', groupId);
             idsToRemove.delete(groupId);
         }
     }
@@ -579,7 +569,7 @@ export async function remove(groupIds) {
         removedGroups = groups.filter(group => idsToRemove.has(group.id));
 
         if (!removedGroups.length) {
-            log.stopError('groups', groupIds, 'not found');
+            log.warn('groups', groupIds, 'not found');
             return;
         }
 
@@ -611,12 +601,10 @@ export async function remove(groupIds) {
 
         sendRemoved(group.id, windowIdByGroupId.get(group.id));
     }
-
-    log.stop();
 }
 
 function removeRefs(group, groups, defaultGroupProps) {
-    const log = logger.start(removeRefs, group.id);
+    using log = logger.start(removeRefs, group.id);
 
     for (const gr of groups) {
         if (gr.moveToGroupIfNoneCatchTabRules === group.id) {
@@ -633,23 +621,19 @@ function removeRefs(group, groups, defaultGroupProps) {
         defaultGroupPropsChanged = true;
     }
 
-    log.stop();
-
     return defaultGroupPropsChanged;
 }
 
 async function removeFinish(group) {
-    const log = logger.start(removeFinish, group.id);
+    using log = logger.start(removeFinish, group.id);
 
     NewCloudGroups.remove(group.id);
 
-    await MenusMain.groupRemoved(group).catch(log.onCatch('cant remove menus', false));
+    await MenusMain.groupRemoved(group).catch(log.catchSilent('cant remove menus'));
 
     await addUndoRemove(group);
 
-    await Bookmarks.removeGroup(group).catch(log.onCatch('cant remove bookmark', false));
-
-    log.stop();
+    await Bookmarks.removeGroup(group).catch(log.catchSilent('cant remove bookmark'));
 }
 
 const RESTORE_GROUP_PREFIX = 'restore-group-';
@@ -688,14 +672,13 @@ async function addUndoRemove(groupToRemove) {
             });
         }
     } catch (error) {
-        logger.logError('cant add undo remove', error);
+        logger.error('cant add undo remove', error);
     }
 }
 
 export async function restore(groupId) {
     using operation = Operations.start('restore-group');
-
-    const log = logger.start('restore', groupId);
+    using log = logger.start('restore', groupId);
 
     const restoreId = RESTORE_GROUP_PREFIX + groupId;
 
@@ -705,7 +688,7 @@ export async function restore(groupId) {
     const {[restoreId]: group} = await browser.storage.session.get(restoreId);
 
     if (!group) {
-        log.stopError('group not found');
+        log.error('group not found');
         return;
     }
 
@@ -751,18 +734,18 @@ export async function restore(groupId) {
 
     sendAdded(group);
 
-    log.stop('success restored', group.id);
+    log.log('success restored', group.id);
 }
 
 export async function update(groupId, updateData) {
     using turn = await writeQueue.wait('update');
 
-    const log = logger.start('update', {groupId, updateData});
+    using log = logger.start('update', {groupId, updateData});
 
     const {group, groupIndex, groups} = await load(groupId);
 
     if (!group) {
-        log.throwError(['group', groupId, 'not found for update it']);
+        throw log.error(`group ${groupId} not found for update it`);
     }
 
     if (typeof updateData === 'function') {
@@ -777,7 +760,7 @@ export async function update(groupId, updateData) {
     const updateDataKeys = new Set(Object.keys(updateData));
 
     if (!updateDataKeys.size) {
-        log.stop('no keys to update');
+        log.log('no keys to update');
         return;
     }
 
@@ -806,27 +789,25 @@ export async function update(groupId, updateData) {
 
     if (updateDataKeys.intersection(KEYS_RESPONSIBLE_VIEW).size) {
         await Browser.actionGroup(group);
-        await MenusMain.updateGroup(group).catch(log.onCatch('cant update menus', false));
+        await MenusMain.updateGroup(group).catch(log.catchSilent('cant update menus'));
     }
 
     if (updateDataKeys.has('title')) {
-        await Bookmarks.updateGroupTitle(group).catch(log.onCatch('cant update title', false));
+        await Bookmarks.updateGroupTitle(group).catch(log.catchSilent('cant update title'));
     }
 
     if (updateDataKeys.has('exportToBookmarks')) {
         if (updateData.exportToBookmarks) {
             const {group: groupToExport} = await load(group.id, true);
-            await Bookmarks.exportGroup(groupToExport).catch(log.onCatch('cant update bookmark', false));
+            await Bookmarks.exportGroup(groupToExport).catch(log.catchSilent('cant update bookmark'));
         } else {
-            await Bookmarks.removeGroup(group).catch(log.onCatch('cant remove bookmark', false));
+            await Bookmarks.removeGroup(group).catch(log.catchSilent('cant remove bookmark'));
         }
     }
-
-    log.stop();
 }
 
 export async function move(groupId, newGroupIndex) {
-    const log = logger.start('move', {groupId, newGroupIndex});
+    using log = logger.start('move', {groupId, newGroupIndex});
 
     let groups;
 
@@ -843,15 +824,13 @@ export async function move(groupId, newGroupIndex) {
     }
 
     await MenusMain.groupsUpdated(groups);
-
-    log.stop();
 }
 
 export async function sort(vector = 'asc') {
-    const log = logger.start('sort', vector);
+    using log = logger.start('sort', vector);
 
     if (!['asc', 'desc'].includes(vector)) {
-        log.throwError(`invalid sort vector: ${vector}`);
+        throw log.error(`invalid sort vector: ${vector}`);
     }
 
     let groups;
@@ -872,8 +851,6 @@ export async function sort(vector = 'asc') {
     }
 
     await MenusMain.groupsUpdated(groups);
-
-    log.stop();
 }
 
 export async function showTabs(group = null, tabs = [], params) {
@@ -911,7 +888,7 @@ export async function pinSharingTabs(tabs) {
         return tabs;
     }
 
-    const log = logger.start(pinSharingTabs, tabsToPin.map(Tabs.extractId));
+    using log = logger.start(pinSharingTabs, tabsToPin.map(Tabs.extractId));
 
     // pinning strips the live membership itself (docs/BEHAVIOR-TABGROUPS.md §19)
     await Tabs.pin(tabsToPin);
@@ -923,8 +900,6 @@ export async function pinSharingTabs(tabs) {
         mainStorage.thisTabsWerePinned = ++showNotif;
         Notification(['thisTabsWerePinned', tabsToPin.map(tab => Tabs.getTitle(tab, false, 20)).join(', ')]);
     }
-
-    log.stop();
 
     return tabs.filter(tab => !tabsToPin.includes(tab));
 }
@@ -943,7 +918,7 @@ export async function settleTabs(group, savedTabs, {live, aligned}) {
         const {group: loadedGroup} = await load(group.id, true);
 
         await SubGroups.apply(windowId, loadedGroup)
-            .catch(logger.onCatch(['cant apply sub-groups', group.id], false));
+            .catch(logger.catchSilent('cant apply sub-groups', group.id));
     } else {
         tabs = await hideTabs(group, tabs);
     }
@@ -956,11 +931,11 @@ export async function settleTabs(group, savedTabs, {live, aligned}) {
 export async function unload(groupId) {
     using operation = Operations.start('unload-group');
 
-    const log = logger.start('unload', groupId);
+    using log = logger.start('unload', groupId);
 
     if (!groupId) {
         Notification('groupNotFound');
-        log.stopError('groupNotFound');
+        log.warn('groupNotFound');
         return false;
     }
 
@@ -968,7 +943,7 @@ export async function unload(groupId) {
 
     if (!windowId) {
         Notification('groupNotLoaded');
-        log.stopError('groupNotLoaded');
+        log.warn('groupNotLoaded');
         return false;
     }
 
@@ -976,13 +951,13 @@ export async function unload(groupId) {
 
     if (!group) {
         Notification('groupNotFound');
-        log.stopError('groupNotFound (2)');
+        log.warn('groupNotFound (2)');
         return false;
     }
 
     if (group.isArchive) {
         Notification(['groupIsArchived', group.title]);
-        log.stopError('groupIsArchived');
+        log.warn('groupIsArchived');
         return false;
     }
 
@@ -1004,15 +979,13 @@ export async function unload(groupId) {
     await MenusMain.groupUnloaded(group, windowId);
 
     sendUnloaded(groupId, windowId);
-
-    log.stop();
     return true;
 }
 
 export async function archiveToggle(groupId) {
     using operation = Operations.start('archive-toggle');
 
-    const log = logger.start('archiveToggle', groupId);
+    using log = logger.start('archiveToggle', groupId);
 
     await Browser.actionLoading();
 
@@ -1021,7 +994,7 @@ export async function archiveToggle(groupId) {
 
         if (!result) {
             await Browser.actionLoading(false);
-            log.stopError('cant unload group');
+            log.log('cant unload group');
             return null;
         }
     }
@@ -1075,8 +1048,6 @@ export async function archiveToggle(groupId) {
     await Browser.actionLoading(false);
 
     await MenusMain.updateGroup(group);
-
-    log.stop();
 }
 
 export function mapForExternalExtension(group) {
@@ -1352,7 +1323,7 @@ export function getTitle({id, title, isArchive, isSticky, tabs, iconViewType, ne
         }
     }
 
-    if (mainStorage.enableDebug) {
+    if (mainStorage.debugMode) {
         const debugWindowId = windowId || tabs?.[0]?.windowId || 'no window';
         title = `@${debugWindowId}:#${id.slice(-4)} ${title}`;
     }

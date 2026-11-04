@@ -26,19 +26,19 @@ Messages.connectToBackground('stg-debug', 'show-error-notification', () => {
 });
 
 function reloadState() {
-    enableDebugButton.classList.toggle('hidden', !!mainStorage.enableDebug);
-    disableDebugButton.classList.toggle('hidden', !mainStorage.enableDebug);
+    enableDebugButton.classList.toggle('hidden', !!mainStorage.debugMode);
+    disableDebugButton.classList.toggle('hidden', !mainStorage.debugMode);
 
     if (wasAutoDebug || isAutoDebug()) {
         debugStatus.classList = 'auto-enabled';
         $('#mainTitle').innerText = Lang('helpPageStgDebugAutoDebugMainTitle');
-    } else if (mainStorage.enableDebug) {
+    } else if (mainStorage.debugMode) {
         debugStatus.classList = 'enabled';
     }
 }
 
 function isAutoDebug() {
-    return mainStorage.enableDebug === Constants.DEBUG.AUTO;
+    return mainStorage.debugMode === Constants.DEBUG.AUTO;
 }
 
 function enableDebug() {
@@ -143,15 +143,10 @@ async function saveConsoleLogs() {
             browser.tabs.query({}).catch(onCatch('tabs', Array)),
         ]);
 
-    const {
-        getLogs,
-        clearLogs,
-        getErrors,
-        clearErrors,
-    } = backgroundSelf.loggerFuncs;
+    const {Logs, Errors} = backgroundSelf.loggerFuncs;
 
-    const logs = getLogs();
-    const errorLogs = getErrors();
+    const logs = Logs.get();
+    const errorLogs = Errors.get();
 
     let loadedWindows = await Promise.all(windows.map(Cache.loadWindowSession));
     loadedWindows = loadedWindows.filter(Boolean);
@@ -199,8 +194,8 @@ async function saveConsoleLogs() {
     const savedId = await File.save(LOGS_OBJ, 'STG-debug-logs.json');
 
     if (savedId) {
-        clearLogs();
-        clearErrors();
+        Logs.clear();
+        Errors.clear();
     }
 }
 

@@ -11,10 +11,10 @@ const logger = new Logger('SyncStorage');
 export const IS_AVAILABLE = Constants.IS_AVAILABLE_SYNC_STORAGE;
 
 export async function get() {
-    const log = logger.start('get');
+    using log = logger.start('get');
 
     if (!IS_AVAILABLE) {
-        log.throwError('Browser sync is not available');
+        throw log.error('Browser sync is not available');
     }
 
     const areaData = await StorageUtils.nativeGet('sync', null, log);
@@ -22,8 +22,7 @@ export async function get() {
     const result = await migrateSyncData(areaData);
 
     if (result.error) {
-        log.stopError(result.error);
-        throw new CloudError(result.error);
+        throw log.error(new CloudError(result.error, {expected: true}));
     }
 
     if (result.migrated) {
@@ -42,41 +41,35 @@ export async function get() {
         syncOptions[key] = result.data[key] !== undefined ? result.data[key] : JSON.clone(defaultValue);
     }
 
-    log.stop();
-
     return syncOptions;
 }
 
 export async function set(data) {
-    const log = logger.start('set', Object.keys(data));
+    using log = logger.start('set', Object.keys(data));
 
     if (!IS_AVAILABLE) {
-        log.throwError('Browser sync is not available');
+        throw log.error('Browser sync is not available');
     }
 
     const {version} = await StorageUtils.nativeGet('sync', 'version', log);
 
     if (isDataVersionNewer(version)) {
-        log.throwError('updateAddonToLatestVersion');
+        throw log.error(new CloudError('updateAddonToLatestVersion', {expected: true}));
     }
 
     const result = await browser.storage.sync.set(stampVersion({...data}));
-
-    log.stop();
 
     return result;
 }
 
 export async function remove(keys) {
-    const log = logger.start('remove', keys);
+    using log = logger.start('remove', keys);
 
     if (!IS_AVAILABLE) {
-        log.throwError('Browser sync is not available');
+        throw log.error('Browser sync is not available');
     }
 
     const result = await browser.storage.sync.remove(keys);
-
-    log.stop();
 
     return result;
 }

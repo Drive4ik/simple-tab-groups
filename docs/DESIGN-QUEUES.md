@@ -16,8 +16,9 @@ goes to its caller and does not break the chain. A turn has a mandatory name, it
 log.
 
 A queue belongs to one module and is never handed out: the only way into it is the API of the
-owner. What may leave the module is a turn — an object that can only be released
-(`Menus.transaction` returns one to the menu modules); the queue itself does not.
+owner. What may leave the module is the release of a turn — an object whose dispose releases it
+(`Menus.transaction` returns a `DisposableStack` that holds the turn and the log of the
+transaction to the menu modules); the queue itself does not.
 
 A function that is called inside a turn of its own queue takes the outer turn in `this`:
 `using turn = await queue.wait(name, this)`, and the call inside the turn is

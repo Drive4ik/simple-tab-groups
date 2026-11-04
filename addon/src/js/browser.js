@@ -26,9 +26,9 @@ export async function action({
 }) {
     using turn = await actionQueue.wait('set', this);
 
-    const log = logger.start('setAction', {
+    using log = logger.start('setAction', {
         title,
-        icon,
+        icon: Utils.sliceText(icon, 25),
         popup,
         enable,
         windowId,
@@ -58,31 +58,29 @@ export async function action({
     await browser.browserAction.setTitle({
         ...winObj,
         title: title,
-    }).catch(log.onCatch('setTitle', false));
+    }).catch(log.catchSilent('setTitle'));
 
     await browser.browserAction.setIcon({
         ...winObj,
         path: icon,
-    }).catch(log.onCatch('setIcon', false));
+    }).catch(log.catchSilent('setIcon'));
 
     await browser.browserAction.setBadgeText({
         ...winObj,
         text: isSticky ? Constants.STICKY_SYMBOL : '',
-    }).catch(log.onCatch('setBadgeText', false));
+    }).catch(log.catchSilent('setBadgeText'));
 
     await browser.browserAction.setPopup({
         ...winObj,
         popup: popup,
-    }).catch(log.onCatch('setPopup', false));
+    }).catch(log.catchSilent('setPopup'));
 
     if (badgeBackgroundColor) {
         await browser.browserAction.setBadgeBackgroundColor({
             ...winObj,
             color: badgeBackgroundColor,
-        }).catch(log.onCatch('setBadgeBackgroundColor', false));
+        }).catch(log.catchSilent('setBadgeBackgroundColor'));
     }
-
-    log.stop();
 }
 
 export async function actionAllWindows(details) {
@@ -115,7 +113,7 @@ export async function actionAllGroups() {
 export async function actionGroup(group, windowId) {
     using turn = await actionQueue.wait('group', this);
 
-    const log = logger.start('actionGroup', {groupId: group?.id, windowId});
+    using log = logger.start('actionGroup', {groupId: group?.id, windowId});
 
     Groups ??= await import('./groups.js');
 
@@ -130,7 +128,7 @@ export async function actionGroup(group, windowId) {
     }
 
     if (!windowId) {
-        log.stop('group not loaded');
+        log.log('group not loaded');
         return;
     }
 
@@ -166,9 +164,7 @@ export async function actionGroup(group, windowId) {
     }
 
     await browser.windows.update(windowId, {titlePreface})
-        .catch(log.onCatch(['prependWindowTitle', {windowId, titlePreface}], false));
-
-    log.stop();
+        .catch(log.catchSilent('prependWindowTitle', {windowId, titlePreface}));
 }
 
 export async function actionLoading(start = true) {

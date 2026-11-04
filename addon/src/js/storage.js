@@ -8,29 +8,25 @@ export * from './storage-utils.js';
 const logger = new Logger('Storage');
 
 export async function get(keys, defaultData = Constants.DEFAULT_OPTIONS) {
-    const log = logger.start('get', keys);
+    using log = logger.start('get', keys);
 
     const keysData = StorageUtils.getKeysData(keys, defaultData);
 
     const result = await StorageUtils.nativeGet('local', keysData, log);
 
-    log.stop();
-
     return result;
 }
 
 export async function getRaw() {
-    const log = logger.start('getRaw');
+    using log = logger.start('getRaw');
 
     const result = await StorageUtils.nativeGet('local', null, log);
-
-    log.stop();
 
     return result;
 }
 
 export async function set(data) {
-    const log = logger.start('set', Object.keys(data));
+    using log = logger.start('set', Object.keys(data));
 
     // the tabs of non-archived groups live in the browser, not in storage - strip them
     // from the persisted copy only, never by mutating the caller's objects
@@ -42,8 +38,6 @@ export async function set(data) {
     }
 
     const result = await browser.storage.local.set(data);
-
-    log.stop();
 
     return result;
 }

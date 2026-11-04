@@ -14,6 +14,7 @@ $('#copyButton').addEventListener('click', copyUrl);
 $('#closeTab').addEventListener('click', closeTab);
 
 if (params.has('url')) {
+    Listeners.runtime.onMessage.unsubscribe();
     showUrl(params.get('url'));
 
     if (Extensions.isExtensionUrl(unsupportedUrl)) {
@@ -27,6 +28,7 @@ if (params.has('url')) {
         if (action === 'real-url') {
             self.clearTimeout(autoCloseTimer);
             showUrl(url);
+            Listeners.runtime.onMessage.unsubscribe();
         }
     });
 }

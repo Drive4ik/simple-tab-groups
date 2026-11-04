@@ -1,10 +1,10 @@
 
 import * as Constants from './constants.js';
 import JSON from './json.js';
-import {nativeErrorToObject, objectToNativeError, PageStack} from './logger.js';
+import {nativeErrorToObject, objectToNativeError, PageStack} from './logger-utils.js';
 
 const CSPorts = new Set;
-const pending = new Map;
+const pagePending = new Map;
 
 export function normalizeSendData(action, data) {
     if (typeof action === 'object' && data === undefined) {
@@ -20,7 +20,7 @@ export async function sendMessage(...args) {
     // self.logger?.info(`send Message ⚡️ "${message.action}"`);
 
     return browser.runtime.sendMessage(message)
-        .catch(self.logger?.onCatch(['sendMessage', message]));
+        .catch(self.logger?.catch('sendMessage', message));
 }
 
 export function sendExternalMessage(exId, ...args) {
@@ -54,7 +54,7 @@ export function connectToBackground(name, listeners = null, callback = null, aut
     port.onMessage.addListener(message => {
         const {postId, result, error} = message;
 
-        if (pending.has(postId)) {
+        if (pagePending.has(postId)) {
             const {resolve, reject} = popPending(postId);
 
             if (error) {
@@ -74,39 +74,38 @@ export function connectToBackground(name, listeners = null, callback = null, aut
     }
 
     return {
-        sendMessage: (...args) => postMessageToBackground(port, ...args),
-        sendMessageModule: (...args) => postMessageToBackground(port, ...getArgumentsModuleCall(...args)),
+        sendMessage: (...args) => sendMessageToBackground(port, ...args),
+        sendMessageModule: (...args) => sendMessageToBackground(port, ...getArgumentsModuleCall(...args)),
+        postMessage: (...args) => port.postMessage({data: normalizeSendData(...args)}), // no reply is waited for
         disconnect,
     };
 }
 
 function popPending(postId) {
-    const {resolve, reject, timer} = pending.get(postId) ?? {};
+    const {resolve, reject, timer} = pagePending.get(postId) ?? {};
 
     clearTimeout(timer);
-    pending.delete(postId);
+    pagePending.delete(postId);
 
     return {resolve, reject};
 }
 
 // RPC
-async function postMessageToBackground(port, ...args) {
+async function sendMessageToBackground(port, ...args) {
     const postId = self.crypto.randomUUID();
     const data = normalizeSendData(...args);
-    const timerError = new Error(`RPC timeout, postId: ${postId}, args: ` + JSON.stringify(data));
+    const timerError = new Error(`RPC timeout, postId: ${postId}`);
 
-    if (data.action !== 'save-log') {
-        self.logger?.info(`postMessage#${data.action}`, `postId: ${postId} to background`);
-    }
+    self.logger?.info(`postMessage#${data.action}`, `postId: ${postId} to background`);
 
     const entry = Promise.withResolvers();
 
     entry.timer = setTimeout(() => {
-        pending.delete(postId);
+        pagePending.delete(postId);
         entry.reject(timerError);
     }, 60_000 * 2); // 2 minutes
 
-    pending.set(postId, entry);
+    pagePending.set(postId, entry);
 
     port.postMessage({
         postId,
@@ -128,34 +127,23 @@ export function createListenerOnConnectedBackground(onMessageListener) {
 
         // the second argument is "port"; but this is not described in https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/runtime/Port#onmessage
         port.onMessage.addListener(async message => {
-            if (!message?.postId || !CSPorts.has(CSPort)) {
+            if (!CSPorts.has(CSPort)) {
                 return;
             }
 
             const {postId, data} = message;
+            const reply = {postId};
 
             try {
-                const result = await onMessageListener(data, port);
-
-                if (CSPorts.has(CSPort)) {
-                    port.postMessage({
-                        postId,
-                        result,
-                    });
-                } else {
-                    popPending(postId);
-                }
+                reply.result = await onMessageListener(data, port);
             } catch (error) {
-                self.logger?.logError(['message:', message], error);
+                self.logger?.error('message:', message, error);
+                reply.error = nativeErrorToObject(error);
+            }
 
-                if (CSPorts.has(CSPort)) {
-                    port.postMessage({
-                        postId,
-                        error: nativeErrorToObject(error),
-                    });
-                } else {
-                    popPending(postId);
-                }
+            // a message without postId waits for no reply
+            if (postId && CSPorts.has(CSPort)) {
+                port.postMessage(reply);
             }
         });
 
@@ -175,10 +163,17 @@ export function sendMessageFromBackground(...args) {
 
     const portNamesSended = [];
 
-    for (const {name, port, listeners} of CSPorts) {
+    for (const CSPort of CSPorts) {
+        const {name, port, listeners} = CSPort;
+
         if (listeners?.includes('*') || listeners?.includes(message.action)) {
-            port.postMessage(message);
-            portNamesSended.push(name);
+            try {
+                port.postMessage(message);
+                portNamesSended.push(name);
+            } catch (e) {
+                CSPorts.delete(CSPort); // the page left before the background listened to its port (docs/DESIGN-LISTENERS.md §2, docs/BEHAVIOR-CREATE-TABS.md §63)
+                self.logger?.warn(name, 'port is closed', e);
+            }
         }
     }
 

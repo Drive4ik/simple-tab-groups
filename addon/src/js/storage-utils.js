@@ -26,10 +26,10 @@ export async function nativeGet(area, keysData, log, errorCounter = 0) {
                 url: Constants.PAGES.HELP.REINSTALL,
                 active: true,
             });
-            log.throwError('db-error-reinstall', e);
+            throw log.error('db-error-reinstall', e);
         }
 
-        log.error("can't read keys", {area, errorCounter});
+        log.warn("can't read keys", {area, errorCounter});
 
         await new Promise(resolve => setTimeout(resolve, 200));
 

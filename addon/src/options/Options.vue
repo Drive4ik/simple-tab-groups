@@ -11,7 +11,7 @@ import backupLocationHost from './backup-location-host.vue';
 
 import '/js/prefixed-storage.js';
 import * as Constants from '/js/constants.js';
-import Logger, {errorEventHandler} from '/js/logger.js';
+import Logger from '/js/logger.js';
 import Notification from '/js/notification.js';
 import Lang from '/js/lang.js?translate-page';
 import * as Utils from '/js/utils.js';
@@ -33,9 +33,9 @@ import globalMixin from '/js/mixins/global.mixin.js';
 import defaultGroupMixin from '/js/mixins/default-group.mixin.js';
 import optionsMixin from '/js/mixins/options.mixin.js';
 
-window.logger = new Logger(Constants.MODULES.OPTIONS);
+window.logger = new Logger(Constants.PAGES.current);
 
-Vue.config.errorHandler = errorEventHandler.bind(window.logger);
+Vue.config.errorHandler = (error, vm, info) => window.logger.handleError(error, info);
 Vue.mixin(globalMixin);
 
 const SECTION_GENERAL = 'general';
