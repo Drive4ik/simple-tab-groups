@@ -69,6 +69,11 @@ function responseToObject(response) {
 }
 
 export function nativeErrorToObject(nativeError) {
+    if (!isSimilarErrorObject(nativeError)) {
+        nativeError = toError(nativeError); // a thrown string or null
+    }
+
+    const fileName = nativeError.fileName ?? nativeError.filename; // a DOMException names the field filename
     let cause;
 
     if (isSimilarErrorObject(nativeError.cause)) {
@@ -83,12 +88,11 @@ export function nativeErrorToObject(nativeError) {
         name: nativeError.name,
         message: nativeError.message,
         lang: nativeError.lang,
-        fileName: removeUnnecessaryStrings(nativeError.fileName),
+        fileName: fileName && removeUnnecessaryStrings(fileName),
         lineNumber: nativeError.lineNumber,
         columnNumber: nativeError.columnNumber,
         cause: cause,
         stack: getStack(nativeError).join('\n'),
-        arguments: nativeError.arguments,
     };
 }
 
@@ -113,6 +117,8 @@ export function objectToNativeError(obj) {
 }
 
 function normalizeError(nativeError) {
+    // a PageStack, a refusal the browser answers from its parent process, an error without a stack:
+    // wrapped so that the record keeps a stack (docs/DESIGN-LOGGER.md §4, docs/BEHAVIOR-ERRORS.md §1, §3)
     if (
         !String(nativeError.name).toLowerCase().includes('error') ||
         nativeError.fileName === 'undefined' ||

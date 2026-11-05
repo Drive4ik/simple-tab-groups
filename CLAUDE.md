@@ -193,11 +193,15 @@ The `error` level has a side effect: the record goes into the saved errors, the 
 sends in the debug file. So `error` is only for what must be there: a defect of the add-on (an
 argument check, an impossible state) and a refusal of the browser or of the host the code did
 not expect. An expected refusal — the rules of the add-on, the user's choice, data newer than
-the add-on, a refusal of the browser the code retries or works around — is `warn`. An error
-object is passed as it is, never as its text: the stack travels with it. One cause is one
-record of `warn` or `error`, where it happened: the first writer of an error object decides its
-level, a catcher above writes it again only into the file, and a caller that wants a trace of
-its own writes an ordinary line. Several places keep `error` whatever the cause. A refusal that
+the add-on, a refusal of the browser the code retries or works around — is `warn`. A `warn`
+ends the matter: the code goes on without the error and never throws what it wrote as `warn`;
+what is thrown is written as `error`. An error object is passed as it is, never as its text:
+the stack travels with it. One cause is one record of `warn` or `error`, where it happened: the
+first writer of an error object decides its level, a catcher above writes it again only into
+the file, and a caller that wants a trace of its own writes an ordinary line. `assert` stands
+between `warn` and `error`: a failed one is written in any mode and shown as an error in the
+file, but it stops nothing and is never saved. Several places
+keep `error` whatever the cause. A refusal that
 is thrown: the throw and the record are one line, the code stays readable, and the record keeps
 who asked, in case the caller is needed later or is harmful. A rejection the code swallows: that
 is a safety net, and the file must show where the net catches most often, so that the logic is

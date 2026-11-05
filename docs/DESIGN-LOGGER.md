@@ -26,9 +26,11 @@ A line passes one gate: `assert` is written when its condition is false; `error`
 always; `debug` only while a debug mode is set (§6); the rest when the logger is enabled
 (`enable()`, `disable()`) or the mode is `manual`.
 
-A record is `{'console.<level>': [prefix, …args], indentIndex, time, stack}`: the arguments
-normalized (§4), a line of a scope with `SCOPE n` as its last argument (§2), the stack of the
-place that wrote it.
+A record is `{level, prefix, args, scope, action, indentIndex, time, stack}`: the level of the
+line, the prefixes joined with a dot, the arguments normalized (§4) with the condition of an
+`assert` first, the number of the scope the line belongs to or `null`, `START` or `STOP` for the
+line that opens or closes a scope and `null` for the rest (§2), the stack of the place that
+wrote it, five frames (`STACK_FRAMES`).
 
 ## 2. Scopes
 
@@ -55,7 +57,9 @@ text — `throw log.error('text')`, `throw log.error('step', e)`.
 An `Error` object written as `warn` or `error` is marked (`writtenErrors`), the one `error()`
 creates too. The first writer decides the level: an `error` line with an unmarked error, or with
 no error object at all, goes into the saved errors; a `warn` or `error` line with a marked error
-goes into the file only. Which level a place writes is the rule "Log levels" of `CLAUDE.md`.
+goes into the file only. A failed `assert` stands between `warn` and `error`: it is written in
+any mode and the viewer paints it as an error, so a file the user sends shows it, but it stops
+nothing and is never saved. Which level a place writes is the rule "Log levels" of `CLAUDE.md`.
 
 The saved errors are `Errors`: the last 50 (`MAX_ERRORS`) in the `localStorage` of the add-on
 under the `Logger` prefix. When the storage refuses by its quota, the oldest records give way one
@@ -63,8 +67,9 @@ by one; a record that does not fit alone goes to the console only. `Errors.get()
 
 `catch(…args)` writes the error with `Catch error on:` and rethrows it; `catchSilent(…args)`
 writes it with `[silent] Catch error on:` and returns `undefined`. `catchFunc(func)` wraps an
-async function: its error, with the stack of the place of wrapping before `Native error stack:`
-and the `arguments` of the call, goes to `handleError`, and the wrapped call resolves with
+async function: its error, with the stack of the place of wrapping before `Native error stack:`,
+goes to `handleError` next to the arguments of the call (`{args}`, an argument of the line of its
+own, so the cap of §4 cuts them and not the error), and the wrapped call resolves with
 `undefined`.
 
 `handleError(event, …details)` takes an `error` event, an `unhandledrejection` event or the
@@ -85,16 +90,40 @@ saved record (`DESIGN-CLOUD-UPLOAD.md` §7).
 `normalizeArgumentValue` (`logger-utils.js`) makes every argument fit a record. A string over
 100 KB (`MAX_LENGTH`) becomes `VERY_BIG_STRING_LENGTH_<n>: <its first 100 characters>`; a function
 becomes its name; an object or an array goes through one `JSON.stringify` with a replacer — an
-`Error` becomes `{time, name, message, lang, fileName, lineNumber, columnNumber, cause, stack,
-arguments}` with the stack as an array (`lang` is the key of the locale on a `CloudError` or a
+`Error` becomes `{time, name, message, lang, fileName, lineNumber, columnNumber, cause, stack}`
+with the stack as an array (`lang` is the key of the locale on a `CloudError` or a
 `HostError`), nested strings are cut and functions named, cycles are
 handled by `json.js` — and a JSON over 100 KB becomes `VERY_BIG_OBJECT_LENGTH_<n>: <the top-level
-keys, or the count of items>`, nothing of the content. An error-like object whose name has no
-`error`, whose file is the string `undefined` or whose stack is empty is wrapped into an `Error`
-with its JSON as the message, and a `FORCE STACK` mark when it had no stack (the `PageStack`
-breadcrumbs of a module call from a page).
+keys, or the count of items>`, nothing of the content. An `Error` is wrapped into a new one with
+its JSON as the message, and a `FORCE STACK` mark when it had no stack, in three cases: its name
+has no `error` (the `PageStack` breadcrumbs of a module call from a page); its file is the string
+`undefined`, the mark of a refusal the browser answers from its parent process
+(`BEHAVIOR-ERRORS.md` §1); its stack is empty (the same refusals, a `DOMException` after a
+structured clone, §3). The new `Error` carries the stack of the place that wrote the line, which
+the browser's one does not have.
 
-`getStack` turns a stack into an array of frames `name@file:line:column`, up to 50: the uuid base
+What the browser hands over, measured in `BEHAVIOR-ERRORS.md`: a refusal from the parent process
+(`tabs.get`, `windows.get`, `tabs.update` with an id that is gone) is an `Error` with the message
+only, `fileName` `"undefined"`, `lineNumber` 0 and an empty stack (§1); a refusal of the schema is
+thrown at the call, not rejected (§2), so a `.catch` chained on the call does not see it; a
+`DOMException` is an error to `Error.isError` and names its file `filename` (§3); a structured
+clone drops the own properties of an `Error` (`lang`) and a custom name (§4), which is
+why an error crosses a port as the plain object of `nativeErrorToObject`, never as itself. Read
+from the Firefox sources, not measured: the parent process re-creates the error as
+`new Error(message, error.fileName)` with `fileName` of a `DOMException`, that is `undefined`, and
+the engine turns an explicit `undefined` into the string (`ExtensionCommon.sys.mjs`,
+`ErrorObject.cpp`); a refusal the browser cannot read gets the message
+`An unexpected error occurred`; the frames of the caller would come as async frames, which the
+engine records only while the devtools are open; a call made from a page that is unloading never
+settles, neither resolves nor rejects; every rejection of `browser.*` is an `Error`, a plain
+object or a string thrown inside the browser is turned into one.
+
+An argument that holds an object of a page that was closed makes the line throw: `Error.isError`,
+which the replacer asks for every value, throws on a dead object (§5). Taken as given: the add-on
+logs no objects of other pages, the pages send plain data through their ports.
+
+`getStack` turns a stack into an array of frames `name@file:line:column`, up to 50 for an error
+object and five for the place a line was written (§1): the uuid base
 of the add-on and the `async*` marks are cut; the frames of the Vue runtime, `listeners.js`,
 `logger.js`, `logger-utils.js` and `json.js` are dropped, and so are the messaging helpers
 (`sendMessage…`, `sendExternalMessage`, `getArgumentsModuleCall`), except their namesakes in
@@ -103,7 +132,10 @@ record.
 
 `nativeErrorToObject` and `objectToNativeError` carry an error through a message and back (the
 reply of a port, `syncResult`), `cause` included; a `Response` in `cause` is reduced to its status
-fields, the headers only under the `manual` mode.
+fields, the headers only under the `manual` mode. A value that is not an error, a thrown string or
+`null`, is made an `Error` first (`toError`). The file is `fileName`, or `filename` of a
+`DOMException`, and is left out when there is none: the string `undefined` in it is the browser's
+mark alone.
 
 ## 5. Where the records go
 
@@ -114,9 +146,9 @@ prints it. The lines a page writes before the background has attached its listen
 are lost (`BEHAVIOR-CREATE-TABS.md` §63).
 
 `showLog` prints a record to the console only while debugging: a debug mode set, or a temporary
-install. The prefix goes first, START and STOP are shown as ▷ and ◁ with the indent, the `SCOPE n`
-mark is taken off, the first two frames of the stack are appended; an `assert` goes to
-`console.assert` with its condition first.
+install. The line is the indent, the prefix, ▷ or ◁ for a START or a STOP by `action`, the
+arguments and the first two frames of the stack; an `assert` goes to `console.assert` with its
+condition before all of it.
 
 The debug page takes `self.loggerFuncs = {Logs, Errors}` of the background. The file it saves
 (`saveConsoleLogs`) holds the add-on and the browser (version, up time, permissions, storage,
@@ -124,7 +156,10 @@ platform, extensions), the windows and the tabs, `logs` (`Logs.get()`) and `erro
 (`Errors.get()`), anonymized unless the install is temporary (`normalizeAndClear`: titles,
 icons, thumbnails, file names and catch rules are replaced by a word, http and file addresses by
 `URL_n` and `FILE_n`, the own uuid is cut); once the file is saved, both stores are cleared.
-`addon/debug-viewer/` shows the file and knows every shape of a record above.
+`addon/debug-viewer/` shows the file and knows every shape of a record above; the logs of a
+version before 6, where the level and the arguments were one key `console.<level>` with the
+prefix as the first argument and the scope a mark among them, are brought to that shape as they
+are read.
 
 ## 6. The debug flag
 

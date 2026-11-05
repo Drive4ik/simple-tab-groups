@@ -22,50 +22,81 @@ function isUUID(uuid) {
 }
 
 window.addEventListener('error', errorEventHandler);
-window.Vue.config.errorHandler = errorEventHandler;
 
-function getConsoleKey(log) {
-    return Object.keys(log).find(k => k.includes('console'));
-}
+const ACTION = Object.freeze({
+    START: 'START',
+    STOP: 'STOP',
+});
 
 const indentConfig = {
-    startSymbol: '▷', // 🔻⚡️
-    stopSymbol: '◁', // 🔺⭕️
-    regExp: /(START|STOP|SCOPE) (\d+)/,
+    actionSymbol: {
+        [ACTION.START]: '▷', // 🔻⚡️
+        [ACTION.STOP]: '◁', // 🔺⭕️
+    },
+    regExp: new RegExp(`(${ACTION.START}|${ACTION.STOP}|SCOPE) (\\d+)`),
 };
 
-function getLogAction(log) {
+// logs of version < 6: the level and the arguments are one key `console.<level>`, the prefix is the first argument
+function takeConsoleKey(log) {
+    const key = Object.keys(log).find(key => key.startsWith('console.'));
+
+    log.level = key ? key.slice('console.'.length) : 'error';
+    log.args = key ? log[key] : [];
+    log.prefix = log.args.shift() ?? '';
+    delete log[key];
+}
+
+// logs of version < 6: the scope of a line is a mark among its arguments, it becomes the fields action and scope
+function takeLogAction(log) {
+    const args = log.args;
     let action, key;
 
-    log[log.consoleKey].some(arg => {
+    const index = args.findIndex(arg => {
         [, action, key] = indentConfig.regExp.exec(arg) || [];
         return action;
     });
 
-    return {action, key};
+    if (index === -1) {
+        log.action = null;
+        log.scope = null;
+        return;
+    }
+
+    args.splice(index, 1);
+
+    log.action = action === 'SCOPE' ? null : action;
+    log.scope = Number(key);
 }
 
 const excludeExtensions = new Set([
     'addons-search-detection@mozilla.com',
 ]);
 
+// the functions of every stack of a line, without the columns: two lines share a function when the sets intersect
+function stackFuncs(log) {
+    return new Set(
+        log.stacks
+            .flat(Infinity)
+            .filter(s => !s.startsWith?.('From') && !s.startsWith?.('Native'))
+            .map(s => s.stack || s)
+            .flat(Infinity)
+            .map(s => s.replace(/(:\d+):\d+/, '$1'))
+    );
+}
+
 const htmlTagArgumentRegExp = /^[^\s]+#[^\s]+$/;
 
-new window.Vue({
-    el: '#app',
-    data: {
-        file: null,
-        fileName: null,
-        fileLoading: false,
+const app = window.Vue.createApp({
+    data() {
+        return {
+            file: null,
+            fileName: null,
+            fileLoading: false,
 
-        logsIndent: 0,
+            logsIndent: 0,
 
-        highlightedLogs: [],
-    },
-    filters: {
-        json(value, expanded = true) {
-            return expanded ? JSON.stringify(value, null, 4) : JSON.stringify(value);
-        },
+            highlightedLogs: [],
+        };
     },
     watch: {
         logsIndent: 'calculateIndentLineHeight',
@@ -96,22 +127,49 @@ new window.Vue({
         errorLogs() {
             return this.file.errorLogs;
         },
-    },
-    methods: {
-        getLogTitle(log) {
-            let title = [],
-                consoleFuncStr = log.consoleKey.split('.').pop();
+        highlightedScopes() {
+            return new Set(this.highlightedLogs.map(log => log.scope));
+        },
+        // the lines of a highlighted scope that share a function of the stack with the highlighted line, found once per change of the highlight, not per line per render
+        highlightedByStack() {
+            const found = new Set;
 
-            if (consoleFuncStr === 'info') {
-                title.push(`<span class="tag is-info">INFO</span> `);
-            } else if (consoleFuncStr === 'warn') {
-                title.push(`<span class="tag is-warning">WARN</span> `);
-            } else if (consoleFuncStr === 'error' || consoleFuncStr === 'assert') {
-                title.push(`<span class="tag is-danger">${consoleFuncStr.toUpperCase()}</span> `);
+            for (const hLog of this.highlightedLogs) {
+                const startIndex = this.logs.findIndex(log => log.scope === hLog.scope && log.action === ACTION.START);
+                const stopIndex = this.logs.findIndex(log => log.scope === hLog.scope && log.action === ACTION.STOP);
+
+                if (stopIndex === -1) {
+                    continue;
+                }
+
+                for (const log of this.logs.slice(Math.max(startIndex, 0), stopIndex + 1)) {
+                    if (log.indentIndex >= hLog.indentIndex && log.stackFuncs.intersection(hLog.stackFuncs).size) {
+                        found.add(log);
+                    }
+                }
             }
 
-            for (let i = 0, k; i < log[log.consoleKey].length; i++) {
-                k = log[log.consoleKey][i];
+            return found;
+        },
+    },
+    methods: {
+        json(value) {
+            return JSON.stringify(value, null, 4);
+        },
+        getLogTitle(log) {
+            let title = [],
+                args = [log.prefix, ...log.args];
+
+            if (log.level === 'info') {
+                title.push(`<span class="tag is-info">INFO</span> `);
+            } else if (log.level === 'warn') {
+                title.push(`<span class="tag is-warning">WARN</span> `);
+            } else if (log.level === 'error' || log.level === 'assert') {
+                title.push(`<span class="tag is-danger">${log.level.toUpperCase()}</span> `);
+            }
+
+            for (let i = 0, k; i < args.length; i++) {
+                k = args[i];
 
                 if (Number.isFinite(k) || k === null || this.isBool(k) || isUUID(k)) {
                     title.push(`<code>${k}</code>`);
@@ -138,12 +196,6 @@ new window.Vue({
                     }
 
                     title.push(`<code ${codeAttrs}>` + jsoned.replaceAll(this.file.addon.UUID, '') + '</code>');
-                } else if (k?.startsWith?.('START')) {
-                    title.push(indentConfig.startSymbol);
-                } else if (k?.startsWith?.('STOP')) {
-                    title.push(indentConfig.stopSymbol);
-                } else if (k?.startsWith?.('SCOPE')) {
-                    // do nothing
                 } else if (htmlTagArgumentRegExp.test(k)) {
                     let [action, message] = k.split('#');
                     title.push(`
@@ -187,7 +239,7 @@ new window.Vue({
                 Object.assign(stack, JSON.parse(stack.message));
                 stack.stack = stack.stack.split('\n').filter(Boolean);
                 // stack.stack = ['Stack from logger arguments:', ...stack.stack.split('\n'), 'native:', ...oldStack];
-            } catch (e) { }
+            } catch { }
 
             return JSON.stringify(stack, null, 4);
         },
@@ -196,44 +248,9 @@ new window.Vue({
             log.showStack = !log.showStack;
             this.calculateIndentLineHeight();
         },
-        isHighlighted(log, byStack = false) {
-            function reduceStackFuncs(l) {
-                return new Set(
-                    l.stacks
-                        .flat(Infinity)
-                        .filter(s => !s.startsWith?.('From') && !s.startsWith?.('Native'))
-                        .map(s => s.stack || s)
-                        .flat(Infinity)
-                        .map(s => s.replace(/(:\d+):\d+/, '$1'))
-                );
-            }
-
-            if (byStack) {
-                const stacks = reduceStackFuncs(log);
-
-                const logIndex = this.logs.indexOf(log);
-
-                return this.highlightedLogs.some(hLog => {
-                    if (log.indentIndex < hLog.indentIndex) {
-                        return false;
-                    }
-
-                    const startIndex = this.logs.findIndex(l => l.key === hLog.key && l.action === 'START');
-                    const stopIndex = this.logs.findIndex(l => l.key === hLog.key && l.action === 'STOP');
-
-                    if (logIndex < startIndex || logIndex > stopIndex) {
-                        return false;
-                    }
-
-                    return stacks.intersection(reduceStackFuncs(hLog)).size > 0;
-                });
-            } else {
-                return this.highlightedLogs.some(l => l.key === log.key);
-            }
-        },
         toggleHighlight(log) {
-            if (this.isHighlighted(log)) {
-                this.highlightedLogs = this.highlightedLogs.filter(l => l.key !== log.key);
+            if (this.highlightedScopes.has(log.scope)) {
+                this.highlightedLogs = this.highlightedLogs.filter(l => l.scope !== log.scope);
             } else {
                 this.highlightedLogs.push(log);
 
@@ -244,14 +261,14 @@ new window.Vue({
             await this.$nextTick();
 
             for (const hLog of this.highlightedLogs) {
-                const log = this.logs.find(l => l.key === hLog.key && l.action === 'START');
+                const log = this.logs.find(l => l.scope === hLog.scope && l.action === ACTION.START);
 
                 if (!log) {
                     continue;
                 }
 
-                let startNode = $(`.log[data-action="START"][data-key="${log.key}"]`),
-                    stopNode = $(`.log[data-action="STOP"][data-key="${log.key}"]`);
+                let startNode = $(`.log[data-action="${ACTION.START}"][data-scope="${log.scope}"]`),
+                    stopNode = $(`.log[data-action="${ACTION.STOP}"][data-scope="${log.scope}"]`);
 
                 if (!startNode || !stopNode) {
                     continue;
@@ -345,22 +362,22 @@ new window.Vue({
 
             function formatLog(log) {
                 log.showStack = false;
-                log.consoleKey = getConsoleKey(log);
-                if (!log.consoleKey) {
-                    log.consoleKey = 'console.error';
-                    log[log.consoleKey] = [];
-                }
                 log.indent = (log.indentIndex * INDENT_PX) + 'px';
                 log.indentLineHeight = 0;
 
-                let {action, key} = getLogAction(log);
-                log.action = action || false;
-                log.key = key || false;
+                // logs of version < 6, each by its own sign
+                if (!Object.hasOwn(log, 'level')) {
+                    takeConsoleKey(log);
+                }
+
+                if (!Object.hasOwn(log, 'action')) {
+                    takeLogAction(log);
+                }
 
                 let messages = [],
                     stacks = [];
 
-                log[log.consoleKey].forEach(consoleValue => {
+                log.args.forEach(consoleValue => {
                     if (consoleValue?.stack !== undefined) {
                         // if (typeof consoleValue.stack === 'string') {
                         //     consoleValue.stack = consoleValue.stack.split('\n');
@@ -372,17 +389,23 @@ new window.Vue({
                     }
                 });
 
+                if (log.action) {
+                    messages.unshift(indentConfig.actionSymbol[log.action]);
+                }
+
                 if (stacks.length) {
                     messages.push(`<span class="tag is-danger is-light">additional stack</span>`);
                 }
 
-                log[log.consoleKey] = messages;
+                log.args = messages;
 
                 if (stacks.length) {
                     log.stacks = ['Errors:', ...stacks, 'Native stack:', log.stack];
                 } else {
                     log.stacks = [log.stack];
                 }
+
+                log.stackFuncs = window.Vue.markRaw(stackFuncs(log)); // a Set behind a reactive proxy has no intersection
             }
 
             function sortTime(a, b) {
@@ -441,3 +464,6 @@ new window.Vue({
         }),
     },
 });
+
+app.config.errorHandler = errorEventHandler;
+app.mount('#app');

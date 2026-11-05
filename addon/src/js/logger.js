@@ -21,6 +21,7 @@ onDebugChanged(mode => debugMode = mode);
 const MAX_LOGS = 10_000;
 const LOGS_TRIM_STEP = 100; // the list grows this far past MAX_LOGS before it is cut back
 const MAX_ERRORS = 50;
+const STACK_FRAMES = 5; // of the place a line was written; an error object keeps its own stack whole
 const logs = [];
 const writtenErrors = new WeakSet; // the Error objects already written as warn or error: the first line decides the level, the catchers' lines stay in the file
 
@@ -28,13 +29,21 @@ const backgroundConnect = Constants.IS_BACKGROUND_PAGE
     ? null
     : Messages.connectToBackground(Constants.MODULES.LOGGER);
 
+const ACTION = Object.freeze({
+    START: 'START',
+    STOP: 'STOP',
+});
+
+const START_LEVELS = new Set(['log', 'info', 'warn', 'debug', 'error']);
+
 const indentConfig = {
     indentSymbol: '   ',
-    startSymbol: '▷', // 🔻⚡️
-    stopSymbol: '◁', // 🔺⭕️
+    actionSymbol: {
+        [ACTION.START]: '▷', // 🔻⚡️
+        [ACTION.STOP]: '◁', // 🔺⭕️
+    },
     index: 0,
 };
-const scopeActionRegExp = /(START|STOP|SCOPE) (\d+)/;
 
 export default class Logger {
     prefixes;
@@ -101,17 +110,21 @@ export default class Logger {
     }
 
     start(...args) {
-        let cKey = this.#level;
+        let level = this.#level;
 
         if (Array.isArray(args[0])) {
-            [cKey, ...args] = [...args[0], ...args.slice(1)];
+            [level, ...args] = [...args[0], ...args.slice(1)];
+
+            if (!START_LEVELS.has(level)) {
+                throw this.error(`unknown level of START: ${level}`);
+            }
         }
 
         const log = this.create(normalizeArgumentValue(args.shift()));
 
         log.scope = Utils.getRandomInt();
 
-        log.#started = log.#log(cKey, [`START ${log.scope}`, ...args], 'START');
+        log.#started = log.#log(level, args, ACTION.START);
 
         log[Symbol.dispose] = () => log.stop();
 
@@ -121,7 +134,7 @@ export default class Logger {
     stop(...args) {
         if (this.#started) {
             this.#started = false;
-            this.#write(this.#level, [`STOP ${this.scope}`, ...args], 'STOP');
+            this.#write(this.#level, args, ACTION.STOP);
         }
     }
 
@@ -149,8 +162,7 @@ export default class Logger {
             } catch (e) {
                 const error = toError(e);
                 error.stack = [wrapStack, 'Native error stack:', error.stack].join('\n');
-                error.arguments = args;
-                logger.handleError(error, `catchFunc(${name}):`);
+                logger.handleError(error, `catchFunc(${name}):`, {args});
             }
         };
     }
@@ -163,43 +175,39 @@ export default class Logger {
         showErrorNotificationMessage();
     }
 
-    #allows(cKey, args) {
-        if (cKey === 'assert') return !args[0];
-        if (cKey === 'error' || cKey === 'warn') return true;
-        if (cKey === 'debug' && !debugMode) return false;
+    #allows(level, args) {
+        if (level === 'assert') return !args[0];
+        if (level === 'error' || level === 'warn') return true;
+        if (level === 'debug' && !debugMode) return false;
         return this.#enabled || debugMode === Constants.DEBUG.MANUAL;
     }
 
-    #log(cKey, args, action = null) {
-        if (!this.#allows(cKey, args)) {
+    #log(level, args, action = null) {
+        if (!this.#allows(level, args)) {
             return false;
         }
 
-        this.#write(cKey, args, action);
+        this.#write(level, args, action);
 
         return true;
     }
 
-    #write(cKey, args, action = null) {
+    #write(level, args, action = null) {
         const errors = args.filter(Error.isError);
 
-        args = args.map(normalizeArgumentValue);
-
-        const argsToLog = [this.prefixes.join(prefixGlue), ...args];
-
-        if (this.scope && !action) {
-            argsToLog.push(`SCOPE ${this.scope}`);
-        }
-
         const log = {
-            [`console.${cKey}`]: argsToLog,
+            level,
+            prefix: this.prefixes.join(prefixGlue),
+            args: args.map(normalizeArgumentValue),
+            scope: this.scope,
+            action,
             indentIndex: this.#calcIndent(action),
             time: Date.now(),
-            stack: getStack(new Error),
+            stack: getStack(new Error, 0, STACK_FRAMES),
         };
 
-        if ((cKey === 'error' || cKey === 'warn') && !errors.some(error => writtenErrors.has(error))) {
-            if (cKey === 'error') {
+        if ((level === 'error' || level === 'warn') && !errors.some(error => writtenErrors.has(error))) {
+            if (level === 'error') {
                 Errors.add(log);
             }
 
@@ -216,9 +224,9 @@ export default class Logger {
     }
 
     #calcIndent(action) {
-        if (action === 'START') {
+        if (action === ACTION.START) {
             this.#indent = indentConfig.index++;
-        } else if (action === 'STOP' && indentConfig.index > 0) {
+        } else if (action === ACTION.STOP && indentConfig.index > 0) {
             indentConfig.index--;
         }
 
@@ -235,47 +243,23 @@ export function showLog(log) {
         return;
     }
 
-    const consoleKey = Object.keys(log).find(key => key.startsWith('console.'));
-    const cKey = consoleKey.slice('console.'.length);
-    const args = log[consoleKey].slice();
+    const {level, prefix} = log;
+    const args = [...log.args];
+    const condition = level === 'assert' ? [args.shift()] : []; // console.assert takes the condition first
 
-    if (cKey === 'assert') {
-        [args[0], args[1]] = [args[1], args[0]];
+    if (log.action) {
+        args.unshift(indentConfig.actionSymbol[log.action]);
     }
 
-    const indentStr = getIndentAndRemoveScope(log.indentIndex, args);
+    args.unshift(prefix);
 
     if (log.indentIndex) {
-        args.splice(cKey === 'assert' ? 1 : 0, 0, indentStr);
+        args.unshift(indentConfig.indentSymbol.repeat(log.indentIndex));
     }
 
     args.push('(' + log.stack.slice(0, 2).join(' ◁ ') + ')');
 
-    console[cKey](...args);
-}
-
-function getAction(args) {
-    let action,
-        argIndex = args.findIndex(arg => {
-            [, action] = scopeActionRegExp.exec(arg) || [];
-            return action;
-        });
-
-    return {action, argIndex};
-}
-
-function getIndentAndRemoveScope(indentCount, args) {
-    const {action, argIndex} = getAction(args);
-
-    if (action === 'START') {
-        args[argIndex] = indentConfig.startSymbol;
-    } else if (action === 'STOP') {
-        args[argIndex] = indentConfig.stopSymbol;
-    } else if (action === 'SCOPE') {
-        args.splice(argIndex, 1);
-    }
-
-    return indentConfig.indentSymbol.repeat(indentCount);
+    console[level](...condition, ...args);
 }
 
 export const Logs = {

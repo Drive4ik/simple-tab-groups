@@ -138,7 +138,7 @@
         <div v-if="file" class="field">
             <template v-if="file.CRITICAL_ERRORS.length">
                 <h1 class="title has-text-centered has-background-danger">CRITICAL_ERRORS</h1>
-                <pre class="field">{{file.CRITICAL_ERRORS | json}}</pre>
+                <pre class="field">{{json(file.CRITICAL_ERRORS)}}</pre>
             </template>
 
             <h1 class="title has-text-centered">info</h1>
@@ -161,7 +161,7 @@
                             {{key}}: "{{val}}"
                         </template>
                         <template v-else>
-                            {{key}}: <pre>{{val | json(true)}}</pre>
+                            {{key}}: <pre>{{json(val)}}</pre>
                         </template>
                     </div>
                 </div>
@@ -201,19 +201,19 @@
             <h1 id="windows-title" class="title has-text-centered">windows</h1>
             <details v-for="(win, i) in file.windows" :key="i + 'win'" class="field">
                 <summary>windowId: {{win?.id}} {{win?.groupId && `(groupId: ${win.groupId})`}}</summary>
-                <pre class="field">{{win | json}}</pre>
+                <pre class="field">{{json(win)}}</pre>
             </details>
 
             <h1 id="tabsWithoutGroup-title" class="title has-text-centered">tabs without group</h1>
             <details class="field">
                 <summary>tabs without group (count: {{tabsWithoutGroup.length}})</summary>
-                <pre class="field">{{tabsWithoutGroup | json}}</pre>
+                <pre class="field">{{json(tabsWithoutGroup)}}</pre>
             </details>
 
             <h1 id="groups-title" class="title has-text-centered">groups (count: {{groups.length}})</h1>
             <details v-for="(group, i) in groups" :key="i + 'group'" class="field">
                 <summary>groupId: {{group?.id}} {{ group?.isArchive ? '(archived)' : ''}} (tabs: {{group.tabs.length}})</summary>
-                <pre class="field">{{group | json}}</pre>
+                <pre class="field">{{json(group)}}</pre>
             </details>
 
 
@@ -221,10 +221,10 @@
             <div id="logs" class="is-relative" :style="{
                     marginLeft: logsIndent + 'px',
                 }">
-                <div v-for="(log, i) in logs" :key="i + 'log'" :data-action="log.action" :data-key="log.key"
+                <div v-for="(log, i) in logs" :key="i + 'log'" :data-action="log.action" :data-scope="log.scope"
                     :class="['is-relative field log p-1', {
-                        'has-background-success-soft indent-line': isHighlighted(log),
-                        'has-background-info-soft': isHighlighted(log, true),
+                        'has-background-success-soft indent-line': highlightedScopes.has(log.scope),
+                        'has-background-info-soft': highlightedByStack.has(log),
                         'time-gap': hasTimeGap(log, i),
                     }]"
                     :style="{
@@ -236,7 +236,7 @@
                     <button @click="toggleShowStack(log)" class="button is-small">
                         <span class="stack-icon icon"></span>
                     </button>
-                    <button v-if="log.action" @click="toggleHighlight(log)" class="button is-small">
+                    <button v-if="log.scope" @click="toggleHighlight(log)" class="button is-small">
                         <span class="highlight-icon icon"></span>
                     </button>
 
@@ -283,7 +283,7 @@
         </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.7.16/vue.js" integrity="sha512-LnT1nhi1a/7Iu/cSAwUdqMMTSrh6WXC15R9Tge+5IY4EanqNDRuSPy0Sf9ls2qE1EnKmfb1IZYTWL/WHu/40VA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.5.44/vue.global.prod.js" integrity="sha512-JF/OqUHZ3g6rDAgbHwXmcCq8CW/6YRiaK3ndCFCLloKbD5c2vj2lWC1b3xNgoQc4DSk0vwISEPg6IsKomCRaBw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script type="text/javascript" src="./debug-viewer.js"></script>
 </body>
 </html>
