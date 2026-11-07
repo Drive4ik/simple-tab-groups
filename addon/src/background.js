@@ -25,7 +25,7 @@ import JSON from '/js/json.js';
 import BatchProcessor from '/js/batch-processor.js';
 import Lang from '/js/lang.js';
 import {initLocalData, stampVersion} from '/js/migration.js';
-// import * as Broadcast from '/js/broadcast.js';
+import * as Broadcast from '/js/broadcast.js';
 import * as Containers from '/js/containers.js?add-listeners';
 import * as Storage from '/js/storage.js';
 import * as Cache from '/js/cache.js';
@@ -36,7 +36,7 @@ import * as MenusMain from '/js/menus-main.js';
 // import * as MenusBookmark from '/js/menus-bookmark.js';
 import * as Groups from '/js/groups.js';
 import * as SubGroups from '/js/sub-groups.js';
-import * as GroupsExternal from '/js/groups-external.js';
+import * as External from '/js/external.js';
 import * as Tabs from '/js/tabs.js';
 import * as Windows from '/js/windows.js';
 import * as Extensions from '/js/extensions.js';
@@ -58,9 +58,8 @@ if (storage.debugMode === Constants.DEBUG.AUTO) {
 
 const logger = self.logger = new Logger(Constants.MODULES.BACKGROUND);
 
-self.loggerFuncs = {Logs, Errors};
-
 const options = self.options = {};
+const NOT_LOADED_ERROR = `[STG] I'm not loaded yet.`;
 
 const ignoreExtForReopenContainer = new Set([...Constants.SAFE_EXTENSIONS_FOR_REOPEN_TAB_IN_CONTAINER]);
 
@@ -68,21 +67,6 @@ const ignoreExtForReopenContainer = new Set([...Constants.SAFE_EXTENSIONS_FOR_RE
 self.CacheTabs = Cache.tabs;
 self.CacheLastTabsState = Cache.lastTabsState;
 self.CacheWindows = Cache.windows;
-
-function sendExternalMessage(...args) {
-    if (!storage.inited) {
-        logger.warn('sendExternalMessage addon not yet loaded');
-        return;
-    }
-
-    const message = Messages.normalizeSendData(...args);
-
-    for (const [exId, params] of Object.entries(Constants.EXTENSIONS_WHITE_LIST)) {
-        if (params.postActions?.includes(message.action) && Extensions.isEnabled(exId)) {
-            Messages.sendExternalMessage(exId, message);
-        }
-    }
-}
 
 const moveTabsBatch = new BatchProcessor(async (tabIds, groupId) => {
     tabIds = Array.from(tabIds);
@@ -368,6 +352,15 @@ function removeListenerOnBeforeRequest() {
     Listeners.webRequest.onBeforeRequest.remove(onBeforeTabRequest);
 }
 
+// the request handler follows every save of the groups (docs/DESIGN-EVENTS.md §5)
+Groups.on('saved', ({needBlockBeforeRequest}) => {
+    if (needBlockBeforeRequest) {
+        addListenerOnBeforeRequest();
+    } else {
+        removeListenerOnBeforeRequest();
+    }
+});
+
 let offDebugChanged = null;
 
 function addEvents() {
@@ -375,7 +368,7 @@ function addEvents() {
 
     Tabs.addListeners();
     Windows.addListeners();
-    GroupsExternal.addListeners();
+    External.addListeners();
     SubGroups.addListeners();
 
     Permissions.onAdded.add(onPermissionsAdded);
@@ -397,7 +390,7 @@ function removeEvents() {
 
     Tabs.removeListeners();
     Windows.removeListeners();
-    GroupsExternal.removeListeners();
+    External.removeListeners();
     SubGroups.removeListeners();
 
     Permissions.onAdded.clear();
@@ -417,11 +410,26 @@ function removeEvents() {
     removeListenerOnBeforeRequest();
 }
 
-const sendMessageFromBackground = self.sendMessageFromBackground = Messages.sendMessageFromBackground;
+function sendMessageFromBackground(...args) {
+    return Messages.sendMessageFromBackground(...args);
+}
 
 Listeners.runtime.onConnect.add(Messages.createListenerOnConnectedBackground(onBackgroundMessage));
 Listeners.runtime.onMessage.add(onBackgroundMessage);
 Listeners.commands.onCommand.add(name => onBackgroundMessage(name, self));
+
+// from the logger of any document (docs/DESIGN-LOGGER.md §3)
+Broadcast.on('show-error-notification', () => {
+    sendMessageFromBackground('show-error-notification');
+
+    Notification('whatsWrongMessage', {
+        iconUrl: 'icons/exclamation-triangle-yellow.svg',
+        module: ['windows', 'createPopup', {
+            url: Constants.PAGES.HELP.DEBUG,
+        }],
+        expires: Notification.MAX_EXPIRES,
+    }).catch(logger.catchSilent('show-error-notification'));
+});
 
 Listeners.runtime.onMessageExternal.add(async function onMessageExternal(request, sender) {
     using log = logger.start(['info', 'onMessageExternal'], `RECEIVED-EXTERNAL-ACTION#${request?.action}`, {request, sender});
@@ -438,13 +446,13 @@ Listeners.runtime.onMessageExternal.add(async function onMessageExternal(request
         log.warn('background not inited');
         return {
             ok: false,
-            error: `[STG] I'm not loaded yet.`,
+            error: NOT_LOADED_ERROR,
         };
     }
 
     const extensionRules = {};
 
-    if (!Utils.isAllowExternalRequestAndSender(request, sender, extensionRules)) {
+    if (!External.isAllowedRequest(request, sender, extensionRules)) {
         log.warn('sender is not allowed');
         return {
             ok: false,
@@ -476,13 +484,13 @@ const INTERNAL_MODULES = {
     Tabs,
     Groups,
     Windows,
+    Logs, // for the debug page (docs/DESIGN-LOGGER.md §5)
+    Errors,
 };
 
 function isStgSender(sender) {
     return sender === self || sender.id === browser.runtime.id;
 }
-
-self.onBackgroundMessage = onBackgroundMessage;
 
 async function onBackgroundMessage(message, sender) {
     sender = sender.sender ?? sender; // a port carries its MessageSender inside
@@ -505,26 +513,16 @@ async function onBackgroundMessage(message, sender) {
     // simple messages
     switch (data.action) {
         case 'are-you-here':
-            result.ok = storage.inited === true;
+            if (storage.inited) {
+                result.ok = true;
+            } else {
+                result.error = NOT_LOADED_ERROR;
+            }
             return result;
 
         case 'save-log':
             Logs.add(data.log);
             showLog(data.log);
-            result.ok = true;
-            return result;
-
-        case 'show-error-notification':
-            sendMessageFromBackground('show-error-notification');
-
-            Notification('whatsWrongMessage', {
-                iconUrl: '/icons/exclamation-triangle-yellow.svg',
-                module: ['windows', 'createPopup', {
-                    url: Constants.PAGES.HELP.DEBUG,
-                }],
-                expires: Notification.MAX_EXPIRES,
-            }).catch(logger.catchSilent('show-error-notification'));
-
             result.ok = true;
             return result;
 
@@ -587,6 +585,14 @@ async function onBackgroundMessage(message, sender) {
             notArchivedGroups,
         } = await Groups.load(focusedWindow?.groupId);
 
+        const applyByPosition = async (direction, groupsToJump) => {
+            if (notArchivedGroups.length) {
+                result.ok = await Groups.applyByPosition(direction, getFocusedWindow().id, groupsToJump, currentGroup?.id);
+            } else {
+                result.error = Lang('noGroupsAvailable');
+            }
+        };
+
         if (data.windowId === browser.windows.WINDOW_ID_CURRENT) {
             data.windowId = getFocusedWindow().id;
         }
@@ -600,33 +606,35 @@ async function onBackgroundMessage(message, sender) {
                 result.ok = true;
                 break;
             case 'load-next-group':
-                result.ok = await Groups.applyByPosition('next', getFocusedWindow().id, notArchivedGroups, currentGroup?.id);
+                await applyByPosition('next', notArchivedGroups);
                 break;
             case 'load-prev-group':
-                result.ok = await Groups.applyByPosition('prev', getFocusedWindow().id, notArchivedGroups, currentGroup?.id);
+                await applyByPosition('prev', notArchivedGroups);
                 break;
             case 'load-next-unloaded-group':
                 {
                     const unloadedGroups = notArchivedGroups.filter(group => !Cache.getWindowId(group.id) || group.id === currentGroup?.id);
-                    result.ok = await Groups.applyByPosition('next', getFocusedWindow().id, unloadedGroups, currentGroup?.id);
+                    await applyByPosition('next', unloadedGroups);
                 }
                 break;
             case 'load-prev-unloaded-group':
                 {
                     const unloadedGroups = notArchivedGroups.filter(group => !Cache.getWindowId(group.id) || group.id === currentGroup?.id);
-                    result.ok = await Groups.applyByPosition('prev', getFocusedWindow().id, unloadedGroups, currentGroup?.id);
+                    await applyByPosition('prev', unloadedGroups);
                 }
                 break;
             case 'load-next-non-empty-group':
                 {
                     const {notArchivedGroups} = await Groups.load(null, true);
-                    result.ok = await Groups.applyByPosition('next', getFocusedWindow().id, notArchivedGroups.filter(group => group.tabs.length), currentGroup?.id);
+                    const nonEmptyGroups = notArchivedGroups.filter(group => group.tabs.length);
+                    await applyByPosition('next', nonEmptyGroups);
                 }
                 break;
             case 'load-prev-non-empty-group':
                 {
                     const {notArchivedGroups} = await Groups.load(null, true);
-                    result.ok = await Groups.applyByPosition('prev', getFocusedWindow().id, notArchivedGroups.filter(group => group.tabs.length), currentGroup?.id);
+                    const nonEmptyGroups = notArchivedGroups.filter(group => group.tabs.length);
+                    await applyByPosition('prev', nonEmptyGroups);
                 }
                 break;
             case 'load-history-next-group':
@@ -638,22 +646,28 @@ async function onBackgroundMessage(message, sender) {
             case 'load-first-group':
                 if (notArchivedGroups.length) {
                     result.ok = await Groups.apply(getFocusedWindow().id, notArchivedGroups.shift().id);
+                } else {
+                    result.error = Lang('noGroupsAvailable');
                 }
                 break;
             case 'load-last-group':
                 if (notArchivedGroups.length) {
                     result.ok = await Groups.apply(getFocusedWindow().id, notArchivedGroups.pop().id);
+                } else {
+                    result.error = Lang('noGroupsAvailable');
                 }
                 break;
             case 'load-custom-group':
                 if (data.groupId === 'new') {
-                    const {ok, group} = await onBackgroundMessage({
+                    const {ok, group, error} = await onBackgroundMessage({
                         action: 'add-new-group',
                         proposalTitle: data.title,
                     }, sender);
 
                     if (ok) {
                         result.ok = await Groups.apply(getFocusedWindow().id, group.id);
+                    } else {
+                        result.error = error;
                     }
                 } else if (data.groupId) {
                     const groupToLoad = groupsById.get(data.groupId);
@@ -681,79 +695,38 @@ async function onBackgroundMessage(message, sender) {
                         result = await onBackgroundMessage(data, sender);
                     }
                 } else {
-                    const activeTab = await getActiveTab();
+                    const {error} = await Tabs.showGroupsPopup(getFocusedWindow().id, {
+                        popupAction: 'load-custom-group',
+                        popupTitle: Lang('hotkeyActionTitleLoadCustomGroup'),
+                        groups: notArchivedGroups.map(Groups.mapForExternalExtension),
+                        disableGroupIds: [currentGroup?.id].filter(Boolean),
+                    });
 
-                    if (Tabs.isCanSendMessage(activeTab)) {
-                        Tabs.sendMessage(activeTab.id, {
-                            action: 'show-groups-popup',
-                            popupAction: 'load-custom-group',
-                            popupTitle: Lang('hotkeyActionTitleLoadCustomGroup'),
-                            groups: notArchivedGroups.map(Groups.mapForExternalExtension),
-                            disableGroupIds: [currentGroup?.id].filter(Boolean),
-                        });
-
-                        result.ok = true;
+                    if (error) {
+                        result.error = error;
                     } else {
-                        result.error = Lang('impossibleToAskUserAboutAction', [
-                            activeTab.title,
-                            Lang('hotkeyActionTitleLoadCustomGroup'),
-                        ]);
-                        Notification(result.error, {
-                            module: ['tabs', 'createUrlOnce', Constants.PAGES.DOC.UNSUPPORTED_URL],
-                        });
+                        result.ok = true;
                     }
                 }
                 break;
             case 'unload-group':
                 if (currentGroup) {
                     result.ok = await Groups.unload(currentGroup.id);
+                } else {
+                    result.error = Lang('windowNotHaveGroup');
                 }
                 break;
             case 'add-new-group':
-                if (!options.alwaysAskNewGroupName || data.title) {
-                    const newGroup = await Groups.add(data.windowId, data.tabIds, data.title);
+                {
+                    const {group, error} = data.title
+                        ? {group: await Groups.add(data.windowId, data.tabIds, data.title)}
+                        : await Groups.addByUser(data.windowId, data.tabIds, data.proposalTitle);
 
-                    result.ok = true;
-                    result.group = Groups.mapForExternalExtension(newGroup);
-                } else {
-                    const activeTab = await getActiveTab();
-                    const {defaultGroupProps} = await Groups.getDefaults();
-                    data.proposalTitle = Groups.createTitle(data.proposalTitle, null, defaultGroupProps);
-
-                    if (Tabs.isCanSendMessage(activeTab)) {
-                        const title = await Tabs.sendMessage(activeTab.id, {
-                            action: 'show-prompt',
-                            promptTitle: Lang('createNewGroup'),
-                            value: data.proposalTitle,
-                        });
-
-                        if (title) {
-                            result = await onBackgroundMessage({
-                                action: 'add-new-group',
-                                title: title,
-                                tabIds: data.tabIds,
-                                windowId: data.windowId,
-                            }, sender);
-                        } else {
-                            result.error = 'title is empty - skip create group';
-                        }
+                    if (group) {
+                        result.ok = true;
+                        result.group = Groups.mapForExternalExtension(group);
                     } else {
-                        result = await onBackgroundMessage({
-                            action: 'add-new-group',
-                            title: data.proposalTitle,
-                            tabIds: data.tabIds,
-                            windowId: data.windowId,
-                        }, sender);
-
-                        if (options.alwaysAskNewGroupName) {
-                            result.error = Lang('impossibleToAskUserAboutAction', [
-                                activeTab.title,
-                                Lang('createNewGroup'),
-                            ]);
-                            Notification(result.error, {
-                                module: ['tabs', 'createUrlOnce', Constants.PAGES.DOC.UNSUPPORTED_URL],
-                            });
-                        }
+                        result.error = error;
                     }
                 }
                 break;
@@ -762,55 +735,32 @@ async function onBackgroundMessage(message, sender) {
                     result.error = Lang('noGroupsAvailable');
                     Notification(result.error);
                 } else if (!data.groupId) {
-                    const activeTab = await getActiveTab();
+                    const {error} = await Tabs.showGroupsPopup(getFocusedWindow().id, {
+                        popupAction: 'rename-group',
+                        popupTitle: Lang('hotkeyActionTitleRenameGroup'),
+                        groups: groups.map(Groups.mapForExternalExtension),
+                        focusedGroupId: currentGroup?.id,
+                        disableNewGroupItem: true,
+                    });
 
-                    if (Tabs.isCanSendMessage(activeTab)) {
-                        Tabs.sendMessage(activeTab.id, {
-                            action: 'show-groups-popup',
-                            popupAction: 'rename-group',
-                            popupTitle: Lang('hotkeyActionTitleRenameGroup'),
-                            groups: groups.map(Groups.mapForExternalExtension),
-                            focusedGroupId: currentGroup?.id,
-                            disableNewGroupItem: true,
-                        });
-
-                        result.ok = true;
+                    if (error) {
+                        result.error = error;
                     } else {
-                        result.error = Lang('impossibleToAskUserAboutAction', [
-                            activeTab.title,
-                            Lang('hotkeyActionTitleRenameGroup'),
-                        ]);
-                        Notification(result.error, {
-                            module: ['tabs', 'createUrlOnce', Constants.PAGES.DOC.UNSUPPORTED_URL],
-                        });
+                        result.ok = true;
                     }
                 } else if (data.groupId && !data.title) {
                     const groupToRename = groupsById.get(data.groupId);
 
                     if (groupToRename) {
-                        const activeTab = await getActiveTab();
+                        const {value: title, error} = await Tabs.prompt(getFocusedWindow().id, Lang('hotkeyActionTitleRenameGroup'), groupToRename.title);
 
-                        if (Tabs.isCanSendMessage(activeTab)) {
-                            const title = await Tabs.sendMessage(activeTab.id, {
-                                action: 'show-prompt',
-                                promptTitle: Lang('hotkeyActionTitleRenameGroup'),
-                                value: groupToRename.title,
-                            });
-
-                            if (title) {
-                                data.title = title;
-                                result = await onBackgroundMessage(data, sender);
-                            } else {
-                                result.error = 'title in empty - skip rename group';
-                            }
+                        if (error) {
+                            result.error = error;
+                        } else if (title) {
+                            data.title = title;
+                            result = await onBackgroundMessage(data, sender);
                         } else {
-                            result.error = Lang('impossibleToAskUserAboutAction', [
-                                activeTab.title,
-                                Lang('hotkeyActionTitleRenameGroup'),
-                            ]);
-                            Notification(result.error, {
-                                module: ['tabs', 'createUrlOnce', Constants.PAGES.DOC.UNSUPPORTED_URL],
-                            });
+                            result.error = 'cancelled by the user';
                         }
                     } else {
                         result = await onBackgroundMessage('rename-group', sender);
@@ -854,27 +804,18 @@ async function onBackgroundMessage(message, sender) {
                 }
 
                 if (!data.groupId) {
-                    const activeTab = await getActiveTab();
+                    const {error} = await Tabs.showGroupsPopup(getFocusedWindow().id, {
+                        popupAction: 'export-group-to-bookmarks',
+                        popupTitle: Lang('exportGroupToBookmarks'),
+                        groups: groups.map(Groups.mapForExternalExtension),
+                        focusedGroupId: currentGroup?.id,
+                        disableNewGroupItem: true,
+                    });
 
-                    if (Tabs.isCanSendMessage(activeTab)) {
-                        Tabs.sendMessage(activeTab.id, {
-                            action: 'show-groups-popup',
-                            popupAction: 'export-group-to-bookmarks',
-                            popupTitle: Lang('exportGroupToBookmarks'),
-                            groups: groups.map(Groups.mapForExternalExtension),
-                            focusedGroupId: currentGroup?.id,
-                            disableNewGroupItem: true,
-                        });
-
-                        result.ok = true;
+                    if (error) {
+                        result.error = error;
                     } else {
-                        result.error = Lang('impossibleToAskUserAboutAction', [
-                            activeTab.title,
-                            Lang('hotkeyActionTitleRenameGroup'),
-                        ]);
-                        Notification(result.error, {
-                            module: ['tabs', 'createUrlOnce', Constants.PAGES.DOC.UNSUPPORTED_URL],
-                        });
+                        result.ok = true;
                     }
                 }
                 break;
@@ -906,7 +847,7 @@ async function onBackgroundMessage(message, sender) {
                         Notification([
                             'groupRemovedByExtension',
                             currentGroup.title,
-                            Utils.getSupportedExternalExtensionName(sender.id),
+                            External.getTitle(sender.id),
                         ]);
                     }
 
@@ -946,14 +887,18 @@ async function onBackgroundMessage(message, sender) {
                     tabIds = await Tabs.getHighlightedIds(activeTab.windowId, undefined, null);
 
                 if (data.groupId === 'new') {
-                    const {ok} = await onBackgroundMessage({
+                    const {ok, error} = await onBackgroundMessage({
                         action: 'add-new-group',
                         title: data.title,
                         proposalTitle: activeTab.title,
                         tabIds: tabIds,
                     }, sender);
 
-                    result.ok = ok;
+                    if (ok) {
+                        result.ok = true;
+                    } else {
+                        result.error = error;
+                    }
                 } else if (data.groupId) {
                     const groupMoveTo = groupsById.get(data.groupId);
 
@@ -970,24 +915,17 @@ async function onBackgroundMessage(message, sender) {
                         result = await onBackgroundMessage(data, sender);
                     }
                 } else {
-                    if (Tabs.isCanSendMessage(activeTab)) {
-                        Tabs.sendMessage(activeTab.id, {
-                            action: 'show-groups-popup',
-                            popupAction: data.action,
-                            popupTitle: Lang('hotkeyActionTitleMoveSelectedTabsToCustomGroup'),
-                            groups: notArchivedGroups.map(Groups.mapForExternalExtension),
-                            focusedGroupId: activeTab.groupId,
-                        });
+                    const {error} = await Tabs.showGroupsPopup(activeTab.windowId, {
+                        popupAction: data.action,
+                        popupTitle: Lang('hotkeyActionTitleMoveSelectedTabsToCustomGroup'),
+                        groups: notArchivedGroups.map(Groups.mapForExternalExtension),
+                        focusedGroupId: activeTab.groupId,
+                    });
 
-                        result.ok = true;
+                    if (error) {
+                        result.error = error;
                     } else {
-                        result.error = Lang('impossibleToAskUserAboutAction', [
-                            activeTab.title,
-                            Lang('hotkeyActionTitleMoveSelectedTabsToCustomGroup'),
-                        ]);
-                        Notification(result.error, {
-                            module: ['tabs', 'createUrlOnce', Constants.PAGES.DOC.UNSUPPORTED_URL],
-                        });
+                        result.ok = true;
                     }
                 }
                 break;
@@ -1004,27 +942,18 @@ async function onBackgroundMessage(message, sender) {
                             result.ok = true;
                         }
                     } else {
-                        const activeTab = await getActiveTab();
+                        const {error} = await Tabs.showGroupsPopup(getFocusedWindow().id, {
+                            popupAction: 'discard-group',
+                            popupTitle: Lang('hotkeyActionTitleDiscardGroup'),
+                            groups: notArchivedGroups.map(Groups.mapForExternalExtension),
+                            focusedGroupId: currentGroup?.id,
+                            disableNewGroupItem: true,
+                        });
 
-                        if (Tabs.isCanSendMessage(activeTab)) {
-                            Tabs.sendMessage(activeTab.id, {
-                                action: 'show-groups-popup',
-                                popupAction: 'discard-group',
-                                popupTitle: Lang('hotkeyActionTitleDiscardGroup'),
-                                groups: notArchivedGroups.map(Groups.mapForExternalExtension),
-                                focusedGroupId: currentGroup?.id,
-                                disableNewGroupItem: true,
-                            });
-
-                            result.ok = true;
+                        if (error) {
+                            result.error = error;
                         } else {
-                            result.error = Lang('impossibleToAskUserAboutAction', [
-                                activeTab.title,
-                                Lang('hotkeyActionTitleDiscardGroup'),
-                            ]);
-                            Notification(result.error, {
-                                module: ['tabs', 'createUrlOnce', Constants.PAGES.DOC.UNSUPPORTED_URL],
-                            });
+                            result.ok = true;
                         }
                     }
                 }
@@ -1047,6 +976,8 @@ async function onBackgroundMessage(message, sender) {
                     const {group} = await Groups.load(currentGroup.id, true);
                     await Tabs.reload(group.tabs);
                     result.ok = true;
+                } else {
+                    result.error = Lang('windowNotHaveGroup');
                 }
 
                 break;
@@ -1147,11 +1078,22 @@ async function onBackgroundMessage(message, sender) {
         }
 
     } catch (e) {
+        result.ok = false;
         result.error = '[STG] ' + String(e);
         log.error(e);
     }
 
-    log.assert(!result.error, result.error);
+    // a refusal without a reason still gets a string (docs/DESIGN-MESSAGES.md §5)
+    if (!result.ok) {
+        result.error ||= `[STG] the action "${data.action}" was not done`;
+    }
+
+    log.assert(result.ok === !result.error, 'you forgot the error!', {
+        action: data.action,
+        ok: result.ok,
+        error: result.error,
+    });
+    log.log('ok:', result.ok);
 
     return result;
 }
@@ -1650,12 +1592,6 @@ async function cloudSync({
     return syncResult;
 }
 
-self.sendExternalMessage = sendExternalMessage;
-
-
-self.addListenerOnBeforeRequest = addListenerOnBeforeRequest;
-self.removeListenerOnBeforeRequest = removeListenerOnBeforeRequest;
-
 // { reason: "update", previousVersion: "3.0.1", temporary: true }
 // { reason: "install", temporary: true }
 Listeners.runtime.onInstalled.add(async ({reason, previousVersion, temporary}) => {
@@ -1786,7 +1722,7 @@ async function init() {
         sendMessageFromBackground('i-am-back');
 
         // send message for addon plugins
-        sendExternalMessage('i-am-back');
+        External.send('i-am-back');
 
         log.log('loading groups for creating cache...');
         await Groups.load(null, true, {includeFavIconUrl: true}); // load favIconUrls, speed up first run popup

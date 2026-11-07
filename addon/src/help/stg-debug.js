@@ -3,12 +3,10 @@ import Lang from '/js/lang.js?translate-page';
 import {getExtensionStartTime} from '/js/listeners.js';
 import * as Messages from '/js/messages.js';
 import {setDebug} from '/js/logger.js';
-import backgroundSelf from '/js/background.js';
 import * as Constants from '/js/constants.js';
 import * as File from '/js/file.js';
 import * as Cache from '/js/cache.js';
 import * as SubGroups from '/js/sub-groups.js';
-import * as Utils from '/js/utils.js';
 
 const mainStorage = localStorage.create(Constants.MODULES.BACKGROUND);
 
@@ -20,7 +18,7 @@ const $ = document.querySelector.bind(document),
 
 reloadState();
 
-Messages.connectToBackground('stg-debug', 'show-error-notification', () => {
+const {sendMessageModule} = Messages.connectToBackground('stg-debug', 'show-error-notification', () => {
     reloadState();
     browser.windows.update(browser.windows.WINDOW_ID_CURRENT, {focused: true});
 });
@@ -56,7 +54,8 @@ async function disableDebug() {
     await saveConsoleLogs();
 }
 
-const urls = new Map; // url → URL_n / FILE_n
+const USER_DATA_KEYS = new Set(['title', 'proposalTitle', 'linkText', 'selectionText', 'icon', 'icons', 'iconUrl', 'favIconUrl', 'thumbnail', 'filename', 'catchTabRules']);
+const urls = new Map; // url → URL_n / FILE_n / VIEW_SOURCE_n / URL_CONTAINS_URL_n
 let urlIndex = 1;
 
 function normalizeAndClear(obj, objKey) {
@@ -68,7 +67,7 @@ function normalizeAndClear(obj, objKey) {
         return obj.map(normalizeAndClear);
     } else if (typeof obj === 'object') {
         for (const key in obj) {
-            if (['title', 'icon', 'icons', 'iconUrl', 'favIconUrl', 'thumbnail', 'filename', 'catchTabRules'].includes(key)) {
+            if (USER_DATA_KEYS.has(key)) {
                 obj[key] = obj[key] ? ('some ' + key) : obj[key];
             } else {
                 obj[key] = normalizeAndClear(obj[key], key);
@@ -77,11 +76,15 @@ function normalizeAndClear(obj, objKey) {
 
         return obj;
     } else if (String(obj).startsWith('data:image')) {
-        return 'some data:image';
+        return urls.getOrInsertComputed(obj, () => 'DATA_IMAGE_' + urlIndex++);
     } else if (String(obj).startsWith('http')) {
         return urls.getOrInsertComputed(obj, () => 'URL_' + urlIndex++);
     } else if (String(obj).startsWith('file:')) {
         return urls.getOrInsertComputed(obj, () => 'FILE_' + urlIndex++);
+    } else if (String(obj).startsWith('view-source:')) {
+        return urls.getOrInsertComputed(obj, () => 'VIEW_SOURCE_' + urlIndex++);
+    } else if (String(obj).includes('url=')) { // about:reader, the wrapper pages
+        return urls.getOrInsertComputed(obj, () => 'URL_CONTAINS_URL_' + urlIndex++);
     } else if (typeof obj === 'string' && obj.includes(Constants.STG_BASE_URL) && objKey !== 'UUID') {
         return obj.replaceAll(Constants.STG_BASE_URL, '');
     }
@@ -129,6 +132,8 @@ async function saveConsoleLogs() {
             permissionBrowserSettings,
             windows,
             tabs,
+            logs,
+            errorLogs,
         ] = await Promise.all([
             getUpTime(),
             browser.runtime.getPlatformInfo().catch(onCatch('getPlatformInfo', Object)),
@@ -141,12 +146,9 @@ async function saveConsoleLogs() {
                 windowTypes: [browser.windows.WindowType.NORMAL],
             }).catch(onCatch('windows', Array)),
             browser.tabs.query({}).catch(onCatch('tabs', Array)),
+            sendMessageModule('Logs.get').catch(onCatch('logs', Array)),
+            sendMessageModule('Errors.get').catch(onCatch('errorLogs', Array)),
         ]);
-
-    const {Logs, Errors} = backgroundSelf.loggerFuncs;
-
-    const logs = Logs.get();
-    const errorLogs = Errors.get();
 
     let loadedWindows = await Promise.all(windows.map(Cache.loadWindowSession));
     loadedWindows = loadedWindows.filter(Boolean);
@@ -194,16 +196,14 @@ async function saveConsoleLogs() {
     const savedId = await File.save(LOGS_OBJ, 'STG-debug-logs.json');
 
     if (savedId) {
-        Logs.clear();
-        Errors.clear();
+        await Promise.all([
+            sendMessageModule('Logs.clear'),
+            sendMessageModule('Errors.clear'),
+        ]);
     }
 }
 
 function onClosePage() {
-    if (Utils.isDeadObject(backgroundSelf)) {
-        return;
-    }
-
     if (wasAutoDebug || isAutoDebug()) {
         setDebug(null);
         Messages.sendMessage('safe-reload-addon');

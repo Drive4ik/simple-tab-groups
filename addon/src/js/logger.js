@@ -2,8 +2,8 @@ import './prefixed-storage.js';
 
 import * as Constants from './constants.js';
 import JSON from './json.js';
-import * as Utils from './utils.js';
 import * as Messages from './messages.js';
+import * as Broadcast from './broadcast.js';
 import * as DebugBroadcast from './broadcast.js?channel=debug';
 import {normalizeArgumentValue, getStack, getFuncName, toError} from './logger-utils.js';
 
@@ -122,7 +122,7 @@ export default class Logger {
 
         const log = this.create(normalizeArgumentValue(args.shift()));
 
-        log.scope = Utils.getRandomInt();
+        log.scope = Number.parseInt(self.crypto.randomUUID().slice(-12), 16); // 48 random bits
 
         log.#started = log.#log(level, args, ACTION.START);
 
@@ -172,7 +172,7 @@ export default class Logger {
 
         setDebug(Constants.DEBUG.AUTO);
         this.error(...details, error);
-        showErrorNotificationMessage();
+        Broadcast.send('show-error-notification');
     }
 
     #allows(level, args) {
@@ -331,14 +331,6 @@ export function onDebugChanged(func) {
 
 export function setTemporaryInstall(value) {
     mainStorage.IS_TEMPORARY = isTemporaryInstall = Boolean(value);
-}
-
-function showErrorNotificationMessage() {
-    if (Constants.IS_BACKGROUND_PAGE) {
-        self.onBackgroundMessage?.('show-error-notification', self); // the background is not up yet: nobody can show it
-    } else {
-        backgroundConnect.postMessage('show-error-notification');
-    }
 }
 
 function errorEventHandler(event) {

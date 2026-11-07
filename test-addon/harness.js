@@ -1,4 +1,5 @@
-import './startup.js'; // the first import on purpose: its probe is the first thing a start of the background does
+import './startup.js'; // the first imports on purpose: their probes are the first thing a start of the background does
+import * as Reload from './reload.js';
 import {ROUNDS, RUN_KEY, LOGS_KEY, BATCH_GAP} from './constants.js';
 import {wait, RestartRequested} from './test.js';
 import {TabsTest, closeHarnessWindows, nameFromUrl} from './tabs.js';
@@ -107,7 +108,7 @@ async function runTest(state, spec, TestClass, round, {url, quiet}) {
         await spec.run(test);
     } catch (error) {
         if (error instanceof RestartRequested) {
-            suspended = error.message;
+            suspended = error;
         } else {
             test.data.failed = error.message;
         }
@@ -122,10 +123,17 @@ async function runTest(state, spec, TestClass, round, {url, quiet}) {
         saveRun(state);
 
         console.debug([
-            `⏸  ${spec.id} needs a browser restart`,
+            `⏸  ${spec.id} ${suspended.reload ? 'reloads the add-on itself' : 'needs a restart'}`,
             'the scene window is left open on purpose — keep it',
-            suspended,
+            suspended.message,
         ].join('\n'));
+
+        // the moment of the call is the zero of the test's timeline: it goes into the checkpoint, and the call comes after the checkpoint and nothing else
+        if (suspended.reload) {
+            test.data.reloadedAt = Date.now();
+            saveRun(state);
+            browser.runtime.reload();
+        }
 
         return false;
     }
@@ -335,6 +343,7 @@ async function report(title = 'current state') {
 
 function forget() {
     globalThis.shutdownProbe?.remove?.();
+    Reload.take(); // a probe armed by the forgotten test must not run at the next start
     dropRun();
     return 'checkpoint dropped';
 }

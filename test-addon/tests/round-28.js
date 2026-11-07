@@ -1,5 +1,5 @@
-import {LOAD_WAIT, POLL_WAIT, SETTLE_TIMEOUT, MANAGEMENT_READ_WAIT, BACKGROUND_TAB_TIMER, NAVIGATE_URL, MANAGEMENT_URL} from '../constants.js';
-import {wait} from '../test.js';
+import {LOAD_WAIT, SETTLE_TIMEOUT, MANAGEMENT_READ_WAIT, BACKGROUND_TAB_TIMER, NAVIGATE_URL, MANAGEMENT_URL} from '../constants.js';
+import {wait, until} from '../test.js';
 import {withContainer} from '../tabs.js';
 import {ownOrigin, hosts, extensions, probe, watch, READ_MOMENTS} from '../management.js';
 import * as Startup from '../startup.js';
@@ -138,20 +138,6 @@ function tellManagement(t, moment, reports, contexts, numberOf) {
             t.note(`${moment}, ${context}: ${event} of ${numberOf(id)}, type ${type} - ${told.join('; ')}; a setTimeout of ${MANAGEMENT_READ_WAIT} ms took ${timer} ms`);
         }
     }
-}
-
-async function until(condition, timeout = SETTLE_TIMEOUT) {
-    const started = Date.now();
-
-    while (Date.now() - started < timeout) {
-        if (await condition()) {
-            return true;
-        }
-
-        await wait(POLL_WAIT);
-    }
-
-    return false;
 }
 
 function bindCreated(t, tab, name) {

@@ -6,7 +6,6 @@ import Listeners, {getExtensionStartTime} from './listeners.js\
 ';
 import Logger from './logger.js';
 import Queue from './queue.js';
-// import backgroundSelf from './background.js';
 import BatchProcessor from './batch-processor.js';
 import * as Browser from './browser.js';
 import * as Broadcast from './broadcast.js';

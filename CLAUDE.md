@@ -207,6 +207,15 @@ who asked, in case the caller is needed later or is harmful. A rejection the cod
 is a safety net, and the file must show where the net catches most often, so that the logic is
 rebuilt to avoid that place before it bursts.
 
+User data — a title, an address, an icon, a file name, a catch rule — never goes into a record
+as a bare argument or glued into a sentence. A title and its kin go inside an object under their
+own key (`title`, `proposalTitle`, `linkText`, `selectionText`, `favIconUrl`, `thumbnail`,
+`filename`, `catchTabRules`), an address goes as a whole value, or an id or a flag goes instead
+(`{tabId}`, `{hasProposalTitle}`). The debug page anonymizes the file by those keys and by the
+shape of a whole address (`normalizeAndClear` in `addon/src/help/stg-debug.js`,
+`docs/DESIGN-LOGGER.md` §5); a title under another key or inside a sentence, and an address
+inside a sentence, reach the developer as they are.
+
 ### Manifest V3 is ahead
 
 The add-on is on MV2, the move to MV3 is planned. All new development takes every MV3 trait
@@ -216,7 +225,9 @@ into account. Events are subscribed through `addon/src/js/listeners.js` (`docs/D
 
 `plugins/modules/` holds the copies of the modules the plugins share with the add-on:
 `constants.js`, `lang.js`, `listeners.js`, `module-runner.js`, `notification.js`,
-`downloads.js`, `utils.js`. The developer copies a module there by hand from `addon/src/js/`
+`downloads.js`. `plugins/modules/utils.js` is a module of the plugins' own that only shares its
+name with `addon/src/js/utils.js`: the add-on's `utils.js` is not shared and is changed freely.
+The developer copies a module there by hand from `addon/src/js/`
 once the module is ready, and `plugins/modules/copy-modules.bat` spreads the copies into every
 plugin (`xcopy /U`: only the files a plugin already has). The assistant never touches
 `plugins/modules/` or the copies in the plugins: a change of a shared module in `addon/src/js/`

@@ -74,9 +74,10 @@ own, so the cap of §4 cuts them and not the error), and the wrapped call resolv
 
 `handleError(event, …details)` takes an `error` event, an `unhandledrejection` event or the
 error itself (`toError`, the event is prevented), sets the `auto` debug mode (§6), writes the
-error and asks for the notification `show-error-notification`: in the background through
-`onBackgroundMessage`, once the background is up; from a page through the port of the logger. It
-is called by `errorEventHandler`, on `error` and `unhandledrejection` of every document, with
+error and asks for the notification `show-error-notification` on the main broadcast channel, from
+any document alike; the background shows it (the notification that opens the debug page, and
+`show-error-notification` to the pages by their ports) once it has subscribed, an error before
+that has nobody to show it. It is called by `errorEventHandler`, on `error` and `unhandledrejection` of every document, with
 `self.logger` or a logger named by the page; by `Vue.config.errorHandler` of the popup, the
 manager and the options; and by hand where a caught error must still reach the user:
 `Groups.apply`, `init`, `catchFunc`.
@@ -150,12 +151,16 @@ install. The line is the indent, the prefix, ▷ or ◁ for a START or a STOP by
 arguments and the first two frames of the stack; an `assert` goes to `console.assert` with its
 condition before all of it.
 
-The debug page takes `self.loggerFuncs = {Logs, Errors}` of the background. The file it saves
+The debug page asks the background for both stores by its port, `Logs.get` and `Errors.get` of
+`INTERNAL_MODULES` (`DESIGN-MESSAGES.md` §1), and clears them the same way, `Logs.clear` and
+`Errors.clear`: one way of delivery wherever a store is kept. The file it saves
 (`saveConsoleLogs`) holds the add-on and the browser (version, up time, permissions, storage,
 platform, extensions), the windows and the tabs, `logs` (`Logs.get()`) and `errorLogs`
 (`Errors.get()`), anonymized unless the install is temporary (`normalizeAndClear`: titles,
-icons, thumbnails, file names and catch rules are replaced by a word, http and file addresses by
-`URL_n` and `FILE_n`, the own uuid is cut); once the file is saved, both stores are cleared.
+proposed titles, link and selection texts, icons, thumbnails, file names and catch rules are
+replaced by a word; http, file and `view-source:` addresses by `URL_n`, `FILE_n` and
+`VIEW_SOURCE_n`, a string with `url=` in it — `about:reader`, the wrapper pages — by
+`URL_CONTAINS_URL_n`; the own uuid is cut); once the file is saved, both stores are cleared.
 `addon/debug-viewer/` shows the file and knows every shape of a record above; the logs of a
 version before 6, where the level and the arguments were one key `console.<level>` with the
 prefix as the first argument and the scope a mark among them, are brought to that shape as they

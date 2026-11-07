@@ -6,7 +6,6 @@ import swatches from 'vue-swatches';
 import contextMenu from '../components/context-menu.vue';
 import 'vue-swatches/dist/vue-swatches.css';
 
-// import backgroundSelf from '/js/background.js';
 import '/js/prefixed-storage.js';
 import * as Constants from '/js/constants.js';
 import * as Containers from '/js/containers.js';

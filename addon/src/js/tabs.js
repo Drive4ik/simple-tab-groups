@@ -12,6 +12,7 @@ import Listeners from '/js/listeners.js\
 import './prefixed-storage.js';
 import Logger from './logger.js';
 import Notification from './notification.js';
+import Lang from './lang.js';
 import BatchProcessor from './batch-processor.js';
 import * as Broadcast from './broadcast.js';
 import * as TabsBroadcast from './broadcast.js?channel=tabs';
@@ -1942,6 +1943,72 @@ export async function remove(tabs, params = {}) {
 export async function sendMessage(tabId, message) {
     message = {colorScheme: settings.colorScheme, ...message};
     return browser.tabs.sendMessage(tabId, message).catch(() => {});
+}
+
+// the dialog was not shown (docs/DESIGN-MESSAGES.md §2)
+function refuseDialog(tab, actionTitle, showNotification, reason) {
+    const error = Lang('impossibleToAskUserAboutAction', [tab.title, actionTitle]);
+
+    logger.warn(reason, tab.id);
+
+    if (showNotification) {
+        Notification(error, {
+            module: ['tabs', 'createUrlOnce', Constants.PAGES.DOC.UNSUPPORTED_URL],
+        });
+    }
+
+    return {error};
+}
+
+async function getActiveForDialog(windowId, actionTitle, showNotification) {
+    const activeTab = await getActive(windowId);
+
+    if (isCanSendMessage(activeTab)) {
+        return {tab: activeTab};
+    }
+
+    return refuseDialog(activeTab, actionTitle, showNotification, 'the tab cannot show a dialog');
+}
+
+// value: the answer, null on cancel; error: the tab cannot ask or did not answer
+export async function prompt(windowId, title, value, params = {}) {
+    const showNotification = params.showNotification ?? true;
+
+    const {tab, error} = await getActiveForDialog(windowId, title, showNotification);
+
+    if (error) {
+        return {error};
+    }
+
+    value = await sendMessage(tab.id, {
+        action: 'show-prompt',
+        promptTitle: title,
+        value,
+    });
+
+    if (value === undefined) {
+        return refuseDialog(tab, title, showNotification, 'the tab did not answer');
+    }
+
+    return {value};
+}
+
+// the choice comes back as a message (popupAction, groupId)
+export async function showGroupsPopup(windowId, popup, params = {}) {
+    const showNotification = params.showNotification ?? true;
+
+    const {tab, error} = await getActiveForDialog(windowId, popup.popupTitle, showNotification);
+
+    if (error) {
+        return {error};
+    }
+
+    sendMessage(tab.id, {
+        action: 'show-groups-popup',
+        ...popup,
+    });
+
+    return {};
 }
 
 export function prepareForSave(tabs, params = {}) {

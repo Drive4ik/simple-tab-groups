@@ -2,7 +2,6 @@
 import './prefixed-storage.js';
 import * as Constants from './constants.js';
 import * as Messages from './messages.js';
-import backgroundSelf from './background.js';
 
 const mainStorage = localStorage.create(Constants.MODULES.BACKGROUND);
 
@@ -16,28 +15,25 @@ function reloadPageOnAddonReady() {
     }
 }
 
-if (backgroundSelf) {
+// a page in another container is reopened in the default one: there it has a localStorage and a BroadcastChannel of its own, not the add-on's (docs/BEHAVIOR-CREATE-TABS.md §19)
+if (Constants.PAGES.isPopup || Constants.PAGES.isSidebar) {
     reloadPageOnAddonReady();
 } else {
-    // current tab was opened not in default cookie container, reopen this tab
-    browser.tabs.getCurrent()
-        .then(async currentTab => {
-            if (currentTab.cookieStoreId === Constants.DEFAULT_COOKIE_STORE_ID) {
-                reloadPageOnAddonReady();
-            } else {
-                await browser.tabs.create({
-                    url: currentTab.url,
-                    active: currentTab.active,
-                    index: currentTab.index,
-                    windowId: currentTab.windowId,
-                    cookieStoreId: Constants.DEFAULT_COOKIE_STORE_ID,
-                });
+    const currentTab = await browser.tabs.getCurrent();
 
-                return browser.tabs.remove(currentTab.id);
-            }
-        })
-        // .catch(() => browser.tabs.create({url: self.location.href}))
-        .catch(e => console.error('no STG background page, cant reopen current', e));
+    if (currentTab.cookieStoreId === Constants.DEFAULT_COOKIE_STORE_ID) {
+        reloadPageOnAddonReady();
+    } else {
+        await browser.tabs.create({
+            url: currentTab.url,
+            active: currentTab.active,
+            index: currentTab.index,
+            windowId: currentTab.windowId,
+            cookieStoreId: Constants.DEFAULT_COOKIE_STORE_ID,
+        });
+
+        await browser.tabs.remove(currentTab.id);
+    }
 }
 
 await waitBackgroundPromise;

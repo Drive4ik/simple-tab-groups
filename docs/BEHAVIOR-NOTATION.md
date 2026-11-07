@@ -208,11 +208,13 @@ Facts about the extension's own lifecycle — `runtime.onInstalled`, updates, en
 uninstall, what each storage survives — cannot be produced by `test-addon/`: the addon under test
 is killed by the very actions being measured. They come from a throwaway stand of two addons (the
 addon under test plus a log collector) that lives outside the repo and is rebuilt from its
-description when a fact is disputed. The exception is browser shutdown and browser start: the
-quit kills the addon too, but the evidence lands in its storage and is read back after the
-restart, and a harness installed in the profile starts with the browser and records its own first
-moments the same way, so those facts come from the regular harness with the usual `R` markers
-(BEHAVIOR-LIFECYCLE.md §8, BEHAVIOR-CREATE-TABS.md §55).
+description when a fact is disputed. The exceptions are browser shutdown and browser start, and a
+reload of the addon: the quit and the reload take the addon down too, but the evidence lands in
+its `localStorage`, which both keep, and is read back after the restart; a harness installed in
+the profile starts with the browser and records its own first moments the same way, and a probe
+armed before a reload records the first moments of the background that starts after it. So those
+facts come from the regular harness with the usual `R` markers (BEHAVIOR-LIFECYCLE.md §8, §9,
+BEHAVIOR-CREATE-TABS.md §55).
 
 Their document keeps the same rules as the rest (§5), with these deviations:
 

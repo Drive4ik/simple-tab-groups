@@ -12,15 +12,6 @@ export function type(obj) {
     return Object.prototype.toString.call(obj).slice(8, -1).toLowerCase();
 }
 
-export function isDeadObject(obj) {
-    try {
-        type(obj);
-        return false;
-    } catch (e) {
-        return e instanceof TypeError;
-    }
-}
-
 // if last element is Boolean true - remove empty keys, else
 // aaa {a|b} ccc => aaa b ccc
 export function format(str, ...args) {
@@ -162,31 +153,6 @@ async function sha256Bytes(str) {
 
 export async function sha256Hex(str) {
     return (await sha256Bytes(str)).toHex();
-}
-
-export function isAllowExternalRequestAndSender(request, sender, extensionRules = {}) {
-    // if (sender?.id?.startsWith('test-stg-action')) {
-    //     return true;
-    // }
-
-    const extension = Constants.EXTENSIONS_WHITE_LIST[sender.id];
-
-    if (!extension) {
-        return false;
-    }
-
-    Object.assign(extensionRules, extension);
-
-    if (!request || 'object' !== type(request)) {
-        extensionRules.error = 'request is wrong';
-        return false;
-    }
-
-    return extension.getActions.includes(request.action);
-}
-
-export function getSupportedExternalExtensionName(extId) {
-    return Constants.EXTENSIONS_WHITE_LIST[extId] ? Constants.EXTENSIONS_WHITE_LIST[extId].title : 'Unknown';
 }
 
 // only protocols `chrome:`, `about:`, `resource:` and `data`:

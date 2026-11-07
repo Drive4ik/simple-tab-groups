@@ -193,18 +193,9 @@ export async function openInGroup(groupId, info, tab) {
 export async function createNewGroup(info, tab) {
     using log = logger.start(createNewGroup, info);
 
-    let {ok, group, error} = await self.onBackgroundMessage({
-        action: 'add-new-group',
-        proposalTitle: info.linkText,
-    }, self);
+    const {group} = await Groups.addByUser(undefined, undefined, info.linkText);
 
-    if (!ok) {
-        log.warn('group not created:', error);
-        group = await Groups.add(undefined, undefined, info.linkText);
-        ok = true;
-    }
-
-    if (ok && group) {
+    if (group) {
         const newTab = await Tabs.add(group.id, undefined, info.linkUrl, info.linkText);
 
         if (info.button.RIGHT) {
@@ -212,7 +203,7 @@ export async function createNewGroup(info, tab) {
         }
     }
 
-    log.log(ok);
+    log.log(group?.id);
 }
 
 // helpers

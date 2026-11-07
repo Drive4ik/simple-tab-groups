@@ -1,5 +1,5 @@
-import {ACTION_WAIT, POLL_WAIT, SETTLE_TIMEOUT, NETWORK_URL, MESSAGE_URL, ORDER_URL, AUTH_URL, AUTH_CREDENTIALS, DEAD_PROXY_PORTS} from '../constants.js';
-import {wait} from '../test.js';
+import {ACTION_WAIT, SETTLE_TIMEOUT, NETWORK_URL, MESSAGE_URL, ORDER_URL, AUTH_URL, AUTH_CREDENTIALS, DEAD_PROXY_PORTS} from '../constants.js';
+import {wait, until} from '../test.js';
 import {sceneUrl, withContainer} from '../tabs.js';
 
 export const note = `Round 39 - several listeners of one event in one context of the extension, and a listener that
@@ -47,16 +47,6 @@ const describeError = error => error?.message ?? (typeof error === 'object' ? JS
 const names = list => list.map(entry => entry.who).join('; ') || 'none';
 const describeProxy = proxyInfo => proxyInfo ? `${proxyInfo.type} ${proxyInfo.host}:${proxyInfo.port}` : 'none, direct';
 const ours = headers => headers.filter(header => header.name.toLowerCase().startsWith('x-stg-')).map(header => `${header.name}: ${header.value}`).join(', ') || 'none';
-
-async function until(condition) {
-    const started = Date.now();
-
-    while (!condition() && Date.now() - started < SETTLE_TIMEOUT) {
-        await wait(POLL_WAIT);
-    }
-
-    return condition();
-}
 
 // a listener of a browser event for the time of the test
 function listen(t, target, handler, ...args) {

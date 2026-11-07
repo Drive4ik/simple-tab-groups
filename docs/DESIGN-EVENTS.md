@@ -1,8 +1,9 @@
 # Events — the add-on's own actions are muted, the user's are mirrored
 
 How the handlers of the browser events in `addon/src/js/tabs.js` and `windows.js` tell the
-add-on's own actions from the user's, what the add-on does about other add-ons, and how an own
-action is awaited by its event (`downloads.js`). The subscription to the events is
+add-on's own actions from the user's, what the add-on does about other add-ons, how an own
+action is awaited by its event (`downloads.js`), and when the request handler of `background.js`
+is on (§5). The subscription to the events is
 `DESIGN-LISTENERS.md`; the browser facts are in `BEHAVIOR-CREATE-TABS.md`,
 `BEHAVIOR-MOVE-TABS.md`, `BEHAVIOR-REMOVE-TABS.md`, `BEHAVIOR-TABGROUPS.md` and
 `BEHAVIOR-DOWNLOADS.md`.
@@ -47,3 +48,15 @@ to `downloads.onChanged` for the whole module, the wait registered right at the 
 `downloads.download()` with nothing awaited in between, and no timeout — a download that is still
 running is not an error. The end of a download is its `state`; an interruption is done once its
 reason has come too, in the same delta or in the next one. The facts — `BEHAVIOR-DOWNLOADS.md`.
+
+## 5. The request handler is on only while a group needs it
+
+`onBeforeTabRequest` (`background.js`), the handler of the blocking `webRequest.onBeforeRequest`
+that moves a tab by the catch rules of the groups and reopens it in the container of its group,
+is added only while some group needs the requests, `Groups.isNeedBlockBeforeRequest`: a group
+that is not archived with a catch rule, a catch container, the reopen of tabs in its container or
+a new-tab container other than the default. The background decides at the start of the add-on by
+the loaded groups, and after every `Groups.save`: the save sends `saved` on the `groups` channel
+with the verdict, and the background adds or removes the handler by it; `removeEvents` removes it.
+Without such a group the handler runs for no request, on purpose, and the requested url of a tab
+comes from `Tabs.create` alone (`DESIGN-CACHE.md` §1).

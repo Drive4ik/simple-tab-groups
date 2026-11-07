@@ -2,7 +2,25 @@ import {QUIET_WAIT, POLL_WAIT, SETTLE_TIMEOUT, SETTING_WAIT, NOISY_UPDATE_KEYS} 
 
 export const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
 
-export class RestartRequested extends Error {}
+// polls the condition every POLL_WAIT until it holds or SETTLE_TIMEOUT runs out; the condition may be async; what comes back is its last reading
+export async function until(condition) {
+    const started = Date.now();
+    let result = await condition();
+
+    while (!result && Date.now() - started < SETTLE_TIMEOUT) {
+        await wait(POLL_WAIT);
+        result = await condition();
+    }
+
+    return result;
+}
+
+export class RestartRequested extends Error {
+    constructor(message, {reload = false} = {}) {
+        super(message);
+        this.reload = reload; // the harness reloads the add-on itself, right after the checkpoint
+    }
+}
 
 const same = (actual, expected) => {
     if (Object.is(actual, expected)) {
@@ -193,9 +211,9 @@ export class Test {
         return answer;
     }
 
-    async restart(message = 'restart Firefox, load the add-on again in about:debugging, then run:  T.continue()') {
+    async restart(message = 'restart Firefox, load the add-on again in about:debugging, then run:  T.continue()', {reload = false} = {}) {
         this.flushEvents();
-        throw new RestartRequested(message);
+        throw new RestartRequested(message, {reload});
     }
 
     async setting(name, value) {

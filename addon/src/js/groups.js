@@ -2,7 +2,6 @@ import './prefixed-storage.js';
 
 import Logger from './logger.js';
 import Queue from './queue.js';
-import backgroundSelf from './background.js'; // TODO refactor to use Broadcast
 import * as GroupsBroadcast from './broadcast.js?channel=groups';
 import * as Constants from './constants.js';
 import * as Storage from './storage.js';
@@ -388,11 +387,7 @@ export async function save(groups, withMessage = false) {
 
     await Storage.set({groups});
 
-    if (isNeedBlockBeforeRequest(groups)) {
-        backgroundSelf.addListenerOnBeforeRequest();
-    } else {
-        backgroundSelf.removeListenerOnBeforeRequest();
-    }
+    send('saved', {needBlockBeforeRequest: isNeedBlockBeforeRequest(groups)});
 
     if (withMessage) {
         sendUpdatedAll();
@@ -532,6 +527,47 @@ export async function add(windowId, tabIds = [], title = null) {
 
     log.log(newGroup.id);
     return newGroup;
+}
+
+// the name is asked in the window in focus when the option says so (docs/DESIGN-MESSAGES.md §2)
+export async function addByUser(windowId, tabIds, proposalTitle, params = {}) {
+    using log = logger.start(addByUser, {windowId, tabIds, proposalTitle, params});
+
+    const added = async title => {
+        const group = await add(windowId, tabIds, title);
+
+        return group ? {group} : {error: 'the group was not created'};
+    };
+
+    const {alwaysAskNewGroupName} = await Storage.get('alwaysAskNewGroupName');
+
+    if (!alwaysAskNewGroupName) {
+        return await added();
+    }
+
+    const {defaultGroupProps} = await getDefaults();
+    const title = createTitle(proposalTitle, null, defaultGroupProps);
+    const focusedWindow = await Windows.getFocusedNormalWindow();
+
+    if (!focusedWindow) {
+        const error = 'no normal window in focus';
+        log.warn(error);
+        return {error};
+    }
+
+    const {value, error} = await Tabs.prompt(focusedWindow.id, Lang('createNewGroup'), title, params);
+
+    if (error) {
+        return await added(title);
+    }
+
+    if (!value) {
+        const error = 'cancelled by the user';
+        log.log(error);
+        return {error};
+    }
+
+    return await added(value);
 }
 
 export async function remove(groupIds) {

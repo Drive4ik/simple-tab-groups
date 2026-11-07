@@ -298,18 +298,9 @@ export async function createNewGroup(info) {
     log.log('bookmark is', bookmark.type);
 
     if (bookmark.type === Bookmarks.BOOKMARK) {
-        let {ok, group, error} = await self.onBackgroundMessage({
-            action: 'add-new-group',
-            proposalTitle: bookmark.title,
-        }, self);
+        const {group} = await Groups.addByUser(undefined, undefined, bookmark.title);
 
-        if (!ok) {
-            log.warn('group not created:', error);
-            group = await Groups.add(undefined, undefined, bookmark.title);
-            ok = true;
-        }
-
-        if (ok && group) {
+        if (group) {
             const newTab = await Tabs.add(group.id, undefined, bookmark.url, bookmark.title);
 
             if (info.button.RIGHT) {

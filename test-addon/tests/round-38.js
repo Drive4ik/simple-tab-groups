@@ -1,5 +1,5 @@
-import {ACTION_WAIT, POLL_WAIT, SETTLE_TIMEOUT, PORT_URL} from '../constants.js';
-import {wait} from '../test.js';
+import {ACTION_WAIT, PORT_URL} from '../constants.js';
+import {wait, until} from '../test.js';
 import {sceneUrl} from '../tabs.js';
 
 export const note = `Round 38 - a port of runtime.connect seen from the end that was late to listen. The background
@@ -62,16 +62,6 @@ function listenReports(t) {
     t.listeners.push({target: browser.runtime.onMessage, handler: onMessage});
 
     return reports;
-}
-
-async function until(condition) {
-    const started = Date.now();
-
-    while (!condition() && Date.now() - started < SETTLE_TIMEOUT) {
-        await wait(POLL_WAIT);
-    }
-
-    return condition();
 }
 
 async function openPage(t, name, action) {

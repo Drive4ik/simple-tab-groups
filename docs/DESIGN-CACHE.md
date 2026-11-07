@@ -28,6 +28,10 @@ sign — a newborn is `complete` + `about:blank` for its first 9–10 ms (§23),
 new window for 50–65 ms (§26), and the url of a restored window's active tab dips back to
 `about:blank` while loading (§28).
 
+A load the user starts is recorded as the requested url only while the handler `onBeforeTabRequest`
+is on, that is while some group needs the requests (`DESIGN-EVENTS.md` §5). Without such a group
+there is no handler, on purpose, and the requested url comes from `Tabs.create` alone.
+
 ## 2. The outcome of a load
 
 `removeTabRequestedUrl` takes the requested url off when:

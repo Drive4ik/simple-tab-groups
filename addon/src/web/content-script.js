@@ -313,7 +313,7 @@ let promptNowShowing = false;
 async function showPrompt({promptTitle, value}) {
     if (promptNowShowing) {
         console.warn('[STG] prompt now showing');
-        return;
+        return null; // as a cancel
     }
 
     promptNowShowing = true;

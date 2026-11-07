@@ -391,7 +391,7 @@ extension page navigates with a content principal, so only the type exceptions a
 add-on's `Utils.isDataUrlAllowToNavigate` is this table as a regexp. What a user types into the
 address bar is a different principal and is not covered by this run.
 
-### 19. An extension page in a non-default container gets `null` from `getBackgroundPage`, is invisible to the background's `getViews`, and still reaches the background with `runtime.sendMessage` (R20.04)
+### 19. An extension page in a non-default container gets `null` from `getBackgroundPage`, is invisible to the background's `getViews`, still reaches the background with `runtime.sendMessage` and shares its `storage.local` and `storage.session`, and has a `localStorage` and a `BroadcastChannel` of its own (R20.04, R20.09)
 
 Two copies of the same page (`probe.html`), one in `firefox-default`, one in a container created
 for the run, each asked for the background page and reported by `runtime.sendMessage`:
@@ -402,9 +402,26 @@ for the run, each asked for the background page and reported by `runtime.sendMes
 | other container | resolves with `null`, no rejection | `null` | 1 (itself only) | yes |
 
 The background's own `extension.getViews({type: 'tab'})` listed the default-container probe and
-not the other one. This is the reason `js/wait-background.js` of STG reopens the popup and the
-manage page in the default container, and the reason the stub pages, which only need messaging,
-work anywhere.
+not the other one.
+
+R20.09, run in November 2026, opened the same two copies after the background had written a token
+of the run under one key into its `localStorage`, into `storage.local` and into `storage.session`;
+each page read the three, wrote the token into a `localStorage` key of its own, said hello in a
+`BroadcastChannel`, and answered a message the background posted into that channel by
+`runtime.sendMessage`:
+
+| probe | `localStorage` key of the background | `storage.local` key | `storage.session` key | own `localStorage` key, read by the background | hello in the channel, heard by the background | the message of the background in the channel, received by the page |
+| - | - | - | - | - | - | - |
+| default container | seen | seen | seen | seen | yes | yes |
+| other container | not seen | seen | seen | not seen | no | no |
+
+A page in another container has a `localStorage` and a `BroadcastChannel` of its own, not the
+add-on's, in both directions; the extension storages and the messaging are shared. That is why
+`js/wait-background.js` of STG reopens the manage page in the default container: in another one
+the page would never see `inited` in the `localStorage` of the add-on and would wait for a start
+of the background for good, and no event of the channels of the background would reach it
+(DESIGN-LOGGER.md §6, DESIGN-MESSAGES.md §3). The stub pages, which only need messaging, work
+anywhere.
 
 ### 20. The url length limit of `tabs.create` is 1 048 572 characters of the SERIALIZED url, 4 short of 1 MiB, not UTF-8 bytes, and the `URL` constructor enforces the same boundary (R20.05)
 

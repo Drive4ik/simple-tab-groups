@@ -1,5 +1,5 @@
-import {LOAD_WAIT, NETWORK_URL, NAVIGATE_URL, SCENE_URL, TABS_CREATE_URL_LIMIT} from '../constants.js';
-import {wait} from '../test.js';
+import {LOAD_WAIT, NETWORK_URL, NAVIGATE_URL, SCENE_URL, TABS_CREATE_URL_LIMIT, PROBE_CHANNEL, PROBE_KEYS} from '../constants.js';
+import {wait, until} from '../test.js';
 import {sceneUrl, withContainer} from '../tabs.js';
 
 export const note = `Round 20 - what tabs.create accepts, and what a page of the add-on may navigate to.
@@ -11,11 +11,15 @@ byte limit of a url passed to tabs.create, and whether it counts bytes or charac
 which schemes a webRequest main_frame listener sees at all (R20.06). Every refusal is printed with
 the browser's own error text, and whether a url over the limit can still be reached by navigation
 and held as a tab url (R20.07); what the URL api does with an address over the limit, built the way
-the add-on builds the address of its stub page (R20.08). The expectations are the facts of
+the add-on builds the address of its stub page (R20.08); what of the background an extension page
+sees from its container - a localStorage, a storage.local and a storage.session key the background
+wrote, a localStorage key the page writes, a BroadcastChannel in both directions - in the default
+container and in a non-default one (R20.09). The expectations are the facts of
 BEHAVIOR-CREATE-TABS.md 16-22 and 54.
-Needs the cookies, contextualIdentities, webRequest and <all_urls> permissions of the manifest.`;
+Needs the cookies, contextualIdentities, webRequest, storage and <all_urls> permissions of the manifest.`;
 
 const PROBE_URL = browser.runtime.getURL('probe.html');
+const PROBES = ['default', 'container'];
 
 const PNG_1PX = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
 const GIF_1PX = 'R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
@@ -526,6 +530,110 @@ export const tests = [
             far,
             far,
         ]);
+    },
+},
+
+{
+    id: 'R20.09',
+    title: 'what of the background an extension page sees from its container - a localStorage, a storage.local and a storage.session key the background wrote, a localStorage key the page writes, a BroadcastChannel in both directions; the default container as the control, next to a non-default one',
+    async run(t) {
+        await t.scene(['x']);
+        await t.snap('before');
+
+        const token = crypto.randomUUID().slice(0, 8); // of this run: a key left by an earlier run must not pass for seen
+        const reports = new Map(); // the first report of a probe
+        const answered = new Set(); // the probes that got the message of the background in the channel
+        const heard = new Set(); // the probes whose hello the background heard in the channel
+        const pageKey = probe => `${PROBE_KEYS.fromPage}:${probe}`;
+        const probeUrl = probe => `${PROBE_URL}?probe=${probe}&token=${token}`;
+
+        const handler = message => {
+            if (!message?.probe) {
+                return;
+            }
+
+            if (message.channelFromBackground) {
+                answered.add(message.probe);
+            } else {
+                reports.set(message.probe, message);
+            }
+        };
+
+        browser.runtime.onMessage.addListener(handler);
+        t.listeners.push({target: browser.runtime.onMessage, handler});
+
+        // the token of this run, null, an error text, or a value of another run
+        const seen = value => value === token ? 'seen' : value === null ? 'not seen' : /^(throws|rejected): /.test(value) ? value : 'another value, not of this run';
+
+        let channel = null;
+
+        try {
+            channel = new BroadcastChannel(PROBE_CHANNEL);
+            channel.addEventListener('message', ({data}) => data?.hello && heard.add(data.probe));
+
+            PROBES.forEach(probe => localStorage.removeItem(pageKey(probe)));
+            localStorage.setItem(PROBE_KEYS.fromBackground, token);
+            await browser.storage.local.set({[PROBE_KEYS.fromBackground]: token});
+            await browser.storage.session.set({[PROBE_KEYS.fromBackground]: token});
+
+            await attempt(t, 'default', 'probe.html?token, default container', {url: probeUrl('default')});
+
+            await withContainer(t, async cookieStoreId => {
+                await attempt(t, 'container', 'probe.html?token, cookieStoreId: container', {url: probeUrl('container'), cookieStoreId});
+                await t.step('wait for the first report of both probes', () => until(() => PROBES.every(probe => reports.has(probe))), {wait: 0, snap: 'reported'});
+
+                // the hello of a page goes before its first report on the same channel: with the channel shared it is here by the time the page answers the message
+                await t.step('BroadcastChannel.postMessage({to}) to both probes, wait for their second reports and their hellos', async () => {
+                    PROBES.forEach(probe => channel.postMessage({to: probe}));
+                    await until(() => PROBES.every(probe => answered.has(probe) && heard.has(probe)));
+                }, {wait: 0, snap: false});
+
+                const stores = {default: 'firefox-default', container: cookieStoreId};
+                const outcomes = {};
+
+                for (const probe of PROBES) {
+                    const report = reports.get(probe);
+
+                    if (!report) {
+                        outcomes[probe] = 'no report';
+                        t.note(`${probe}: no report arrived`);
+                        continue;
+                    }
+
+                    t.require(`the ${probe} probe runs in the requested container`, report.cookieStoreId === stores[probe], `the page reports ${report.cookieStoreId}`);
+
+                    outcomes[probe] = {
+                        localStorage: seen(report.localStorageFromBackground),
+                        storageLocal: seen(report.storageLocalFromBackground),
+                        storageSession: seen(report.storageSessionFromBackground),
+                        pageLocalStorage: seen(localStorage.getItem(pageKey(probe))),
+                        hello: heard.has(probe),
+                        to: answered.has(probe),
+                    };
+
+                    t.note(`${probe}: ${[
+                        `localStorage of the background: ${outcomes[probe].localStorage}`,
+                        `storage.local: ${outcomes[probe].storageLocal}`,
+                        `storage.session: ${outcomes[probe].storageSession}`,
+                        `localStorage of the page (${report.localStorageFromPage}), read by the background: ${outcomes[probe].pageLocalStorage}`,
+                        `the channel of the page: ${report.channel}`,
+                        `hello in the channel, heard by the background: ${outcomes[probe].hello ? 'yes' : 'no'}`,
+                        `the message of the background in the channel, received by the page: ${outcomes[probe].to ? 'yes' : 'no'}`,
+                    ].join('; ')}`);
+                }
+
+                t.expect('a page in another container shares storage.local and storage.session with the background and has a localStorage and a BroadcastChannel of its own; the default-container page shares them all (BEHAVIOR-CREATE-TABS.md §19)', outcomes, {
+                    default: {localStorage: 'seen', storageLocal: 'seen', storageSession: 'seen', pageLocalStorage: 'seen', hello: true, to: true},
+                    container: {localStorage: 'not seen', storageLocal: 'seen', storageSession: 'seen', pageLocalStorage: 'not seen', hello: false, to: false},
+                });
+            });
+        } finally {
+            channel?.close();
+            localStorage.removeItem(PROBE_KEYS.fromBackground);
+            PROBES.forEach(probe => localStorage.removeItem(pageKey(probe)));
+            await browser.storage.local.remove(PROBE_KEYS.fromBackground);
+            await browser.storage.session.remove(PROBE_KEYS.fromBackground);
+        }
     },
 },
 

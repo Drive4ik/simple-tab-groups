@@ -1,5 +1,5 @@
-import {SCENE_URL, POLL_WAIT, SETTLE_TIMEOUT} from '../constants.js';
-import {wait} from '../test.js';
+import {SCENE_URL, SETTLE_TIMEOUT} from '../constants.js';
+import {until} from '../test.js';
 import {openedWindows, sceneUrl} from '../tabs.js';
 import {ErrorsTest, shape, isError, outcome} from '../errors.js';
 
@@ -20,16 +20,6 @@ export const testClass = ErrorsTest;
 const UNKNOWN_ID = 2147483647; // the largest id the schema takes; no tab and no window has it
 const OWN_FILE = 'fileName: string "<own page>/tests/round-40.js"';
 const DEAD = "throws TypeError: can't access dead object";
-
-async function until(condition) {
-    const started = Date.now();
-
-    while (!condition() && Date.now() - started < SETTLE_TIMEOUT) {
-        await wait(POLL_WAIT);
-    }
-
-    return condition();
-}
 
 // the call under test: whether it threw at the call, rejected or resolved, and the error it gave
 async function tryCall(t, label, call) {

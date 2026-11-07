@@ -63,4 +63,6 @@ Operations:
 - `startIndex`, `createMissing`, `hideUnloaded` — `createMultiple`.
 - `byMinIndex` — `ensureSorted`.
 - `joinLiveGroupId` — `Tabs.group`.
-- `newTabIndex`, `auto`, `showTab`, `showOnlyActiveTab`, `showNotification` — `Tabs.move`.
+- `newTabIndex`, `auto`, `showTab`, `showOnlyActiveTab` — `Tabs.move`.
+- `showNotification` — `Tabs.move`, `Tabs.prompt`, `Tabs.showGroupsPopup`: the user is told by a
+  notification.

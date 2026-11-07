@@ -275,12 +275,7 @@ export async function createNewGroup(info, tab) {
 
     const tabIds = await Tabs.getHighlightedIds(tab.windowId, tab);
 
-    await self.onBackgroundMessage({
-        action: 'add-new-group',
-        proposalTitle: tab.title,
-        tabIds: tabIds,
-        windowId: info.button.RIGHT ? tab.windowId : undefined,
-    }, self);
+    await Groups.addByUser(info.button.RIGHT ? tab.windowId : undefined, tabIds, tab.title);
 }
 
 // helpers
