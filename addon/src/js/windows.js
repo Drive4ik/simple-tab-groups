@@ -593,7 +593,7 @@ export async function create(groupId, activeTabId) {
     } else {
         log.log('creating new window for group', groupId);
         skip.nextCreation = true;
-        const win = await browser.windows.create();
+        const win = await browser.windows.create({url: 'about:blank'});
 
         log.log('applying group to window', win.id);
         await Groups.apply(win.id, groupId, activeTabId);
