@@ -1,5 +1,6 @@
 # strip-res.ps1 — removes unused resources linked into the built exe by the RTL/VCL.
 # Uses the WinAPI Begin/Update/EndUpdateResource calls, no third-party tools (Resource Hacker etc).
+# Alternative: Resource Cracker https://www.pelock.com/products/resource-cracker
 # Invoked by the StripResources post-build target in STGHost.dproj.
 # Idempotent; its own errors never fail the build.
 
